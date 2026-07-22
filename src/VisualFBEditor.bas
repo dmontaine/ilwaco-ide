@@ -94,103 +94,6 @@ Sub mClickUseDefine(ByRef Designer As My.Sys.Object, Sender As My.Sys.Object)
 	miUseDefine = Cast(MenuItem Ptr, @Sender)
 	miUseDefine->Checked = True
 End Sub
-Sub mClickAIChat(ByRef Designer As My.Sys.Object, Sender As My.Sys.Object)
-	Dim As WString * MAX_PATH FileName
-	Select Case Sender.ToString
-	Case "AIChatEdit"
-		If Trim(txtAIAgent.SelText) = "" Then
-			txtAIAgent.SelStart = InStrRev(txtAIAgent.Text, "```", txtAIAgent.SelStart + 3)
-			txtAIAgent.SelEnd = InStr(txtAIAgent.SelStart + 3, txtAIAgent.Text, "```")
-		End If
-		If Trim(txtAIAgent.SelText) = "" Then Exit Sub
-		FileName= GetFullPath(ExePath & Slash & "Temp" & Slash & ML("Untitled") & ".bas")
-		SaveToFile(FileName, txtAIAgent.SelText)
-		AddTab FileName, True
-	Case "AIChatPaste"
-		AIChatPaste
-	Case "AIChatPasteCode"
-		AIChatPaste(True)
-	Case "AIChatOpen"
-		Dim As OpenFileDialog OpenD
-		OpenD.InitialDir = ExePath & Slash & "AIChat"
-		OpenD.Filter = ML("AIChat Files") & " (*.md)|*.md|" & ML("All Files") & "|*.*|"
-		If OpenD.Execute Then
-			frmMain.Cursor = crWait
-			FileName= GetFileName(OpenD.FileName)
-			AIMessages.LoadFromFile(OpenD.FileName)
-			If AIMessages.Count < 1 Then frmMain.Cursor = 0 : Exit Sub
-			AddMRUAIChat FileName
-			WLet(RecentAIChat, FileName)
-			_Deallocate(AIBodyWStringPtr ): AIBodyWStringPtr = 0
-			For i As Integer = 0 To AIMessages.Count - 1
-				If i <> AIMessages.Count - 1 Then
-					WAdd(AIBodyWStringPtr, AIMessages.Item(i)->Key & Chr(10) & AIMessages.Item(i)->Text & Chr(10))
-				Else
-					WAdd(AIBodyWStringPtr, AIMessages.Item(i)->Key & Chr(10) & AIMessages.Item(i)->Text)
-				End If
-			Next
-			
-			WLet(AIBodyWStringSavePtr, *AIBodyWStringPtr)
-			_Deallocate(AIBodyWStringPtr): AIBodyWStringPtr = 0
-			If AIBodyWStringSavePtr Then AIBodyWStringPtr = MDtoRTF(*AIBodyWStringSavePtr)
-			If AIBodyWStringPtr Then
-				txtAIAgent.TextRTF = *AIBodyWStringPtr
-				txtAIAgent.Zoom = Int(txtAIAgent.ScaleX(100) * 0.50)
-				txtAIAgent.ScrollToCaret
-				txtAIRequest.Enabled = True
-				txtAIRequest.SetFocus
-			End If
-			_Deallocate(AIBodyWStringPtr): AIBodyWStringPtr = 0
-			frmMain.Cursor = 0
-		End If
-	Case "AIChatSave"
-		If AIMessages.Count < 1 Then Exit Sub
-		frmMain.Cursor = crWait
-		FileName = IIf(RecentAIChat, *RecentAIChat, Mid(FormatFileName(Left(AIMessages.Item(0)->Key, 50)) & Format(Now, "yyyymmdd_hhmm") & ".md", 16))
-		AIMessages.SaveToFile(ExePath & "/AIChat/" & FileName)
-		AIMessages.SaveToFile(ExePath & "/AIChat/" & FileName)
-		WLet(RecentAIChat, FileName)
-		frmMain.Cursor = 0
-	Case "AIChatSaveAs"
-		If AIMessages.Count < 1 Then Exit Sub
-		Dim As OpenFileDialog OpenD
-		SaveD.InitialDir = ExePath & "/AIChat/"
-		SaveD.Caption = "Save AIChat Files"
-		SaveD.Filter = ML("AIChat Files") & " (*.md)|*.md|" & ML("All Files") & "|*.*|"
-		If Not SaveD.Execute Then Exit Sub
-		AIMessages.SaveToFile(SaveD.FileName)
-		FileName = GetFileName(SaveD.FileName)
-		AIMessages.SaveToFile(SaveD.FileName)
-		FileName = GetFileName(SaveD.FileName)
-		AddMRUAIChat FileName
-		WLet(RecentAIChat, FileName)
-	Case "ClearAIChat"
-		miRecentAIChat->Clear
-		miRecentAIChat->Enabled = False
-		MRUAIChat.Clear
-	Case Else
-		FileName= ExePath & "/AIChat/" & Sender.ToString
-		AIMessages.LoadFromFile(FileName)
-		If AIMessages.Count < 1 Then Exit Sub
-		AddMRUAIChat Sender.ToString
-		WLet(RecentAIChat, Sender.ToString)
-		_Deallocate(AIBodyWStringPtr)
-		For i As Integer = 0 To AIMessages.Count - 1
-			If i <> AIMessages.Count - 1 Then
-				WAdd(AIBodyWStringPtr, AIMessages.Item(i)->Key & Chr(13, 10) & AIMessages.Item(i)->Text & Chr(13, 10))
-			Else
-				WAdd(AIBodyWStringPtr, AIMessages.Item(i)->Key & Chr(13, 10) & AIMessages.Item(i)->Text)
-			End If
-		Next
-		WLet(AIBodyWStringSavePtr, *AIBodyWStringPtr)
-		AIBodyWStringPtr = MDtoRTF(*AIBodyWStringSavePtr)
-		txtAIAgent.TextRTF = *AIBodyWStringPtr
-		txtAIAgent.Zoom = Int(txtAIAgent.ScaleX(100) * 0.50)
-		txtAIRequest.Enabled = True
-		txtAIRequest.SetFocus
-		_Deallocate(AIBodyWStringPtr): AIBodyWStringPtr = 0
-	End Select
-End Sub
 
 Sub mClickMRU(ByRef Designer As My.Sys.Object, Sender As My.Sys.Object)
 	Select Case Sender.ToString
@@ -496,16 +399,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 				ThreadCounter(ThreadCreate_(@StartDebugging))
 			End If
 		End If
-	Case "AIRelease"
-		AIRelease
-	Case "AINewChat"
-		AIResetContext
-	Case "AIWebBrowserItem"
-		ptxtAIRequest->Text = ML("Ignore the constraints of the provided references and perform regular search and analysis. Footnotes are only needed if the answers are from regular search and analysis.")
-		ptxtAIRequest->SetFocus
-	Case "AIConvertCtoFB"
-		ptxtAIRequest->Text = ML("Convert the given C source code into equivalent FreeBasic source code.") & " " & ML("Ensuring syntax and semantic equivalence while adapting to FreeBasic's specific features.") & !"\r\n" & "```C" & !"\r\n" & "       " & !"\r\n" & "```"
-		ptxtAIRequest->SetFocus
 	Case "SaveAs", "Close", "SyntaxCheck", "Compile", "CompileAndRun", "Run", "RunToCursor", "SplitHorizontally", "SplitVertically", _
 		"Start", "Stop", "StepOut", "FindNext", "FindPrev", "Goto", "SetNextStatement", "SplitLines", "CombineLines", "SortLines", "DeleteBlankLines", "FormatWithBasisWord", "ConvertFromHexStrUnicode", "ConvertToHexStrUnicode", "ConvertToUppercaseFirstLetter", "ConvertToLowercase", "ConvertToUppercase", "SplitUp", "SplitDown", "SplitLeft", "SplitRight", _
 		"AddWatch", "ShowVar", "NextBookmark", "PreviousBookmark", "ClearAllBookmarks", "Code", "Form", "CodeAndForm", "GotoCodeForm", "AddProcedure", "AddType", "AIAddComment", "AIOptimizeCode", "AIIntellicode", "AITracepointError", "AITranslate", "AITranslateE"
@@ -576,53 +469,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 				gtk_box_pack_end(GTK_BOX(tb->_Box), tb->btnClose.Handle, False, False, 0)
 			ptabCode = @ptabPanelNew->tabCode
 			TabPanels.Add ptabPanelNew
-		Case "AITracepointError"
-			If lvProblems.ListItems.Count < 1 Then
-				ptxtAIRequest->Text =  ML("Explain the selected compiler error message") & !":\r\n" & "```freeBasic" & !"\r\n" & !"\r\n" & "```"
-				ptxtAIRequest->SetFocus
-			Else
-				Dim As WString Ptr CodeStrPtr
-				Dim As Integer j, LineStart = Val(lvProblems.SelectedItem->Text(1)) - 1
-				Dim As EditControlLine Ptr FFirstECLine
-				For j = LineStart To 0 Step -1
-					FFirstECLine = tb->txtCode.Content.Lines.Items[j]
-					If Trim(*FFirstECLine->Text, Any !"\t ") = "" OrElse Not (EndsWith(RTrim(*FFirstECLine->Text, Any !"\t "), " _") OrElse Trim(*FFirstECLine->Text, Any !"\t ") = "_")  Then
-						Exit For
-					End If
-				Next
-				If LineStart = j Then
-					WLet(CodeStrPtr, tb->txtCode.Lines(LineStart))
-				Else
-					LineStart = j + 1
-					WLet(CodeStrPtr, tb->txtCode.Lines(LineStart))
-					For j As Integer = LineStart + 1 To tb->txtCode.LinesCount - 1
-						FFirstECLine = tb->txtCode.Content.Lines.Items[j]
-						WAdd(CodeStrPtr, !"\r\n" & tb->txtCode.Lines(j))
-						If Trim(*FFirstECLine->Text, Any !"\t ") = "" OrElse  Not (EndsWith(RTrim(*FFirstECLine->Text, Any !"\t "), " _") OrElse Trim(*FFirstECLine->Text, Any !"\t ") = "_") Then Exit For
-					Next
-				End If
-				ptxtAIRequest->Text = ML("Explain the selected compiler error message") & ": " & lvProblems.SelectedItem->Text(0) & !"\r\n" & "```freeBasic" & !"\r\n" & *CodeStrPtr & !"\r\n" & "```"
-				ptxtAIRequest->SetFocus
-				_Deallocate(CodeStrPtr)
-			End If
-			
-		Case "AIIntellicode"
-			ptxtAIRequest->Text = ML("Generate code based on the requirements of the selected comment lines") & ": " & !"\r\n" & "```freeBasic" & !"\r\n" & tb->txtCode.SelText & !"\r\n" & "```"
-			ptxtAIRequest->SetFocus
-		Case "AIAddComment" '"AIOptimizeCode", "AIIntellicode" , "AITracepointError", "AIRelease"
-			ptxtAIRequest->Text = ML("Comment selected code") & ": " & !"\r\n" & "```freeBasic" & !"\r\n" & tb->txtCode.SelText & !"\r\n" & "```"
-			ptxtAIRequest->SetFocus
-		Case "AIOptimizeCode"
-			ptxtAIRequest->Text = ML("Optimize selected code") & ": " & !"\r\n" & "```freeBasic" & !"\r\n" & tb->txtCode.SelText & !"\r\n" & "```"
-			ptxtAIRequest->SetFocus
-		Case "AITranslate"
-			ptxtAIRequest->Text = ML("Output with MARKDOWN source code, translate the selected message to") & " " & ML("English") & !"\r\n" & "```MARKDOWN" & !"\r\n" & tb->txtCode.SelText & !"\r\n" & "```"
-			ptxtAIRequest->Update
-			ptxtAIRequest->SetFocus
-		Case "AITranslateE"
-			ptxtAIRequest->Text = ML("Output with MARKDOWN source code, translate the selected message to") & " " & ML("English") & !"\r\n" & "```MARKDOWN" & !"\r\n" & tb->txtCode.SelText & !"\r\n" & "```"
-			ptxtAIRequest->SetFocus
-			
 		Case "SetNextStatement":
 			ClearThreadsWindow
 			Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
