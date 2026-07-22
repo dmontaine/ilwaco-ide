@@ -320,14 +320,8 @@ End Sub
 Function GetLibKey As String
 	Dim LibKey As String = "Lib"
 		LibKey &= "X"
-	#ifdef __FB_64BIT__
 		LibKey &= "64"
-	#else
-		LibKey &= "32"
-	#endif
-	#ifdef __USE_GTK__
-			LibKey &= "_gtk2"
-	#endif
+			LibKey &= "_gtk3"
 	Return LibKey
 End Function
 

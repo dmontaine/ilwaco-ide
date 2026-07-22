@@ -3,10 +3,6 @@
 ' Freeware. Use at your own risk.
 
 '#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/ComboBoxEdit.bi"
 	#include once "mff/CommandButton.bi"
@@ -56,13 +52,8 @@
 			.Text = "VFBE SerialPort"
 			.Designer = @This
 			.Caption = "VFBE SerialPort"
-			#ifdef __FB_64BIT__
 				'...instructions for 64bit OSes...
 				.Caption = "VFBE SerialPort64"
-			#else
-				'...instructions for other OSes
-				.Caption = "VFBE SerialPort32"
-			#endif
 				This.Icon.LoadFromFile(ExePath & "\SerialPort.ico")
 
 			.OnCreate = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @Form_Create)

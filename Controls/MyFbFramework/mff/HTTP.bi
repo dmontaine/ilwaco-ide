@@ -1,4 +1,4 @@
-#include once "Component.bi"
+﻿#include once "Component.bi"
 
 Using My.Sys.ComponentModel
 

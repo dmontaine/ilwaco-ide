@@ -12,7 +12,6 @@
 '###############################################################################
 
 #include once "UpDown.bi"
-'Const UDN_DELTAPOS = (UDN_FIRST - 1)
 
 Namespace My.Sys.Forms
 	#ifndef ReadProperty_Off
@@ -85,17 +84,7 @@ Namespace My.Sys.Forms
 	
 	Private Property UpDown.MinValue(Value As Integer)
 		FMinValue = Value
-		#ifdef __USE_GTK__
 			gtk_spin_button_set_range(GTK_SPIN_BUTTON(widget), FMinValue, FMaxValue)
-		#else
-			If Handle Then
-				If FMinValue < 0 OrElse FMaxValue < 0 Then
-					SendMessage(Handle, UDM_SETRANGE32, FMinValue, FMaxValue)
-				Else
-					SendMessage(Handle, UDM_SETRANGE, 0, MAKELPARAM(FMaxValue, FMinValue))
-				End If
-			End If
-		#endif
 	End Property
 	
 	Private Property UpDown.MaxValue As Integer
@@ -104,47 +93,17 @@ Namespace My.Sys.Forms
 	
 	Private Property UpDown.MaxValue(Value As Integer)
 		FMaxValue = Value
-		#ifdef __USE_GTK__
 			gtk_spin_button_set_range(GTK_SPIN_BUTTON(widget), FMinValue, FMaxValue)
-		#else
-			If Handle Then 
-				If FMinValue < 0 OrElse FMaxValue < 0 Then
-					SendMessage(Handle, UDM_SETRANGE32, FMinValue, FMaxValue)
-				Else
-					SendMessage(Handle, UDM_SETRANGE, 0, MAKELONG(FMaxValue, FMinValue))
-				End If
-			End If
-		#endif
 	End Property
 	
 	Private Property UpDown.Position As Integer
-		#ifdef __USE_GTK__
 			FPosition = gtk_spin_button_get_value(GTK_SPIN_BUTTON(widget))
-		#else
-			If Handle Then
-				'FPosition = LoWord(SendMessage(Handle, UDM_GETPOS, 0, 0))
-				FPosition = SendMessage(Handle, UDM_GETPOS32, 0, 0)
-			End If
-		#endif
 		Return FPosition
 	End Property
 	
 	Private Property UpDown.Position(Value As Integer)
 		FPosition = Value
-		#ifdef __USE_GTK__
 			gtk_spin_button_set_value(GTK_SPIN_BUTTON(widget), FPosition)
-		#else
-			If Handle Then
-				If FPosition < 0 Then
-					SendMessage(Handle, UDM_SETPOS32, 0, FPosition)
-				Else
-					SendMessage(Handle, UDM_SETPOS, 0, MAKELONG(FPosition, 0))
-				End If
-				If FAssociate Then
-					FAssociate->Text = Str(Position)
-				End If
-			End If
-		#endif
 	End Property
 	
 	Private Property UpDown.Increment As Integer
@@ -154,15 +113,7 @@ Namespace My.Sys.Forms
 	Private Property UpDown.Increment(Value As Integer)
 		If Value <> FIncrement Then
 			FIncrement = Value
-			#ifdef __USE_GTK__
 				gtk_spin_button_set_increments(GTK_SPIN_BUTTON(widget), FIncrement, FIncrement)
-			#else
-				If Handle Then
-					SendMessage(Handle, UDM_GETACCEL, 1, CInt(@FUDAccel(0)))
-					FUDAccel(0).nInc = Value
-					SendMessage(Handle, UDM_SETACCEL, 1, CInt(@FUDAccel(0)))
-				End If
-			#endif
 		End If
 	End Property
 	
@@ -192,11 +143,7 @@ Namespace My.Sys.Forms
 	Private Property UpDown.Wrap(Value As Boolean)
 		If FWrap <> Value Then
 			FWrap = Value
-			#ifdef __USE_GTK__
 				gtk_spin_button_set_wrap(GTK_SPIN_BUTTON(widget), FWrap)
-			#else
-				Base.Style = WS_CHILD Or UDS_SETBUDDYINT Or AStyle(abs_(FStyle)) Or AAlignment(abs_(FAlignment)) Or AWrap(abs_(FWrap)) Or AArrowKeys(abs_(FArrowKeys)) Or AAThousand(abs_(FThousands))
-			#endif
 		End If
 	End Property
 	
@@ -264,26 +211,8 @@ Namespace My.Sys.Forms
 	
 	Private Constructor UpDown
 		Dim As Boolean Result
-		#ifdef __USE_GTK__
 			widget = gtk_spin_button_new_with_range(0, 100, 1)
 			
-		#else
-			Dim As INITCOMMONCONTROLSEX ICC
-			ICC.dwSize = SizeOf(ICC)
-			ICC.dwICC  = ICC_UPDOWN_CLASS
-			Result = INITCOMMONCONTROLSEX(@ICC)
-			If Not Result Then InitCommonControls
-			AStyle(0)        = 0
-			AStyle(1)        = UDS_HORZ
-			AAlignment(0)    = UDS_ALIGNRIGHT
-			AAlignment(1)    = UDS_ALIGNLEFT
-			AWrap(0)         = 0
-			AWrap(1)         = UDS_WRAP
-			AArrowKeys(0)    = 0
-			AArrowKeys(1)    = UDS_ARROWKEYS
-			AAThousand(0)    = UDS_NOTHOUSANDS
-			AAThousand(1)    = 0
-		#endif
 		FMinValue        = 0
 		FMaxValue        = 100
 		FArrowKeys       = True

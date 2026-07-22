@@ -30,8 +30,6 @@ Namespace My.Sys.Text
 	'' UTF-16 WStrings and needs no such conversion.
 	'' -------------------------------------------------------------
 
-#if (defined(__USE_PCRE2__)) Or (Not defined(__USE_WINAPI__))
-
 	'' How many WString characters does the first ByteLen bytes of Utf8Bytes
 	'' decode to? Utf8Bytes must be sliced at a UTF-8 character boundary
 	'' (true for all offsets PCRE2/GRegex hand back to us).
@@ -54,8 +52,6 @@ Namespace My.Sys.Text
 		Dim As UString prefix = Left(Text, CharIndex)
 		Return Len(ToUtf8(prefix))
 	End Function
-
-#endif
 
 	'' -------------------------------------------------------------
 	'' Backend: PCRE2 (8-bit library, UTF-8 mode) -- used whenever

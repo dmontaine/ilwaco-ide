@@ -2,16 +2,11 @@
 
 '#Region "Form"
 	Constructor frmTrek
-		LoadLanguageTexts
 		' frmTrek
 		With This
 			.Name = "frmTrek"
 			.Text = ML("Trek")
-			#ifdef __USE_GTK__
 				.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico")
-			#else
-				.Icon.LoadFromResourceID(1)
-			#endif
 			.MinimizeBox = False
 			.BorderStyle = FormBorderStyle.Sizable
 			.StartPosition = FormStartPosition.CenterParent

@@ -166,18 +166,11 @@ Namespace My.Sys.Forms
 	
 	Private Sub PagePanel.CreateWnd
 		Base.CreateWnd
-		#ifdef __USE_JNI__
-			layoutview = FHandle
-		#endif
 	End Sub
 	
 	Private Sub PagePanel.GraphicChange(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Drawing.GraphicType, Image As Any Ptr, ImageType As Integer)
 		With Sender
 			If .Ctrl->Child Then
-				#ifdef __USE_GTK__
-				#else
-					.Ctrl->Repaint
-				#endif
 			End If
 		End With
 	End Sub
@@ -217,11 +210,7 @@ Namespace My.Sys.Forms
 			.Graphic.OnChange = @GraphicChange
 			NumericUpDownControl.Name = "PagePanel_NumericUpDownControl"
 			'NumericUpDownControl.Align = DockStyle.alBottom
-			#ifdef __USE_GTK__
 				NumericUpDownControl.Width = 100
-			#else
-				NumericUpDownControl.Width = 70
-			#endif
 			NumericUpDownControl.Style = udHorizontal
 			NumericUpDownControl.MinValue = -1
 			NumericUpDownControl.Position = -1
@@ -234,13 +223,9 @@ Namespace My.Sys.Forms
 			mnuShowPanel.Caption = "Show Panel"
 			mnuContext.ParentWindow = @This
 			mnuContext.Add @mnuShowPanel
-				#ifdef __USE_GTK3__
 					widget = gtk_stack_new()
 					overlaywidget = gtk_overlay_new()
 					gtk_container_add(GTK_CONTAINER(overlaywidget), widget)
-				#else
-					widget = gtk_layout_new(NULL, NULL)
-				#endif
 				.RegisterClass "PagePanel", @This
 			FTabIndex          = -1
 			WLet(FClassName, "PagePanel")

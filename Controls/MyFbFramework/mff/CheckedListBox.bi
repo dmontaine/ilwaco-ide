@@ -21,9 +21,7 @@ Namespace My.Sys.Forms
 		FRadioCheck As Boolean
 			As GtkCellRenderer Ptr rendertoggle
 	Protected:
-		#ifdef __USE_GTK__
 			Declare Static Sub Check(cell As GtkCellRendererToggle Ptr, path As gchar Ptr, model As GtkListStore Ptr)
-		#endif
 	Public:
 		#ifndef ReadProperty_Off
 			'Loads persisted check states

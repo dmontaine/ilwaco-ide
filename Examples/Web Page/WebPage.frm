@@ -1,8 +1,4 @@
 ﻿'#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	
 	#ifdef __FB_JS__
 		#define OnClient
@@ -26,12 +22,6 @@
 		End Type
 		
 		Constructor Form1Type
-			#if _MAIN_FILE_ = __FILE__
-				With App
-					.CurLanguagePath = ExePath & "/Languages/"
-					.CurLanguage = .Language
-				End With
-			#endif
 			' Form1
 			With This
 				.Name = "Form1"
@@ -71,12 +61,6 @@
 		End Type
 		
 		Constructor frmServerType
-			#if _MAIN_FILE_ = __FILE__
-				With App
-					.CurLanguagePath = ExePath & "/Languages/"
-					.CurLanguage = .Language
-				End With
-			#endif
 			' Form1
 			With This
 				.Name = "frmServer"

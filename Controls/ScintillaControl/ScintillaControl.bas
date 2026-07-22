@@ -103,10 +103,7 @@ End Destructor
 Private Sub ScintillaControl.CreateWnd()
 	Base.CreateWnd
 	'Creates a ScintillaControl editing window
-	'Dim rt As Rect
 	'GetClientRect(This.Parent->Handle, @rt)
-	'Dim As Integer lExStyle = 0
-	'Dim As Integer lStyle = WS_CHILD Or WS_VISIBLE Or WS_TABSTOP Or WS_BORDER
 	'Handle = CreateWindowEx(lExStyle, "ScintillaControl", 0, lStyle, 0, 0, rt.Right - rt.Left, rt.Bottom - rt.Top, IIf(This.Parent = 0, 0, This.Parent->Handle), NULL, 0, 0)
 	
 	'font quality (antialiasing method)

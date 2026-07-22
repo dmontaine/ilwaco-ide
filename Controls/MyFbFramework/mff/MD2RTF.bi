@@ -184,9 +184,7 @@ Sub MarkdownStreamConverter.Flush()
 	If m_BufferPtr <> 0 AndAlso Len(*m_BufferPtr) > 0 Then
 		ProcessLine(m_BufferPtr)
 		WLet(m_BufferPtr, "")
-		'If m_State = State_InTable OrElse m_State = State_PotentialTable Then
 		'	m_State = State_Normal
-		'End If
 		UpdateRTB()
 	End If
 End Sub
@@ -418,7 +416,6 @@ Function MarkdownStreamConverter.freeBasicToRTF(ByRef LineText As WString) As WS
 							End If
 							
 							If Not bInAsm Then
-								'Global
 								If tIndex = -1 Then
 									If bTypeAs Then tIndex = pComps->IndexOf(MatnLCase)
 									If tIndex <> -1 Then
@@ -496,7 +493,6 @@ Function MarkdownStreamConverter.freeBasicToRTF(ByRef LineText As WString) As WS
 							'MatnBoshi - 1, j, Keyword  ' SC
 							WAdd(rtfiText, "\cf" & sc & " " & Mid(LineText, MatnBoshi, j - MatnBoshi + 1), , Capacity)
 						End If
-						'End If
 						MatnBoshi = 0
 					End If
 				ElseIf IIf(bInAsm, t = 35 OrElse t = 39, t = 39) Then
@@ -582,16 +578,12 @@ Sub MarkdownStreamConverter.ProcessLine(ByVal iLinePtr As WString Ptr)
 			End If
 			If level = 1 Then
 				'ResultPtr = ProcessInlineStyles(Mid(*iLinePtr, level))
-				'If ResultPtr Then WAdd(RTFBodyPtr, m_DefaultStyle & *ResultPtr & "\par", , m_Capacity)
-				'Else
 				ResultPtr = ProcessInlineStyles(iLinePtr)
 				If ResultPtr Then WAdd(RTFBodyPtr, m_DefaultStyle & *ResultPtr & "\par", , m_Capacity)
 			End If
 			If ResultPtr Then _Deallocate(ResultPtr)
 		Case 96 '"`"  ' 1. Code block processing (enhanced robustness)
-			'If (Trim(*iLinePtr) = "```") Then 'NOT always in the begging in GLM
 			If iLineLen > 3 Then '`
-				'If InStr(LCase(*iLinePtr), "```freebasic") OrElse InStr(LCase(*iLinePtr), "```fb") OrElse InStr(LCase(*iLinePtr), "```vb") Then
 				m_State = State_InCodeBlock
 				WAdd(RTFBodyPtr, "\f1\fs" & (RTFFontSizefs) & "\cf2\highlight" & "7" & " " & Left(*iLinePtr & Space(300), 300) & "\cf" & ColorIndexFore & "\highlight" & ColorIndexCodeBK & "\par", , m_Capacity)
 			End If
@@ -625,7 +617,6 @@ Sub MarkdownStreamConverter.ProcessLine(ByVal iLinePtr As WString Ptr)
 				WLet(m_TableBufferPtr, *iLinePtr)
 			End If
 		Case 32 '" " ' 3. 处理列表项下方的缩进内容 (如 "   abcd")
-			'If m_inListItem Then
 			Dim As Integer indentCount = 0
 			While indentCount < iLineLen AndAlso (*iLinePtr)[indentCount] = 32
 				indentCount += 1
@@ -894,7 +885,6 @@ Sub MarkdownStreamConverter.OutputNormalLine(ByVal iLinePtr As WString Ptr)
 	If ResultPtr = 0 Then Return
 	' 统一拼接 RTF 并释放内存
 	WAdd(RTFBodyPtr, rtfPrefix & *ResultPtr & "\par" & Chr(10), , m_Capacity)
-	'If ContentPtr <> iLinePtr Then _Deallocate(ContentPtr)
 	_Deallocate(ContentPtr)
 	_Deallocate(ResultPtr)
 End Sub
@@ -953,7 +943,6 @@ End Sub
 
 
 '
-'Dim As WString * 8096 testMarkdown
 'testMarkdown = !"# Markdown to RTF Test\n" & _
 '!"## Level 2 Heading\n" & _
 '!"This is a paragraph containing **bold**, *italic* and `inline code`.\n" & _
@@ -976,18 +965,7 @@ End Sub
 '!"| John | 25  | Programmer |\n" & _
 '!"| Jane | 30  | Designer |\n" & _
 '!"[Example image](example.png)"
-'Dim As WString Ptr rtfOutput
 'rtfOutput = MDtoRTF(testMarkdown)
-'Print "Generated RTF content:"
-'Print "--------------------------------------------------"
-'Print *rtfOutput
-'Print "--------------------------------------------------"
 ''txtThink.iTextRTF = rtfOutput
-'Dim Fn As Integer = FreeFile
-'Open "test.rtf" For Output As #Fn
-'Print #Fn, *rtfOutput
-'Close #Fn
-'Print "RTF file saved as test.rtf"
 'Deallocate rtfOutput
 'Sleep(8000)
-'End

@@ -41,11 +41,7 @@ Namespace My.Sys.Forms
 	
 	Private Property VerticalBox.Spacing(Value As Integer)
 		FVerticalSpacing = Value
-		#ifdef __USE_GTK__
 			gtk_box_set_spacing(GTK_BOX(widget), FVerticalSpacing)
-		#else
-			RequestAlign
-		#endif
 	End Property
 	
 	Private Property VerticalBox.TabIndex As Integer
@@ -90,10 +86,8 @@ Namespace My.Sys.Forms
 	
 	Private Constructor VerticalBox
 		With This
-			#ifdef __USE_GTK__
 					widget = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0)
 				.RegisterClass "VerticalBox", @This
-			#endif
 			FAutoSize = True
 			Canvas.Ctrl    = @This
 			.Child       = @This

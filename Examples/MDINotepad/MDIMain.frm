@@ -4,10 +4,6 @@
 
 '#Region "Form"
 	#define __MDI__ MDIMain
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/Dialogs.bi"
 	#include once "mff/ImageList.bi"
@@ -47,7 +43,6 @@
 		Declare Sub MDIChildActivate(ByRef Child As Any Ptr)                            '激活的子窗口指针Pointer of activated child-window.
 		Declare Sub MDIChildClick()                                                     '更新状态栏信息Update status bar information.
 		Declare Sub MDIChildDestroy(ByRef Child As Any Ptr)                             '子窗口销毁Destroy the child-window.
-		'Declare Sub MDIChildDoubleClick(ByRef Child As Any Ptr)
 		Declare Sub MDIChildInsertText(ByRef Child As Any Ptr, ByRef Text As WString)   '在子窗口的光标处插入文字Insert text at the cursor position in the sub-window.
 		Declare Sub MDIChildMenuUpdate()                                                '更新窗口菜单Update window menus.
 		Declare Sub MenuEnabled(Enabled As Boolean)                                     '窗口菜单可用与否Availability of window menus.
@@ -1437,13 +1432,8 @@ Private Sub MDIMainType.Form_Close(ByRef Sender As Form, ByRef Action As Integer
 End Sub
 
 Private Sub MDIMainType.Form_Create(ByRef Sender As Control)
-	#ifdef __FB_64BIT__
 		'...instructions for 64bit OSes...
 		WLet(mCaption, "VFBE MDI Notepad64" & fbcVer)
-	#else
-		'...instructions for other OSes
-		WLet(mCaption, "VFBE MDI Notepad64" & fbcVer)
-	#endif
 	Caption = *mCaption
 	
 	MenuEnabled(False)
@@ -1643,7 +1633,6 @@ End Sub
 Private Sub MDIMainType.mnuEdit_Click(ByRef Sender As MenuItem)
 	Dim As MDIChildType Ptr a = actMdiChild
 	Select Case Sender.Name
-		'Case "mnuEditRedo"
 	Case "mnuEditUndo"
 		a->Editor.Undo
 	Case "mnuEditCut"

@@ -55,13 +55,8 @@ Namespace My.Sys.Forms
 		Return FDesignMode
 	End Property
 	
-	#ifdef __USE_GTK__
 		Private Function ImageBox.DesignDraw(widget As GtkWidget Ptr, cr As cairo_t Ptr, data1 As Any Ptr) As Boolean
-			#ifdef __USE_GTK3__
 				Dim As Integer AllocatedWidth = gtk_widget_get_allocated_width(widget), AllocatedHeight = gtk_widget_get_allocated_height(widget)
-			#else
-				Dim As Integer AllocatedWidth = widget->allocation.width, AllocatedHeight = widget->allocation.height
-			#endif
 			cairo_rectangle(cr, 0.0, 0.0, AllocatedWidth, AllocatedHeight)
 			Dim As Double Ptr dashed = _Allocate(SizeOf(Double) * 2)
 			dashed[0] = 3.0
@@ -79,18 +74,11 @@ Namespace My.Sys.Forms
 			cairo_destroy(cr)
 			Return False
 		End Function
-	#endif
 	
 	Private Property ImageBox.DesignMode(Value As Boolean)
 		FDesignMode = Value
 		If Value Then
-			#ifdef __USE_GTK__
-				#ifdef __USE_GTK3__
 					g_signal_connect(widget, "draw", G_CALLBACK(@DesignDraw), @This)
-				#else
-					g_signal_connect(widget, "expose-event", G_CALLBACK(@DesignExposeEvent), @This)
-				#endif
-			#endif
 		End If
 	End Property
 		
@@ -99,10 +87,8 @@ Namespace My.Sys.Forms
 	End Property
 	
 	Private Property ImageBox.Style(Value As ImageBoxStyle)
-		'If Value <> FImageStyle Then
 			FImageStyle = Value
 			RecreateWnd
-		'End If
 	End Property
 	
 	Private Property ImageBox.RealSizeImage As Boolean
@@ -130,46 +116,17 @@ Namespace My.Sys.Forms
 	Private Sub ImageBox.GraphicChange(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Drawing.GraphicType, Image As Any Ptr, ImageType As Integer)
 		With Sender
 			If .Ctrl->Child Then
-				#ifdef __USE_GTK__
 					Select Case ImageType
 					Case 0
 						gtk_image_set_from_pixbuf(GTK_IMAGE(.Ctrl->widget), .Bitmap.Handle)
 					Case 1
 						gtk_image_set_from_pixbuf(GTK_IMAGE(.Ctrl->widget), .Icon.Handle)
 					End Select
-				#elseif 0
-					Select Case ImageType
-					Case 0
-						QImageBox(.Ctrl->Child).Style = ImageBoxStyle.ssBitmap
-						QImageBox(.Ctrl->Child).Perform(BM_SETIMAGE,ImageType,CInt(Sender.Bitmap.Handle))
-					Case 1
-						QImageBox(.Ctrl->Child).Style = ImageBoxStyle.ssIcon
-						QImageBox(.Ctrl->Child).Perform(BM_SETIMAGE,ImageType,CInt(Sender.Icon.Handle))
-					Case 2
-						QImageBox(.Ctrl->Child).Style = ImageBoxStyle.ssCursor
-						QImageBox(.Ctrl->Child).Perform(BM_SETIMAGE,ImageType,CInt(Sender.Icon.Handle))
-					Case 3
-						QImageBox(.Ctrl->Child).Style = ImageBoxStyle.ssEmf
-						QImageBox(.Ctrl->Child).Perform(BM_SETIMAGE,ImageType,CInt(0))
-					End Select
-				#elseif 0
-					Select Case ImageType
-					Case 0
-						.Ctrl->FElementStyle &= "background-image: url('" & .Bitmap.Handle & "');background-repeat: no-repeat;" & IIf(Cast(ImageBox Ptr, .Ctrl)->FCenterImage, "background-position: center;", "background-size: cover;")
-					Case 1
-						.Ctrl->FElementStyle &= "background-image: url('" & .Icon.Handle & "');background-repeat: no-repeat;" & IIf(Cast(ImageBox Ptr, .Ctrl)->FCenterImage, "background-position: center;", "background-size: cover;")
-					End Select
-				#endif
 			End If
 		End With
 	End Sub
 	
 	
-	#ifdef __USE_WASM__
-		Private Function ImageBox.GetContent() As UString
-			Return ""
-		End Function
-	#endif
 	
 	Private Sub ImageBox.ProcessMessage(ByRef Message As Message)
 		Base.ProcessMessage(Message)
@@ -180,24 +137,10 @@ Namespace My.Sys.Forms
 	End Operator
 	
 	Private Constructor ImageBox
-		#ifdef __USE_GTK__
 			widget = gtk_image_new()
 			eventboxwidget = gtk_event_box_new()
 			gtk_container_add(GTK_CONTAINER(eventboxwidget), widget)
 			This.RegisterClass "ImageBox", @This
-		#elseif 0
-			AStyle(0)        = SS_BITMAP
-			AStyle(1)        = SS_ICON
-			AStyle(2)        = SS_ICON
-			AStyle(3)        = SS_ENHMETAFILE
-			AStyle(4)        = SS_OWNERDRAW
-			ACenterImage(0)  = SS_RIGHTJUST
-			ACenterImage(1)  = SS_CENTERIMAGE
-			ARealSizeImage(0)= 0
-			ARealSizeImage(1) = SS_REALSIZEIMAGE
-			ARealSizeControl(0) = SS_REALSIZECONTROL
-			ARealSizeControl(1) = 0
-		#endif
 		FImageStyle = 0
 		Graphic.Ctrl = @This
 		Graphic.OnChange = @GraphicChange

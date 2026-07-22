@@ -446,12 +446,8 @@ Function AddTab(ByRef FileName As WString = "", bNew As Boolean = False, TreeN A
 			tb->UseVisualStyleBackColor = True
 			tb->CheckExtension FileName
 			ptabCode->AddTab(Cast(TabPage Ptr, tb))
-			#ifdef __USE_GTK__
 				gtk_box_pack_end (GTK_BOX (._Box), .btnClose.Handle, False, False, 0)
 				gtk_widget_show_all(._Box)
-			#else
-				ptabCode->Add(@.btnClose)
-			#endif
 			tb->ImageKey = GetIconName(FileNameNew)
 			If Not bNoActivate Then .SelectTab Else .Visible = True: ptabCode->RequestAlign: .Visible = False
 			.tbrTop.Buttons.Item(1)->Checked = True
@@ -617,9 +613,7 @@ Sub OnMouseHoverEdit(ByRef Designer As My.Sys.Object, ByRef Sender As Control, M
 	Static As Integer OldY, OldX
 	Var tb = Cast(TabWindow Ptr, Sender.Tag)
 	If tb = 0  OrElse tb->txtCode.LinesCount < 1 Then Exit Sub
-	#ifdef __USE_GTK__
 		Return
-	#endif
 	If tb->txtCode.MouseHoverToolTipShowed Then
 		If CBool((Abs(OldY - y) > 0 OrElse Abs(OldX - x) > 0)) Then
 			tb->txtCode.CloseMouseHoverToolTip
@@ -705,20 +699,14 @@ Sub CloseButton_MouseLeave(ByRef Designer As My.Sys.Object, ByRef Sender As Cont
 	btn->MouseIn = False
 End Sub
 
-#ifdef __USE_GTK__
 	Function CloseButton_OnDraw(widget As GtkWidget Ptr, cr As cairo_t Ptr, data1 As gpointer) As Boolean
 		Dim As CloseButton Ptr cb = Cast(Any Ptr, data1)
 		
 			cairo_select_font_face(cr, "Noto Mono", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD)
 		cairo_set_font_size(cr, 11)
 		
-		#ifdef __USE_GTK3__
 			Var width1 = gtk_widget_get_allocated_width (widget)
 			Var height1 = gtk_widget_get_allocated_height (widget)
-		#else
-			Var width1 = widget->allocation.width
-			Var height1 = widget->allocation.height
-		#endif
 		
 		If cb->MouseIn Then
 			cairo_rectangle(cr, width1 - 16, (height1 - 16) / 2, 16, 16)
@@ -748,7 +736,6 @@ End Sub
 		cairo_destroy(cr)
 		Return False
 	End Function
-#endif
 
 Constructor CloseButton
 	Base.OnMouseUp = @CloseButton_MouseUp
@@ -756,12 +743,7 @@ Constructor CloseButton
 	OnMouseLeave = @CloseButton_MouseLeave
 	OldBackColor = This.BackColor
 	OldForeColor = This.Font.Color
-	#ifdef __USE_GTK__
-		#ifdef __USE_GTK3__
 			g_signal_connect(widget, "draw", G_CALLBACK(@CloseButton_OnDraw), @This)
-		#else
-			g_signal_connect(widget, "expose-event", G_CALLBACK(@CloseButton_OnExposeEvent), @This)
-		#endif
 		This.Width = 20
 		This.Height = 20
 		Dim As PangoContext Ptr pcontext
@@ -771,10 +753,6 @@ Constructor CloseButton
 			desc = pango_font_description_from_string ("Noto Mono 11")
 		pango_layout_set_font_description (layout, desc)
 		pango_font_description_free (desc)
-	#else
-		This.Alignment = taCenter
-		Caption = "×"
-	#endif
 End Constructor
 
 Destructor CloseButton
@@ -788,11 +766,7 @@ End Property
 Property TabWindow.Caption(ByRef Value As WString)
 	FCaptionNew = _Reallocate(FCaptionNew, (Len(Value) + 1) * SizeOf(WString))
 	*FCaptionNew = Value
-	#ifdef __USE_GTK__
 		Base.Caption = Value
-	#else
-		Base.Caption = Value + Space(5)
-	#endif
 End Property
 
 Property TabWindow.FileName ByRef As WString
@@ -2526,20 +2500,15 @@ Sub PropertyChanged(ByRef Sender As Control, ByRef Sender_Text As WString, IsCom
 				If st AndAlso st->IsComponentFunc AndAlso CInt(st->IsComponentFunc(pSelectedControls->Item(i))) Then
 					If st->ComponentGetBoundsSub Then st->ComponentGetBoundsSub(pSelectedControls->Item(i), iLeft, iTop, iWidth, iHeight)
 				End If
-				#ifdef __USE_GTK__
 					Dim As GtkWidget Ptr tmpWidget
 					If st AndAlso st->ReadPropertyFunc Then tmpWidget = st->ReadPropertyFunc(pSelectedControls->Item(i), "widget")
-				#endif
 				tb->WriteObjProperty(pSelectedControls->Item(i), PropertyName, Sender_Text)
-				#ifdef __USE_GTK__
 					pApp->DoEvents
-				#endif
 				Dim As Integer iLeft2, iTop2, iWidth2, iHeight2
 				If st AndAlso st->IsComponentFunc AndAlso CInt(st->IsComponentFunc(pSelectedControls->Item(i))) Then
 					If st->ComponentGetBoundsSub Then st->ComponentGetBoundsSub(pSelectedControls->Item(i), iLeft2, iTop2, iWidth2, iHeight2)
 					If iLeft <> iLeft2 OrElse iTop <> iTop2 OrElse iWidth <> iWidth2 OrElse iHeight <> iHeight2 Then tb->Des->MoveDots pSelectedControls->Item(i), False
 				End If
-				#ifdef __USE_GTK__
 					Dim As GtkWidget Ptr tmpChangedWidget
 					If st AndAlso st->ReadPropertyFunc Then tmpChangedWidget = st->ReadPropertyFunc(pSelectedControls->Item(i), "widget")
 					If tmpWidget <> tmpChangedWidget Then
@@ -2547,7 +2516,6 @@ Sub PropertyChanged(ByRef Sender As Control, ByRef Sender_Text As WString, IsCom
 						tb->Des->FSelControl = tmpChangedWidget
 						If g_object_get_data(G_OBJECT(tmpChangedWidget), "drawed") = tb->Des Then tb->Des->MoveDots pSelectedControls->Item(i)
 					End If
-				#endif
 			Next i
 			If PropertyName = "TabIndex" Then
 				For i As Integer = 2 To tb->cboClass.ItemCount - 1
@@ -3619,12 +3587,7 @@ Sub DesignerClickProperties(ByRef Sender As Designer, Ctrl As Any Ptr)
 	tpProperties->SelectTab
 End Sub
 
-#ifdef __USE_GTK__
 	Sub lvIntellisense_ItemActivate(ByRef Designer As My.Sys.Object, ByRef Sender As ListView, ByVal ItemIndex As Integer)
-#else
-	Sub cboIntellisense_Selected(ByRef Designer As My.Sys.Object, ByRef Sender As ComboBoxEdit, ItemIndex As Integer)
-		If ItemIndex < 0 OrElse ItemIndex > Cast(ComboBoxEx Ptr, @Sender)->Items.Count - 1 Then Exit Sub
-#endif
 	Dim As TabWindow Ptr tb = Cast(TabWindow Ptr, ptabCode->SelectedTab)
 	If tb = 0 Then Exit Sub
 	Dim sLine As WString Ptr = @tb->txtCode.Lines(SelLinePos)
@@ -3632,30 +3595,17 @@ End Sub
 	Dim As Integer i, Pos1, Pos2, Pos3, xStartPlus, xEndPlus, yStartPlus, yEndPlus
 	Dim As String Symbol
 	Dim As TypeElement Ptr te, teParam, teParamNew
-	#ifdef __USE_GTK__
 	With tb->txtCode.lvIntellisense
-	#else
-	With tb->txtCode.cboIntellisense
-	#endif
 		If tb->txtCode.FileDropDown Then
 			Dim As Integer iSelStartLine, iSelEndLine, iSelStartChar, iSelEndChar
 			tb->txtCode.GetSelection iSelStartLine, iSelEndLine, iSelStartChar, iSelEndChar
 			i = iSelEndChar
-			#ifdef __USE_GTK__
 			If .ListItems.Item(ItemIndex)->ImageKey <> "Folder" Then Symbol = """"
-			#else
-			If .Items.Item(ItemIndex)->ImageKey <> "Folder" Then Symbol = """"
-			#endif
 		Else
 			i = GetNextCharIndex(*sLine, SelCharPos)
 		End If
-		#ifdef __USE_GTK__
 		If .ListItems.Item(ItemIndex) Then
 			te = .ListItems.Item(ItemIndex)->Tag
-		#else
-		If .Items.Item(ItemIndex) Then
-			te = .ItemData(ItemIndex)
-		#endif
 			If te <> 0 AndAlso te->ElementType = E_Snippet Then
 				tb->txtCode.ClearCarets
 				Dim As UString Parameters = te->Parameters
@@ -3689,22 +3639,14 @@ End Sub
 				tb->txtCode.ReplaceLine SelLinePos, ..Left(*sLine, SelCharPos) & Parameters & Symbol & Mid(*sLine, i + 1)
 				tb->txtCode.SetSelection SelLinePos + yStartPlus, SelLinePos + yEndPlus, n + xStartPlus, n + xEndPlus
 			Else
-				#ifdef __USE_GTK__
 					tb->txtCode.SetSelection SelLinePos, SelLinePos, SelCharPos, i, True
 					tb->txtCode.ChangeText .ListItems.Item(ItemIndex)->Text(0) & Symbol
 					i = SelCharPos + Len(.ListItems.Item(ItemIndex)->Text(0) & Symbol)
-				#else
-					tb->txtCode.SetSelection SelLinePos, SelLinePos, SelCharPos, i, True
-					tb->txtCode.ChangeText .Items.Item(ItemIndex)->Text & Symbol
-					i = SelCharPos + Len(.Items.Item(ItemIndex)->Text & Symbol)
-				#endif
 				'tb->txtCode.SetSelection SelLinePos, SelLinePos, i, i
 			End If
 		End If
 		tb->txtCode.SetFocus
-		#ifdef __USE_GTK__
 			tb->txtCode.CloseDropDown
-		#endif
 	End With
 End Sub
 
@@ -3750,7 +3692,6 @@ Function AddSorted(tb As TabWindow Ptr, ByRef Text As WString, te As TypeElement
 	ElseIf te->ElementType = E_Keyword OrElse te->ElementType = E_KeywordFunction OrElse te->ElementType = E_KeywordSub OrElse te->ElementType = E_KeywordOperator Then
 		imgKeyNew = "StandartTypes"
 	End If
-	#ifdef __USE_GTK__
 		Dim iIndex As Integer = -1
 		With tb->txtCode.lvIntellisense.ListItems
 			For i As Integer = 0 To .Count - 1
@@ -3763,19 +3704,6 @@ Function AddSorted(tb As TabWindow Ptr, ByRef Text As WString, te As TypeElement
 			Var item = .Add(Text, imgKeyNew, , , iIndex)
 			item->Tag = te
 		End With
-	#else
-		Dim iIndex As Integer = -1
-		With tb->txtCode.cboIntellisense.Items
-			For i As Integer = 0 To .Count - 1
-				If LCase(.Item(i)->Text) = LCase(Text) Then
-					Return True
-				ElseIf LCase(.Item(i)->Text) > LCase(Text) Then
-					iIndex = i: Exit For
-				End If
-			Next i
-			.Add Text, te, imgKeyNew, imgKeyNew, , , iIndex
-		End With
-	#endif
 	Return True
 	Exit Function
 	ErrorHandler:
@@ -3880,11 +3808,7 @@ End Sub
 Sub FillAllIntellisenses(ByRef Starts As WString = "")
 	Var tb = Cast(TabWindow Ptr, ptabCode->SelectedTab)
 	If tb = 0 Then Exit Sub
-	#ifdef __USE_GTK__
 		tb->txtCode.lvIntellisense.ListItems.Clear
-	#else
-		tb->txtCode.cboIntellisense.Items.Clear
-	#endif
 	If Not AddSorted(tb, "_", , Starts) Then Exit Sub
 	Dim As Integer iSelStartLine, iSelEndLine, iSelStartChar, iSelEndChar
 	tb->txtCode.GetSelection iSelStartLine, iSelEndLine, iSelStartChar, iSelEndChar
@@ -3980,11 +3904,7 @@ End Sub
 Sub FillTypeIntellisenses(ByRef Starts As WString = "")
 	Var tb = Cast(TabWindow Ptr, ptabCode->SelectedTab)
 	If tb = 0 Then Exit Sub
-	#ifdef __USE_GTK__
 		tb->txtCode.lvIntellisense.ListItems.Clear
-	#else
-		tb->txtCode.cboIntellisense.Items.Clear
-	#endif
 	Dim As Integer iSelStartLine, iSelEndLine, iSelStartChar, iSelEndChar
 	tb->txtCode.GetSelection iSelStartLine, iSelEndLine, iSelStartChar, iSelEndChar
 	Dim As EditControlLine Ptr ECLine = tb->txtCode.Content.Lines.Item(iSelEndLine)
@@ -4053,7 +3973,6 @@ Function AddFileSorted(tb As TabWindow Ptr, ByRef Text As WString, ByRef Starts 
 	If c > IntellisenseLimit Then Return False
 	Dim As String imgKeyNew = imgKey
 	If imgKeyNew = "" Then imgKeyNew = GetIconName(Text)
-	#ifdef __USE_GTK__
 		Dim iIndex As Integer = -1
 		With tb->txtCode.lvIntellisense.ListItems
 			For i As Integer = 0 To .Count - 1
@@ -4065,19 +3984,6 @@ Function AddFileSorted(tb As TabWindow Ptr, ByRef Text As WString, ByRef Starts 
 			Next i
 			Var item = .Add(Text, imgKeyNew, , , iIndex)
 		End With
-	#else
-		Dim iIndex As Integer = -1
-		With tb->txtCode.cboIntellisense.Items
-			For i As Integer = 0 To .Count - 1
-				If LCase(.Item(i)->Text) = LCase(Text) Then
-					Return True
-				ElseIf LCase(.Item(i)->Text) > LCase(Text) Then
-					iIndex = i: Exit For
-				End If
-			Next i
-			.Add Text, 0, imgKeyNew, imgKeyNew, , , iIndex
-		End With
-	#endif
 	Return True
 	Exit Function
 	ErrorHandler:
@@ -4105,11 +4011,7 @@ End Function
 Sub FillFileIntellisenses(ByRef Path As WString = "", ByRef Starts As WString = "")
 	Var tb = Cast(TabWindow Ptr, ptabCode->SelectedTab)
 	If tb = 0 Then Exit Sub
-	#ifdef __USE_GTK__
 		tb->txtCode.lvIntellisense.ListItems.Clear
-	#else
-		tb->txtCode.cboIntellisense.Items.Clear
-	#endif
 	Dim c As Integer
 	If Path <> "" Then
 		If Not AddPaths(tb, Path, Starts, c) Then Exit Sub
@@ -4180,19 +4082,10 @@ Sub FindComboIndex(tb As TabWindow Ptr, ByRef sLine As WString, iEndChar As Inte
 	For i As Integer = iEndChar + 1 To Len(sLine)
 		If CInt(IsArg(Asc(Mid(sLine, i, 1)))) OrElse CInt(Mid(sLine, i, 1) = "#") Then WAdd(sTempRight, Mid(sLine, i, 1)) Else Exit For
 	Next
-	#ifdef __USE_GTK__
 		With tb->txtCode.lvIntellisense
-	#else
-		With tb->txtCode.cboIntellisense
-	#endif
 		Dim As Integer Ekv, EkvOld, iPos = -1, i
-		#ifdef __USE_GTK__
 			For i = 0 To .ListItems.Count - 1
 				Ekv = Ekvivalent(.ListItems.Item(i)->Text(0), *sTempRight)
-		#else
-			For i = 0 To .Items.Count - 1
-				Ekv = Ekvivalent(.Items.Item(i)->Text, *sTempRight)
-		#endif
 			If Ekv < EkvOld Then
 				Exit For
 			ElseIf Ekv > EkvOld Then
@@ -4200,19 +4093,11 @@ Sub FindComboIndex(tb As TabWindow Ptr, ByRef sLine As WString, iEndChar As Inte
 			End If
 			EkvOld = Ekv
 		Next
-		#ifdef __USE_GTK__
 			.SelectedItemIndex = iPos
-		#else
-			.ItemIndex = iPos
-		#endif
 		tb->txtCode.LastItemIndex = iPos
 		tb->txtCode.FocusedItemIndex = iPos
 		If iPos > 0 Then
-			#ifdef __USE_GTK__
 				If CInt(*sTempRight = "") OrElse CInt(Not StartsWith(LCase(.ListItems.Item(i - 1)->Text(0)), LCase(*sTempRight))) Then
-			#else
-				If CInt(*sTempRight = "") OrElse CInt(Not StartsWith(LCase(.Items.Item(i - 1)->Text), LCase(*sTempRight))) Then
-			#endif
 				tb->txtCode.LastItemIndex = -1
 			End If
 		End If
@@ -4257,12 +4142,8 @@ Sub FillIntellisenseByName(Value As String, TypeName As String, Starts As String
 	End If
 	FListItems.Clear
 	If Not NotClear Then
-		#ifdef __USE_GTK__
 			tb->txtCode.lvIntellisense.ListItems.Clear
 			tb->txtCode.lvIntellisense.Sort = ssSortAscending
-		#else
-			tb->txtCode.cboIntellisense.Items.Clear
-		#endif
 	End If
 	Dim As TypeElement Ptr te, te1
 	Dim As Integer Pos1
@@ -4319,12 +4200,8 @@ Sub FillIntellisenseByName(Value As String, TypeName As String, Starts As String
 		If NotClear Then
 			If Not AddSorted(tb, FListItems.Item(i), te, Starts) Then Exit Sub
 		Else
-			#ifdef __USE_GTK__
 				Var lvItem = tb->txtCode.lvIntellisense.ListItems.Add(FListItems.Item(i), imgKey)
 				lvItem->Tag = te
-			#else
-				tb->txtCode.cboIntellisense.Items.Add FListItems.Item(i), te, imgKey, imgKey
-			#endif
 		End If
 	Next i
 End Sub
@@ -4333,7 +4210,6 @@ Sub SetParametersFromDropDown()
 	Dim As TabWindow Ptr tb = Cast(TabWindow Ptr, ptabCode->SelectedTab)
 	If tb = 0 Then Exit Sub
 	Dim As Integer Index
-	#ifdef __USE_GTK__
 		Index = tb->txtCode.lvIntellisense.SelectedItemIndex
 		If Index = -1 Then Exit Sub
 		With *tb->txtCode.lvIntellisense.ListItems.Item(Index)
@@ -4344,28 +4220,10 @@ Sub SetParametersFromDropDown()
 				If tb->txtCode.HintDropDown = "" Then tb->txtCode.HintDropDown = .Text(0)
 			End If
 		End With
-	#else
-		Index = tb->txtCode.cboIntellisense.ItemIndex
-		If Index = -1 Then Exit Sub
-		With tb->txtCode.cboIntellisense
-			If tb->txtCode.FileDropDown Then
-				tb->txtCode.HintDropDown = .Text
-			Else
-				Dim As String sWord = .Item(Index)
-				Dim As TypeElement Ptr te = .ItemData(Index)
-				tb->txtCode.HintDropDown = GetParameters(sWord, te, tb->txtCode.DropDownTypeElement)
-				If tb->txtCode.HintDropDown = "" Then tb->txtCode.HintDropDown = .Text
-			End If
-		End With
-	#endif
 	tb->txtCode.UpdateDropDownToolTip
 End Sub
 
-#ifdef __USE_GTK__
 	Sub Intellisense_SelectedItemChanged(ByRef Designer As My.Sys.Object, ByRef Sender As ListView, ByVal ItemIndex As Integer)
-#else
-	Sub Intellisense_SelectedItemChanged(ByRef Designer As My.Sys.Object, ByRef Sender As ComboBoxEdit)
-#endif
 	SetParametersFromDropDown
 End Sub
 
@@ -4441,31 +4299,16 @@ Sub CompleteWord
 			FillAllIntellisenses sTemp
 		End If
 	End If
-	#ifdef __USE_GTK__
 		If tb->txtCode.lvIntellisense.ListItems.Count = 0 Then OldWord = sTemp: Exit Sub
 		With tb->txtCode.lvIntellisense
-	#else
-		If tb->txtCode.cboIntellisense.Items.Count = 0 Then OldWord = sTemp: Exit Sub
-		With tb->txtCode.cboIntellisense
-	#endif
 		FindComboIndex(tb, *sLine, SelCharPos)
-		#ifdef __USE_GTK__
 			If CInt(tb->txtCode.LastItemIndex <> -1 AndAlso tb->txtCode.LastItemIndex < .ListItems.Count) AndAlso _
 				CInt(Not StartsWith(LCase(.ListItems.Item(tb->txtCode.LastItemIndex)->Text(0)), LCase(sTemp))) Then
-		#else
-			If CInt(tb->txtCode.LastItemIndex <> -1 AndAlso tb->txtCode.LastItemIndex < .Items.Count) AndAlso _
-				CInt(Not StartsWith(LCase(.Items.Item(tb->txtCode.LastItemIndex)->Text), LCase(sTemp))) Then
-		#endif
 			Dim i As Integer = GetNextCharIndex(*sLine, SelCharPos)
-			#ifdef __USE_GTK__
 				If tb->txtCode.lvIntellisense.SelectedItem Then
 					tb->txtCode.ReplaceLine iSelEndLine, ..Left(*sLine, SelCharPos) & .SelectedItem->Text(0) & Mid(*sLine, i + 1)
 					i = SelCharPos + Len(.SelectedItem->Text(0))
 				End If
-			#else
-				tb->txtCode.ReplaceLine iSelEndLine, ..Left(*sLine, SelCharPos) & .Text & Mid(*sLine, i + 1)
-				i = SelCharPos + Len(.Text)
-			#endif
 			tb->txtCode.SetSelection SelLinePos, SelLinePos, i, i
 			Exit Sub
 		End If
@@ -5093,11 +4936,9 @@ End Sub
 Sub OnKeyDownEdit(ByRef Designer As My.Sys.Object, ByRef Sender As Control, Key As Integer, Shift As Integer)
 	Var tb = Cast(TabWindow Ptr, Sender.Tag)
 	If tb = 0 Then Exit Sub
-	#ifdef __USE_GTK__
 		If Key = GDK_KEY_SPACE AndAlso (Shift And GDK_CONTROL_MASK) Then
 			CompleteWord
 		End If
-	#endif
 	If CBool(Key = 32) AndAlso tb->txtCode.DropDownShowed AndAlso Not tb->txtCode.FileDropDown Then 
 		tb->txtCode.CloseDropDown
 	ElseIf CBool(Key = 8) AndAlso tb->txtCode.DropDownShowed AndAlso tb->txtCode.FileDropDown Then
@@ -5125,9 +4966,7 @@ Sub OnKeyDownEdit(ByRef Designer As My.Sys.Object, ByRef Sender As Control, Key 
 				SelLinePos = iSelEndLine
 				SelCharPos = Pos1
 				FindComboIndex tb, *sLine, iSelEndChar - 1
-				#ifdef __USE_GTK__
 					If tb->txtCode.LastItemIndex = -1 Then tb->txtCode.lvIntellisense.SelectedItemIndex = -1
-				#endif
 				tb->txtCode.DropDownTypeElement = 0
 				tb->txtCode.FileDropDown = True
 				SetParametersFromDropDown
@@ -5174,11 +5013,7 @@ Sub OnKeyPressEdit(ByRef Designer As My.Sys.Object, ByRef Sender As Control, Key
 		Dim As String TypeName = tb->txtCode.Content.GetLeftArgTypeName(iSelEndLine, iSelEndChar - k, te, Oldte, OldTypete, OldTypeName, Types) 'GetLeftArgTypeName(tb, iSelEndLine, iSelEndChar - k, te, , , Types)
 		If Trim(TypeName) = "" Then Exit Sub
 		FillIntellisenseByName tb->txtCode.GetWordAt(iSelEndLine, iSelEndChar - k), TypeName, , , , , Types, OldTypete
-		#ifdef __USE_GTK__
 			If tb->txtCode.lvIntellisense.ListItems.Count = 0 Then Exit Sub
-		#else
-			If tb->txtCode.cboIntellisense.Items.Count = 0 Then Exit Sub
-		#endif
 		SelLinePos = iSelEndLine
 		SelCharPos = iSelEndChar
 		FindComboIndex tb, *sLine, iSelEndChar
@@ -5207,11 +5042,7 @@ Sub OnKeyPressEdit(ByRef Designer As My.Sys.Object, ByRef Sender As Control, Key
 		Dim As TypeElement Ptr teEnum
 		Dim As String OldTypeName
 		Dim As String TypeName = tb->txtCode.Content.GetLeftArgTypeName(iSelEndLine, Len(RTrim(..Left(*sLine, iSelEndChar - 1))), teEnum, , , OldTypeName)
-		#ifdef __USE_GTK__
 			tb->txtCode.lvIntellisense.ListItems.Clear
-		#else
-			tb->txtCode.cboIntellisense.Items.Clear
-		#endif
 		Dim As TypeElement Ptr te
 		If TypeName = "" Then
 			Exit Sub
@@ -5246,9 +5077,7 @@ Sub OnKeyPressEdit(ByRef Designer As My.Sys.Object, ByRef Sender As Control, Key
 		SelLinePos = iSelEndLine
 		SelCharPos = iSelEndChar + 1
 		FindComboIndex tb, *sLine, iSelEndChar + 1
-		#ifdef __USE_GTK__
 			If tb->txtCode.LastItemIndex = -1 Then tb->txtCode.lvIntellisense.SelectedItemIndex = -1
-		#endif
 		tb->txtCode.DropDownTypeElement = 0
 		tb->txtCode.FileDropDown = False
 		SetParametersFromDropDown
@@ -5277,9 +5106,7 @@ Sub OnKeyPressEdit(ByRef Designer As My.Sys.Object, ByRef Sender As Control, Key
 			SelLinePos = iSelEndLine
 			SelCharPos = iSelEndChar
 			FindComboIndex tb, *sLine, iSelEndChar
-			#ifdef __USE_GTK__
 				If tb->txtCode.LastItemIndex = -1 Then tb->txtCode.lvIntellisense.SelectedItemIndex = -1
-			#endif
 			tb->txtCode.DropDownTypeElement = 0
 			tb->txtCode.FileDropDown = False
 			SetParametersFromDropDown
@@ -5305,9 +5132,7 @@ Sub OnKeyPressEdit(ByRef Designer As My.Sys.Object, ByRef Sender As Control, Key
 			SelLinePos = iSelEndLine
 			SelCharPos = iSelEndChar
 			FindComboIndex tb, *sLine, iSelEndChar
-			#ifdef __USE_GTK__
 				If tb->txtCode.LastItemIndex = -1 Then tb->txtCode.lvIntellisense.SelectedItemIndex = -1
-			#endif
 			tb->txtCode.DropDownTypeElement = 0
 			tb->txtCode.FileDropDown = True
 			SetParametersFromDropDown
@@ -5319,20 +5144,14 @@ Sub OnKeyPressEdit(ByRef Designer As My.Sys.Object, ByRef Sender As Control, Key
 			If tb->IsNew Then GetIncludeFiles tb->txtCode.Content, 0
 		Else
 			If Key <> 8 AndAlso Key <> 127 Then
-				#ifdef __USE_GTK__
 					If tb->txtCode.lvIntellisense.ListItems.Count = 0 Then Exit Sub
-				#else
-					If tb->txtCode.cboIntellisense.ItemCount = 0 Then Exit Sub
-				#endif
 			End If
 		End If
-		#ifdef __USE_GTK__
 			If Key = GDK_KEY_Home OrElse Key = GDK_KEY_End OrElse Key = GDK_KEY_Left OrElse Key = GDK_KEY_Right OrElse _
 				Key = GDK_KEY_Escape OrElse Key = GDK_KEY_Escape OrElse Key = GDK_KEY_Up OrElse Key = GDK_KEY_Down OrElse _
 				Key = GDK_KEY_Page_Up OrElse Key = GDK_KEY_Page_Down Then
 				Exit Sub
 			End If
-		#endif
 		Dim As Integer iSelStartLine, iSelEndLine, iSelStartChar, iSelEndChar, k
 		tb->txtCode.GetSelection iSelStartLine, iSelEndLine, iSelStartChar, iSelEndChar
 		Dim sLine As WString Ptr = @tb->txtCode.Lines(iSelEndLine)
@@ -5356,30 +5175,10 @@ Sub OnKeyPressEdit(ByRef Designer As My.Sys.Object, ByRef Sender As Control, Key
 				End If
 			End If
 		End If
-		#ifdef __USE_GTK__
 			If tb->txtCode.lvIntellisense.ListItems.Count = 0 Then OldWord = sTemp: Exit Sub
-		#else
-			If tb->txtCode.cboIntellisense.ItemCount = 0 Then 
-				OldWord = sTemp: Exit Sub
-			Else
-				Dim As HWND h = Cast(HWND, SendMessage(tb->txtCode.cboIntellisense.Handle, CBEM_GETCOMBOCONTROL, 0, 0))
-				Dim As COMBOBOXINFO cbINFO
-				cbINFO.cbSize = SizeOf(COMBOBOXINFO)
-				GetComboBoxInfo(h, @cbINFO)
-				If cbINFO.hwndList Then
-					Dim As Rect rc
-					GetWindowRect cbINFO.hwndList, @rc
-					MoveWindow cbINFO.hwndList, rc.Left, rc.Top, rc.Right - rc.Left, Max(1, Min(tb->txtCode.cboIntellisense.ItemCount, 7)) * tb->ScaleY(tb->txtCode.cboIntellisense.ItemHeight) + 2, True
-				End If
-			End If
-		#endif
 		If OldWord <> "" Then OldWord = ""
 		FindComboIndex tb, *sLine, tb->txtCode.DropDownChar
-		#ifdef __USE_GTK__
 			If tb->txtCode.LastItemIndex = -1 Then tb->txtCode.lvIntellisense.SelectedItemIndex = -1
-		#else
-			If tb->txtCode.LastItemIndex = -1 Then tb->txtCode.cboIntellisense.ItemIndex = -1
-		#endif
 	ElseIf AutoComplete AndAlso (CBool(Key >= Asc("A") AndAlso Key <= Asc("Z")) OrElse CBool(Key >= Asc("a") AndAlso Key <= Asc("z")) OrElse CBool(Key = Asc("_"))) Then
 		CompleteWord
 	End If
@@ -5473,8 +5272,6 @@ Sub TabWindow.SetGraphicProperty(Ctrl As Any Ptr, PropertyName As String, TypeNa
 	End Select
 End Sub
 
-#ifdef __USE_GTK__
-	#ifdef __USE_GTK3__
 		Function Overlay_get_child_position(self As GtkOverlay Ptr, widget As GtkWidget Ptr, allocation As GdkRectangle Ptr, user_data As Any Ptr) As Boolean
 			Dim As Designer Ptr Des = user_data
 			allocation->x = Cast(Integer, g_object_get_data(G_OBJECT(widget), "@@@Left"))
@@ -5483,8 +5280,6 @@ End Sub
 			allocation->height = Des->DotSize
 			Return True
 		End Function
-	#endif
-#endif
 
 Function TabWindow.FindControlIndex(ArgName As String) As Integer
 	Dim i As Integer = 2
@@ -8824,12 +8619,10 @@ Sub TabWindow.FormDesign(NotForms As Boolean = False)
 						Des->OnClickProperties = @DesignerClickProperties
 						Des->OnModified = @DesignerModified
 						Des->TopMenu = @pnlTopMenu
-						#ifdef __USE_GTK3__
 							Des->overlay = pnlForm.overlaywidget
 							If Des->overlay Then
 								g_signal_connect(Des->overlay, "get-child-position", G_CALLBACK(@Overlay_get_child_position), Des)
 							End If
-						#endif
 						Des->xdpi = xdpi
 						Des->ydpi = ydpi
 						pnlTopMenu.Visible = False
@@ -8856,12 +8649,7 @@ Sub TabWindow.FormDesign(NotForms As Boolean = False)
 							Dim As SymbolsType Ptr stDesignControl = Des->Symbols(.DesignControl)
 							If stDesignControl AndAlso stDesignControl->WritePropertyFunc Then
 								stDesignControl->WritePropertyFunc(.DesignControl, "IsChild", @bTrue)
-								#ifdef __USE_GTK__
 									stDesignControl->WritePropertyFunc(.DesignControl, "ParentWidget", pnlForm.widget)
-								#else
-									Dim As HWND pnlFormHandle = pnlForm.Handle
-									stDesignControl->WritePropertyFunc(.DesignControl, "ParentHandle", @pnlFormHandle)
-								#endif
 								stDesignControl->WritePropertyFunc(.DesignControl, "xdpi", @xdpi)
 								stDesignControl->WritePropertyFunc(.DesignControl, "ydpi", @ydpi)
 								stDesignControl->WritePropertyFunc(.DesignControl, "DesignMode", @bTrue)
@@ -8871,7 +8659,6 @@ Sub TabWindow.FormDesign(NotForms As Boolean = False)
 								End If
 							End If
 							If stDesignControl AndAlso stDesignControl->ReadPropertyFunc Then
-								#ifdef __USE_GTK__
 									Dim As GtkWidget Ptr DCLayoutWidget = stDesignControl->ReadPropertyFunc(.DesignControl, "LayoutWidget")
 									If DCLayoutWidget <> 0 Then
 										.layoutwidget = DCLayoutWidget
@@ -8881,13 +8668,6 @@ Sub TabWindow.FormDesign(NotForms As Boolean = False)
 									If DCWidget <> 0 Then
 										.Dialog = DCWidget
 									End If
-								#else
-									Dim As HWND Ptr DCHandle = stDesignControl->ReadPropertyFunc(.DesignControl, "Handle")
-									If DCHandle <> 0 Then
-										SetParent *DCHandle, pnlForm.Handle
-										.Dialog = *DCHandle
-									End If
-								#endif
 							End If
 							RequestAlign
 						End With
@@ -9005,14 +8785,8 @@ Sub TabWindow.FormDesign(NotForms As Boolean = False)
 										Result = WriteObjProperty(Ctrl, PropertyName, *FLine2, True)
 										If Result Then
 											If st AndAlso st->ReadPropertyFunc Then
-												#ifdef __USE_GTK__
 													If LCase(PropertyName) = "parent" AndAlso st->ReadPropertyFunc(Ctrl, "Widget") Then
 														Des->HookControl(st->ReadPropertyFunc(Ctrl, "Widget"))
-												#else
-													Dim hwnd1 As HWND Ptr = st->ReadPropertyFunc(Ctrl, "Handle")
-													If LCase(PropertyName) = "parent" AndAlso hwnd1 AndAlso *hwnd1 Then
-														Des->HookControl(*hwnd1)
-												#endif
 													If SelControlNames.Contains(QWString(st->ReadPropertyFunc(Ctrl, "Name"))) Then
 														Des->SelectedControls.Add Ctrl
 													End If
@@ -9028,12 +8802,10 @@ Sub TabWindow.FormDesign(NotForms As Boolean = False)
 													If CurrentToolBarName = CtrlName Then pfMenuEditor->CurrentToolBar = Ctrl
 													If CurrentStatusBarName = CtrlName Then pfMenuEditor->CurrentStatusBar = Ctrl
 												End If
-												#ifdef __USE_GTK__
 													Var CtrlWidget = st->ReadPropertyFunc(Ctrl, "Widget")
 													If GTK_IS_WIDGET(CtrlWidget) Then
 														gtk_widget_show(CtrlWidget)
 													End If
-												#endif
 											End If
 										End If
 									End If
@@ -9142,15 +8914,9 @@ Sub TabWindow.FormDesign(NotForms As Boolean = False)
 	If CInt(NotForms = False) AndAlso CInt(Des) AndAlso CInt(Des->DesignControl) Then
 		If Not bSelControlFind Then
 			Des->SelectedControl = Des->DesignControl
-			#ifdef __USE_GTK__
 				Dim As GtkWidget Ptr widget
 				If Des->SymbolsReadProperty(Des->SelectedControl) Then widget = Des->Symbols(Des->SelectedControl)->ReadPropertyFunc(Des->SelectedControl, "Widget")
 				If widget <> 0 Then gtk_widget_show_all(widget)
-			#else
-				Dim As HWND Ptr DesCtrlHandle
-				If Des->SymbolsReadProperty(Des->SelectedControl) Then DesCtrlHandle = Des->Symbols(Des->SelectedControl)->ReadPropertyFunc(Des->DesignControl, "Handle")
-				Des->MoveDots Des->DesignControl, False
-			#endif
 			If Des->SelectedControls.Count > 1 Then Des->MoveDots Des->SelectedControl, False
 		End If
 		Dim As WString * 2048 PropertyName, TempWS
@@ -9463,11 +9229,7 @@ Constructor TabWindow(ByRef wFileName As WString = "", bNew As Boolean = False, 
 	txtCode.Content.FileName = ML("Untitled")
 	txtCode.Tag = @This
 	txtCode.ShowHint = False
-	#ifdef __USE_GTK__
 		txtCode.lvIntellisense.OnSelectedItemChanged = @Intellisense_SelectedItemChanged
-	#else
-		txtCode.cboIntellisense.OnChange = @Intellisense_SelectedItemChanged
-	#endif
 	txtCode.OnMouseMove = @OnMouseMoveEdit
 	txtCode.OnMouseHover = @OnMouseHoverEdit
 	This.Width = 180
@@ -9476,11 +9238,7 @@ Constructor TabWindow(ByRef wFileName As WString = "", bNew As Boolean = False, 
 	LastButton = "CodeAndForm"
 	lvPropertyWidth = 150
 	btnClose.tbParent = @This
-	#ifdef __USE_GTK__
 		pnlTop.Height = 33
-	#else
-		pnlTop.Height = 25
-	#endif
 	pnlTop.Width = This.Width
 	tbrTop.Width = This.Width
 	txtCode.ContextMenu = @mnuCode
@@ -9493,18 +9251,8 @@ Constructor TabWindow(ByRef wFileName As WString = "", bNew As Boolean = False, 
 	splForm.Align = SplitterAlignmentConstants.alRight
 	cboClass.ImagesList = pimgListTools
 	tbrTop.ImagesList = pimgList
-	#ifdef __USE_GTK__
-		#ifdef __USE_GTK3__
 			cboClass.Height = 20
 			cboFunction.Height = 20
-		#else
-			cboClass.Height = 30
-			cboFunction.Height = 30
-		#endif
-	#else
-		cboClass.DropDownCount = 30
-		cboFunction.DropDownCount = 30
-	#endif
 	cboClass.Anchor.Left = asAnchor
 	cboClass.OnSelected = @cboClass_Change
 	cboClass.ImagesList = pimgListTools
@@ -9548,34 +9296,17 @@ Constructor TabWindow(ByRef wFileName As WString = "", bNew As Boolean = False, 
 	End If
 	IsNew = bNew OrElse wFileName = ""
 	pnlForm.Top = -500
-	#ifdef __USE_GTK__
-		#ifdef __USE_GTK3__
 			pnlForm.overlaywidget = gtk_overlay_new()
 			gtk_container_add(GTK_CONTAINER(pnlForm.overlaywidget), pnlForm.Handle)
 			pnlForm.scrolledwidget = gtk_scrolled_window_new(NULL, NULL)
 			gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(pnlForm.scrolledwidget), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC)
 			gtk_container_add(GTK_CONTAINER(pnlForm.scrolledwidget), pnlForm.overlaywidget)
-		#else
-			pnlForm.scrolledwidget = gtk_scrolled_window_new(NULL, NULL)
-			gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(pnlForm.scrolledwidget), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC)
-			gtk_container_add(GTK_CONTAINER(pnlForm.scrolledwidget), pnlForm.Handle)
-		#endif
-	#else
-		pnlForm.Style = pnlForm.Style Or WS_HSCROLL Or WS_VSCROLL
-	#endif
 	pnlCode.Add @txtCode
 	This.Add @tbrTop
 	This.Add @pnlForm
 	This.Add @splForm
 	This.Add @pnlCode
-	#ifdef __USE_GTK__
 		txtCode.lvIntellisense.OnItemActivate = @lvIntellisense_ItemActivate
-	#else
-		txtCode.cboIntellisense.ImagesList = pimgList
-		txtCode.cboIntellisense.OnDropDown = @cboIntellisense_DropDown
-		txtCode.cboIntellisense.OnCloseUp = @cboIntellisense_CloseUp
-		txtCode.cboIntellisense.OnSelected = @cboIntellisense_Selected
-	#endif
 	If TreeN <> 0 Then
 		tn = TreeN
 	Else
@@ -9844,28 +9575,12 @@ Sub PipeCmd(ByRef file As WString, ByRef cmd As WString, MainThread As Boolean =
 	Dim As WString Ptr fileW, cmdW
 	'WLet fileW, file
 	'WLet cmdW, cmd
-	#ifdef __USE_GTK__
 		Dim As Long result = Shell(cmd)
 		If Not MainThread Then ThreadsEnter
 		If result = -1 Then MsgBox ML("Error: Couldn't Create Process") & Chr(10) & cmd
 		If Not MainThread Then ThreadsLeave
-	#else
-		WLet(cmdW, "cmd /c """ + cmd + """|clip")
-		Dim PI As PROCESS_INFORMATION
-		Dim SI As STARTUPINFO
-		SI.wShowWindow = SW_HIDE
-		SI.cb = SizeOf(STARTUPINFO)
-		SI.dwFlags = STARTF_USESHOWWINDOW
-		CreateProcess(0, cmdW, 0, 0, 1, NORMAL_PRIORITY_CLASS, 0, 0, @SI, @PI)
-		WaitForSingleObject(PI.hProcess, INFINITE)
-		CloseHandle(PI.hProcess)
-		CloseHandle(PI.hThread)
-		Dim As Integer result = GetLastError()
-		If result <> 0 Then MsgBox ML("Error: Couldn't Create Process") & Chr(13, 10) & GetErrorString(result) & Chr(13, 10) & cmd
-	#endif
 End Sub
 
-#ifdef __USE_GTK__
 	Function build_create_shellscript(ByRef working_dir As WString, ByRef cmd As WString, autoclose As Boolean, bDebug As Boolean = False, ByRef Arguments As WString = "") As String
 		Dim As Boolean Bit32 = tbt32Bit->Checked
 		Dim As WString Ptr DebuggerPath = IIf(Bit32, Debugger32Path, Debugger64Path)
@@ -9886,7 +9601,6 @@ End Sub
 		ScriptPath = "sh " & ScriptPath
 		Return ScriptPath
 	End Function
-#endif
 
 
 
@@ -10284,30 +9998,14 @@ Function CheckCondition(ByRef sLine As WString, ForWindows As Boolean) As Boolea
 		Return Not CheckCondition(Mid(sLine, 5), ForWindows)
 	Else
 		Select Case sLine
-		Case "__fb_win32__", "defined(__fb_win32__)"
-			If ForWindows Then
-				Return True
-			Else
-					Return False
-			End If
 		Case "__fb_linux__", "defined(__fb_linux__)"
-			#ifdef __FB_LINUX__
 				Return True
-			#else
-				Return False
-			#endif
 		Case "__fb_main__", "defined(__fb_main__)"
 			Return True
 		Case "__fb_64bit__", "defined(__fb_64bit__)"
 			Return tbt64Bit->Checked
-		Case "__use_winapi__", "defined(__use_winapi__)"
-			Return InStr(LCase(UseDefine), "__use_winapi__") > 0
-		Case "__use_gtk2__", "defined(__use_gtk2__)"
-			Return InStr(LCase(UseDefine), "__use_gtk2__") > 0
 		Case "__use_gtk3__", "defined(__use_gtk3__)"
 			Return InStr(LCase(UseDefine), "__use_gtk3__") > 0
-		Case "__use_gtk4__", "defined(__use_gtk4__)"
-			Return InStr(LCase(UseDefine), "__use_gtk4__") > 0
 		Case "__use_gtk__", "defined(__use_gtk__)"
 			Return InStr(LCase(UseDefine), "__use_gtk__") > 0
 		Case Else
@@ -10356,11 +10054,7 @@ Function GetFirstCompileLine(ByRef FileName As WString, ByRef Project As Project
 		If ForWindows Then
 			Result += " " & IIf(Bit32, *Project->CompilationArguments32Windows, WGet(Project->CompilationArguments64Windows))
 		Else
-			#ifdef __USE_GTK__
 				Result += " " & IIf(Bit32, *Project->CompilationArguments32Linux, WGet(Project->CompilationArguments64Linux))
-			#else
-				Result += " " & IIf(Bit32, *Project->CompilationArguments32Windows, WGet(Project->CompilationArguments64Windows))
-			#endif
 		End If
 		Select Case Project->ProjectType
 		Case 0
@@ -10771,7 +10465,6 @@ Sub RunPr(Debugger As String = "", ByRef ProjectFileName As WString, ByRef Proje
 			ShowMessages(Time & ": " & ML("Application do not run. Error code") & ": " & ML("File not found") & ": " & *ExeFileName)
 			Exit Sub
 		End If
-		#ifdef __USE_GTK__
 			Dim As GPid pid = 0
 			Dim As WString Ptr Arguments
 			WLet(Arguments, *RunArguments)
@@ -10804,149 +10497,6 @@ Sub RunPr(Debugger As String = "", ByRef ProjectFileName As WString, ByRef Proje
 			ShowMessages(Time & ": " & ML("Application finished. Returned code") & ": " & Result & " - " & Err2Description(Result))
 			CheckProfiler GetFolderName(*ExeFileName), *ExeFileName
 			ThreadsLeave()
-		#else
-			Dim As Integer pClass
-			Dim As WString Ptr Workdir, CmdL
-			Dim As ULong ExitCode 
-			If EndsWith(*ExeFileName, ".html") Then
-				WLet(CmdL, "explorer http://localhost:8000/" & GetFileName(*ExeFileName))
-			Else
-				WLet(CmdL, """" & *ExeFileName & """ " & *RunArguments)
-				If ProjectCommandLineArguments <> "" Then WAdd(CmdL, " " & ProjectCommandLineArguments)
-				Var Pos1 = InStrRev(*ExeFileName, Slash)
-				If Pos1 = 0 Then Pos1 = Len(*ExeFileName)
-				WLet(Workdir, Left(*ExeFileName, Pos1))
-				If WGet(TerminalPath) <> "" Then
-					Dim As ToolType Ptr Tool
-					Dim As Integer Idx = pTerminals->IndexOfKey(*CurrentTerminal)
-					If Idx <> - 1 Then
-						Tool = pTerminals->Item(Idx)->Object
-						WLet(CmdL, Tool->GetCommand(*ExeFileName) & " " & *RunArguments)
-					End If
-					'WLetEx CmdL, " /K ""cd /D """ & *Workdir & """ & " & *CmdL & """", True
-					WLet(ExeFileName, Replace(WGet(TerminalPath), BackSlash, Slash))
-				End If
-			End If
-			ShowMessages(Time & ": " & ML("Run") & ": " & *CmdL + " ...")
-			If InStr(FirstLine & CompileLine, "-s gui") Then
-				#define BufferSize 2048
-				Dim si As STARTUPINFO
-				Dim pi As PROCESS_INFORMATION
-				Dim sa As SECURITY_ATTRIBUTES
-				Dim hReadPipe As HANDLE
-				Dim hWritePipe As HANDLE
-				Dim zBuffer As ZString * BufferSize
-				Dim wBuffer As WString * BufferSize
-				Dim sOutput As WString * BufferSize
-				Dim bytesRead As DWORD
-				Dim As Integer result1, nPos, nPos1
-				sa.nLength = SizeOf(SECURITY_ATTRIBUTES)
-				sa.lpSecurityDescriptor = NULL
-				sa.bInheritHandle = True
-				
-				If CreatePipe(@hReadPipe, @hWritePipe, @sa, 0) = 0 Then
-					ShowMessages(ML("Error: Couldn't Create Pipe"), False)
-					If Workdir Then _Deallocate(Workdir)
-					If CmdL Then _Deallocate(CmdL)
-					ChangeEnabledDebug True, False, False
-					Exit Sub
-				End If
-				
-				si.cb = Len(STARTUPINFO)
-				si.dwFlags = STARTF_USESTDHANDLES Or STARTF_USESHOWWINDOW
-				si.hStdOutput = hWritePipe
-				si.hStdError = hWritePipe
-				si.wShowWindow = SW_SHOW
-				pClass = NORMAL_PRIORITY_CLASS Or CREATE_UNICODE_ENVIRONMENT Or CREATE_NEW_CONSOLE
-				ChDir(GetFolderName(*ExeFileName))
-				If CreateProcess(0, *CmdL, @sa, @sa, 1, pClass, 0, 0, @si, @pi) = 0 Then
-					ShowMessages(ML("Error: Couldn't Create Process"), False)
-					If Workdir Then _Deallocate(Workdir)
-					If CmdL Then _Deallocate(CmdL)
-					ChangeEnabledDebug True, False, False
-					Exit Sub
-				End If
-				CloseHandle hWritePipe
-				Do
-					result1 = ReadFile(hReadPipe, @zBuffer, BufferSize, @bytesRead, ByVal 0)
-					Var bExistsNull = False
-					For i As Integer = 0 To bytesRead - 1
-						If zBuffer[i] = 0 Then
-							bExistsNull = True
-							Exit For
-						End If
-					Next
-					wBuffer = ""
-					If bExistsNull Then
-						Var i = 0
-						Do While i < bytesRead
-							If zBuffer[i] = 0 Then
-							ElseIf zBuffer[i] >= 48 /'0'/ AndAlso zBuffer[i] <= 57 /'9'/ OrElse zBuffer[i] = 32 /' '/ OrElse zBuffer[i] = 10 OrElse zBuffer[i] = 13 Then
-								wBuffer &= Chr(zBuffer[i])
-							Else
-								wBuffer &= Left(*Cast(WString Ptr, @zBuffer[i]), 1)
-								i += 1
-							End If
-							i += 1
-						Loop
-					Else
-						wBuffer = Left(zBuffer, bytesRead)
-					End If
-					Var Pos1 = InStrRev(wBuffer, Chr(10))
-					If Pos1 > 0 Then
-						Dim res() As WString Ptr
-						sOutput += Left(wBuffer, Pos1 - 1)
-						Split sOutput, WChr(10), res()
-						For i As Integer = 0 To UBound(res)
-							ShowMessages *res(i)
-							If Len(*res(i)) <= 1 Then Continue For
-							If InStr(*res(i), Chr(13)) > 0 Then *res(i) = Left(*res(i), Len(*res(i)) - 1)
-							_Deallocate(res(i)): res(i) = 0
-						Next i
-						Erase res
-						sOutput = ""
-					Else
-						sOutput += wBuffer
-					End If
-				Loop While result1
-				If sOutput <> "" Then
-					ShowMessages sOutput
-				End If
-				CloseHandle pi.hProcess
-				CloseHandle pi.hThread
-				CloseHandle hReadPipe
-				result1 = GetLastError()
-				ShowMessages(Time & ": " & ML("Application finished. Returned code") & ": " & IIf(result1 = ERROR_BROKEN_PIPE, "0 - " & Err2Description(0), result1  & " - " & GetErrorString(result1)))
-				CheckProfiler *Workdir, *ExeFileName
-			Else
-				Dim SInfo As STARTUPINFO
-				Dim PInfo As PROCESS_INFORMATION
-				SInfo.cb = Len(SInfo)
-				SInfo.dwFlags = STARTF_USESHOWWINDOW
-				SInfo.wShowWindow = SW_NORMAL
-				pClass = CREATE_UNICODE_ENVIRONMENT Or CREATE_NEW_CONSOLE
-				ChDir(GetFolderName(*ExeFileName))
-				If CreateProcessW(NULL, CmdL, ByVal NULL, ByVal NULL, False, pClass, NULL, Workdir, @SInfo, @PInfo) Then
-					dbghand = PInfo.hProcess
-					prun = True
-					WaitForSingleObject PInfo.hProcess, INFINITE
-					GetExitCodeProcess(PInfo.hProcess, @ExitCode)
-					CloseHandle(PInfo.hProcess)
-					CloseHandle(PInfo.hThread)
-					prun = False
-					Result = ExitCode
-					ShowMessages(Time & ": " & ML("Application finished. Returned code") & ": " & Result & " - " & Err2Description(Result))
-					CheckProfiler *Workdir, *ExeFileName
-				Else
-					Result = GetLastError()
-					ShowMessages(Time & ": " & ML("Application do not run. Error code") & ": " & Result & " - " & GetErrorString(Result))
-				End If
-			End If
-			ChangeEnabledDebug True, False, False
-			RestoreStatusText
-			If Workdir Then _Deallocate(Workdir)
-			If CmdL Then _Deallocate(CmdL)
-		#endif
 	End If
 	If ExeFileName Then _Deallocate( ExeFileName)
 	Exit Sub

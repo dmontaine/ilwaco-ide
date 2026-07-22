@@ -29,10 +29,6 @@ Public:
 	FromPage As Integer     = 1
 	ToPage As Integer       = 3
 	
-	'Declare Property Left() As Integer
-	'Declare Property Left(value As Integer)
-	'Declare Property Top() As Integer
-	'Declare Property Top(value As Integer)
 	Declare Property SetupDialog() As Integer
 	Declare Property SetupDialog(value As Integer)
 	

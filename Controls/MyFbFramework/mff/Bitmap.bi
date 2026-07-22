@@ -14,9 +14,7 @@
 #include once "Object.bi"
 #include once "Graphics.bi"
 		#include once "gtk/gtk.bi"
-		#ifdef __USE_GTK3__
 			#include once "glib-object.bi"
-		#endif
 
 Namespace My.Sys.Drawing
 	#define QBitmapType(__Ptr__) (*Cast(BitmapType Ptr,__Ptr__))
@@ -38,18 +36,7 @@ Namespace My.Sys.Drawing
 			Declare Virtual Function WriteProperty(PropertyName As String, Value As Any Ptr) As Boolean
 		#endif
 		Graphic      As Any Ptr
-		#ifdef __USE_GTK__
 			Handle 		As GdkPixbuf Ptr
-		#elseif 0
-			Handle       As jobject
-		#elseif 0
-			Handle       As HBITMAP
-			pImage As GpImage Ptr
-		#elseif 0
-			Handle       As UString
-		#else
-			Handle       As Any Ptr
-		#endif
 		Brush        As My.Sys.Drawing.Brush
 		Pen          As My.Sys.Drawing.Pen
 		Tag          As Any Ptr
@@ -68,12 +55,7 @@ Namespace My.Sys.Drawing
 		Declare Sub Free
 		Declare Operator Cast As Any Ptr
 		Declare Operator Let(ByRef Value As WString)
-		#ifdef __USE_GTK__
 			Declare Operator Let(Value As GdkPixbuf Ptr)
-		#elseif 0
-			Declare Operator Let(Value As HBITMAP)
-			Declare Operator Let(Value As HICON)
-		#endif
 		Declare Constructor
 		Declare Destructor
 		Changed As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As BitmapType)

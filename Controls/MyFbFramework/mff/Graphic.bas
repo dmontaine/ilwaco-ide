@@ -114,53 +114,14 @@ Namespace My.Sys.Drawing
 	
 	#ifndef GraphicType_LoadFromResourceID_Off
 		Private Function GraphicType.LoadFromResourceID(ResID As Integer, ModuleHandle As Any Ptr = 0, cxDesired As Integer = 0, cyDesired As Integer = 0) As Boolean
-			#ifdef __USE_GTK__
 				Return Bitmap.LoadFromResourceID(ResID, ModuleHandle, cxDesired, cyDesired)
-			#elseif 0
-				WLet(FResName, Str(ResID))
-				If FindResource(ModuleHandle, *FResName, RT_BITMAP) Then
-					Return Bitmap.LoadFromResourceID(ResID, ModuleHandle, cxDesired, cyDesired)
-				ElseIf FindResource(ModuleHandle, *FResName, "PNG") Then
-					Return Bitmap.LoadFromResourceID(ResID, ModuleHandle, cxDesired, cyDesired)
-				ElseIf FindResource(ModuleHandle, *FResName, RT_ICON) Then
-					Return Icon.LoadFromResourceID(ResID, ModuleHandle, cxDesired, cyDesired)
-				ElseIf FindResource(ModuleHandle, *FResName, RT_CURSOR) Then
-					Return Cursor.LoadFromResourceID(ResID, ModuleHandle, cxDesired, cyDesired)
-				ElseIf FindResource(ModuleHandle, *FResName, RT_RCDATA) Then
-					Return Bitmap.LoadFromResourceID(ResID, ModuleHandle, cxDesired, cyDesired)
-				Else
-					Return Bitmap.LoadFromResourceID(ResID, ModuleHandle, cxDesired, cyDesired)
-				End If
-			#else
-				Return False
-			#endif
 		End Function
 	#endif
 	
 	#ifndef GraphicType_LoadFromResourceName_Off
 		Private Function GraphicType.LoadFromResourceName(ResName As String, ModuleHandle As Any Ptr = 0, cxDesired As Integer = 0, cyDesired As Integer = 0) As Boolean
 			WLet(FResName, ResName)
-			#ifdef __USE_GTK__
 				Return Bitmap.LoadFromResourceName(ResName, ModuleHandle, cxDesired, cyDesired)
-			#elseif 0
-				Return Bitmap.LoadFromResourceName(ResName, ModuleHandle, cxDesired, cyDesired)
-			#elseif 0
-				If FindResource(ModuleHandle, ResName, RT_BITMAP) Then
-					Return Bitmap.LoadFromResourceName(ResName, ModuleHandle, cxDesired, cyDesired)
-				ElseIf FindResource(ModuleHandle, ResName, "PNG") Then
-					Return Bitmap.LoadFromResourceName(ResName, ModuleHandle, cxDesired, cyDesired)
-				ElseIf FindResource(ModuleHandle, ResName, RT_ICON) Then
-					Return Icon.LoadFromResourceName(ResName, ModuleHandle, cxDesired, cyDesired)
-				ElseIf FindResource(ModuleHandle, ResName, RT_CURSOR) Then
-					Return Cursor.LoadFromResourceName(ResName, ModuleHandle, cxDesired, cyDesired)
-				ElseIf FindResource(ModuleHandle, ResName, RT_RCDATA) Then
-					Return Bitmap.LoadFromResourceName(ResName, ModuleHandle, cxDesired, cyDesired)
-				Else
-					Return Bitmap.LoadFromResourceName(ResName, ModuleHandle, cxDesired, cyDesired)
-				End If
-			#else
-				Return False
-			#endif
 		End Function
 	#endif
 	
@@ -178,17 +139,9 @@ Namespace My.Sys.Drawing
 	#endif
 	
 	Private Operator GraphicType.Let(ByRef Value As WString)
-		#ifdef __USE_WASM__
-			If InStr(Value, "/") > 0 OrElse InStr(Value, ".") > 0 Then
-				LoadFromFile(Value)
-			Else
-				LoadFromResourceName(Value)
-			End If
-		#else
 			If (Not LoadFromResourceID(Val(Value))) AndAlso (Not LoadFromResourceName(Value)) Then
 				LoadFromFile(Value)
 			End If
-		#endif
 	End Operator
 	
 	Private Operator GraphicType.Let(ByRef Value As My.Sys.Drawing.BitmapType)
@@ -207,7 +160,8 @@ Namespace My.Sys.Drawing
 	End Operator
 	
 	Private Function GraphicType.ToString() ByRef As WString
-		If FResName > 0 Then Return *FResName Else Return ""
+	Static EmptyWString As WString * 1
+		If FResName > 0 Then Return *FResName Else Return EmptyWString
 	End Function
 	
 	Private Constructor GraphicType

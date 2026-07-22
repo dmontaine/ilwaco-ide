@@ -35,20 +35,12 @@ Namespace My.Sys.ComponentModel
 		FParent             As Component Ptr
 		FComponents         As List
 		FTempString         As String
-		#ifdef __USE_GTK__
 			box 			As GtkWidget Ptr
 			fixedwidget		As GtkWidget Ptr
 			scrolledwidget	As GtkWidget Ptr
 			eventboxwidget  As GtkWidget Ptr
 			overlaywidget   As GtkWidget Ptr
 			containerwidget As GtkWidget Ptr
-		#elseif 0
-			FHandle         As jobject
-		#elseif 0
-			FHandle         As HWND
-		#elseif 0
-			FHandle         As Any Ptr
-		#endif
 		Declare Sub FreeWidget()
 		Declare Virtual Sub Move(cLeft As Integer, cTop As Integer, cWidth As Integer, cHeight As Integer)
 	Public:
@@ -58,31 +50,11 @@ Namespace My.Sys.ComponentModel
 		Margins             As MarginsType
 		'Returns/sets the extra space between controls (Windows, Linux, Android, Web).
 		ExtraMargins        As MarginsType
-		#ifdef __USE_GTK__
 			'Gets the window handle that the control is bound to (Windows, Linux, Android, Web).
 			Declare Property Handle As GtkWidget Ptr
 			Declare Property Handle(Value As GtkWidget Ptr)
 			Declare Property LayoutHandle As GtkWidget Ptr
 			Declare Property LayoutHandle(Value As GtkWidget Ptr)
-		#elseif 0
-			'Gets the window handle that the control is bound to (Windows, Linux, Android, Web).
-			Declare Property Handle As jobject
-			Declare Property Handle(Value As jobject)
-			Declare Property LayoutHandle As jobject
-			Declare Property LayoutHandle(Value As jobject)
-		#elseif 0
-			'Gets the window handle that the control is bound to (Windows, Linux, Android, Web).
-			Declare Property Handle As HWND
-			Declare Property Handle(Value As HWND)
-			Declare Property LayoutHandle As HWND
-			Declare Property LayoutHandle(Value As HWND)
-		#elseif 0
-			'Gets the window handle that the control is bound to (Windows, Linux, Android, Web).
-			Declare Property Handle As Any Ptr
-			Declare Property Handle(Value As Any Ptr)
-			Declare Property LayoutHandle As Any Ptr
-			Declare Property LayoutHandle(Value As Any Ptr)
-		#endif
 		#ifndef ReadProperty_Off
 			'Reads value from the name of property (Windows, Linux, Android, Web).
 			Declare Virtual Function ReadProperty(ByRef PropertyName As String) As Any Ptr
@@ -122,37 +94,20 @@ Namespace My.Sys.ComponentModel
 		'Gets or sets the parent container of the control (Windows, Linux, Android, Web).
 		Declare Property Parent As Component Ptr 'ContainerControl
 		Declare Property Parent(Value As Component Ptr)
-		'Declare Constructor
 		Declare Destructor
 	End Type
 End Namespace
 
 Private Type Message
 	Sender   As Any Ptr
-	#ifdef __USE_GTK__
 		widget As GtkWidget Ptr
 		Event As GdkEvent Ptr
 		Result   As Boolean
-	#elseif 0
-		hWnd     As HWND
-		Msg      As UINT
-		wParam   As WPARAM
-		lParam   As LPARAM
-		Result   As LRESULT
-		wParamLo As Integer
-		wParamHi As Integer
-		lParamLo As Integer
-		lParamHi As Integer
-		Captured As Any Ptr
-	#endif
 	Handled As Boolean
 End Type
 
-#ifdef __USE_GTK__
-#endif
 
 Private Enum Keys
-	#ifdef __USE_GTK__
 		Key_Esc = GDK_KEY_Escape
 		Key_Left = GDK_KEY_Left
 		Key_Right = GDK_KEY_Right
@@ -226,85 +181,6 @@ Private Enum Keys
 		F22 = GDK_KEY_F22
 		F23 = GDK_KEY_F23
 		F24 = GDK_KEY_F24
-	#elseif 0
-		Key_Esc = 0
-	#elseif 0
-		Key_Esc = VK_ESCAPE
-		Key_Left = VK_LEFT
-		Key_Right = VK_RIGHT
-		Key_Up = VK_UP
-		Key_Down = VK_DOWN
-		Key_Home = VK_HOME
-		Key_End = VK_END
-		Key_Delete = VK_DELETE
-		Key_Enter = VK_RETURN
-		ShiftMask = 1 'VK_SHIFT
-		LockMask = 2 'VK_SCROLL
-		CtrlMask = 4 'VK_CONTROL
-		AltMask = 8 'VK_MENU
-		Key_1 = VK_1
-		Key_2 = VK_2
-		Key_3 = VK_3
-		Key_4 = VK_4
-		Key_5 = VK_5
-		Key_6 = VK_6
-		Key_7 = VK_7
-		Key_8 = VK_8
-		Key_9 = VK_9
-		Key_0 = VK_0
-		Key_A = VK_A
-		Key_B = VK_B
-		Key_C = VK_C
-		Key_D = VK_D
-		Key_E = VK_E
-		Key_F = VK_F
-		Key_G = VK_G
-		Key_H = VK_H
-		Key_I = VK_I
-		Key_J = VK_J
-		Key_K = VK_K
-		Key_L = VK_L
-		Key_M = VK_M
-		Key_N = VK_N
-		Key_O = VK_O
-		Key_P = VK_P
-		Key_Q = VK_Q
-		Key_R = VK_R
-		Key_S = VK_S
-		Key_T = VK_T
-		Key_U = VK_U
-		Key_V = VK_V
-		Key_W = VK_W
-		Key_X = VK_X
-		Key_Y = VK_Y
-		Key_Z = VK_Z
-		F1 = VK_F1
-		F2 = VK_F2
-		F3 = VK_F3
-		F4 = VK_F4
-		F5 = VK_F5
-		F6 = VK_F6
-		F7 = VK_F7
-		F8 = VK_F8
-		F9 = VK_F9
-		F10 = VK_F10
-		F11 = VK_F11
-		F12 = VK_F12
-		F13 = VK_F13
-		F14 = VK_F14
-		F15 = VK_F15
-		F16 = VK_F16
-		F17 = VK_F17
-		F18 = VK_F18
-		F19 = VK_F19
-		F20 = VK_F20
-		F21 = VK_F21
-		F22 = VK_F22
-		F23 = VK_F23
-		F24 = VK_F24
-	#else
-		Key_Esc = 0
-	#endif
 End Enum
 
 Declare Sub ThreadsEnter

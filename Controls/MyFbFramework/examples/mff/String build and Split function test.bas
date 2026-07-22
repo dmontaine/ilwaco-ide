@@ -46,7 +46,6 @@ Private Function SplitOld Overload(ByRef wszMainStr As String, ByRef Delimiter A
 	Do While i <= ls
 		If MatchCase Then tFlag = StartsWith(wszMainStr, Delimiter, i - 1) Else tFlag = StartsWith(LCase(wszMainStr), LCase(Delimiter), i - 1)
 		If tFlag Then
-			'If Mid(subject, i, tLen) = Delimiter Then
 			If (Not skipEmptyElement) OrElse i - p > 0 Then
 				n = n + 1
 				If (n >= items + 1 ) Then
@@ -83,7 +82,6 @@ Private Function SplitOld(ByRef wszMainStr As WString, ByRef Delimiter As Const 
 	Do While i <= ls
 		If MatchCase Then tFlag = StartsWith(wszMainStr, Delimiter, i - 1) Else tFlag = StartsWith(LCase(wszMainStr), LCase(Delimiter), i - 1)
 		If tFlag Then
-			'If Mid(subject, i, tLen) = Delimiter Then
 			If (Not skipEmptyElement) OrElse i - p > 0 Then
 				n = n + 1
 				If (n >= items + 1 ) Then

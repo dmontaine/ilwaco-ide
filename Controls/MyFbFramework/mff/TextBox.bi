@@ -29,7 +29,6 @@ Namespace My.Sys.Forms
 	Private Type TextBox Extends Control
 	Private:
 	Protected:
-		#ifdef __USE_GTK__
 			Declare Static Sub Entry_Activate(entry As GtkEntry Ptr, user_data As Any Ptr)
 			Declare Static Sub Entry_Changed(entry As GtkEntry Ptr, user_data As Any Ptr)
 			Declare Static Function Entry_FocusInEvent(widget As GtkWidget Ptr, Event As GdkEventFocus Ptr, user_data As Any Ptr) As Boolean
@@ -42,9 +41,6 @@ Namespace My.Sys.Forms
 			Declare Static Sub Adjustment_ValueChanged(adjustment As GtkAdjustment Ptr, user_data As Any Ptr)
 			Declare Static Sub Preedit_Changed(self As GtkWidget Ptr, preedit As gchar Ptr, user_data As Any Ptr)
 			Declare Static Sub Entry_InsertText(self As GtkEditable Ptr, new_text As gchar Ptr, new_text_length As gint, position As gint Ptr, user_data As Any Ptr)
-		#else
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-		#endif
 		Declare Static Sub OnTextChanged(ByRef Sender As UString)
 		FTopLine          As Integer
 		FSelStart         As Integer
@@ -79,16 +75,11 @@ Namespace My.Sys.Forms
 		FText_ As UString
 		FWordWraps As Boolean
 		FInputFilter As WString Ptr 'David Change
-		#ifdef __USE_GTK__
 			TextBuffer As GtkTextBuffer Ptr
 			WidgetScrolledWindow As GtkWidget Ptr
 			WidgetEntry As GtkWidget Ptr
 			WidgetTextView As GtkWidget Ptr
 			Declare Sub ChangeWidget()
-		#else
-			Declare Static Sub WndProc(ByRef message As Message)
-			Declare Virtual Sub SetDark(Value As Boolean)
-		#endif
 		Declare Virtual Sub ProcessMessage(ByRef message As Message)
 	Public:
 		#ifndef ReadProperty_Off
@@ -232,7 +223,6 @@ Namespace My.Sys.Forms
 		Declare Sub CopyToClipboard
 		'Cuts selected text to clipboard.
 		Declare Sub CutToClipboard
-		'Declare Sub Delete
 		Declare Sub SelectAll
 		'Scrolls view to caret position.
 		Declare Sub ScrollToCaret

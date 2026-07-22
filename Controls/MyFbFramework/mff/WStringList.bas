@@ -14,7 +14,8 @@
 
 'WStringListItem
 Private Property WStringListItem.Value ByRef As WString
-	If FValue Then Return *FValue Else Return ""
+	Static EmptyWString As WString * 1
+	If FValue Then Return *FValue Else Return EmptyWString
 End Property
 
 Private Property WStringListItem.Value(ByRef V As WString)
@@ -88,6 +89,7 @@ Private Property WStringList.Sorted As Boolean
 End Property
 
 Private Property WStringList.Text ByRef As WString
+	Static EmptyWString As WString * 1
 	WLet(FText, "")
 	Dim As Integer Capacity
 	For i As Integer = 0 To FCount -1
@@ -98,7 +100,7 @@ Private Property WStringList.Text ByRef As WString
 			WAdd(FText, Item(i), , Capacity)
 		End If
 	Next i
-	If FText Then Return *FText Else Return ""
+	If FText Then Return *FText Else Return EmptyWString
 End Property
 
 #ifndef WStringList_Text_Set_Off
@@ -117,20 +119,22 @@ End Property
 #endif
 
 Private Operator WStringList.[](Index As Integer) ByRef As WString
+	Static EmptyWString As WString * 1
 	Dim As Any Ptr FItemsItemsIndex = FItems.Item(Index)
 	If FItemsItemsIndex <> 0 Then
 		Return QWStringListItem(FItemsItemsIndex).Value
 	Else
-		Return ""
+		Return EmptyWString
 	End If
 End Operator
 
 Private Property WStringList.Item(Index As Integer) ByRef As WString
+	Static EmptyWString As WString * 1
 	Dim As Any Ptr FItemsItemsIndex = FItems.Item(Index)
 	If FItemsItemsIndex <> 0 Then
 		Return QWStringListItem(FItemsItemsIndex).Value
 	Else
-		Return ""
+		Return EmptyWString
 	End If
 End Property
 
@@ -155,11 +159,9 @@ End Property
 
 #ifndef WStringList_Add_Off
 	Private Function WStringList.Add(ByRef iValue As WString, Obj As Any Ptr = 0) As Integer
-		'If iValue = "" Then Return -1 'We should allow add a empty records. Will gpt trouble in TreeListview if not allowed.
 		If CBool(FCount > 0) AndAlso FSorted Then
 			Return This.Insert(-1, iValue, Obj)
 		Else
-			'Dim As WString Ptr iText = CAllocate_((Len(iValue) + 1) * SizeOf(WString))
 			'*iText = iValue
 			'Items.Add iText
 			'Objects.Add Obj
@@ -233,7 +235,6 @@ End Sub
 
 Private Sub WStringList.Remove(Index As Integer)
 	If Index < 0 OrElse Index >= FCount Then Exit Sub
-	'If Items.Item(Index) > 0 Then Deallocate_(Items.Item(Index))
 	'Items.Remove Index
 	''If Objects.Item(Index) > 0 Then Delete Objects.Item(Index)
 	'Objects.Remove Index
@@ -427,7 +428,6 @@ Private Sub WStringList.SaveToFile(ByRef FileName As WString)
 	Fn = FreeFile_
 	If Open(FileName For Output Encoding "utf-8" As #Fn) = 0 Then 'David Change
 		For i As Integer = 0 To FCount -1
-			'Print #Fn, *Cast(WString Ptr, Items.Item(i))
 			Print #Fn, Item(i)
 		Next
 	End If
@@ -438,7 +438,6 @@ Private Sub WStringList.LoadFromFile(ByRef FileName As WString)
 	'Items.LoadFromFile File
 	Dim As Integer Fn = FreeFile_, Result = -1
 	Dim Buff As WString * 2048 'David Change for V1.07 Line Input not working fine
-	'If Open(FileName For Binary Access Read As #F) = 0 Then
 	Result = Open(FileName For Input Encoding "utf-8" As #Fn)
 	If Result <> 0 Then Result = Open(FileName For Input Encoding "utf-16" As #Fn)
 	If Result <> 0 Then Result = Open(FileName For Input Encoding "utf-32" As #Fn)
@@ -456,7 +455,6 @@ End Sub
 
 #ifndef WStringList_IndexOf_Off
 	Private Function WStringList.IndexOf(ByRef iValue As Const WString, ByVal bMatchCase As Boolean = False, ByVal bMatchFullWords As Boolean = True, ByVal iStart As Integer = 0, ByRef ItemPtr As WStringListItem Ptr = 0) As Integer
-		'If iValue = "" OrElse FCount < 1 Then Return -1 'We should allow add a empty records. Will get trouble in TreeListview if not allowed.
 		Dim As WString Ptr ItemTextPtr
 		If FCount < 1 Then Return -1
 		If iStart < 0 Then iStart = 0
@@ -495,7 +493,6 @@ End Sub
 					'ItemTextPtr = Items.Item(MidIndex)
 					ItemTextPtr = @(ItemPtr->Value)
 					If ItemTextPtr = 0 Then Return -1
-					'If LCase(*ItemTextPtr) =  *iValuePtr  AndAlso (MidIndex = 0 OrElse LCase(*Cast(WString Ptr, Items.Item(MidIndex - 1))) <>  *iValuePtr ) Then
 					If LCase(*ItemTextPtr) = *iValuePtr  AndAlso (MidIndex = 0 OrElse LCase(Item(MidIndex - 1)) <>  *iValuePtr ) Then
 						If iValuePtr Then _Deallocate(iValuePtr)
 						Return MidIndex
@@ -520,7 +517,6 @@ End Sub
 				Next
 			Else
 				Dim As WString Ptr iValuePtr
-				'Print "iValue=|" & iValue & "|"
 				WLet(iValuePtr, LCase(iValue))
 				For j As Integer = iStart To FCount - 1
 					ItemPtr = FItems.Item(j)
@@ -551,7 +547,6 @@ End Function
 	Private Function WStringList.IndexOfObject(Obj As Any Ptr) As Integer
 		If Obj = 0 OrElse FCount < 1 Then Return -1
 		For j As Integer = 0 To FCount - 1
-			'If Objects.Item(j) = Obj Then Return j
 			If QWStringListItem(FItems.Item(j)).Object = Obj Then Return j
 		Next
 		Return -1

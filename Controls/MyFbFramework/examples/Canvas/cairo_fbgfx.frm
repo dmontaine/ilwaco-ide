@@ -5,10 +5,6 @@
 '################################################################################
 
 '#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	
 	#include once "mff/Form.bi"
 	#include once "mff/Panel.bi"
@@ -28,8 +24,6 @@
 	#include once "cairo/cairo.bi"
 	
 	'if drawing with RayLib
-	'#include once "inc/raymath.bi"
-	'#include once "inc/raylib.bi"
 	'Using RayLib
 	'
 	
@@ -298,11 +292,6 @@ Private Sub Form1Type.Form_Close(ByRef Sender As Form, ByRef Action As Integer)
 End Sub
 
 Private Sub Form1Type.PanelRender_Resize(ByRef Sender As Control, NewWidth As Integer, NewHeight As Integer)
-	#if 0
-		
-	#elseif 0
-		MoveWindow(HandleRender, 0, 0, ScaleX(PanelRender.Width), ScaleY(PanelRender.Height), True)
-	#endif
 End Sub
 
 Private Sub Form1Type.cmdPlay_Click(ByRef Sender As Control)

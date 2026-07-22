@@ -17,34 +17,20 @@ Namespace My.Sys.Forms
 	End Function
 	
 	Private Property ComboBoxItem.Text ByRef As WString
-		'        If Parent AndAlso Parent->Handle Then
 		'            WReallocate FText, 255
-		'            Dim cbei As COMBOBOXEXITEM
 		'            cbei.mask = CBEIF_TEXT
 		'            cbei.iItem = Index
 		'                cbei.pszText    = FText
 		'                cbei.cchTextMax = 255
 		'              Parent->Perform CBEM_GETITEM, 0, CInt(@cbei)
-		'          End If
 		Return WGet(FText)
 	End Property
 	
 	Private Property ComboBoxItem.Text(ByRef Value As WString)
 		WLet(FText, Value)
-		#ifdef __USE_GTK__
 			If Parent AndAlso Parent->Handle Then
 				gtk_list_store_set (Cast(ComboBoxEx Ptr, Parent)->ListStore, @TreeIter, 1, ToUtf8(Value), -1)
 			End If
-		#else
-			If Parent AndAlso Parent->Handle Then
-				Dim cbei As COMBOBOXEXITEM
-				cbei.mask = CBEIF_TEXT
-				cbei.iItem = Index
-				cbei.pszText    = FText
-				cbei.cchTextMax = Len(*FText)
-				SendMessage Parent->Handle, CBEM_SETITEM, 0, CInt(@cbei)
-			End If
-		#endif
 	End Property
 	
 	Private Property ComboBoxItem.Object As Any Ptr
@@ -80,11 +66,9 @@ Namespace My.Sys.Forms
 	
 	Private Property ComboBoxItem.ImageKey(ByRef Value As WString)
 		WLet(FImageKey, Value)
-		#ifdef __USE_GTK__
 			If Parent AndAlso Parent->Handle Then
 				gtk_list_store_set (Cast(ComboBoxEx Ptr, Parent)->ListStore, @TreeIter, 0, ToUtf8(Value), -1)
 			End If
-		#endif
 	End Property
 	
 	Private Property ComboBoxItem.SelectedImageIndex As Integer
@@ -173,28 +157,13 @@ Namespace My.Sys.Forms
 			.Text        		= FText
 			.Object        		= Obj
 		End With
-		#ifdef __USE_GTK__
 			If Cast(ComboBoxEx Ptr, Parent)->Sort Then
 				gtk_list_store_insert(Cast(ComboBoxEx Ptr, Parent)->ListStore, @PItem->TreeIter, i)
 			Else
-				#ifdef __USE_GTK3__
 					gtk_list_store_insert(Cast(ComboBoxEx Ptr, Parent)->ListStore, @PItem->TreeIter, Index)
-				#else
-					gtk_list_store_insert(Cast(ComboBoxEx Ptr, Parent)->ListStore, @PItem->TreeIter, IIf(Index = -1, FItems.Count, Index))
-				#endif
 			End If
 			gtk_list_store_set (Cast(ComboBoxEx Ptr, Parent)->ListStore, @PItem->TreeIter, 1, ToUtf8(FText), -1)
 			'gtk_widget_show_all(Parent->widget)
-		#else
-			cbei.mask = CBEIF_IMAGE Or CBEIF_INDENT Or CBEIF_OVERLAY Or CBEIF_SELECTEDIMAGE Or CBEIF_TEXT
-			cbei.pszText  = @FText
-			cbei.cchTextMax = Len(FText)
-			cbei.iItem = IIf(Index = -1, FItems.Count - 1, Index)
-			cbei.iImage   = FImageIndex
-			cbei.iSelectedImage   = FSelectedImageIndex
-			cbei.iOverlay   = FOverlayIndex
-			cbei.iIndent   = FIndent
-		#endif
 		If Parent Then
 			PItem->Parent = Parent
 		End If
@@ -217,11 +186,7 @@ Namespace My.Sys.Forms
 	Private Sub ComboBoxExItems.Remove(Index As Integer)
 		If Index = -1 Then Exit Sub
 		If Parent Then
-			#ifdef __USE_GTK__
 				gtk_list_store_remove(Cast(ComboBoxEx Ptr, Parent)->ListStore, @This.Item(Index)->TreeIter)
-			#else
-				SendMessage Parent->Handle, CBEM_DELETEITEM, Index, 0
-			#endif
 		End If
 		_Delete( Cast(ComboBoxItem Ptr, FItems.Items[Index]))
 		FItems.Remove Index
@@ -250,11 +215,7 @@ Namespace My.Sys.Forms
 	End Function
 	
 	Private Sub ComboBoxExItems.Clear
-		#ifdef __USE_GTK__
 			If Parent Then gtk_list_store_clear(Cast(ComboBoxEx Ptr, Parent)->ListStore)
-		#else
-			If Parent Then SendMessage Parent->Handle, CB_RESETCONTENT, 0, 0
-		#endif
 		For i As Integer = Count -1 To 0 Step -1
 			_Delete( Cast(ComboBoxItem Ptr, FItems.Items[i]))
 		Next i
@@ -331,10 +292,11 @@ Namespace My.Sys.Forms
 	End Property
 	
 	Private Property ComboBoxEx.Item(Index As Integer) ByRef As WString
+	Static EmptyWString As WString * 1
 		If Items.Item(Index) Then
 			Return Items.Item(Index)->Text
 		Else
-			Return ""
+			Return EmptyWString
 		End If
 	End Property
 	
@@ -374,11 +336,8 @@ Namespace My.Sys.Forms
 				FText = iItem->Text
 			End If
 		Else
-				'#ifdef __USE_GTK__
 					FText = WStr(*gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget)))
-'				#else
 '					Base.Text
-'				#endif
 		End If
 		Return *FText.vptr
 	End Property
@@ -411,11 +370,7 @@ Namespace My.Sys.Forms
 	Private Property ComboBoxEx.Style(Value As ComboBoxEditStyle)
 		If Value <> Base.FStyle Then
 			Base.FStyle = Value
-			#ifdef __USE_GTK__
 				Base.Style = Value
-			#else
-				Base.Base.Style = WS_CHILD Or CBS_AUTOHSCROLL Or AStyle(abs_(Value))
-			#endif
 		End If
 	End Property
 	
@@ -424,7 +379,6 @@ Namespace My.Sys.Forms
 	End Operator
 	
 	Private Constructor ComboBoxEx
-		#ifdef __USE_GTK__
 			ListStore = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING)
 			widget = gtk_combo_box_new_with_model(GTK_TREE_MODEL(ListStore))
 			g_signal_connect(widget, "changed", G_CALLBACK(@ComboBoxEdit.ComboBoxEdit_Changed), @This)
@@ -440,14 +394,6 @@ Namespace My.Sys.Forms
 			eventboxwidget = gtk_event_box_new()
 			gtk_container_add(GTK_CONTAINER(eventboxwidget), widget)
 			Base.Base.RegisterClass "ComboBoxEx", @This
-		#else
-			Dim As INITCOMMONCONTROLSEX icex
-			
-			icex.dwSize = SizeOf(INITCOMMONCONTROLSEX)
-			icex.dwICC = ICC_USEREX_CLASSES
-			
-			INITCOMMONCONTROLSEX(@icex)
-		#endif
 		Items.Parent       = @This
 		FIntegralHeight    = False
 		FTabStop           = True

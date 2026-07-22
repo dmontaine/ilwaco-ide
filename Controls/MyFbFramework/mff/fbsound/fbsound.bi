@@ -1,4 +1,4 @@
-#ifndef __FBSOUND_BI__
+﻿#ifndef __FBSOUND_BI__
 #define __FBSOUND_BI__
 
 '  ##############
@@ -9,7 +9,7 @@
 
 #include once "fbstypes.bi"
 
-#if (__FB_OUT_EXE__ <> 0) Or (__FB_OUT_LIB__ <> 0)
+#if ((__FB_OUT_EXE__ <> 0) Or (__FB_OUT_LIB__ <> 0))
 '#inclib "fbsound"
 #endif
 
@@ -22,13 +22,12 @@
 #endif
 
 '' when building a static library, pull in the other plug-ins.
-#if __FB_OUT_DLL__ = 0
+#if (__FB_OUT_DLL__ = 0)
 
 '' plug_XX.required are referenced to pull in the needed
 '' modules, even if they exist in a static library.
 
 
-#ifdef __FB_LINUX__
 #ifndef NO_PLUG_ALSO
 	namespace fbsound.plug_also
 		extern "c"
@@ -48,7 +47,6 @@
 			required = 1
 		end sub
 	end namespace
-#endif
 #endif
 
 #endif

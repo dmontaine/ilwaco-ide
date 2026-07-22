@@ -1,7 +1,4 @@
-﻿#ifdef __USE_WINAPI__
-	#include once "windows.bi"
-#endif
-
+﻿
 Namespace My.Sys.Forms
 	Type SystemInformation
 	Private:

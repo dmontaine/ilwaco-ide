@@ -1,8 +1,4 @@
 ﻿'#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/TextBox.bi"
 	#include once "mff/CommandButton.bi"
@@ -45,13 +41,8 @@
 			.Designer = @This
 			.OnCreate = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @Form_Create)
 			.StartPosition = FormStartPosition.CenterScreen
-			#ifdef __FB_64BIT__
 				'...instructions for 64bit OSes...
 				.Caption = "VFBE PipeProcess64"
-			#else
-				'...instructions for other OSes
-				.Caption = "VFBE PipeProcess32"
-			#endif
 			.SetBounds 0, 0, 826, 500
 		End With
 		' Panel1

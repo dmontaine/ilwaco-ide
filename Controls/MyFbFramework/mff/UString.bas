@@ -1,10 +1,6 @@
 ﻿#include once "UString.bi"
 
-#ifdef __USE_WASM__
-	#define GrowLength 2
-#else
 	#define GrowLength 1
-#endif
 
 Private Constructor UString()
 	m_Length = 0
@@ -207,22 +203,10 @@ End Function
 #define ZDeAllocate(subject) If subject <> 0 Then: Deallocate(subject): End If: subject = 0
 #define ZAdd(subject, txt) Scope : Dim As Long ls = Len(txt) : Dim As ZString Ptr ResultPtr : If subject <> 0 Then : ResultPtr = _Reallocate(subject, (ls + Len(*subject) + 1) * SizeOf(ZString) * GrowLength) : Else : ResultPtr = _CAllocate((ls + 1) * SizeOf(ZString) * GrowLength) : End If : If ResultPtr = 0 Then : Print  __FUNCTION__ & " (Line " & __LINE__ & ") " & "Memory was not allocated." : Else : If subject <> 0 Then : *ResultPtr = *subject & txt : If subject <> ResultPtr Then : Deallocate(subject) : End If : Else : *ResultPtr = txt : End If : subject = ResultPtr : End If : End Scope
 
-'#define WReAllocate(subject, lLen) If subject <> 0 Then: subject = _Reallocate(subject, (lLen + 1) * SizeOf(WString) * GrowLength): Else: subject = _Allocate((lLen + 1) * SizeOf(WString) * GrowLength): End If
-'#define WLet(subject, txt) Scope: Dim As UString txt1 = txt: WReAllocate(subject, Len(txt1)): *subject = txt1: End Scope
-'#define WDeAllocate(subject) If subject <> 0 Then: _Deallocate(subject): End If: subject = 0
-'#define ZLet(subject, txt) Scope: Dim As String txt1 = txt: subject = _Reallocate(subject, (Len(txt) + 1) * SizeOf(ZString)): If subject Then: *subject = txt1: End If: End Scope
-'#define ZDeAllocate(subject) If subject <> 0 Then: _Deallocate(subject): End If: subject = 0
-'#define WAdd(subject, txt) Scope: Dim TempWStr As WString Ptr: WLet(TempWStr, WGet(subject) & txt): If TempWStr Then: If subject <> TempWStr Then: WDeAllocate(subject): End If: subject = TempWStr: End If: End Scope
-'#define ZAdd(subject, txt) Scope: Dim TempZStr As WString Ptr: WLet(TempZStr, WGet(subject) & txt): If TempZStr Then: If subject <> TempZStr Then: WDeAllocate(subject): End If: subject = TempZStr: End If: End Scope
 #else
 	Private Sub WReAllocate(ByRef subject As WString Ptr, lLen As Integer)
 		If subject <> 0 Then
-			#ifdef __USE_GTK__
 				subject = _Reallocate(subject, (lLen + 1) * SizeOf(WString) * GrowLength)
-			#else
-				_Deallocate(subject)
-				subject = _CAllocate((lLen + 1) * SizeOf(WString) * GrowLength)
-			#endif
 		Else
 			subject = _CAllocate((lLen + 1) * SizeOf(WString) * GrowLength)
 		End If
@@ -585,7 +569,6 @@ Private Operator & (ByRef lhs As UString, ByRef rhs As UString) As UString
 End Operator
 
 Private Function Left Overload(ByRef subject As UString, ByVal n As Integer) As UString
-	'Return Left(*(subject.vptr), n)
 	Dim As UString Result
 	If n <= 0 Then Return Result
 	If n > subject.m_Length Then n = subject.m_Length
@@ -599,7 +582,6 @@ Private Function Left Overload(ByRef subject As UString, ByVal n As Integer) As 
 End Function
 
 Private Function Right Overload(ByRef subject As UString, ByVal n As Integer) As UString
-	'Return Right(*(subject.vptr), n)
 	Dim As UString Result
 	If n <= 0 Then Return Result
 	If n > subject.m_Length Then n = subject.m_Length
@@ -617,25 +599,13 @@ Private Function Right Overload(ByRef subject As UString, ByVal n As Integer) As
 End Function
 
 #ifndef Replace_Off
-	'Private Function tallynumW Overload(ByRef somestring As WString, ByRef partstring As WString) As Integer
-	'	Dim As Integer i, j, ln, lnp, count, num
 	'	ln=Len(somestring):If ln=0 Then Return 0
 	'	lnp=Len(partstring):If lnp=0 Then Return 0
 	'	count=0
 	'	i=-1
-	'	Do
 	'		i+=1
-	'		If somestring[i] <> partstring[0] Then Continue Do
-	'		If somestring[i] = partstring[0] Then
-	'			For j=0 To lnp-1
-	'				If somestring[j+i]<>partstring[j] Then Continue Do
-	'			Next j
-	'		End If
 	'		count+=1
 	'		i=i+lnp-1
-	'	Loop Until i>=ln-1
-	'	Return count
-	'End Function
 	
 	
 	'
@@ -741,17 +711,13 @@ End Function
 '       WString Pointer to dereference. If the value is NULL, zero-length string ("") is returned.
 '
 'Example
-'#include "mff/UString.bi"
 '
-'Dim p As WString Ptr
 '
-'Print WGet(p)
 '
 'p = Allocate(SizeOf(WString) * 5)
 '
 '*p = "Good"
 '
-'Print WGet(p)
 '
 'Delete p
 '
@@ -765,35 +731,19 @@ Private Function WGet(ByRef subject As WString Ptr) ByRef As WString
 End Function
 
 Private Function ToUtf8(ByRef nWString As WString) As String
-	'	#ifdef __USE_GTK__
-	'		Static As gchar Ptr s = NULL
-	'		Dim As GError Ptr Error1 = NULL
-	'		Dim As gsize r_bytes, w_bytes
-	'		Dim As ZString Ptr fc
-	'		Dim As gchar Ptr from_codeset = NULL
 	'
-	'		If nWString = "" Then Return ""
 	'		'If (t = 0) Then g_assert_not_reached()
 	'		'If (g_utf8_validate(Cast(gchar Ptr, @nWString), -1, NULL)) Then Return nWString
 	'
 	'		/' so we got a non-UTF-8 '/
 	'
-	'		If Len(Environ("SMB_CODESET")) <> 0 Then
 	'			from_codeset = g_strdup(Environ("SMB_CODESET"))
-	'		Else
 	'			g_get_charset(@fc)
-	'			If (fc) Then
 	'				from_codeset = g_strdup(fc)
-	'			Else
 	'				from_codeset = g_strdup("ISO-8859-1")
-	'			End If
-	'		End If
 	'
-	'		If *from_codeset = "ISO-" Then
 	'			g_free(from_codeset)
 	'			from_codeset = g_strdup("ISO-8859-1")
-	'		End If
-	'		If (s) Then g_free(s)
 	'
 	''		For c As Integer = 0 To Len(nWString)
 	''			If (@nWString)[c] < 32 AndAlso (@nWString)[c] <> Asc(!"\n") Then (@nWString)[c] = Asc(" ")
@@ -807,19 +757,10 @@ Private Function ToUtf8(ByRef nWString As WString) As String
 	''				If s[c] > 128 Then s[c] = Asc("?")
 	''			Next
 	''		End If
-	'		If (Error1) Then
 	'			'Print ("DBG: %s. Codeset for system is: %s\n", Error->message,from_codeset)
 	'			'Print ("DBG: You should set the environment variable SMB_CODESET To ISO-8859-1\n")
 	'			g_error_free(Error1)
-	'		End If
-	'		Return *s
 	'		'Return *g_locale_to_utf8(nWString, Len(nWString), 0, 0, 0)
-	'	#else
-	'		Dim cbLen As Integer
-	'		Dim m_BufferLen As Integer = Len(nWString)
-	'		If m_BufferLen = 0 Then Return ""
-	'		Dim buffer As String = String(m_BufferLen * 5 + 1, 0)
-	'		Return *Cast(ZString Ptr, WCharToUTF(1, @nWString, m_BufferLen * 2, StrPtr(buffer), @cbLen))
 	Dim As Integer m_BufferLen = Len(nWString)
 	Dim i1 As ULong = m_BufferLen * 5 + 1                   'if all unicode chars use 5 bytes in utf8
 	Dim As String ansiStr = String(i1, 0)
@@ -827,9 +768,6 @@ Private Function ToUtf8(ByRef nWString As WString) As String
 End Function
 
 Private Function FromUtf8(pZString As ZString Ptr) As WString Ptr
-	'	#ifdef __USE_GTK__
-	'		Return g_locale_from_utf8(*pZString, Len(*pZString), 0, 0, 0)
-	'	#else
 	'UTF-8: EF BB BF
 	'UTF-16: FF FE
 	'UTF-16 big-endian: FE FF
@@ -856,7 +794,6 @@ Function FromHexStrUnicode(ByRef HexString As WString) As String
 			'WAdd(Result, WChr(codePoint))
 			i += 5
 		Else
-			'If i > iStart Then WAdd(Result, WChr(HexString[i]))
 		End If
 	Next
 	Function = *Result
@@ -890,7 +827,6 @@ Function FromHexStrUTF8(ByRef HexString As WString) As String
 	iPos1 = InStr(iPos + 4, HexString, "_")
 	If iPos1 < 1 Then Return HexString
 	IPos2 = InStr(iPos + 1, HexString, Any ".# ->=+-*/\()[]{},?'""^&!$@")
-	'Print "IPos2 < iPos1", IPos2, iPos1, iPos
 	If IPos2 > 0 AndAlso IPos2 < iPos1 Then Return HexString
 	Dim As Integer codePoint, iStart, byteCount
 	Dim As ZString Ptr ResultUTF8Ptr = _Allocate((iLen * 2 + 1) * SizeOf(ZString))
@@ -993,7 +929,6 @@ End Function
 #ifndef StringParseCount_Off
 	' ========================================================================================
 	' * Returns the count of delimited fields from a string expression.
-	' If wszMainStr is empty (a null string) or contains no delimiter character(s), the string
 	' is considered to contain exactly one sub-field. In this case, AfxStrParseCount returns the value 0.
 	' Delimiter contains a string (one or more characters) that must be fully matched.
 	' Delimiters are case-sensitive.
@@ -1021,47 +956,18 @@ End Function
 	End Function
 #endif
 
-'Function InStrPos(ByRef subject As WString, ByRef searchtext() AS Wstring, start As Integer = 1) As Integer
 'FOr i As Integer = 1 To Len(subject)
-'For j As Integer = 0 To Ubound(searchtext)
-'If Mid(subject, i, Len(searchtext(j)) = searchtext(j) Then Return i
-'Next j
-'Next
-'Return 0
-'End Function
 '
-'Function InStrRevPos(ByRef subject As WString, ByRef searchtext() AS Wstring, start As Integer = 1) As Integer
 'FOr i As Integer = Len(subject) To 1 Step -1
-'For j As Integer = 0 To Ubound(searchtext)
-'If Mid(subject, i, Len(searchtext(j)) = searchtext(j) Then Return i
-'Next j
-'Next
-'Return 0
-'End Function
 
-'Private Function Replace Overload(ByRef wszMainStr As WString, ByRef wszMatchStr As Const WString, ByRef wszReplaceWith As Const WString, ByVal Start As Integer = 1, ByRef Count As Integer = 0, MatchCase As Boolean = True) As String
-'	If wszMainStr = "" OrElse wszMatchStr = "" OrElse wszMatchStr = wszReplaceWith Then Return wszMainStr
-'	Dim As WString Ptr TempString
 '	WLet TempString, wszMainStr
-'	Dim nLenReplaceWith As Long = Len(wszReplaceWith)
-'	Dim nLen As Long = Len(wszMatchStr)
-'	If Start < 0 Then Start = nLen + Start + 1
-'	Dim As Long nPos = Start, C =0
-'	Do
 '		C += 1
-'		If MatchCase Then
 '			nPos = InStr(nPos, *TempString, wszMatchStr)
-'		Else
 '			nPos = InStr(nPos, UCase(*TempString), UCase(wszMatchStr))
-'		End If
-'		If nPos = 0 Then Exit Do
 '		WLet TempString, Mid(*TempString, 1, nPos - 1) + wszReplaceWith + Mid(*TempString, nPos + nLen)
 '		nPos += nLenReplaceWith
-'	Loop
 '	Count = C
-'	Function = *TempString
 '	Deallocate TempString
-'End Function
 '
 '' ========================================================================================
 '' * Within a specified string, replace all occurrences of any of the individual string
@@ -1070,45 +976,23 @@ End Function
 '' Example: ReplaceAny("abacadabra", "abc", "*")  ->  a*aa*aada*ara   ' -> *****d**r*
 '' Example: ReplaceAny("abacadabefra", "ab|bc|ef", "*")  ->  a*aa*aada*ara   ' ->
 '' ========================================================================================
-'Private Function Replace Overload(ByRef wszMainStr As WString, MatchedStr() As WString Ptr, ReplaceWith() As WString Ptr, ByVal Start As Integer = 1, ByRef Count As Integer = 0, MatchCase As Boolean = True) As String
-'	Dim As Long i = 1, nLen = Len(wszMainStr), nLen1 = UBound(MatchedStr), nLen2 = UBound(ReplaceWith), C = 0
-'	If nLen = 0 OrElse nLen1 = 0 OrElse nLen2 = 0  OrElse nLen2 <> nLen Then Return wszMainStr
-'	Dim As WString Ptr TempString
-'	Dim As String wszMatchStr, wszReplaceWith
 '	WLet TempString, wszMainStr
 '	nLen = nLen1
-'	For j As Integer = 0 To nLen
 '		wszReplaceWith = *ReplaceWith(j) : wszMatchStr = *MatchedStr(j)
 '		nLen1 = Len(wszMatchStr) : nLen2 = Len(wszReplaceWith)
-'		For x As Integer = 1 To nLen1
 '			'skip the one which is one of the wszReplaceWith
-'			If InStr(Start, wszReplaceWith, Mid(wszMatchStr, x, 1)) > 0 Then Continue For
 '			C += 1
-'			Do While i <= Len(*TempString)
-'				If MatchCase Then
-'					If Mid(wszMatchStr, x, 1) = Mid(*TempString, i, 1) Then
 '						'Mid(*TempString, i, 1) = wszReplaceWith
 '						WLet TempString, Mid(*TempString, 1, i - 1) + wszReplaceWith + Mid(*TempString, i + 1)
 '						i += nLen2
-'					End If
-'				Else
-'					If UCase(Mid(wszMatchStr, x, 1)) = UCase(Mid(*TempString, i, 1)) Then
 '						WLet TempString, Mid(*TempString, 1, i - 1) + wszReplaceWith + Mid(*TempString, i + 1)
 '						i += nLen2
-'					End If
-'				End If
 '				i +=1
-'			Loop
 '			i=1
-'		Next
-'	Next
 '	Count = C
-'	Function = *TempString
 '	Deallocate TempString
-'End Function
 
 Private Function StartsWith(ByRef a As Const WString, ByRef b As Const WString, Start As Integer = 0) As Boolean
-	'If a = "" OrElse b = "" Then Return False Else Return Left(a, Len(b)) = b
 	If Len(a) < Len(b) Then Return False
 	Dim j As Integer = Start
 	For i As Integer = 0 To Len(b) - 1
@@ -1120,7 +1004,6 @@ End Function
 
 
 Private Function EndsWith(ByRef a As Const WString, ByRef b As Const WString) As Boolean
-	'If a = "" OrElse b = "" Then Return False Else Return Right(a, Len(b)) = b
 	If Len(a) < Len(b) Then Return False
 	Dim j As Integer = Len(a) - Len(b)
 	For i As Integer = 0 To Len(b) - 1
@@ -1227,39 +1110,19 @@ Private Function Split(ByRef wszMainStr As WString, ByRef Delimiter As Const WSt
 	Loop
 	Return i + 1
 	'' Old version
-	'Dim As Long n = 0, p = 1, items = 50, i = 1
-	'Dim As Long tLen = Len(Delimiter)
-	'Dim As Long ls = Len(wszMainStr)
-	'Dim As Boolean tFlag
-	'If ls < 1 OrElse tLen < 1 Then
 	'	ReDim Result(0)
-	'	Return 0
-	'End If
 	'ReDim Result(0 To items - 1)
-	'Do While i <= ls
-	'	If MatchCase Then tFlag = StartsWith(wszMainStr, Delimiter, i - 1) Else tFlag = StartsWith(LCase(wszMainStr), LCase(Delimiter), i - 1)
-	'	If tFlag Then
 	'		'If Mid(subject, i, tLen) = Delimiter Then
-	'		If (Not skipEmptyElement) OrElse i - p > 0 Then
 	'			n = n + 1
-	'			If (n >= items + 1 ) Then
 	'				items += 50
 	'				ReDim Preserve Result(0 To items - 1)
-	'			End If
 	'			Result(n - 1) = Mid(wszMainStr, p, i - p)
-	'		End If
 	'		p = i + tLen
 	'		i = p
-	'		Continue Do
-	'	End If
 	'	i = i + 1
-	'Loop
-	'If (Not skipEmptyElement) OrElse ls - p + 1 > 0 Then
 	'	n += 1
 	'	ReDim Preserve Result(n - 1)
 	'	Result(n - 1) = Mid(wszMainStr, p, ls - p + 1)
-	'End If
-	'Return n
 	
 End Function
 
@@ -1347,46 +1210,23 @@ Private Function Split(ByRef wszMainStr As WString, ByRef Delimiter As Const WSt
 	Return i + 1
 	
 	' Old version
-	'Dim As Long n = 0, p = 1, items = 50, i = 1
-	'Dim As Long tLen = Len(Delimiter)
-	'Dim As Long ls = Len(wszMainStr)
-	'Dim As Boolean tFlag
-	'If ls < 1 OrElse tLen < 1 Then
 	'	ReDim Result(0)
-	'	Return 0
-	'End If
 	'ReDim Result(0 To items - 1)
-	'Do While i <= ls
-	'	If MatchCase Then tFlag = StartsWith(wszMainStr, Delimiter, i - 1) Else tFlag = StartsWith(LCase(wszMainStr), LCase(Delimiter), i - 1)
-	'	If tFlag Then
 	'		'If Mid(subject, i, tLen) = Delimiter Then
-	'		If (Not skipEmptyElement) OrElse i - p > 0 Then
 	'			n = n + 1
-	'			If (n >= items + 1 ) Then
 	'				items += 50
 	'				ReDim Preserve Result(0 To items - 1)
-	'			End If
 	'			WLet(Result(n - 1),  Mid(wszMainStr, p, i - p))
-	'		End If
 	'		p = i + tLen
 	'		i = p
-	'		Continue Do
-	'	End If
 	'	i = i + 1
-	'Loop
-	'If (Not skipEmptyElement) OrElse ls - p + 1 > 0 Then
 	'	n += 1
 	'	ReDim Preserve Result(n - 1)
 	'	WLet(Result(n - 1),  Mid(wszMainStr, p, ls - p + 1))
-	'End If
-	'Return n
 	'
-	'If (Not skipEmptyElement) OrElse ls - p + 1 > 0 Then
 	'	n += 1
 	'	ReDim Preserve Result(n - 1)
 	'	WLet(Result(n - 1),  Mid(wszMainStr, p, ls - p + 1))
-	'End If
-	'Return n
 End Function
 
 Private Function Split(ByRef wszMainStr As ZString, ByRef Delimiter As Const ZString, Result() As ZString Ptr, MatchCase As Boolean = True, skipEmptyElement As Boolean = False) As Long
@@ -1475,18 +1315,11 @@ Function Join Overload(Subject() As String, ByRef Delimiter As Const String, ByV
 	Return so
 	
 	'Old Code
-	'For i As Integer = iStart To UBound(Subject) Step iStep
 	'	Result &= IIf(i = iStart, "", Delimiter) & Subject(i)
-	'Next
-	'Return Result
 End Function
 
 Function Join(Subject() As UString, ByRef Delimiter As Const WString, ByVal skipEmptyElement As Boolean = False, iStart As Integer = 0, iStep As Integer = 1) As UString
-	'Dim As UString Result
-	'For i As Integer = iStart To UBound(Subject) Step iStep
 	'	'Result &= IIf(i = iStart, "", Delimiter) & Subject(i)
-	'Next
-	'Return Result
 	Dim As Integer size
 	Dim As Integer lj = Max(LBound(Subject), 0)
 	Dim As Integer uj = UBound(Subject)
@@ -1547,12 +1380,8 @@ Function Join(SubjectPtr() As WString Ptr, ByRef Delimiter As Const WString, ByV
 	Return ResultPtr
 	
 	'Old Code
-	'Dim As WString Ptr TmpString
 	'WLet(TmpString, "")
-	'For i As Integer = iStart To UBound(Subject) Step iStep
 	'	WAdd TmpString, IIf(i = iStart, "", Delimiter) & *Subject(i)
-	'Next
-	'Return TmpString
 End Function
 
 Function Join(SubjectPtr() As ZString Ptr, ByRef Delimiter As Const ZString, ByVal skipEmptyElement As Boolean = False, iStart As Integer = 0, iStep As Integer = 1) As ZString Ptr
@@ -1839,40 +1668,18 @@ End Function
 	End Function
 #endif
 
-#if 1
 	Private Function FileExists (ByRef FileName As UString) As Boolean
-		#ifdef __USE_GTK__
 			If *FileName.vptr <> "" AndAlso g_file_test(ToUtf8(*FileName.vptr), G_FILE_TEST_EXISTS) Then
 				Return True
 			Else
 				Return False
 			End If
-		#elseif __USE_JNI__
-			Return 0
-		#else
-			If PathFileExistsW(FileName.vptr) Then
-				Return True
-			Else
-				Return False
-			End If
-		#endif
 	End Function
 	
 	Private Function FileExists Overload(ByRef FileName As WString) As Boolean
-		#ifdef __USE_GTK__
 			If FileName <> "" AndAlso g_file_test(ToUtf8(FileName), G_FILE_TEST_EXISTS) Then
 				Return True
 			Else
 				Return False
 			End If
-		#elseif __USE_JNI__
-			Return 0
-		#else
-			If PathFileExistsW(FileName) Then
-				Return True
-			Else
-				Return False
-			End If
-		#endif
 	End Function
-#endif

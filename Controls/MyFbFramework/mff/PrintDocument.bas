@@ -1,4 +1,4 @@
-#include once "PrintDocument.bi"
+﻿#include once "PrintDocument.bi"
 
 Namespace My.Sys.ComponentModel
 	#ifndef ReadProperty_Off

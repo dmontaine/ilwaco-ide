@@ -32,12 +32,6 @@
 	End Type
 	
 	Constructor frmAddTypeType
-		#if _MAIN_FILE_ = __FILE__
-			With App
-				.CurLanguagePath = ExePath & "/Languages/"
-				.CurLanguage = .Language
-			End With
-		#endif
 		' frmAddType
 		With This
 			.Name = "frmAddType"

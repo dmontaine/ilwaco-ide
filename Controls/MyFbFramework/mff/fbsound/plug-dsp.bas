@@ -272,17 +272,6 @@ function  plug_init (byref Plug as FBS_PLUG) as boolean export
     return false
   end if
 
-#if 0
-  cmd=SNDCTL_DSP_NONBLOCK:arg=0
-  ret=SYS_IOCTL(_Me.hDevice,cmd,@arg)
-  if ret <0 then 
-    _Me.LastError="dsp: plug_init error: can't set none blocking mode!"
-    dprint(_Me.LastError)
-    sys_close _Me.hDevice
-    return false
-  end if
-#endif
-
   ' !!! makes shorter values any sence !!!
   if Plug.nFrames<64 then Plug.nFrames=64
 

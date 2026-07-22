@@ -3,10 +3,6 @@
 ' Freeware. Use at your own risk.
 
 '#Region "Form"
-	#if 0
-		#define __MAIN_FILE__ __FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/CommandButton.bi"
 	#include once "mff/Panel.bi"
@@ -195,11 +191,7 @@
 			.Name = "frmMedia"
 			.Text = "VFBE Media Player"
 				This.Icon.LoadFromFile(ExePath & ".\res\MediaPlayer.ico")
-			#ifdef __FB_64BIT__
 				.Caption = "VFBE Media Player64"
-			#else
-				.Caption = "VFBE Media Player32"
-			#endif
 			.Designer = @This
 			.OnCreate = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @Form_Create)
 			.OnClose = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Form, ByRef Action As Integer), @Form_Close)
@@ -1052,14 +1044,10 @@ Function CaptureBmp(filename As ZString Ptr, pMC As IMediaControl Ptr, pBV2 As I
 	Dim As FILTER_STATE pfs
 	Do
 		hr = pMC->lpVtbl->GetState(pMC, NULL, @pfs)
-		'Print "FILTER_STATE=" & pfs & ", " &  hr
 		Select Case hr
 		Case VFW_S_STATE_INTERMEDIATE
-			'Print "VFW_S_STATE_INTERMEDIATE"
 		Case VFW_S_CANT_CUE
-			'Print "VFW_S_CANT_CUE"
 		Case E_FAIL
-			'Print "E_FAIL"
 			Return hr
 		Case Else
 		End Select
@@ -1107,10 +1095,8 @@ Function CaptureBmp(filename As ZString Ptr, pMC As IMediaControl Ptr, pBV2 As I
 	'8, Retrieves the current image waiting at the renderer.
 	hr = pBV2->lpVtbl->GetCurrentImage(pBV2, @pBufferSize, pDIBImage)
 	If hr = VFW_E_NOT_PAUSED Then
-		'Print "VFW_E_NOT_PAUSED"
 	End If
 	If hr = E_UNEXPECTED Then
-		'Print "E_UNEXPECTED"
 	End If
 	If hr Then Return hr
 	
@@ -1124,7 +1110,6 @@ Function CaptureBmp(filename As ZString Ptr, pMC As IMediaControl Ptr, pBV2 As I
 	
 	'10, 写入文件
 	fileHandle = fopen(filename, @Str("wb"))
-	'Print "fopen(filename, @Str(wb)): " & fileHandle
 	If fileHandle Then
 		Dim As DWORD bytesWritten = fwrite(@mbitmapFileHeader, 1, SizeOf(BITMAPFILEHEADER), fileHandle)
 		bytesWritten = fwrite(@mbitmapInfoHeader, 1, SizeOf(BITMAPINFOHEADER), fileHandle)

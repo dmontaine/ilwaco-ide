@@ -15,7 +15,8 @@
 'DictionaryItem
 #ifndef DictionaryItem_Key_Get_Off
 	Private Property DictionaryItem.Key ByRef As WString
-		If FKey <> 0 Then Return *FKey Else Return ""
+	Static EmptyWString As WString * 1
+		If FKey <> 0 Then Return *FKey Else Return EmptyWString
 	End Property
 #endif
 
@@ -25,7 +26,8 @@ End Property
 
 #ifndef DictionaryItem_Text_Get_Off
 	Private Property DictionaryItem.Text ByRef As WString
-		If FText <>0 Then Return *FText Else Return ""
+	Static EmptyWString As WString * 1
+		If FText <>0 Then Return *FText Else Return EmptyWString
 	End Property
 #endif
 
@@ -252,7 +254,6 @@ End Sub
 	' iDirection: SORT_ASCENDING (1) 为升序(默认), SORT_DESCENDING (-1) 为降序
 	Sub Dictionary.Sort(ByVal bMatchCase As Boolean = False, ByVal iDirection As Long = 1, ByVal bNaturalSort As Boolean = False)
 		If FItems.Count <= 1 Then Return
-		'Dim As Boolean flag
 		Sorted = True
 		SortKeysed  = False
 		FSortMatchCase = bMatchCase
@@ -340,7 +341,6 @@ End Sub
 #ifndef Dictionary_SortKeys_Off
 	Private Sub Dictionary.SortKeys(ByVal bMatchCase As Boolean = False, ByVal iDirection As Long = 1, ByVal bNaturalSort As Boolean = False)
 		If FItems.Count <= 1 Then Return
-		'Dim As Boolean flag
 		FSortKeysMatchCase = bMatchCase
 		SortKeysed = True
 		Sorted = False
@@ -437,7 +437,6 @@ End Sub
 Private Sub Dictionary.SaveToFile(ByRef FileName As WString)
 	If FItems.Count < 1 Then Exit Sub
 	Dim As Integer Fn = FreeFile_
-	'If Open(FileName For Binary Access Write As #F) = 0 Then
 	If Open(FileName For Output Encoding "utf-8" As #Fn) = 0 Then 'David Change
 		For i As Integer = 0 To FItems.Count - 1
 			If Item(i) = 0 Then Continue For
@@ -574,15 +573,17 @@ End Sub
 	End Function
 #endif
 Private Operator Dictionary.[](ByRef iKey As WString) ByRef As WString
+	Static EmptyWString As WString * 1
 	Dim As Integer iIndex = IndexOfKey(iKey)
 	If iIndex >= 0 Then Return QDictionaryItem(FItems.Items[iIndex]).Text
-	Return ""
+	Return EmptyWString
 End Operator
 
 Private Function Dictionary.GetText(ByRef iKey As WString, ByVal MatchCase As Boolean = False) ByRef As WString
+	Static EmptyWString As WString * 1
 	Dim As Integer iIndex = IndexOfKey(iKey, , MatchCase)
 	If iIndex >= 0 Then Return QDictionaryItem(FItems.Items[iIndex]).Text
-	Return ""
+	Return EmptyWString
 End Function
 
 Private Function Dictionary.GetObject(ByRef iKey As WString, ByVal MatchCase As Boolean = False) As Any Ptr
@@ -596,20 +597,23 @@ Private Function Dictionary.GetObject(Index As Integer) As Any Ptr
 End Function
 
 Private Function Dictionary.GetKey(ByRef wText As WString, ByVal MatchCase As Boolean = False) ByRef As WString
+	Static EmptyWString As WString * 1
 	Dim As Integer iIndex = IndexOf(wText, MatchCase)
 	If iIndex >= 0 Then Return QDictionaryItem(FItems.Items[iIndex]).Key
-	Return ""
+	Return EmptyWString
 End Function
 
 Private Function Dictionary.GetKey(iObject As Any Ptr) ByRef As WString
+	Static EmptyWString As WString * 1
 	Dim As Integer iIndex = IndexOfObject(iObject)
 	If iIndex >= 0 Then Return QDictionaryItem(FItems.Items[iIndex]).Key
-	Return ""
+	Return EmptyWString
 End Function
 
 #ifndef Dictionary_Text_Get_Off
 	Private Property Dictionary.Text ByRef As WString
-		If FItems.Count < 1 Then Return ""
+	Static EmptyWString As WString * 1
+		If FItems.Count < 1 Then Return EmptyWString
 		WLet(FText, "")
 		Dim As Integer Capacity
 		For i As Integer = 0 To FItems.Count - 1
@@ -620,7 +624,7 @@ End Function
 				WAdd(FText, Item(i)->Key & Chr(9) & " " & Item(i)->Text, , Capacity)
 			End If
 		Next i
-		If FText <> 0 Then Return *FText Else Return ""
+		If FText <> 0 Then Return *FText Else Return EmptyWString
 	End Property
 #endif
 

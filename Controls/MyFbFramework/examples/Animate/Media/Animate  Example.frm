@@ -11,9 +11,6 @@
 '#Region "Form"
 	#define GIFPlayOn
 	#define MoviePlayOn
-	#if 0
-		#define __MAIN_FILE__ __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/sys.bi"
 	#include once "mff/CommandButton.bi"
@@ -190,11 +187,7 @@
 		With This
 			.Name = "frmAnimate"
 			.Text = ML("VisualFBEditor Animate Player")
-			#ifdef __FB_64BIT__
 				.Caption = ML("VisualFBEditor Animate Player(X64)")
-			#else
-				.Caption = ML("VisualFBEditor Animate Player(X32)")
-			#endif
 			.Designer = @This
 			.OnCreate = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @Form_Create)
 			.OnClose = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Form, ByRef Action As Integer), @Form_Close)
@@ -762,10 +755,8 @@ Private Sub frmAnimateType.Animate1_Message(ByRef Sender As Control, ByRef msg A
 		Dim lParam2 As LONG_PTR
 		'Debug.Print  " Message.lParamLo= " & msg.lParamLo & " Message.lParamHi= " & msg.lParamHi
 		If lEventCode = EC_COMPLETE Then
-			'If chkLoop.Checked Then
 			'	pIMediaPosition->lpVtbl->put_CurrentPosition(pIMediaPosition , 0)
 			'	pIMediaControl->lpVtbl->Run(pIMediaControl)
-			'End If
 		End If
 	End Select
 End Sub

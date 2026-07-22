@@ -263,14 +263,16 @@ Private Property FilesSearch.FileSize() As LongInt
 End Property
 
 Private Property FilesSearch.File(Index As Integer) ByRef As WString
-	If mFileCount < 0 Then Return ""
-	If mFileCount < Index Then Return ""
+	Static EmptyWString As WString * 1
+	If mFileCount < 0 Then Return EmptyWString
+	If mFileCount < Index Then Return EmptyWString
 	Return *mFiles(Index)
 End Property
 
 Private Property FilesSearch.Path(Index As Integer) ByRef As WString
-	If mPathCount < 0 Then Return ""
-	If mPathCount < Index Then Return ""
+	Static EmptyWString As WString * 1
+	If mPathCount < 0 Then Return EmptyWString
+	If mPathCount < Index Then Return EmptyWString
 	Return *mPaths(Index)
 End Property
 

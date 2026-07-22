@@ -408,7 +408,6 @@ End Function
 			ErrStr = "Request failed": This.Event_Send(12, ErrStr)
 			Return 0
 		End If
-		'Function = MYSQL_last_insert_rowid(m_DB)
 		If Transaction Then Transaction += 1
 	End Function
 	Function MariaDBBox.Exec(Sql_Utf8 As String) As Long

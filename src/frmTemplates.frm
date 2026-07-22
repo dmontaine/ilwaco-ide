@@ -1,8 +1,4 @@
-﻿#ifdef __FB_WIN32__
-	'#Compile -exx "Form1.rc"
-#else
-	'#Compile -exx
-#endif
+﻿'#Compile -exx
 '#Region "Form"
 	#include once "frmTemplates.bi"
 	
@@ -11,11 +7,7 @@
 		With This
 			.Name = "frmTemplates"
 			.Text = ML("New") & "..."
-			#ifdef __USE_GTK__
 				.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico")
-			#else
-				.Icon.LoadFromResourceID(1)
-			#endif
 			.Designer = @This
 			.BorderStyle = FormBorderStyle.Sizable
 			.OnShow = @Form_Show_
@@ -357,11 +349,7 @@ Private Sub frmTemplates.cmdOK_Click(ByRef Sender As Control)
 					Dim As WString * MAX_PATH SrcPath, DestPath
 					SrcPath = SelectedFolder & Slash & GetFileName(SelectedTemplate)
 					DestPath = SelectedFolder & Slash & GetFileName(SelectedFolder) & ".vfp"
-					#ifdef __USE_GTK__
 						.Name(SrcPath, DestPath)
-					#else
-						MoveFile @SrcPath, @DestPath
-					#endif
 					ModalResult = ModalResults.OK
 					Me.CloseForm
 				End If

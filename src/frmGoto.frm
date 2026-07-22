@@ -28,11 +28,7 @@ pfGoto = @fGoto
 		With This
 			.Name = "frmGoto"
 			.Caption = ML("Goto")
-			#ifdef __USE_GTK__
 				.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico")
-			#else
-				.Icon.LoadFromResourceID(1)
-			#endif
 			.MinimizeBox = False
 			.MaximizeBox = False
 			.OnShow = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Form), @Form_Show)

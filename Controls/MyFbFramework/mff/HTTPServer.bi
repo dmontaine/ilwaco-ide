@@ -1,4 +1,4 @@
-' courtesy https://www.freebasic.net/forum/viewtopic.php?t=4199&hilit=Simple+Web+Server
+﻿' courtesy https://www.freebasic.net/forum/viewtopic.php?t=4199&hilit=Simple+Web+Server
 ' Simple Web Server, (c) Anselme Dewavrin 2006 - dewavrin@yahoo.com
 ' Feel free to use it, provided you mention my name.
 ' based on the example provided with freebasic tweaked by thrive4 march 2024.

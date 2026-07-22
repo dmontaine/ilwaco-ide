@@ -16,18 +16,9 @@
 #include once "Component.bi"
 #include once "ImageList.bi"
 
-#ifdef __USE_GTK__
 	Dim Shared As GdkPixbuf Ptr EmptyPixbuf
 	EmptyPixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, True, 8, 16, 16)
 	gdk_pixbuf_fill(EmptyPixbuf, 0)
-#else
-	'	Type BP_PAINTPARAMS
-	'        cbSize As DWORD
-	'        dwFlags As DWORD
-	'        prcExclude As Const RECT Ptr
-	'        pBlendFunction As Const BLENDFUNCTION Ptr
-	'    End Type
-#endif
 
 Using My.Sys.ComponentModel
 
@@ -215,9 +206,7 @@ Namespace My.Sys.Forms
 		Declare Sub GetMenuItems
 		Declare Virtual Sub ProcessMessage(ByRef mess As Message)
 	Public:
-		#ifdef __USE_GTK__
 			Widget As GtkWidget Ptr
-		#endif
 		#ifndef ReadProperty_Off
 			'Loads menu structure from stream
 			Declare Virtual Function ReadProperty(ByRef PropertyName As String) As Any Ptr

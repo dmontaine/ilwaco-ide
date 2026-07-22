@@ -1,13 +1,7 @@
 ﻿#define UNICODE
 #include once "file.bi"
-#if 1
 	#undef FileExists
-	#ifdef __USE_GTK__
 			#include once "glib.bi"
-	#else
-		#include once "win\shlwapi.bi"
-	#endif
-#endif
 #ifndef MEMCHECK
 	#define MEMCHECK 0
 #endif
@@ -94,8 +88,6 @@ Declare Function ToHexStrUnicode(ByRef iString As WString) As String
 Declare Function Replace(ByRef Expression As WString, ByRef FindingText As WString, ByRef ReplacingText As WString, ByVal Start As Integer = 1, ByVal Count As Integer = -1, MatchCase As Boolean = True, ByRef CountReplaced As Integer = 0) As UString
 Declare Function ZGet(ByRef subject As ZString Ptr) As String
 Declare Function InStrCount(ByRef subject As WString, ByRef searchtext As WString, start As Integer = 1, MatchCase As Boolean = True) As Long
-'Declare Function Replace Overload(ByRef wszMainStr As WString, ByRef wszMatchStr As Const WString, ByRef wszReplaceWith As Const WString, ByVal Start As Integer = 1, ByRef Count As Integer = 0, MatchCase As Boolean = True) As String
-'Declare Function Replace Overload(ByRef wszMainStr As WString, MatchedStr() As WString Ptr, ReplaceWith() As WString Ptr, ByVal Start As Integer = 1, ByRef Count As Integer = 0, MatchCase As Boolean = True) As String
 Declare Function Split Overload(ByRef wszMainStr As String, ByRef Delimiter As Const String, Result() As String, MatchCase As Boolean = True, skipEmptyElement As Boolean = False) As Long
 Declare Function Split(ByRef wszMainStr As WString, ByRef Delimiter As Const WString, Result() As String, MatchCase As Boolean = True, skipEmptyElement As Boolean = False) As Long
 Declare Function Split(ByRef wszMainStr As WString, ByRef Delimiter As Const WString, Result() As UString, MatchCase As Boolean = True, skipEmptyElement As Boolean = False) As Long
@@ -116,10 +108,8 @@ Declare Function StringSubStringAll(ByRef wszMainStr As WString, ByRef ParseStar
 'Example: Dim As WString * 20 mainStr = "Hello World" : Dim As WString * 100 result = SubString(mainStr, 7, 5, "FreeBasic" )(Expected: 'Hello FreeBasic')
 Declare Function SubString(ByRef wszMainStr As WString, ByVal start As Integer, ByVal n As Integer, ByRef expression As Const WString = "" ) As UString
 Declare Function FormatFileName(ByRef originalName As WString) As UString
-#if 1
 	Declare Function FileExists Overload(ByRef FileName As UString) As Boolean
 	Declare Function FileExists Overload(ByRef FileName As WString) As Boolean
-#endif
 
 #ifndef __USE_MAKE__
 	#include once "UString.bas"

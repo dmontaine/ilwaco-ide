@@ -1,8 +1,4 @@
-﻿#ifdef __FB_WIN32__
-	'#Compile -exx -s gui "Example.rc"
-#else
-	'#Compile -exx
-#endif
+﻿	'#Compile -exx
 #include "mff/Form.bi"
 #include "mff/CommandButton.bi"
 

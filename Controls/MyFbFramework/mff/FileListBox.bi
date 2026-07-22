@@ -190,15 +190,11 @@ Destructor FileListBox()
 End Destructor
 ''
 '' 测试代码
-'Dim As FileListBox file1
 'file1.Path = "c:\GitHub\VisualFBEditorPro\Resources\AIAgent\models"
 '
 ''file1.Pattern = "*.bas;*.doc"
 ''file1.Pattern = "*.png"
 '
 'Debug.Print "Files Count: " & file1.ListCount
-'For i As Integer = 0 To file1.ListCount - 1
 '	Debug.Print i & ": " & file1.FileList.Item(i)
-'Next
 'Sleep(5000)
-'End

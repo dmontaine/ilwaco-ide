@@ -1,10 +1,4 @@
-﻿#ifdef __USE_GTK4__
-	#include once "cairo/cairo.bi"
-	#include once "mff/gir_headers/Gir/Gtk-4.0.bi"
-	#include once "mff/gir_headers/Gir/_GObjectMacros-2.0.bi"
-#else
-	#include once "gtk/gtk.bi"
-#endif
+﻿	#include once "gtk/gtk.bi"
 
 Sub on_button_clicked cdecl (ByVal widget As GtkWidget Ptr, ByVal user_data As gpointer)
 	Print "Hello, World!"

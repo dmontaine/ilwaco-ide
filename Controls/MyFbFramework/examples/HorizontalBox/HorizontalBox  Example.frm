@@ -4,10 +4,6 @@
 '#  Authors: Xusinboy Bekchanov, Liu XiaLin                                     #
 '################################################################################
 '#Region "Form"
-    #if 0
-        #define __MAIN_FILE__
-        Const _MAIN_FILE_ = __FILE__
-    #endif
     #include once "mff/Form.bi"
     #include once "mff/ScrollControl.bi"
     #include once "mff/HorizontalBox.bi"

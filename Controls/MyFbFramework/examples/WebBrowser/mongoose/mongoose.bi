@@ -1,4 +1,4 @@
-'https://github.com/cesanta/mongoose
+﻿'https://github.com/cesanta/mongoose
 'See https://mongoose.ws/ for complete documentation, videos, case studies, etc. 
 #pragma once
 #ifndef MONGOOSE_H
@@ -446,9 +446,9 @@ Declare Function mg_uecc_sign_deterministic(ByVal private_key As Const UByte Ptr
 Declare Function mg_uecc_verify(ByVal public_key As Const UByte Ptr, ByVal message_hash As Const UByte Ptr, ByVal hash_size As ULong, ByVal signature As Const UByte Ptr, ByVal curve As MG_UECC_Curve) As Long
 #define _UECC_TYPES_H_
 
-#if defined(__FB_DOS__) Or ((Not defined(__FB_64BIT__)) And (defined(__FB_DARWIN__) Or defined(__FB_WIN32__) Or defined(__FB_CYGWIN__) Or ((Not defined(__FB_ARM__)) And (defined(__FB_LINUX__) Or defined(__FB_FREEBSD__) Or defined(__FB_OPENBSD__) Or defined(__FB_NETBSD__)))))
+#if defined(__FB_DOS__) Or ((Not defined(__FB_64BIT__)) And (defined(__FB_DARWIN__) Or 0 Or defined(__FB_CYGWIN__) Or ((Not defined(__FB_ARM__)) And (defined(__FB_LINUX__) Or defined(__FB_FREEBSD__) Or defined(__FB_OPENBSD__) Or defined(__FB_NETBSD__)))))
 	Const MG_UECC_PLATFORM = mg_uecc_x86
-#elseif defined(__FB_64BIT__) And (defined(__FB_DARWIN__) Or defined(__FB_WIN32__) Or defined(__FB_CYGWIN__) Or ((Not defined(__FB_ARM__)) And (defined(__FB_LINUX__) Or defined(__FB_FREEBSD__) Or defined(__FB_OPENBSD__) Or defined(__FB_NETBSD__))))
+#elseif defined(__FB_64BIT__) And (defined(__FB_DARWIN__) Or 0 Or defined(__FB_CYGWIN__) Or ((Not defined(__FB_ARM__)) And (defined(__FB_LINUX__) Or defined(__FB_FREEBSD__) Or defined(__FB_OPENBSD__) Or defined(__FB_NETBSD__))))
 	Const MG_UECC_PLATFORM = mg_uecc_x86_64
 #elseif defined(__FB_64BIT__) And defined(__FB_ARM__) And (defined(__FB_LINUX__) Or defined(__FB_FREEBSD__) Or defined(__FB_OPENBSD__) Or defined(__FB_NETBSD__))
 	Const MG_UECC_PLATFORM = mg_uecc_arm64
@@ -461,7 +461,7 @@ Declare Function mg_uecc_verify(ByVal public_key As Const UByte Ptr, ByVal messa
 	Const MG_UECC_ARM_USE_UMAAL = 0
 #endif
 
-#if defined(__FB_64BIT__) And (defined(__FB_WIN32__) Or defined(__FB_UNIX__))
+#if defined(__FB_64BIT__) And (0 Or defined(__FB_UNIX__))
 	Const MG_UECC_WORD_SIZE = 8
 #else
 	Const MG_UECC_WORD_SIZE = 4
@@ -471,7 +471,7 @@ Type wordcount_t As Byte
 Type bitcount_t As Short
 Type cmpresult_t As Byte
 
-#if defined(__FB_64BIT__) And (defined(__FB_WIN32__) Or defined(__FB_UNIX__))
+#if defined(__FB_64BIT__) And (0 Or defined(__FB_UNIX__))
 	Type mg_uecc_word_t As ULongInt
 	Const HIGH_BIT_SET = &h8000000000000000u
 	Const MG_UECC_WORD_BITS = 64

@@ -56,9 +56,7 @@ Namespace My.Sys.Forms
 		FState             As Integer
 		FIndent            As Integer
 	Public:
-		#ifdef __USE_GTK__
 			TreeIter As GtkTreeIter
-		#endif
 		Parent  As Control Ptr
 		Tag As Any Ptr
 		Declare Sub SelectItem
@@ -114,9 +112,7 @@ Namespace My.Sys.Forms
 		FForeColor     As Integer = -1
 		FBackColor     As Integer = -1
 	Public:
-		#ifdef __USE_GTK__
 			Dim As GtkTreeViewColumn Ptr Column
-		#endif
 		'Ordinal position within parent grid columns
 		Index As Integer
 		'Reference to containing grid control
@@ -168,9 +164,7 @@ Namespace My.Sys.Forms
 		FItems As List
 		PItem As GridRow Ptr
 	Public:
-		#ifdef __USE_GTK__
 			Declare Function FindByIterUser_Data(User_Data As Any Ptr) As GridRow Ptr
-		#endif
 		'Reference to containing grid control
 		Parent          As Control Ptr
 		Declare Property Count As Integer
@@ -194,10 +188,8 @@ Namespace My.Sys.Forms
 	Private Type GridColumns Extends My.Sys.Object
 	Private:
 		FColumns As List
-		#ifdef __USE_GTK__
 			Declare Static Sub Cell_Edited(renderer As GtkCellRendererText Ptr, path As gchar Ptr, new_text As gchar Ptr, user_data As Any Ptr)
 			Declare Static Sub Check(cell As GtkCellRendererToggle Ptr, path As gchar Ptr, user_data As Any Ptr)
-		#endif
 	Public:
 		'Reference to containing grid control
 		Parent  As Control Ptr
@@ -255,7 +247,6 @@ Namespace My.Sys.Forms
 			FGridLinePenMode        As Integer
 		Declare Sub ChangeLVExStyle(iStyle As Integer, Value As Boolean)
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
-		#ifdef __USE_GTK__
 			Declare Static Sub Grid_RowActivated(tree_view As GtkTreeView Ptr, path As GtkTreePath Ptr, column As GtkTreeViewColumn Ptr, user_data As Any Ptr)
 			Declare Static Sub Grid_SelectionChanged(selection As GtkTreeSelection Ptr, user_data As Any Ptr)
 			Declare Static Sub Grid_Map(widget As GtkWidget Ptr, user_data As Any Ptr)
@@ -264,15 +255,7 @@ Namespace My.Sys.Forms
 			TreeSelection As GtkTreeSelection Ptr
 			ColumnTypes As GType Ptr
 			PrevIndex As Integer
-		#elseif 0
-			Declare Virtual Sub SetDark(Value As Boolean)
-			hHeader As HWND
-			headerTextColor As COLORREF
-		#endif
 	Protected:
-		#ifdef __USE_WASM__
-			Declare Virtual Function GetContent() As UString
-		#endif
 	Public:
 		'Removes all rows and columns.
 		Declare Sub Clear()

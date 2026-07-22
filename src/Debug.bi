@@ -27,17 +27,10 @@ Declare Sub DeleteDebugCursor
 
 'Common Shared As Byte runtype        'running type 07/12/2014
 
-#ifdef __FB_64BIT__
 	#define regip rip
 	#define regbp rbp
 	#define regsp rsp
 	#define ver3264 "(64bit) "
-#else
-	#define regip eip
-	#define regbp ebp
-	#define regsp esp
-	#define ver3264 "(32bit) "
-#endif
 
 '#define fulldbg_prt 'uncomment to get more information
 #define dbg_prt2 Rem ' dbg_prt 'used temporary for debugging, change rem by print 
@@ -46,14 +39,14 @@ Declare Sub DeleteDebugCursor
 #define fmt2(t, l) Left(t, l) + Space(l - Len(t))
 #define fmt3(t, l) Space(l - Len(t)) + Left(t, l)
 	
-#ifdef __FB_WIN32 ''sometime need of double & otherwise underlined next character
+#ifdef __FB_WIN32''sometime need of double & otherwise underlined next character
 	#define KAMPERSAND "&&"
 #else
 	#define KAMPERSAND "&"
 #endif
 
 ''to handle new added field in array descriptor structure
-#if __FB_VERSION__ >= "1.08"
+#if (__FB_VERSION__ >= "1.08")
 	#define KNEWARRAYFIELD ''to skip flag field
 #endif
 
@@ -86,11 +79,7 @@ Declare Sub DeleteDebugCursor
 		KCRASHED
 	End Enum
 
-	#ifdef __FB_64BIT__
 		#define FIRSTBYTE &hFFFFFFFFFFFFFF00
-	#else
-		#define FIRSTBYTE &hFFFFFF00
-	#endif
 
 	Enum PTRACE_REQUEST
 		PTRACE_TRACEME             =0
@@ -171,25 +160,6 @@ Declare Sub DeleteDebugCursor
 	End Type
 	
 	Type pt_regs 'or user_regs_struct
-	#ifndef __FB_64BIT__
-		As Long ebx
-		As Long ecx
-		As Long edx
-		As Long esi
-		As Long edi
-		As Long xbp
-		As Long eax
-		As Long ds', __dsu
-		As Long es', __esu
-		As Long fs', __fsu
-		As Long gs', __gsu
-		As Long orig_eax
-		As ULong xip
-		As Long  cs', __csu
-		As Long eflags
-		As Long xsp
-		As Long ss', __ssu
-	#else
 	   As UInteger r15
 	   As UInteger r14
 	   As UInteger r13
@@ -217,7 +187,6 @@ Declare Sub DeleteDebugCursor
 	   As UInteger es
 	   As UInteger fs
 	   As UInteger gs
-	#endif
 	End Type
 	'#define	EPERM		 1
 	'#define	ENOENT		 2
@@ -259,35 +228,12 @@ Declare Sub DeleteDebugCursor
 
 Declare Sub string_sh(tv As Any Ptr)
 Declare Sub shwexp_new(tview As Any Ptr)
-#ifdef __USE_GTK__
 	Common Shared windmain As Any Ptr
 	Common Shared tviewcur As TreeView Ptr  'TV1 ou TV2 ou TV3
 	Common Shared tviewvar As TreeView Ptr 'running proc/var
 	Common Shared tviewprc As TreeView Ptr 'all proc
 	Common Shared tviewthd As TreeView Ptr 'all threads
 	Common Shared tviewwch As TreeView Ptr 'watched variables
-#else
-	Declare Sub fastrun()
-	Declare Sub thread_rsm()
-	Declare Sub exe_mod()
-	Declare Sub brk_set(t As Integer)
-	Declare Function var_sh1(i As Integer) As String
-	
-	Common Shared windmain As HWND
-	'Common Shared stopcode As Integer
-	'Common Shared dbghand As HANDLE 'debugged proc handle
-	'Common Shared As Integer linenb
-	Common Shared tviewcur As HWND  'TV1 ou TV2 ou TV3
-	Common Shared tviewvar As HWND 'running proc/var
-	Common Shared tviewprc As HWND 'all proc
-	Common Shared tviewthd As HWND 'all threads
-	Common Shared tviewwch As HWND 'watched variables
-
-	'Common Shared As Integer linenbprev 'used for dll
-	'Common Shared rline() As tline
-	'Common Shared source() As String    'source names
-	Common Shared As HWND htab1, htab2
-#endif
 Common Shared As Integer rlineold 'numbers of lines, index of previous executed line (rline)
 Common Shared As Integer fntab
 
@@ -408,13 +354,8 @@ End Enum
 
 Union pointeurs
 	pxxx As Any Ptr
-	#ifdef __FB_64BIT__
 	   pinteger As Long Ptr
 	   puinteger As ULong Ptr
-	#else
-	   pinteger As Integer Ptr
-	   puinteger As UInteger Ptr
-	#endif
 	'pinteger As Integer Ptr
 	'puinteger As UInteger Ptr
 	psingle As Single Ptr

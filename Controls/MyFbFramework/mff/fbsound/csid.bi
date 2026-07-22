@@ -1,4 +1,4 @@
-#ifndef __CSID_BI__
+﻿#ifndef __CSID_BI__
 #define __CSID_BI__
 
 #ifndef NO_SID

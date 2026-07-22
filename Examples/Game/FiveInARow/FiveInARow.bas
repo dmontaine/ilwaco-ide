@@ -22,10 +22,6 @@
 '6/黑方禁手形成时,白方应立即指出,黑方即负.若白方未发现或发现后未指明而继续应子,则不能判黑方负.
 
 '#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	
 	#include once "mff/Form.bi"
 	#include once "mff/sys.bi"
@@ -93,18 +89,11 @@
 		Dim As NumericUpDown numChessSize
 		Dim As CheckBox chkComputerFirst
 		Dim As LinkLabel LinkLblAbout
-		'Dim As TextBox LinkLblAbout
 		Dim As ColorDialog ColorDialog1
 		
 	End Type
 	
 	Constructor frmWuziqiType
-		#if _MAIN_FILE_ = __FILE__
-			With App
-				.CurLanguagePath = ExePath & "/Languages/"
-				.CurLanguage = My.Sys.Language
-			End With
-		#endif
 		' frmWuziqi
 		With This
 			.Name = "frmWuziqi"
@@ -604,7 +593,6 @@ Sub frmWuziqiType.ComputerAI()
 	
 	Xmin = 0: XMax = ChessSize-1
 	YMin = 0: YMax = ChessSize-1
-	'Print Xmin, XMax, Ymin, YMax
 	Picture1.Cursor = crWait
 	'初始化赋值数组
 	'* * * * * * * * 电脑加强算法 * * * * * * * *
@@ -832,8 +820,6 @@ Public Function frmWuziqiType.WinStepsTotal(ByVal tChessSize As Long) As Long
 	'反对角线方向 6+(5+4+3+2+1)*2=36
 	' 总的获胜组合数为60 + 60 + 36 +36= 192
 	Dim As Long i, j, m, n
-	'For i = n - 5 To 1 Step -1: n += i: Next
-	'Return 2 * (2 * t + n - 4) + 2 * n * (n - 4)
 	
 	'******** 初始化获胜组合 ********
 	n = 0

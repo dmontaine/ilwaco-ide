@@ -58,15 +58,7 @@ Namespace My.Sys.Forms
 		#ifndef WriteProperty_Off
 			Declare Virtual Function WriteProperty(PropertyName As String, Value As Any Ptr) As Boolean
 		#endif
-		#ifdef __USE_GTK__
 			Handle      As GtkIconTheme Ptr
-		#elseif 0
-			Handle      As jobject
-		#elseif 0
-			Handle      As HIMAGELIST
-		#else
-			Handle      As Any Ptr
-		#endif
 		InitialCount    As Integer
 		GrowCount       As Integer
 		ImageType       As ImageTypes
@@ -90,17 +82,6 @@ Namespace My.Sys.Forms
 		Declare Sub AddMasked(ByRef Bitmap As My.Sys.Drawing.BitmapType, MaskColor As Integer, ByRef Key As WString = "")
 		Declare Sub AddMasked(ByRef ResName As WString, MaskColor As Integer, ByRef Key As WString = "", ModuleHandle As Any Ptr = 0)
 		Declare Sub AddFromFile(ByRef File As WString, ByRef Key As WString = "")
-'		Declare Sub AddPng(ByRef ResName As WString, ByRef Key As WString = "", ModuleHandle As Any Ptr = 0)
-'		Declare Sub Set(Index As Integer, Bitmap As My.Sys.Drawing.BitmapType, Mask As My.Sys.Drawing.BitmapType, ByRef Key As WString = "")
-'		Declare Sub Set(ByRef Key As WString, Bitmap As My.Sys.Drawing.BitmapType, Mask As My.Sys.Drawing.BitmapType, ByRef Key As WString = "")
-'		Declare Sub Set(Index As Integer, Icon As My.Sys.Drawing.Icon, ByRef Key As WString = "")
-'		Declare Sub Set(ByRef Key As WString, Icon As My.Sys.Drawing.Icon, ByRef Key As WString = "")
-'		Declare Sub Set(Index As Integer, Cursor As My.Sys.Drawing.Cursor, ByRef Key As WString = "")
-'		Declare Sub Set(ByRef Key As WString, Cursor As My.Sys.Drawing.Cursor, ByRef Key As WString = "")
-'		Declare Sub Set(Index As Integer, ByRef ResName As WString, ModuleHandle As Any Ptr = 0)
-'		Declare Sub Set(ByRef Key As WString, ByRef ResName As WString, ModuleHandle As Any Ptr = 0)
-'		Declare Sub SetFromFile(Index As Integer, ByRef File As WString)
-'		Declare Sub SetFromFile(ByRef Key As WString, ByRef File As WString)
 		Declare Sub Remove(Index As Integer)
 		Declare Sub Remove(ByRef Key As WString)
 		Declare Function GetBitmap(Index As Integer) As My.Sys.Drawing.BitmapType

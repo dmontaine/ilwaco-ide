@@ -1,14 +1,10 @@
-'################################################################################
+﻿'################################################################################
 '#  MDIMain.frm                                                                 #
 '#  This file is an examples of MyFBFramework.                                  #
 '#  Authors: Xusinboy Bekchanov, Liu XiaLin                                     #
 '################################################################################
 
 '#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/Menus.bi"
 	#include once "mff/ImageList.bi"
@@ -21,7 +17,6 @@
 	Type MDIMainType Extends Form
 		Dim lstMdiChild As List
 		Dim actMdiChild As Any Ptr
-		'Dim actMidChildIdx As Integer
 		
 		Dim mnuWindowCount As Integer = -1
 		Dim mnuWindows(Any) As MenuItem Ptr

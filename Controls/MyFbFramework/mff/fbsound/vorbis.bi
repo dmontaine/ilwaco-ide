@@ -205,19 +205,6 @@ type OggVorbis_File
   as ov_callbacks      callbacks 
 end type
 
-#if 0
-function OGGErrorString(code as integer) as string
-  select case (code)
-    case OV_EREAD:       return "Read from media."
-    case OV_ENOTVORBIS:  return "Not Vorbis data."
-    case OV_EVERSION:    return "Vorbis version mismatch."
-    case OV_EBADHEADER:  return "Invalid Vorbis header."
-    case OV_EFAULT:      return "Internal logic fault (bug or heap/stack corruption."
-    case else:           return "Unknown Ogg error."
-  end select
-end function
-#endif
-
 ' alias "" needed !
 declare function ov_clear( _
 byval vf as OggVorbis_File ptr) as long 

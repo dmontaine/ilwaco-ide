@@ -15,11 +15,7 @@
 #define CodePage_UTF32      12000
 #define CodePage_UTF32BE    12001
 
-	#if 1
 		#define OsEol NewLineTypes.LinuxLF
-	#else
-		#define OsEol NewLineTypes.MacOSCR
-	#endif
 
 ' 定义排序类型：升序或降序
 Enum SortOrders

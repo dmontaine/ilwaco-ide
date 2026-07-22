@@ -9,8 +9,6 @@
 '#                                                                              #
 '################################################################################
 
-	#define __USE_WINAPI__
-
 	#include once "crt/linux/unistd.bi"
 	Declare Function ioctl Alias "ioctl" (fd As Integer, request As ULong, ...) As Integer
 	#define FIONREAD &h541B

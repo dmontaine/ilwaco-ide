@@ -17,29 +17,21 @@
 #ifndef SCINTILLA_H
 	#define SCINTILLA_H
 	
-	'#ifdef __cplusplus
 	'Extern "C"
-	'#endif
 	'
-	'#if defined(_WIN32)
 	'' Return False On failure:
 	'Int Scintilla_RegisterClasses(VOID *HINSTANCE)
 	'Int Scintilla_ReleaseResources(VOID)
-	'#endif
 	'
-	'#ifdef __cplusplus
 	'}
-	'#endif
 	'
 	' Include Header that defines basic numeric types.
-	'#include <stdint.h>
 	'
 	' Define uptr_t, an Unsigned Integer Type large enough To hold a Pointer.
 	'typedef uintptr_t uptr_t
 	' Define sptr_t, a signed Integer large enough To hold a Pointer.
 	'typedef intptr_t sptr_t
 	'
-	'#include "Sci_Position.h"
 	'
 	'typedef sptr_t (*SciFnDirect)(sptr_t Ptr, Unsigned Int iMessage, uptr_t WPARAM, sptr_t LPARAM)
 	'typedef sptr_t (*SciFnDirectStatus)(sptr_t Ptr, Unsigned Int iMessage, uptr_t WPARAM, sptr_t LPARAM, Int *pStatus)

@@ -103,35 +103,16 @@ Sub Maze.Init(ByVal mSize As Integer, ByVal wSize As Integer)
 End Sub
 
 Sub Maze.Show(ByVal WSize As Integer)
-	'Dim As Integer x, y, xx, yy, ws
 	'WallSize= IIf(WSize < 10 OrElse WSize< 10, 10, WSize)
 	'ws = WallSize / 2
 	'Canvas.Scale(0, 0, (MazeSize+ 1) * WallSize / 2, (MazeSize+ 1) * WallSize/ 2)
 	'Canvas.Cls
-	'For x = 0 To MazeSize -1
-	'	For y = 0 To MazeSize -1
 	'		xx = x*WallSize + WallSize
 	'		yy = y*WallSize + WallSize
-	'		If rooms(x, y).getStatus() And (Gen Or Visited) Then
 	'			'Canvas.Line(xx - ws, yy - ws, xx + ws, yy + ws, RGB(0, 32, 0), "bf")
-	'			If rooms(x, y).getStatus() And Gen Then Canvas.Circle(xx, yy, ws / 2, RGB(255, 128, 0))
-	'			If rooms(x, y).isWall(North) And WALL Then Canvas.Line (xx - ws, yy - ws, xx + ws, yy - ws, RGB(0, 255, 0))
-	'			If rooms(x, y).isWall(West)  And WALL Then Canvas.Line (xx - ws, yy - ws, xx - ws, yy + ws, RGB(0, 255, 0))
-	'			If rooms(x, y).isWall(South) And WALL Then Canvas.Line (xx - ws, yy + ws, xx + ws, yy + ws, RGB(0, 255, 0))
-	'			If rooms(x, y).isWall(East)  And WALL Then Canvas.Line (xx + ws, yy - ws, xx + ws, yy + ws, RGB(0, 255, 0))
-	'		End If
-	'	Next
-	'Next
-	'For x = 0 To MazeSize -1
-	'	For y = 0 To MazeSize -1
 	'		xx = x * WallSize + WallSize
 	'		yy = y * WallSize + WallSize
-	'		If rooms(x,y).getStatus() And (Gen Or Visited) Then
-	'		Else
 	'			Canvas.Line(xx - ws, yy - ws, xx + ws, yy + ws, RGB(0, 64, 0), "bf")
-	'		End If
-	'	Next
-	'Next
 End Sub
 
 Sub Maze.Generate(ByVal x As Integer, y As Integer,ByVal style As Integer)

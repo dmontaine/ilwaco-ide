@@ -10,13 +10,7 @@
 Namespace My
 	Namespace Sys
 		Private Function Name As String
-			#ifdef __USE_GTK__
 				Return "Linux"
-			#elseif 0
-				Return "Android"
-			#else
-				Return "Windows"
-			#endif
 		End Function
 		
 		Private Function Version As Long

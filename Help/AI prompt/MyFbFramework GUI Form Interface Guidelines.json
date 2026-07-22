@@ -230,7 +230,7 @@
         ],
         "reference_doc": "MyFbFramework VB VB.NET Control Cross-Reference Table.md"
       }
-    }
+    },
       "preprocessor": {
         "directives": [
           "#include once \"mff/Form.bi\"",
@@ -273,9 +273,6 @@
           }
          },
         "constructor": {
-            "app_settings": {
-              "language_config": "ExePath & \"/Languages/\""
-            },
             "control_configuration": {
                   "required_properties": ["Name", "Designer", "Parent"],
                   "initialization": {
@@ -312,9 +309,9 @@
     },
     "code_structure_example": {
       "code_structure_example": {  
-    "header": "'#Region \"Form\"\n #if defined(__FB_MAIN__) AndAlso Not defined(__MAIN_FILE__)\n  #define __MAIN_FILE__\n  #ifdef __FB_WIN32__\n   #cmdline \"Form1.rc\"\n  #endif  Const _MAIN_FILE_ = __FILE__\n #endif\n #include once \"mff/Form.bi\"\n #include once \"mff/CommandButton.bi\"\n \n Using My.Sys.Forms\n",  
+    "header": "'#Region \"Form\"\n #if defined(__FB_MAIN__) AndAlso Not defined(__MAIN_FILE__)\n  #define __MAIN_FILE__\n  Const _MAIN_FILE_ = __FILE__\n #endif\n #include once \"mff/Form.bi\"\n #include once \"mff/CommandButton.bi\"\n \n Using My.Sys.Forms\n",  
     "form_type": " Type Form1Type Extends Form\n  Declare Sub CommandButton1_Click(ByRef Sender As Control)\n  Declare Sub CommandButton1_Paint(ByRef Sender As Control, ByRef Canvas As My.Sys.Drawing.Canvas)\n  Declare Constructor\n   Dim As CommandButton CommandButton1(1)\n End Type\n ",  
-    "constructor": "\n Constructor Form1Type\n  #if _MAIN_FILE_ = __FILE__\n   With App\n    .CurLanguagePath = ExePath & \"/Languages/\"\n    .CurLanguage = My.Sys.Language\n   End With\n  #endif\n  ' Form1\n  With This\n   .Name = \"Form1\"\n   .Text = \"Form1\"\n   .Designer = @This\n   .SetBounds 0, 0, 350, 300\n  End With\n  ' CommandButton1(0)\n  With CommandButton1(0)\n   .Name = \"CommandButton1(0)\"\n   .Text = \"CommandButton1(0)\"\n   .TabIndex = 0\n   .SetBounds 42, 93, 121, 32\n   .Designer = @This\n   .OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @CommandButton1_Click)\n   .OnPaint = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control, ByRef Canvas As My.Sys.Drawing.Canvas), @CommandButton1_Paint)\n   .Parent = @This\n  End With\n  ' CommandButton1(1)\n  With CommandButton1(1)\n   .Name = \"CommandButton1(1)\"\n   .Text = \"CommandButton1(0)\"\n   .TabIndex = 1\n   .ControlIndex = 0\n   .SetBounds 168, 95, 121, 32\n   .Designer = @This\n   .Parent = @This\n  End With\n End Constructor\n ",
+    "constructor": "\n Constructor Form1Type\n  ' Form1\n  With This\n   .Name = \"Form1\"\n   .Text = \"Form1\"\n   .Designer = @This\n   .SetBounds 0, 0, 350, 300\n  End With\n  ' CommandButton1(0)\n  With CommandButton1(0)\n   .Name = \"CommandButton1(0)\"\n   .Text = \"CommandButton1(0)\"\n   .TabIndex = 0\n   .SetBounds 42, 93, 121, 32\n   .Designer = @This\n   .OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @CommandButton1_Click)\n   .OnPaint = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control, ByRef Canvas As My.Sys.Drawing.Canvas), @CommandButton1_Paint)\n   .Parent = @This\n  End With\n  ' CommandButton1(1)\n  With CommandButton1(1)\n   .Name = \"CommandButton1(1)\"\n   .Text = \"CommandButton1(0)\"\n   .TabIndex = 1\n   .ControlIndex = 0\n   .SetBounds 168, 95, 121, 32\n   .Designer = @This\n   .Parent = @This\n  End With\n End Constructor\n ",
     "application_start": " Dim Shared Form1 As Form1Type\n \n #if _MAIN_FILE_ = __FILE__\n  App.DarkMode = True\n  Form1.MainForm = True\n  Form1.Show\n  App.Run\n #endif\n '#End Region\n"
   },  
   "external_handler": {  

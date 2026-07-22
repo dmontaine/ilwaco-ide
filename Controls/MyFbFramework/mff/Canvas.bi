@@ -93,66 +93,17 @@ Namespace My.Sys.Drawing
 		imgOffsetY      As Double
 		FMoveToX        As Double
 		FMoveToY        As Double
-		FUseDirect2D    As Boolean
 		dwCharX         As Single
 		dwCharY         As Single
 	Protected:
-		#ifdef __USE_GTK__
 			Dim As PangoContext Ptr pcontext
-		#elseif 1
-			Dim As cairo_surface_t Ptr cairoSurface
-			Dim As HDC DeviceContextHandle
-		#elseif 0
-			#ifdef __FB_64BIT__
-				Dim FGdipStartupInput As GdiplusStartupInput  'GDI+ startup info
-			#else
-				Dim FGdipStartupInput As Gdiplus.GdiplusStartupInput  'GDI+ startup info
-			#endif
-			Dim PrevWidth As Integer = 0
-			Dim PrevHeight As Integer = 0
-			pID2D1BitmapList As PointerList
-			tm              As TEXTMETRIC
-			Declare Sub ReleaseDirect2D
-		#endif
 	Public:
 		HandleSetted As Boolean
 		FillGradient As Boolean
 		FillOpacity As Long
 		BackColorOpacity As Long
-		#ifdef __USE_CAIRO__
 			Handle  As cairo_t Ptr
-			#ifdef __USE_GTK__
 				Dim As PangoLayout Ptr layout
-			#endif
-		#elseif 0
-			Declare Function CreateD2DBitmapFromHBITMAP Overload(ByVal pRT As ID2D1DCRenderTarget Ptr, ByVal hBmp As HBITMAP, ByRef pOut As ID2D1Bitmap Ptr) As HRESULT
-			Declare Function CreateD2DBitmapFromHBITMAP Overload(ByVal pRT As ID2D1DeviceContext Ptr, ByVal hBmp As HBITMAP, ByRef pOut As ID2D1Bitmap Ptr) As HRESULT
-			'Dim pRenderTarget As ID2D1DeviceContext Ptr = 0
-			Dim pTargetBitmap As ID2D1Bitmap Ptr = 0
-			'Dim pRenderTarget As ID2D1HwndRenderTarget Ptr
-			Dim pRenderTarget As ID2D1DCRenderTarget Ptr
-			Dim pStrokeStyle As ID2D1StrokeStyle Ptr
-			Dim pTextLayout As IDWriteTextLayout Ptr
-			'Dim pSwapChain As IDXGISwapChain1 Ptr = 0
-			'Dim pSurface As IDXGISurface Ptr = 0
-			'Dim pTexture As ID3D11Texture2D Ptr = 0
-			Dim pTextFormat As IDWriteTextFormat Ptr = 0
-			Dim pBrushBorder As ID2D1SolidColorBrush Ptr = 0
-			Dim pBrushFill As ID2D1SolidColorBrush Ptr = 0
-			Dim pBrushOpacity As ID2D1Brush Ptr
-			Handle  As HDC
-			GdipToken As ULONG_PTR
-			GdipGraphics As GpGraphics Ptr
-			GdipBrush As GpBrush Ptr
-			GdipPen As GpPen Ptr
-			GdipFont As GpFont Ptr
-			GdipHatchStyles As GpHatchStyle = HatchStyleCross
-			GpLineGradientPara As GpLineGradientParameter
-		#elseif 0
-			Handle  As jobject
-		#else
-			Handle  As Any Ptr
-		#endif
 		Pen         As My.Sys.Drawing.Pen
 		Brush       As My.Sys.Drawing.Brush
 		Font        As My.Sys.Drawing.Font
@@ -192,8 +143,6 @@ Namespace My.Sys.Drawing
 		Declare Property HatchStyle(Value As HatchStyles)
 		Declare Property FillStyles As BrushStyles
 		Declare Property FillStyles(Value As BrushStyles)
-		Declare Property UseDirect2D As Boolean
-		Declare Property UseDirect2D(Value As Boolean)
 		Declare Sub Cls(x As Double = 0, y As Double = 0, x1 As Double = 0, y1 As Double = 0)
 		Declare Sub MoveTo(x As Double,y As Double)
 		Declare Sub LineTo(x As Double,y As Double)
@@ -219,9 +168,7 @@ Namespace My.Sys.Drawing
 		Declare Function GetPixel(x As Double, y As Double) As Integer
 		Declare Function Get(x As Double, y As Double, nWidth As Integer, nHeight As Integer, ByRef ImageSource As My.Sys.Drawing.BitmapType) As Any Ptr
 		Declare Function Get(x As Double, y As Double, nWidth As Integer, nHeight As Integer, ByVal ImageSource As Any Ptr) As Any Ptr
-		#ifdef __USE_CAIRO__
 			Declare Sub SetHandle(CanvasHandle As cairo_t Ptr)
-		#endif
 		Declare Sub UnSetHandle()
 		Declare Sub TextOut(x As Double, y As Double, ByRef s As WString, FG As Integer = -1, BK As Integer = -1)
 		Declare Sub DrawTransparent(x As Double, y As Double, Image As Any Ptr, cTransparentColor As UInteger = 0)

@@ -1,8 +1,4 @@
 ﻿'#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/ComboBoxEx.bi"
 	#include once "mff/TreeView.bi"
@@ -67,12 +63,6 @@
 	End Type
 	
 	Constructor frmBrowserType
-		#if _MAIN_FILE_ = __FILE__
-			With App
-				.CurLanguagePath = ExePath & "/Languages/"
-				.CurLanguage = My.Sys.Language
-			End With
-		#endif
 		' frmBrowser
 		With This
 			.Name = "frmBrowser"
@@ -397,7 +387,6 @@ Private Sub frmBrowserType.Form_Create(ByRef Sender As Control)
 End Sub
 
 Private Function frmBrowserType.Path2ComboEx(ByRef Sender As ComboBoxEx, Path As Const WString) As Integer
-	'If Path = "" Then Return -1
 	Dim i As Integer = Sender.IndexOf("" + Path)
 	If i < 0 Then
 		Dim FileInfo As SHFILEINFO

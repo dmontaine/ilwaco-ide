@@ -74,17 +74,13 @@ Namespace My.Sys.Forms
 			If OldStyle = sbHorizontal Then
 				iHeight = Height
 				iWidth = This.Width
-				#ifdef __USE_GTK__
 					gtk_orientable_set_orientation(gtk_orientable(widget), GTK_ORIENTATION_VERTICAL)
-				#endif
 				Height = iWidth
 				This.Width  = iHeight
 			Else
 				iWidth = This.Width
 				iHeight = Height
-				#ifdef __USE_GTK__
 					gtk_orientable_set_orientation(GTK_ORIENTABLE(widget), GTK_ORIENTATION_HORIZONTAL)
-				#endif
 				This.Width = iHeight
 				Height  = iWidth
 			End If
@@ -99,11 +95,7 @@ Namespace My.Sys.Forms
 	
 	Private Property ScrollBarControl.MinValue(Value As Integer)
 		FMin = Value
-		#ifdef __USE_GTK__
 			gtk_range_set_range(GTK_RANGE(widget), FMin, FMax)
-		#else
-			If Handle Then Perform(SBM_SETRANGE, FMin, FMax)
-		#endif
 	End Property
 	
 	Private Property ScrollBarControl.MaxValue As Integer
@@ -112,29 +104,17 @@ Namespace My.Sys.Forms
 	
 	Private Property ScrollBarControl.MaxValue(Value As Integer)
 		FMax = Value
-		#ifdef __USE_GTK__
 			gtk_range_set_range(GTK_RANGE(widget), FMin, FMax)
-		#else
-			If Handle Then Perform(SBM_SETRANGE, FMin, FMax)
-		#endif
 	End Property
 	
 	Private Property ScrollBarControl.Position As Integer
-		#ifdef __USE_GTK__
 			FPosition = gtk_range_get_value(GTK_RANGE(widget))
-		#else
-			If Handle Then FPosition = Perform(SBM_GETPOS, 0, 0)
-		#endif
 		Return FPosition
 	End Property
 	
 	Private Property ScrollBarControl.Position(Value As Integer)
 		FPosition = Value
-		#ifdef __USE_GTK__
 			gtk_range_set_value(GTK_RANGE(widget), CDbl(Value))
-		#else
-			If Handle Then Perform(SBM_SETPOS, FPosition, True)
-		#endif
 		If OnScroll Then OnScroll(*Designer, This, FPosition)
 	End Property
 	
@@ -144,9 +124,7 @@ Namespace My.Sys.Forms
 	
 	Private Property ScrollBarControl.ArrowChangeSize(Value As Integer)
 		FArrowChangeSize = Value
-		#ifdef __USE_GTK__
 			gtk_range_set_increments(GTK_RANGE(widget), FArrowChangeSize, FPageSize)
-		#endif
 	End Property
 	
 	Private Property ScrollBarControl.PageSize As Integer
@@ -156,13 +134,7 @@ Namespace My.Sys.Forms
 	Private Property ScrollBarControl.PageSize(Value As Integer)
 		If FPageSize > FMax Or Value = FPageSize Then Exit Property
 		FPageSize = Value
-		#ifdef __USE_GTK__
 			gtk_range_set_increments(GTK_RANGE(widget), FArrowChangeSize, FPageSize)
-		#else
-			SIF.fMask = SIF_PAGE
-			SIF.nPage = FPageSize
-			If Handle Then Perform(SBM_SETSCROLLINFO, True, CInt(@SIF))
-		#endif
 	End Property
 	
 	
@@ -174,25 +146,15 @@ Namespace My.Sys.Forms
 		Return Cast(Control Ptr, @This)
 	End Operator
 	
-	#ifdef __USE_GTK__
 		Private Sub ScrollBarControl.Range_ValueChanged(range As GtkRange Ptr, user_data As Any Ptr)
 			Dim As ScrollBarControl Ptr scr = user_data
 			If scr->OnScroll Then scr->OnScroll(*scr->Designer, *scr, gtk_range_get_value(range))
 		End Sub
-	#endif
 	
 	Private Constructor ScrollBarControl
-		#ifdef __USE_GTK__
-			#ifdef __USE_GTK3__
 				widget = gtk_scrollbar_new(GTK_ORIENTATION_HORIZONTAL, NULL)
-			#else
-				widget = gtk_hscrollbar_new(NULL)
-			#endif
 			g_signal_connect(widget, "value-changed", G_CALLBACK(@Range_ValueChanged), @This)
 			This.RegisterClass "ScrollBarControl", @This
-		#else
-			SIF.cbSize = SizeOf(SCROLLINFO)
-		#endif
 		MaxValue        = 100
 		MinValue        = 0
 		Position        = 0

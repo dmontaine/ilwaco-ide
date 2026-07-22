@@ -1,4 +1,4 @@
-#ifndef __FBSOUND_DYNAMIC_BI__
+﻿#ifndef __FBSOUND_DYNAMIC_BI__
 #define __FBSOUND_DYNAMIC_BI__
 
 '  ######################
@@ -234,7 +234,7 @@ type tFBS_Set_MP3StreamCallback as function (byval cb as tFBS_BUFFERCALLBACK)  a
 type tFBS_Enable_MP3StreamCallback as function () as boolean
 type tFBS_Disable_MP3StreamCallback as function () as boolean
  #endif
-#endif ' MP3
+#endif' MP3
 
 #ifndef NO_SID
 type tFBS_Create_SIDStream as function (byref Filename as string, _
@@ -258,8 +258,8 @@ type tFBS_Get_SIDTitle  as function () as string
 type tFBS_Set_SIDStreamCallback as function (byval cb as tFBS_BUFFERCALLBACK)  as boolean
 type tFBS_Enable_SIDStreamCallback as function () as boolean
 type tFBS_Disable_SIDStreamCallback as function () as boolean
- #endif ' NO_CALLBACK
-#endif ' SID
+ #endif' NO_CALLBACK
+#endif' SID
 
 #define fbs_declare(_NAME_) dim shared as t##_NAME_ _NAME_
 fbs_declare(FBS_Init)
@@ -378,7 +378,7 @@ fbs_declare(FBS_Set_MP3StreamCallback)
 fbs_declare(FBS_Enable_MP3StreamCallback)
 fbs_declare(FBS_Disable_MP3StreamCallback)
  #endif
-#endif ' MP3
+#endif' MP3
 
 #ifndef NO_SID
 fbs_declare(FBS_Create_SIDStream)
@@ -397,7 +397,7 @@ fbs_declare(FBS_Set_SIDStreamCallback)
 fbs_declare(FBS_Enable_SIDStreamCallback)
 fbs_declare(FBS_Disable_SIDStreamCallback)
  #endif
-#endif ' SID
+#endif' SID
 
 #undef fbs_declare
 
@@ -414,21 +414,12 @@ end function
 Sub RuntimeLoad Constructor
   dprint("fbsound-1.2 RuntimeLoad Constructor")
   if hFBS<>0 then exit sub
-#ifndef __FB_64BIT__
-  dprint("DyLibLoad( '" + FBSOUND_DLL_PATH + "fbsound-32' )")
-  hFBS = DyLibLoad( FBSOUND_DLL_PATH + "fbsound-32" )
-  if hFBS=0 then
-    dprint("error: lib fbsound-32 not loaded !")
-    exit sub
-  end if  
-#else
   dprint("DyLibLoad( '" + FBSOUND_DLL_PATH + "fbsound-64' )") 
   hFBS = DyLibLoad( FBSOUND_DLL_PATH + "fbsound-64" )
   if hFBS=0 then
     dprint("error: lib fbsound-64 not loaded !")
     exit sub
   end if  
-#endif
 
   #define fbs_load(_NAME_) _NAME_ = DyLibSymbol(hFBS,ucase(#_NAME_)) : if _NAME_ = 0 then print "error: can't resolve " & #_NAME_  : beep : sleep : end 1 
   fbs_load(FBS_Init)
@@ -471,36 +462,36 @@ Sub RuntimeLoad Constructor
   fbs_load(FBS_DB_2_Volume)
   fbs_load(FBS_Pow)
   
-#ifndef NO_DSP  
+#ifndef NO_DSP
   fbs_load(FBS_Set_MasterFilter)
   fbs_load(FBS_Enable_MasterFilter)
   fbs_load(FBS_Disable_MasterFilter)
  #ifndef NO_PITCHSHIFT
   fbs_load(FBS_PitchShift)
- #endif  
+ #endif
 #endif
   
-#ifndef NO_CALLBACK  
+#ifndef NO_CALLBACK
   fbs_load(FBS_Set_LoadCallback)
   fbs_load(FBS_Enable_LoadCallback)
   fbs_load(FBS_Disable_LoadCallback)
   fbs_load(FBS_Set_MasterCallback)
   fbs_load(FBS_Enable_MasterCallback)
   fbs_load(FBS_Disable_MasterCallback)
-#endif  
+#endif
   fbs_load(FBS_Load_WAVFile)
 
-#ifndef NO_MP3  
+#ifndef NO_MP3
   fbs_load(FBS_Load_MP3File)
 #endif
 
 #ifndef NO_MOD
   fbs_load(FBS_Load_MODFile)
-#endif  
+#endif
 
 #ifndef NO_OGG
   fbs_load(FBS_Load_OGGFile)
-#endif  
+#endif
   
   fbs_load(FBS_Create_Wave)
   fbs_load(FBS_Destroy_Wave)
@@ -528,13 +519,13 @@ Sub RuntimeLoad Constructor
   fbs_load(FBS_Set_SoundPointers)
   fbs_load(FBS_Get_SoundPosition)
 
-#ifndef NO_CALLBACK  
+#ifndef NO_CALLBACK
   fbs_load(FBS_Set_SoundCallback)
   fbs_load(FBS_Enable_SoundCallback)
   fbs_load(FBS_Disable_SoundCallback)
-#endif  
+#endif
   
-#ifndef NO_MP3  
+#ifndef NO_MP3
   fbs_load(FBS_Create_MP3Stream)
   fbs_load(FBS_Play_MP3Stream)
   fbs_load(FBS_End_MP3Stream)
@@ -543,12 +534,12 @@ Sub RuntimeLoad Constructor
   fbs_load(FBS_Set_MP3StreamPan)
   fbs_load(FBS_Get_MP3StreamPan)
   fbs_load(FBS_Get_MP3StreamBuffer)
- #ifndef NO_CALLBACK  
+ #ifndef NO_CALLBACK
   fbs_load(FBS_Set_MP3StreamCallback)
   fbs_load(FBS_Enable_MP3StreamCallback)
   fbs_load(FBS_Disable_MP3StreamCallback)
- #endif  
-#endif ' MP3
+ #endif
+#endif' MP3
 
 #ifndef NO_SID
   fbs_load(FBS_Create_SIDStream)
@@ -562,12 +553,12 @@ Sub RuntimeLoad Constructor
   fbs_load(FBS_Get_SIDAuthor)
   fbs_load(FBS_Get_SIDInfo)
   fbs_load(FBS_Get_SIDTitle)
- #ifndef NO_CALLBACK 
+ #ifndef NO_CALLBACK
   fbs_load(FBS_Set_SIDStreamCallback)
   fbs_load(FBS_Enable_SIDStreamCallback)
   fbs_load(FBS_Disable_SIDStreamCallback)
- #endif 
-#endif ' SID
+ #endif
+#endif' SID
   
 #undef fbs_load
   
@@ -590,4 +581,4 @@ sub RuntimeUnload Destructor
 end sub
 
 
-#endif ' __FBSOUND_DYNAMIC_BI__
+#endif' __FBSOUND_DYNAMIC_BI__

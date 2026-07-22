@@ -10,7 +10,6 @@
 '###############################################################################
 
 #include once "WStringList.bi"
-'#include once "Control.bi"
 
 #define QListItems(__Ptr__) (*Cast(ListItems Ptr,__Ptr__))
 

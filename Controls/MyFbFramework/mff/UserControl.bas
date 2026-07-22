@@ -18,10 +18,8 @@ Namespace My.Sys.Forms
 	
 	Private Constructor UserControl
 		With This
-			#ifdef __USE_GTK__
 				widget = gtk_layout_new(NULL, NULL)
 				.RegisterClass "UserControl", @This
-			#endif
 			Canvas.Ctrl    = @This
 			.Child       = @This
 			WLet(FClassName, "UserControl")

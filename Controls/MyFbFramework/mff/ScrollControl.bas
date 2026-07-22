@@ -60,12 +60,10 @@ Namespace My.Sys.Forms
 	End Operator
 	
 	Private Constructor ScrollControl
-		#ifdef __USE_GTK__
 			widget = gtk_scrolled_window_new(NULL, NULL)
 			gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(widget), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC)
 			'g_signal_connect(widget, "value-changed", G_CALLBACK(@Range_ValueChanged), @This)
 			This.RegisterClass "ScrollControl", @This
-		#endif
 		FTabIndex       = -1
 		With This
 			.Child      = @This

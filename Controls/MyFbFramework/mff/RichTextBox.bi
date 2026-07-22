@@ -67,10 +67,8 @@ Namespace My.Sys.Forms
 		'Bulleted list formatting for selection.
 		Declare Property SelBullet(Value As Boolean)
 		Declare Property SelIndent As Integer
-		'Left indent of selected paragraphs.
 		Declare Property SelIndent(Value As Integer)
 		Declare Property SelRightIndent As Integer
-		'Right indent of selected paragraphs.
 		Declare Property SelRightIndent(Value As Integer)
 		Declare Property SelHangingIndent As Integer
 		'Hanging indent of selection.

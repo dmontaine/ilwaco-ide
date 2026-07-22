@@ -1,4 +1,4 @@
-#ifndef __MMNCPU_BI__
+﻿#ifndef __MMNCPU_BI__
 #define __MMNCPU_BI__
 
 '  #############

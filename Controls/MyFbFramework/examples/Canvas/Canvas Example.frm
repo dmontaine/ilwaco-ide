@@ -715,11 +715,8 @@ Private Sub Form1Type.PictureBK_Paint(ByRef Sender As Control, ByRef Canvas As M
 	
 	'创建包含圆弧的多边形 > BeginFigure(startPoint, D2D1_FIGURE_BEGIN_FILLED)
 	' 添加直线段
-	'Dim lines(1) As D2D1_POINT_2F lines(0).x = 100 : lines(0).y = 100(1).x = 200 : lines(1).y = 100 > AddLines(@lines(0), 2)
 	' 添加圆弧段
-	'Dim arc As D2D1_ARC_SEGMENT.point.x = 200 : arc.point.Y = 200.size.Width = 50 : arc.size.Height = 50.rotationAngle = 0.sweepDirection = D2D1_SWEEP_DIRECTION_CLOCKWISE.arcSize = D2D1_ARC_SIZE_SMALL>AddArc(@arc)
 	' 添加贝塞尔曲线段
-	'Dim bezier As D2D1_BEZIER_SEGMENT.point1.x = 200 : bezier.point1.y = 250.point2.x = 150 : bezier.point2.y = 300.point3.x = 100 : bezier.point3.y = 250>AddBeziers(@bezier, 1)
 	' 闭合图形 >EndFigure(D2D1_FIGURE_END_CLOSED)>Close()
 	
 	
@@ -840,7 +837,6 @@ Private Sub Form1Type.Form_Show(ByRef Sender As Form)
 End Sub
 
 Private Sub Form1Type.PictureBK_MouseMove(ByRef Sender As Control, MouseButton As Integer, x As Integer, y As Integer, Shift As Integer)
-	'If MouseButton = 0 Then Sender.Location = Type<My.Sys.Drawing.Point>(Sender.Left + x - Ms.X, Sender.Top + y - Ms.Y) : Sender.Repaint
 End Sub
 
 Private Sub Form1Type.PictureBK_MouseDown(ByRef Sender As Control, MouseButton As Integer, x As Integer, y As Integer, Shift As Integer)
@@ -871,9 +867,7 @@ Private Sub Form1Type.PictureBK_MouseUp(ByRef Sender As Control, MouseButton As 
 End Sub
 
 Private Sub Form1Type.Form_Create(ByRef Sender As Control)
-	'	Dim As Rect R
 	'GetClientRect GetDesktopWindow(), @R
-	'If R.Right < 10 Then R = Type<Rect>(0, 0, 1920, 1080)
 	'This.Graphic.Bitmap.LoadFromScreen(R.Left, R.Top, R.Right, R.Bottom)
 End Sub
 
@@ -888,10 +882,6 @@ Private Sub Form1Type.PictureBK_Click(ByRef Sender As Control)
 End Sub
 
 Private Sub Form1Type.cmdGDIDraw_Click(ByRef Sender As Control)
-	'Dim As Integer x = -140
-	'Dim As Integer y = -40
-	'Dim As Integer r =  30
-	'	With PictureBK.Canvas
 	'	.Circle x, y, 2 * r
 	'	.Line x, y - 2 * r, x, y + 2 * r, 7, "B"
 	'	'.Paint x - r, y, 15, 7
@@ -899,7 +889,6 @@ Private Sub Form1Type.cmdGDIDraw_Click(ByRef Sender As Control)
 	'	.Circle x, y + r / 2, r - 1, clBlack
 	'	.Circle x, y - r / 2, r / 3, clBlack
 	'	.Circle x, y + r / 2, r / 3, clWhite
-	'End With
 End Sub
 
 Private Sub Form1Type.RadioGDIPlus_Click(ByRef Sender As RadioButton)

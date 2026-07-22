@@ -12,7 +12,6 @@
 '###############################################################################
 
 #include once "Control.bi"
-'Const UDN_DELTAPOS = (UDN_FIRST - 1)
 
 Namespace My.Sys.Forms
 	#define QUpDown(__Ptr__) (*Cast(UpDown Ptr,__Ptr__))

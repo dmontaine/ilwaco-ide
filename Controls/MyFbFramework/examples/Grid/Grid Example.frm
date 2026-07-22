@@ -1,12 +1,4 @@
 ﻿'#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		#ifdef __FB_64BIT__
-			#cmdline "-gen gas64"
-		#endif
-		#define __USE_GTK3__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/Grid.bi"
 	#include once "mff/CommandButton.bi"
@@ -309,7 +301,6 @@ End Sub
 
 Private Sub Form1Type.cmdColDele_Click(ByRef Sender As Control)
 	Dim As Integer Curr = Grid1.SelectedColumnIndex
-	'Print "CurrCol=" &  Curr
 	Grid1.Columns.Remove(Curr)
 End Sub
 

@@ -81,11 +81,9 @@ Namespace My.Sys.Forms
 	End Property
 	
 	Private Property NotifyIcon.Visible(Value As Boolean)
-		'If FVisible <> Value Then
 		FVisible = Value
 		If Not FDesignMode Then
 		End If
-		'End If
 	End Property
 	
 	Private Sub NotifyIcon.IconChanged(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Drawing.Icon)

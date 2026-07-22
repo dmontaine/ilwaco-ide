@@ -122,7 +122,6 @@ End Function
 
 Function PipeProcess.PipeWrite(a As String) As Long
 	Dim nWritten As Long
-'	Dim a As String = aStr(cmd) '多字节Unicode字符串转换为单字节Ansi字符串
 	WriteFile(hPipeInWrite, StrPtr(a), Len(a), @nWritten, NULL)
 	Return nWritten
 End Function

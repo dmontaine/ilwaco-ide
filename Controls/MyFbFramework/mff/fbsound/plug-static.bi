@@ -1,4 +1,4 @@
-#ifndef __FBS_PLUG_STATIC_BI__
+﻿#ifndef __FBS_PLUG_STATIC_BI__
 #define __FBS_PLUG_STATIC_BI__
 
 '' plug-static.bi

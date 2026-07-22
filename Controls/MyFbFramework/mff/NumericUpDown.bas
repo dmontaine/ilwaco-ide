@@ -12,7 +12,6 @@
 '###############################################################################
 
 #include once "NumericUpDown.bi"
-'Const UDN_DELTAPOS = (UDN_FIRST - 1)
 
 Namespace My.Sys.Forms
 	#ifndef ReadProperty_Off
@@ -118,14 +117,9 @@ Namespace My.Sys.Forms
 	Private Property NumericUpDown.DecimalPlaces(Value As Integer)
 		FDecimalPlaces = Value
 		FScaleFactor = Val(Mid("1000000", 1, FDecimalPlaces + 1))
-		'If FDecimalPlaces > 1 Then UpDownControl.Increment = FScaleFactor / Val(Mid("1000000", 1, FDecimalPlaces))
 	End Property
 	Private Property NumericUpDown.Text ByRef As WString
-		#ifdef __USE_GTK__
 			FText = UpDownControl.Text
-		#else
-			FText = IIf(FDecimalPlaces > 0,  WStr(Val(Base.Text) / FScaleFactor), Base.Text)
-		#endif
 		Return FText
 	End Property
 	
@@ -188,18 +182,10 @@ Namespace My.Sys.Forms
 	End Property
 	
 	Private Sub NumericUpDown.SelectAll
-		#ifdef __USE_GTK__
-			'If GTK_IS_EDITABLE(widget) Then
 			'	gtk_editable_select_region(GTK_EDITABLE(widget), 0, -1)
-			'Else
-			'	Dim As GtkTextIter _start, _end
 			'	gtk_text_buffer_get_iter_at_offset(gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)), @_start, 0)
 			'	gtk_text_buffer_get_iter_at_offset(gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)), @_end, gtk_text_buffer_get_char_count(gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget))))
 			'	gtk_text_buffer_select_range(gtk_text_view_get_buffer(GTK_TEXT_VIEW(widget)), @_start, @_end)
-			'End If
-		#elseif 0
-			If FHandle Then Perform(EM_SETSEL, 0, -1)
-		#endif
 	End Sub
 	
 		Private Sub NumericUpDown.SpinButton_ValueChanged(self As GtkSpinButton Ptr, user_data As Any Ptr)
@@ -219,10 +205,8 @@ Namespace My.Sys.Forms
 	End Operator
 	
 	Private Constructor NumericUpDown
-		#ifdef __USE_GTK__
 			widget = UpDownControl.Handle
 			g_signal_connect(widget, "value_changed", G_CALLBACK(@SpinButton_ValueChanged), @This)
-		#endif
 		With This
 			.Child             = @This
 			UpDownControl.Associate = @This
@@ -235,11 +219,9 @@ Namespace My.Sys.Forms
 	End Constructor
 	
 	Private Destructor NumericUpDown
-		#ifdef __USE_GTK__
 		If GTK_IS_WIDGET(widget) Then
 			g_signal_handlers_disconnect_by_func(widget, G_CALLBACK(@SpinButton_ValueChanged), @This)
 		End If
 		widget = 0
-		#endif
 	End Destructor
 End Namespace

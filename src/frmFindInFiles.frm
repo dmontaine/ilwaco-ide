@@ -32,11 +32,7 @@ pfFindFile = @fFindFile
 	Constructor frmFindInFiles
 		This.Name = "frmFindInFiles"
 		This.StartPosition = FormStartPosition.CenterParent
-		#ifdef __USE_GTK__
 			This.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico")
-		#else
-			This.Icon.LoadFromResourceID(1)
-		#endif
 		This.BorderStyle = FormBorderStyle.Sizable
 		This.Caption = ML("Find In Files")
 		This.ID = 1000
@@ -399,11 +395,7 @@ Private Sub frmFindInFiles.ReplaceInFile(ByRef Path As WString ="", ByRef tSearc
 			If LCase(tML) <> LCase(tReplace) Then
 				FNameOpen = GetBakFileName(Path & f)
 				' https://www.freebasic.net/forum/viewtopic.php?f=2&t=27370&p=257529&hilit=FileCopy#p257529
-				#ifdef __USE_GTK__
 					FileCopy  Path & f, FNameOpen  'Function FileCopy suport unicode file name, But FileExist  is Ok in linux
-				#else
-					CopyFileW Path & f, FNameOpen, False
-				#endif
 			Else
 				FNameOpen = Path & f
 			End If

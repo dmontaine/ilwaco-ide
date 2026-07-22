@@ -1,8 +1,4 @@
 ﻿'#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/TextBox.bi"
 	#include once "mff/CommandButton.bi"
@@ -19,12 +15,6 @@
 	End Type
 	
 	Constructor frmEditType
-		#if _MAIN_FILE_ = __FILE__
-			With App
-				.CurLanguagePath = ExePath & "/Languages/"
-				.CurLanguage = My.Sys.Language
-			End With
-		#endif
 		' frmEdit
 		With This
 			.Name = "frmEdit"

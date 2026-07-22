@@ -1,4 +1,4 @@
-'' FreeBASIC binding for SQLite 3.8.11.1
+﻿'' FreeBASIC binding for SQLite 3.8.11.1
 ''
 '' based on the C header files:
 ''   * 2001 September 15

@@ -130,14 +130,14 @@ Namespace My.Sys.Drawing
 	End Operator
 	
 	Private Function Cursor.ToString() ByRef As WString
-		If FResName > 0 Then Return *FResName Else Return ""
+	Static EmptyWString As WString * 1
+		If FResName > 0 Then Return *FResName Else Return EmptyWString
 	End Function
 	
 	
 	Private Operator Cursor.Let(Value As Integer)
 	End Operator
 	
-	#ifdef __USE_GTK__
 		Private Operator Cursor.Let(Value As GdkCursorType)
 			If Ctrl AndAlso Ctrl->Handle Then
 				Dim As GdkDisplay Ptr pdisplay = gtk_widget_get_display(Ctrl->Handle)
@@ -145,13 +145,6 @@ Namespace My.Sys.Drawing
 			End If
 		End Operator
 		
-	#elseif 0
-		Private Operator Cursor.Let(Value As HCURSOR)
-			If Handle Then DestroyCursor(Handle)
-			Handle = Value
-			If Ctrl AndAlso Ctrl->Handle Then SendMessage(Ctrl->Handle, WM_SETCURSOR, Cast(WPARAM, Ctrl->Handle), Cast(LPARAM, 1))
-		End Operator
-	#endif
 	
 	Private Operator Cursor.Let(Value As Cursor)
 		Handle = Value.Handle
@@ -159,9 +152,7 @@ Namespace My.Sys.Drawing
 	
 	Private Constructor Cursor
 		WLet(FClassName, "Cursor")
-'		#ifndef __USE_GTK__
 '			Handle = LoadCursor(NULL,IDC_ARROW)
-'		#endif
 		If Changed Then Changed(*Designer, This)
 	End Constructor
 	

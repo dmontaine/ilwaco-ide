@@ -77,15 +77,6 @@ byval bits       as long, _
 byval channels   as long, _
 byval streamname as string) as arts_stream_t
 
-#if 0
-' read samples from stream
-' returns number of read bytes on success or error code
-declare function arts_read alias "arts_read" ( _
-byval stream   as arts_stream_t, _
-byval lpBuffer as any ptr      , _
-byval count    as long) as long 
-#endif
-
 ' write samples to to stream
 ' returns number of written bytes on success or error code
 declare function arts_write alias "arts_write" ( _

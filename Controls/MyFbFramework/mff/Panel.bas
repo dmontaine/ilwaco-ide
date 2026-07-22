@@ -104,11 +104,6 @@ Namespace My.Sys.Forms
 	End Property
 	
 	
-	#ifdef __USE_WASM__
-		Private Function Panel.GetContent() As UString
-			Return ""
-		End Function
-	#endif
 	
 	Private Sub Panel.ProcessMessage(ByRef Message As Message)
 		Base.ProcessMessage(Message)
@@ -137,47 +132,19 @@ Namespace My.Sys.Forms
 	
 	Private Sub Panel.CreateWnd
 		Base.CreateWnd
-		#ifdef __USE_JNI__
-			layoutview = FHandle
-		#endif
 	End Sub
 	
 	Private Sub Panel.GraphicChange(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Drawing.GraphicType, Image As Any Ptr, ImageType As Integer)
 		With Sender
 			If .Ctrl->Child Then
-				#ifdef __USE_GTK__
-					'If GTK_IS_IMAGE(QForm(.Ctrl->Child).ImageWidget) Then
-					'	Select Case ImageType
-					'	Case 0
 					'		gtk_image_set_from_pixbuf(GTK_IMAGE(QForm(.Ctrl->Child).ImageWidget), .Bitmap.Handle)
-					'	Case 1
 					'		gtk_image_set_from_pixbuf(GTK_IMAGE(QForm(.Ctrl->Child).ImageWidget), .Icon.Handle)
-					'	End Select
-					'End If
-				#else
-					'					Select Case ImageType
-					'					Case 0
-					'QForm(.Ctrl->Child).ChangeStyle SS_BITMAP, True
-					'QForm(.Ctrl->Child).Perform(BM_SETIMAGE, ImageType, CInt(Sender.Bitmap.Handle))
-					'					Case 1
-					'QForm(.Ctrl->Child).ChangeStyle SS_ICON, True
-					'QForm(.Ctrl->Child).Perform(BM_SETIMAGE, ImageType, CInt(Sender.Icon.Handle))
-					'					Case 2
-					'QForm(.Ctrl->Child).ChangeStyle SS_ICON, True
-					'QForm(.Ctrl->Child).Perform(BM_SETIMAGE, ImageType, CInt(Sender.Icon.Handle))
-					'					Case 3
-					'QForm(.Ctrl->Child).ChangeStyle SS_ENHMETAFILE, True
-					'QForm(.Ctrl->Child).Perform(BM_SETIMAGE, ImageType, CInt(0))
-					'					End Select
-					.Ctrl->Repaint
-				#endif
 			End If
 		End With
 	End Sub
 	
 	Private Constructor Panel
 		With This
-			#ifdef __USE_GTK__
 				'widget = gtk_scrolled_window_new(null, null)
 				'widget = gtk_layout_new(null, null)
 				'widget = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0)
@@ -204,7 +171,6 @@ Namespace My.Sys.Forms
 				'gtk_scrolled_window_set_propagate_natural_width(gtk_scrolled_window(widget), true)
 				'widget = gtk_fixed_new()
 				.RegisterClass "Panel", @This
-			#endif
 			FBorderWidth = 0
 			'FBevelWidth=2
 			'PopupMenu.Ctrl = This

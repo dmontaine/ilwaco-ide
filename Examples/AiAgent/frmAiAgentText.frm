@@ -1,8 +1,4 @@
 ﻿'#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/RichTextBox.bi"
 	#include once "mff/Splitter.bi"
@@ -47,12 +43,6 @@
 	End Type
 	
 	Constructor frmAiAgentType
-		#if _MAIN_FILE_ = __FILE__
-			With App
-				.CurLanguagePath = ExePath & "/Languages/"
-				.CurLanguage = My.Sys.Language
-			End With
-		#endif
 		' frmAiAgent
 		With This
 			.Name = "frmAiAgent"

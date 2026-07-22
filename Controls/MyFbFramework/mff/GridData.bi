@@ -67,11 +67,7 @@ Namespace My.Sys.Forms
 		PItem As PGridDataItem
 		FParentItem As PGridDataItem
 	Public:
-		#ifdef __USE_GTK__
 			Declare Function FindByIterUser_Data(User_Data As Any Ptr) As PGridDataItem
-		#else
-			Declare Function FindByHandle(Value As LPARAM) As PGridDataItem
-		#endif
 		Parent   As Control Ptr
 		Declare Property Count As Integer
 		Declare Property Count(Value As Integer)
@@ -116,15 +112,8 @@ Namespace My.Sys.Forms
 
 	Protected:
 	Public:
-		#ifdef __USE_GTK__
 			'Native tree iterator handle (GTK+ integration)
 			TreeIter As GtkTreeIter
-		#else
-			'Native OS handle for the item element
-			HANDLE As LPARAM
-			'Returns position in parent collection
-			Declare Function GetItemIndex() As Integer
-		#endif
 		'Reference to parent grid control
 		Parent   As Control Ptr
 		'Collection of child items (for hierarchical data)
@@ -213,9 +202,7 @@ Namespace My.Sys.Forms
 		FGridEditComboItem As WString Ptr
 		FSortOrder    As SortStyle
 	Public:
-		#ifdef __USE_GTK__
 			Dim As GtkTreeViewColumn Ptr Column
-		#endif
 		'Ordinal position in grid columns
 		Index As Integer
 		'Reference to parent grid control
@@ -274,10 +261,8 @@ Namespace My.Sys.Forms
 	Private Type GridDataColumns
 	Private:
 		FColumns As List
-		#ifdef __USE_GTK__
 			Declare Static Sub Cell_Edited(renderer As GtkCellRendererText Ptr, path As gchar Ptr, new_text As gchar Ptr, user_data As Any Ptr)
 			Declare Static Sub Cell_Editing(cell As GtkCellRenderer Ptr, editable As GtkCellEditable Ptr, path As Const gchar Ptr, user_data As Any Ptr)
-		#endif
 	Public:
 		'Reference to parent grid control
 		Parent   As Control Ptr
@@ -378,23 +363,17 @@ Namespace My.Sys.Forms
 		Declare Sub SortData(iCol As Integer,tSortStyle As SortStyle)
 
 	Protected:
-		#ifdef __USE_GTK__
 			Declare Static Function GridData_TestExpandRow(tree_view As GtkTreeView Ptr, iter As GtkTreeIter Ptr, path As GtkTreePath Ptr, user_data As Any Ptr) As Boolean
 			Declare Static Sub GridData_Map(widget As GtkWidget Ptr, user_data As Any Ptr)
 			Declare Static Sub GridData_RowActivated(tree_view As GtkTreeView Ptr, path As GtkTreePath Ptr, column As GtkTreeViewColumn Ptr, user_data As Any Ptr)
 			Declare Static Sub GridData_SelectionChanged(selection As GtkTreeSelection Ptr, user_data As Any Ptr)
-		#else
-			Declare Function GetGridDataItem(Item As Integer) As GridDataItem Ptr
-		#endif
 	Public:
-		#ifdef __USE_GTK__
 			'Pointer to native tree storage structure.
 			TreeStore As GtkTreeStore Ptr
 			'Hierarchical selection mode (Single/Multi).
 			TreeSelection As GtkTreeSelection Ptr
 			'Column data types (Text/Image/Checkbox).
 			ColumnTypes As GType Ptr
-		#endif
 		'Collection of grid data rows.
 		ListItems         As GridDataItems
 		'Collection of column definitions.

@@ -15,7 +15,6 @@
 
 Const OFN_ENABLEINCLUDENOTIFY = &H400000
 
-#ifdef __USE_GTK__
 	Private Enum OpenOption
 		ofReadOnly
 		ofOverwritePrompt
@@ -38,30 +37,6 @@ Const OFN_ENABLEINCLUDENOTIFY = &H400000
 		ofEnableIncludeNotify
 		ofEnableSizing
 	End Enum
-#else
-	Private Enum OpenOption
-		ofReadOnly            = OFN_READONLY
-		ofOverwritePrompt     = OFN_OVERWRITEPROMPT
-		ofHideReadOnly        = OFN_HIDEREADONLY
-		ofNoChangeDir         = OFN_NOCHANGEDIR
-		ofShowHelp            = OFN_SHOWHELP
-		ofNoValidate          = OFN_NOVALIDATE
-		ofAllowMultiSelect    = OFN_ALLOWMULTISELECT
-		ofExtensionDifferent  = OFN_EXTENSIONDIFFERENT
-		ofPathMustExist       = OFN_PATHMUSTEXIST
-		ofFileMustExist       = OFN_FILEMUSTEXIST
-		ofCreatePrompt        = OFN_CREATEPROMPT
-		ofShareAware          = OFN_SHAREAWARE
-		ofNoReadOnlyReturn    = OFN_NOREADONLYRETURN
-		ofNoTestFileCreate    = OFN_NOTESTFILECREATE
-		ofNoNetworkButton     = OFN_NONETWORKBUTTON
-		ofNoLongNames         = OFN_NOLONGNAMES
-		ofOldStyleDialog      = OFN_EXPLORER
-		ofNoDereferenceLinks  = OFN_NODEREFERENCELINKS
-		ofEnableIncludeNotify = OFN_ENABLEINCLUDENOTIFY
-		ofEnableSizing        = OFN_ENABLESIZING
-	End Enum
-#endif
 
 Private Type OpenFileOptions
 	Count   As Integer

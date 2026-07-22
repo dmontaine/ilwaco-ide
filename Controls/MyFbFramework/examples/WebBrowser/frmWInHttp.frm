@@ -4,10 +4,6 @@
 '#  Authors: Xusinboy Bekchanov, Liu XiaLin                                     #
 '################################################################################
 
-#if 0
-	#define __MAIN_FILE__
-	Const _MAIN_FILE_ = __FILE__
-#endif
 
 	#define __USE_GTK3__
 	#define _NOT_AUTORUN_FORMS_
@@ -155,7 +151,6 @@ End Sub
 '分离成域名与路径
 '网络调用里使用，因为多要把 URL 分成：域名或者IP地址与页面路径使用
 Sub URL_RemoveDomain(ByVal URL As String, ByRef domain As String, ByRef path As String, ByRef port As Integer) '分离成域名与路径
-	'ByRef 域名 as String ,ByRef 路径 as String ,ByRef 端口
 	Dim As String  tob,ltob
 	Dim As Long  aa,bb
 	tob = Trim(URL)
@@ -273,7 +268,6 @@ Function StringExtractHTML(ByRef wszMainStr As WString, ByRef wszDelim1 As Const
 End Function
 
 Private Sub frmWinsockType.Form_Close(ByRef Sender As Form, ByRef Action As Integer)
-	'If mTmpString Then Deallocate mTmpString
 End Sub
 
 

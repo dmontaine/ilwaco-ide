@@ -49,9 +49,7 @@ extern "C"
 #define _ogg_free free
 type ogg_int16_t as short
 
-#if defined(__FB_WIN32__) or defined(__FB_UNIX__)
 	type ogg_uint16_t as ushort
-#endif
 
 type ogg_int32_t as long
 type ogg_uint32_t as ulong

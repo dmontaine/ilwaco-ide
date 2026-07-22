@@ -370,8 +370,6 @@ Function midiPlayer.isPlayable(eventCode As Integer) As Boolean
 	'1 - define parameter type (pType)
 	Select Case eventCode
 	Case &H80 To &HEF
-		'Dim c As UByte = eventCode And maskChannel
-		'Return EnabledChannel(c)
 		Return True
 	End Select
 	Return False

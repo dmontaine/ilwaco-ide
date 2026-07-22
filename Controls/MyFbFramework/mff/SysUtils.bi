@@ -9,104 +9,13 @@
 '#  Modified by Xusinboy Bekchanov(2018-2019)  Liu XiaLin                       #
 '################################################################################
 
-#ifdef __FB_ANDROID__
-	#ifndef __USE_JNI__
-		#define __USE_JNI__
-	#endif
-#elseif 0
-	#ifndef __USE_WASM__
-		#define __USE_WASM__
-	#endif
-#elseif 1
-		#ifndef __USE_GTK__
-			#define __USE_GTK__
-		#endif
-#endif
 
 
-#ifdef __USE_GTK__
 	#define __USE_CAIRO__
-	'#define FHandle Widget
-	'#if defined(__USE_GTK3__) Or defined(__USE_GTK4__)
-	'#elseif Not defined(__USE_GTK2__)
-	'	#define __USE_GTK2__
-	'#endif
-	'#ifdef __USE_GTK4__
-	'	#include once "cairo/cairo.bi"
-	'	#include once "gir_headers/Gir/PangoCairo-1.0.bi"
-	'	#include once "gir_headers/Gir/Gtk-4.0.bi"
-	'	#include once "gir_headers/Gir/_GObjectMacros-2.0.bi"
-	'#else
-	'	#include once "gtk/gtk.bi"
 	#include once "gtk/gtk.bi"
-	'	#ifdef __USE_GTK3__
-	#ifdef __USE_GTK3__
-	'		#include once "glib-object.bi"
 		#include once "glib-object.bi"
-	'	#endif
-	#endif
-	'#endif
-#elseif 0
-	#include once "jni.bi"
-	#define Max(a, b) IIf((a) > (b), (a), (b))
-	#define Min(a, b) IIf((a) < (b), (a), (b))
-#elseif 0
-	#define Max(a, b) IIf((a) > (b), (a), (b))
-	#define Min(a, b) IIf((a) < (b), (a), (b))
-	Declare Sub AddColumn(Id As Any Ptr, Caption As String)
-	Declare Sub AddRow(Id As Any Ptr, Text As String)
-	Declare Sub AddSelectItem(Id As Any Ptr, Text As String)
-	Declare Function GetDocumentWidth() As Integer
-	Declare Function GetDocumentHeight() As Integer
-	Declare Sub InsertHTML(Value As String)
-	Declare Sub SetTitle(Value As String)
-	Declare Sub FreePtr(Ptr As Any Ptr)
-	Declare Sub SetVisibleByStringId(Id As String, Value As Boolean)
-	Declare Sub SetVisible(Id As Any Ptr, Value As Boolean)
-	Declare Sub SetMultiple(Id As Any Ptr, Value As Boolean)
-	Declare Sub SetSize(Id As Any Ptr, Value As Integer)
-	Declare Function GetSelectedIndex(Id As Any Ptr) As Integer
-	Declare Sub SetSelectedIndex(Id As Any Ptr, Value As Integer)
-	Declare Sub CreateElement(AddPosition As String, ClassName As String, Class As String, Type As String, Id As Any Ptr, Name As String, Text As String, Style As String, PositionType As String, Left As String, Top As String, Width As String, Height As String, Right As String, Bottom As String, Parent As Any Ptr)
-	Declare Sub DeleteElement(Id As Any Ptr)
-	Declare Function GetStringValue(Id As Any Ptr) As ZString Ptr
-	Declare Sub SetStringValue(Id As Any Ptr, Value As String)
-	Declare Sub SetBackColor(Id As Any Ptr, Value As Integer)
-	Declare Sub SetForeColor(Id As Any Ptr, Value As Integer)
-	Declare Sub SetFont(Id As Any Ptr, Value As String)
-	Declare Sub SetChecked(Id As String, Value As Boolean)
-	Declare Function GetChecked(Id As String) As Boolean
-	Declare Function MessageBox(Message As String, Caption As String, MessageType As Integer, ButtonsType As Integer) As Integer
-	Declare Sub SetLoadEvent(Id As Any Ptr)
-	Declare Sub SetChangeEvent(Id As Any Ptr)
-	Declare Sub SetClickEvent(Id As Any Ptr)
-	Declare Sub SetDblClickEvent(Id As Any Ptr)
-	Declare Sub SetGotFocusEvent(Id As Any Ptr)
-	Declare Sub SetLostFocusEvent(Id As Any Ptr)
-	Declare Sub SetKeyDownEvent(Id As Any Ptr)
-	Declare Sub SetKeyPressEvent(Id As Any Ptr)
-	Declare Sub SetKeyUpEvent(Id As Any Ptr)
-	Declare Sub SetMouseEnterEvent(Id As Any Ptr)
-	Declare Sub SetMouseDownEvent(Id As Any Ptr)
-	Declare Sub SetMouseMoveEvent(Id As Any Ptr)
-	Declare Sub SetMouseUpEvent(Id As Any Ptr)
-	Declare Sub SetMouseLeaveEvent(Id As Any Ptr)
-	Declare Sub SetMouseWheelEvent(Id As Any Ptr)
-	Declare Sub SetUnloadEvent(Id As Any Ptr)
-	#define NULL 0
-#elseif 0
-	#include once "win/wincrypt.bi"
-	#include once "Win/CommCtrl.bi"
-	#include once "Win/CommDlg.bi"
-	#include once "Win/RichEdit.bi"
-	#include once "win/iphlpapi.bi"
-	#define Instance GetModuleHandle(NULL)
-#endif
 #include once "UString.bi"
 #include once "Integer.bi"
-#ifdef __USE_WASM__
-	Declare Function SendHTTPRequest(url As String, method As String, data As String) As ZString Ptr
-#endif
 
 #ifdef __EXPORT_PROCS__
 	#define PublicOrPrivate Public
@@ -116,10 +25,8 @@
 	#define __EXPORT__
 #endif
 
-'#define In ,
 '#macro Each(iter, arr)
 '	index As Integer = LBound(arr) To UBound(arr)
-'	#define iter arr(index)
 '#endmacro
 
 #define Each(iter, col) __index__ As Integer = 0 To col.Count - 1: Dim As Typeof(col.Item(__index__)) iter = col.Item(__index__)
@@ -127,11 +34,7 @@
 #define Me This
 
 #ifndef _L
-	#ifdef __USE_GTK__
 		#define _L Print __LINE__, __FILE__, __FUNCTION__:
-	#else
-		#define _L Print __LINE__, __FILE__, __FUNCTION__, GetErrorString(GetLastError, , True):
-	#endif
 #endif
 
 Const HELP_SETPOPUP_POS = &Hd

@@ -18,9 +18,7 @@ Namespace My.Sys
 		FFormatCount As Integer
 		FFormat      As WString Ptr
 		FText        As WString Ptr
-		#ifdef __USE_GTK__
 			FClipboard As GtkClipboard Ptr
-		#endif
 	Public:
 		Declare Sub Open
 		Declare Sub Clear
@@ -36,7 +34,6 @@ Namespace My.Sys
 	End Type
 End Namespace
 
-'Common Shared As My.Sys.ClipboardType Ptr pClipboard
 
 #ifndef __USE_MAKE__
 	#include once "Clipboard.bas"

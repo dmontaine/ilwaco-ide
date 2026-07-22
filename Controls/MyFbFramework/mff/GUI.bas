@@ -23,20 +23,12 @@ Namespace My.Sys.Forms
 	End Property
 	
 	Property GroupBox.Text ByRef As WString
-		#ifdef __USE_GTK__
 			FText = WStr(gtk_frame_get_label(GTK_FRAME(widget)))
 			Return *FText.vptr
-		#else
-			Return Base.Text
-		#endif
 	End Property
 	
 	Property GroupBox.Text(ByRef Value As WString)
-		#ifdef __USE_GTK__
 			If widget Then gtk_frame_set_label(GTK_FRAME(widget), ToUtf8(Value))
-		#else
-			Base.Text = Value
-		#endif
 	End Property
 	
 	Property GroupBox.ParentColor As Boolean
@@ -63,13 +55,8 @@ Namespace My.Sys.Forms
 	Constructor GroupBox
 		With This
 			.Child       = @This
-			#ifdef __USE_GTK__
 				widget = gtk_frame_new("")
 				.RegisterClass "GroupBox", @This
-			#else
-				.RegisterClass "GroupBox", "Button"
-				.ChildProc   = @WndProc
-			#endif
 			WLet(FClassName, "GroupBox")
 			WLet(FClassAncestor, "Button")
 			FTabStop           = True

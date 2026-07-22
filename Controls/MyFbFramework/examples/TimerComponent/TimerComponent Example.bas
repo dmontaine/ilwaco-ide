@@ -1,8 +1,4 @@
-﻿#ifdef __FB_WIN32__
-	'#Compile -exx "Form2.rc"
-#else
-	'#Compile -exx
-#endif
+﻿	'#Compile -exx
 #include once "mff/Form.bi"
 #include once "mff/CommandButton.bi"
 #include once "mff/TimerComponent.bi"

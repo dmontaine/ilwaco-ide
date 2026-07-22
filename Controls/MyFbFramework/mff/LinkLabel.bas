@@ -51,9 +51,7 @@ Namespace My.Sys.Forms
 	
 	Private Property LinkLabel.Text(ByRef Value As WString)
 		Base.Text = Value
-		#ifdef __USE_GTK__
 			gtk_label_set_markup_with_mnemonic(GTK_LABEL(widget), ToUtf8(Replace(Value, "&", "_")))
-		#endif
 	End Property
 	
 	
@@ -61,7 +59,6 @@ Namespace My.Sys.Forms
 		Base.ProcessMessage Message
 	End Sub
 	
-	#ifdef __USE_GTK__
 		Private Function LinkLabel.ActivateLink(label As GtkLabel Ptr, uri As gchar Ptr, user_data As gpointer) As Boolean
 			Dim As LinkLabel Ptr lab = user_data
 			Dim As Integer Action = 1
@@ -73,7 +70,6 @@ Namespace My.Sys.Forms
 				Return True
 			End If
 		End Function
-	#endif
 	
 	Private Operator LinkLabel.Cast As My.Sys.Forms.Control Ptr
 		Return Cast(My.Sys.Forms.Control Ptr, @This)
@@ -82,25 +78,12 @@ Namespace My.Sys.Forms
 	Private Constructor LinkLabel
 		With This
 			WLet(FClassName, "LinkLabel")
-			#ifdef __USE_GTK__
 				widget = gtk_label_new("")
 				scrolledwidget = gtk_scrolled_window_new(NULL, NULL)
 				gtk_scrolled_window_set_policy(gtk_scrolled_window(scrolledwidget), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC)
-				#ifdef __USE_GTK3__
 					gtk_container_add(gtk_container(scrolledwidget), widget)
-				#else
-					gtk_scrolled_window_add_with_viewport(gtk_scrolled_window(scrolledwidget), widget)
-				#endif
 				g_signal_connect(widget, "activate-link", G_CALLBACK(@ActivateLink), @This)
 				.RegisterClass "LinkLabel", @This
-			#else
-				.RegisterClass "LinkLabel", WC_LINK
-				WLet(FClassAncestor, WC_LINK)
-				.ExStyle      = 0
-				.Style        = WS_CHILD
-				.ChildProc    = @WndProc
-				.OnHandleIsAllocated = @HandleIsAllocated
-			#endif
 			FTabIndex          = -1
 			.Width        = 100
 			.Height       = 32

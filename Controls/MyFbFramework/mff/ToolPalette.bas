@@ -18,7 +18,6 @@ Namespace My.Sys.Forms
 		Private Function ToolPalette.ReadProperty(ByRef PropertyName As String) As Any Ptr
 			Select Case LCase(PropertyName)
 			Case "autosize": Return @FAutosize
-			'Case "caption": Return FText.vptr
 			Case "flat": Return @FFlat
 			Case "list": Return @FList
 			Case "wrapable": Return @FWrapable
@@ -51,7 +50,6 @@ Namespace My.Sys.Forms
 				Case "bitmapheight": This.BitmapHeight = QInteger(Value)
 				Case "buttonwidth": This.ButtonWidth = QInteger(Value)
 				Case "buttonheight": This.ButtonHeight = QInteger(Value)
-				'Case "caption": This.Caption = QWString(Value)
 				Case "flat": This.Flat = QBoolean(Value)
 				Case "list": This.List = QBoolean(Value)
 				Case "disabledimageslist": This.DisabledImagesList = Value
@@ -68,9 +66,7 @@ Namespace My.Sys.Forms
 	#endif
 	
 	Private Constructor ToolGroup
-		#ifdef __USE_GTK__
 			Widget = gtk_tool_item_group_new("")
-		#endif
 		FExpanded = True
 		Buttons.Parent = @This
 	End Constructor
@@ -108,9 +104,7 @@ Namespace My.Sys.Forms
 	
 	Private Property ToolGroup.Caption(ByRef Value As WString)
 		WLet(FCaption, Value)
-		#ifdef __USE_GTK__
 			gtk_tool_item_group_set_label(GTK_TOOL_ITEM_GROUP(Widget), ToUtf8(Value))
-		#endif
 	End Property
 	
 	Private Property ToolGroup.Name ByRef As WString
@@ -127,22 +121,7 @@ Namespace My.Sys.Forms
 	
 	Private Property ToolGroup.Expanded(Value As Boolean)
 		FExpanded = Value
-		#ifdef __USE_GTK__
 			gtk_tool_item_group_set_collapsed(GTK_TOOL_ITEM_GROUP(Widget), Not Value)
-		#else
-			If Ctrl Then
-				With QControl(Ctrl)
-					.UpdateLock
-					SendMessage(.Handle, TB_CHECKBUTTON, FCommandID, MAKELONG(FExpanded, 0))
-					SendMessage(.Handle, TB_CHANGEBITMAP, FCommandID, MAKELONG(IIf(Value, 0, 1), 0))
-					SendMessage(.Handle, TB_HIDEBUTTON, FCommandID * 10 + 1, MAKELONG(Not FExpanded, 0))
-					For i As Integer = 0 To Buttons.Count - 1
-						Buttons.Item(i)->Visible = FExpanded
-					Next
-					.UpdateUnLock
-				End With
-			End If
-		#endif
 	End Property
 	
 	Private Operator ToolGroup.Cast As Any Ptr
@@ -169,7 +148,6 @@ Namespace My.Sys.Forms
 		'QToolButton(FButtons.Items[Index]) = Value
 	End Property
 	
-	#ifdef __USE_GTK__
 		Private Sub ToolGroupButtons.ToolButtonClicked(gtoolbutton As GtkToolButton Ptr, user_data As Any Ptr)
 			Dim As ToolButton Ptr tbut = user_data
 			If tbut Then
@@ -180,7 +158,6 @@ Namespace My.Sys.Forms
 				End If
 			End If
 		End Sub
-	#endif
 	
 	Private Function ToolGroupButtons.Add(FStyle As ToolButtonStyle = tbsAutosize, FImageIndex As Integer = -1, Index As Integer = -1, FClick As NotifyEvent = NULL, ByRef FKey As WString = "", ByRef FCaption As WString = "", ByRef FHint As WString = "", FShowHint As Boolean = False, FState As ToolButtonState = tstEnabled) As ToolButton Ptr
 		Dim As ToolButton Ptr PButton
@@ -189,7 +166,6 @@ Namespace My.Sys.Forms
 		FButtons.Add PButton
 		With *PButton
 			.Style          = FStyle
-			#ifdef __USE_GTK__
 				Select Case FStyle
 				Case tbsSeparator
 					.Widget = GTK_WIDGET(gtk_separator_tool_item_new())
@@ -231,7 +207,6 @@ Namespace My.Sys.Forms
 					g_signal_connect(.Widget, "clicked", G_CALLBACK(@ToolButtonClicked), PButton)
 				End Select
 				gtk_widget_show_all(.Widget)
-			#endif
 			.State        = FState
 			.ImageIndex     = FImageIndex
 			.Hint           = FHint
@@ -242,49 +217,16 @@ Namespace My.Sys.Forms
 			.OnClick        = FClick
 		End With
 		PButton->Ctrl = @Cast(ToolGroup Ptr, Parent)->Ctrl
-		#ifdef __USE_GTK__
 			If Parent Then
 				gtk_tool_item_group_insert(GTK_TOOL_ITEM_GROUP(Cast(ToolGroup Ptr, Parent)->Widget), GTK_TOOL_ITEM(PButton->Widget), Index)
 			End If
-		#else
-			Dim As TBBUTTON TB
-			TB.fsState   = FState
-			TB.fsStyle   = FStyle
-			TB.iBitmap   = PButton->ImageIndex
-			TB.idCommand = PButton->CommandID
-			If FCaption <> "" Then
-				TB.iString = CInt(@FCaption)
-			Else
-				TB.iString = 0
-			End If
-			TB.dwData = Cast(DWORD_PTR, @PButton->DropDownMenu)
-			If This.Parent AndAlso Cast(ToolGroup Ptr, This.Parent)->Ctrl Then
-				With *Cast(ToolGroup Ptr, This.Parent)
-					If Index = -1 Then
-						SendMessage(.Ctrl->Handle, TB_INSERTBUTTON, SendMessage(.Ctrl->Handle, TB_COMMANDTOINDEX, .CommandID, 0) + FButtons.Count + 1, CInt(@TB))
-					Else
-						SendMessage(.Ctrl->Handle, TB_INSERTBUTTON, SendMessage(.Ctrl->Handle, TB_COMMANDTOINDEX, .CommandID, 0) + Index + 1, CInt(@TB))
-					End If
-				End With
-			End If
-		#endif
 		Return PButton
 	End Function
 	
 	Private Function ToolGroupButtons.Add(FStyle As ToolButtonStyle = tbsAutosize, ByRef ImageKey As WString, Index As Integer = -1, FClick As NotifyEvent = NULL, ByRef FKey As WString = "", ByRef FCaption As WString = "", ByRef FHint As WString = "", FShowHint As Boolean = False, FState As ToolButtonState = tstEnabled) As ToolButton Ptr
 		Dim As ToolButton Ptr PButton
-		#ifdef __USE_GTK__
 			PButton = Add(FStyle, -1, Index, FClick, FKey, FCaption, FHint, FShowHint, FState)
 			If PButton Then PButton->ImageKey         = ImageKey
-		#else
-			If Parent AndAlso Cast(ToolGroup Ptr, Parent)->Ctrl AndAlso Cast(ToolPalette Ptr, Cast(ToolGroup Ptr, Parent)->Ctrl)->ImagesList Then
-				With *Cast(ToolPalette Ptr, Cast(ToolGroup Ptr, Parent)->Ctrl)->ImagesList
-					PButton = Add(FStyle, .IndexOf(ImageKey), Index, FClick, FKey, FCaption, FHint, FShowHint, FState)
-				End With
-			Else
-				PButton = Add(FStyle, -1, Index, FClick, FKey, FCaption, FHint, FShowHint, FState)
-			End If
-		#endif
 		Return PButton
 	End Function
 	
@@ -354,46 +296,9 @@ Namespace My.Sys.Forms
 			.CommandID		= (FGroups.Count) * 100
 		End With
 		PGroup->Ctrl = Parent
-		#ifdef __USE_GTK__
 			If Parent AndAlso Parent->Handle Then
 				gtk_container_add(GTK_CONTAINER (Parent->Handle), PGroup->Widget)
 			End If
-		#else
-			If Parent Then
-				Dim As TBBUTTON TB
-				If FGroups.Count > 1 Then
-					TB.fsState   = TBSTATE_ENABLED Or TBSTATE_WRAP
-					TB.fsStyle   = TBSTYLE_SEP
-					TB.iBitmap   = -1
-					TB.idCommand = 0
-					TB.iString = 0
-					TB.dwData = 0
-					SendMessage(Parent->Handle, TB_ADDBUTTONS, 1, CInt(@TB))
-				End If
-				TB.fsState   = TBSTATE_ENABLED Or TBSTATE_CHECKED Or TBSTATE_WRAP
-				TB.fsStyle   = TBSTYLE_CHECK
-				TB.iBitmap   = 0
-				TB.idCommand = PGroup->CommandID
-				If Caption <> "" Then
-					TB.iString = CInt(@Caption)
-				Else
-					TB.iString = 0
-				End If
-				TB.dwData = 0 'Cast(DWord_Ptr,@PButton->DropDownMenu)
-				'If Index <> -1 Then
-				'	Parent->Parent->Perform(TB_INSERTBUTTON,Index,CInt(@TB))
-				'Else
-				SendMessage(Parent->Handle, TB_ADDBUTTONS, 1, CInt(@TB))
-				'End If
-				TB.fsState   = 0
-				TB.fsStyle   = TBSTYLE_SEP
-				TB.iBitmap   = -1
-				TB.idCommand = PGroup->CommandID * 10 + 1
-				TB.iString = 0
-				TB.dwData = 0
-				SendMessage(Parent->Handle, TB_ADDBUTTONS, 1, CInt(@TB))
-			End If
-		#endif
 		Return PGroup
 	End Function
 	
@@ -459,11 +364,7 @@ Namespace My.Sys.Forms
 	
 	Private Sub ToolPalette.GetDropDownMenuItems
 		FPopupMenuItems.Clear
-		'For j As Integer = 0 To Buttons.Count - 1
-		'    For i As Integer = 0 To Buttons.Item(j)->DropDownMenu.Count -1
 		'        EnumPopupMenuItems *Buttons.Item(j)->DropDownMenu.Item(i)
-		'    Next i
-		'Next j
 	End Sub
 	
 	Private Property ToolPalette.AutoSize As Boolean
@@ -480,7 +381,6 @@ Namespace My.Sys.Forms
 	
 	Private Property ToolPalette.Style(Value As Integer)
 		FStyle = Value
-		#ifdef __USE_GTK__
 			Dim As GtkToolbarStyle gStyle
 			Select Case FStyle
 			Case 0: gStyle = GTK_TOOLBAR_ICONS
@@ -489,38 +389,9 @@ Namespace My.Sys.Forms
 			Case 3: gStyle = GTK_TOOLBAR_BOTH_HORIZ
 			End Select
 			gtk_tool_palette_set_style(GTK_TOOL_PALETTE(widget), gStyle)
-			'For i As Integer = 0 To Groups.Count - 1
-			'	For j As Integer = 0 To Groups.Item(i)->Buttons.Count - 1
-			'		With *Groups.Item(i)->Buttons.Item(i)
 			'			.ImageKey = .ImageKey
-			'		End With
-			'	Next j
-			'Next i
 			If GTK_IS_CONTAINER(widget) Then gtk_widget_queue_resize(widget)
 			If GTK_IS_WIDGET(widget) Then gtk_widget_queue_draw(widget)
-		#else
-			For j As Integer = 0 To Groups.Count - 1
-				For i As Integer = 0 To Groups.Item(j)->Buttons.Count - 1
-					With *Cast(ToolButton Ptr, Groups.Item(j)->Buttons.Item(i))
-						If Value = 0 Then
-							
-						End If
-						If Value = 0 Then
-							.Caption = ""
-							.Style = Cast(ToolButtonStyle, tbsCheckGroup Or tbsAutosize)
-						Else
-							.Caption = .Name
-							.Style = tbsCheckGroup
-						End If
-					End With
-				Next i
-			Next j
-			ChangeStyle TBSTYLE_AUTOSIZE, Value
-			If FHandle Then
-				If FAutosize Then Perform(TB_AUTOSIZE, 0, 0)
-				RecreateWnd
-			End If
-		#endif
 	End Property
 	
 	Private Property ToolPalette.Flat As Boolean
@@ -617,33 +488,12 @@ Namespace My.Sys.Forms
 	
 	Private Constructor ToolPalette
 		With This
-			#ifdef __USE_GTK__
 				widget = gtk_tool_palette_new()
 				gtk_tool_palette_set_style(GTK_TOOL_PALETTE(widget), GTK_TOOLBAR_BOTH_HORIZ)
 				scrolledwidget = gtk_scrolled_window_new(NULL, NULL)
 				gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolledwidget), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC)
 				gtk_container_add(GTK_CONTAINER(scrolledwidget), widget)
 				.RegisterClass "ToolPalette", @This
-			#else
-				AFlat(0)        = 0
-				AFlat(1)        = TBSTYLE_FLAT
-				ADivider(0)     = CCS_NODIVIDER
-				ADivider(1)     = 0
-				AAutosize(0)    = 0
-				AAutosize(1)    = TBSTYLE_AUTOSIZE
-				AList(0)        = 0
-				AList(1)        = TBSTYLE_LIST
-				AState(0)       = TBSTATE_INDETERMINATE
-				AState(1)       = TBSTATE_ENABLED
-				AState(2)       = TBSTATE_HIDDEN
-				AState(3)       = TBSTATE_CHECKED
-				AState(4)       = TBSTATE_PRESSED
-				AState(5)       = TBSTATE_WRAP
-				AWrap(0)        = 0
-				AWrap(1)        = TBSTYLE_WRAPABLE
-				ATransparent(0) = 0
-				ATransparent(1) = TBSTYLE_TRANSPARENT
-			#endif
 			FTransparent    = 1
 			FAutosize       = 1
 			FBitmapWidth    = 16

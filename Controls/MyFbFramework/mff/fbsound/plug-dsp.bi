@@ -1,4 +1,4 @@
-#ifndef __FBS_PLUGOUT_DSP__
+﻿#ifndef __FBS_PLUGOUT_DSP__
 #define __FBS_PLUGOUT_DSP__
 
 '  ###############

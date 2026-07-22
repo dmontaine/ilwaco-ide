@@ -7,11 +7,7 @@
 			.Name = "frmMenuEditor"
 			.Caption = ML("Menu Editor")
 			.Designer = @This
-			#ifdef __USE_GTK__
 				This.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico")
-			#else
-				This.Icon.LoadFromResourceID(1)
-			#endif
 			.OnPaint = @Form_Paint_
 			.Canvas.Font.Name = "Tahoma"
 			.Canvas.Font.Size = 8
@@ -254,11 +250,7 @@ Private Sub frmMenuEditor.Form_Paint(ByRef Sender As Control, ByRef Canvas As My
 							Dim As SymbolsType Ptr st = Des->Symbols(ImagesList)
 							If ImageKey <> "" AndAlso st <> 0 AndAlso st->ImageListIndexOfFunc <> 0 Then ImageIndex = st->ImageListIndexOfFunc(ImagesList, ImageKey)
 							If ImageIndex > -1 Then
-								#ifdef __USE_GTK__
 									
-								#else
-									ImageList_Draw(ImagesListHandle, ImageIndex, .Handle, ScaleX(Rects(RectsCount).Left + IIf(IsToolBarList, 3, (Rects(RectsCount).Right - Rects(RectsCount).Left - BitmapWidth - IIf(QInteger(stCurrentToolBar->ReadPropertyFunc(Ctrls(RectsCount), "Style")) = ToolButtonStyle.tbsDropDown, 15, 0) - IIf(QInteger(stCurrentToolBar->ReadPropertyFunc(Ctrls(RectsCount), "Style")) = ToolButtonStyle.tbsWholeDropdown, 10, 0)) / 2)), ScaleY(Rects(RectsCount).Top + IIf(Rects(RectsCount).Bottom - Rects(RectsCount).Top - 6 < BitmapHeight, 3, 3)), ILD_TRANSPARENT)
-								#endif
 							End If
 						End If
 						If QInteger(stCurrentToolBar->ReadPropertyFunc(Ctrls(RectsCount), "Style")) = ToolButtonStyle.tbsSeparator Then
@@ -267,13 +259,8 @@ Private Sub frmMenuEditor.Form_Paint(ByRef Sender As Control, ByRef Canvas As My
 							.Pen.Color = BGR(255, 255, 255)
 							.Line Rects(RectsCount).Left + (Rects(RectsCount).Right - Rects(RectsCount).Left) / 2 + 1, Rects(RectsCount).Top + 5, Rects(RectsCount).Left + (Rects(RectsCount).Right - Rects(RectsCount).Left) / 2 + 1, Rects(RectsCount).Bottom - 5
 						Else
-							#ifdef __USE_GTK__
 								.TextOut Rects(RectsCount).Left + IIf(IsToolBarList, BitmapWidth + 7, (Rects(RectsCount).Right - Rects(RectsCount).Left - .TextWidth(QWString(stCurrentToolBar->ReadPropertyFunc(Ctrls(RectsCount), "Caption"))) - IIf(QInteger(stCurrentToolBar->ReadPropertyFunc(Ctrls(RectsCount), "Style")) = ToolButtonStyle.tbsDropDown, 15, 0)) / 2), _
 									IIf(IsToolBarList, Rects(RectsCount).Top + (Rects(RectsCount).Bottom - Rects(RectsCount).Top - .TextHeight("A")) / 2, Rects(RectsCount).Bottom - .TextHeight("A") - 6), QWString(stCurrentToolBar->ReadPropertyFunc(Ctrls(RectsCount), "Caption")), IIf(QBoolean(stCurrentToolBar->ReadPropertyFunc(Ctrls(RectsCount), "Enabled")), BGR(0, 0, 0), BGR(109, 109, 109)), -1
-							#else
-								.TextOut Rects(RectsCount).Left + IIf(IsToolBarList, BitmapWidth + 7, (Rects(RectsCount).Right - Rects(RectsCount).Left - .TextWidth(QWString(stCurrentToolBar->ReadPropertyFunc(Ctrls(RectsCount), "Caption"))) - IIf(QInteger(stCurrentToolBar->ReadPropertyFunc(Ctrls(RectsCount), "Style")) = ToolButtonStyle.tbsDropDown, 15, 0)) / 2), _
-									IIf(IsToolBarList, Rects(RectsCount).Top + (Rects(RectsCount).Bottom - Rects(RectsCount).Top - .TextHeight("A")) / 2, Rects(RectsCount).Bottom - .TextHeight("A") - 6), QWString(stCurrentToolBar->ReadPropertyFunc(Ctrls(RectsCount), "Caption")), IIf(QBoolean(stCurrentToolBar->ReadPropertyFunc(Ctrls(RectsCount), "Enabled")), IIf(g_darkModeEnabled AndAlso RectsCount <> ActiveRect, darkTextColor, BGR(0, 0, 0)), BGR(109, 109, 109)), -1
-							#endif
 						End If
 					End If
 				ElseIf CurrentStatusBar Then
@@ -288,19 +275,11 @@ Private Sub frmMenuEditor.Form_Paint(ByRef Sender As Control, ByRef Canvas As My
 					End If
 				Else
 					If stCurrentMenu AndAlso stCurrentMenu->ReadPropertyFunc Then
-						#ifdef __USE_GTK__
 							If QWString(stCurrentMenu->ReadPropertyFunc(Ctrls(RectsCount), "Caption")) = "-" Then
 								.TextOut Rects(RectsCount).Left + 5, Rects(RectsCount).Top + 3, "|", BGR(0, 0, 0), -1
 							Else
 								.TextOut Rects(RectsCount).Left + 5, Rects(RectsCount).Top + 3, QWString(stCurrentMenu->ReadPropertyFunc(Ctrls(RectsCount), "Caption")), IIf(QBoolean(stCurrentMenu->ReadPropertyFunc(Ctrls(RectsCount), "Enabled")), BGR(0, 0, 0), BGR(109, 109, 109)), -1
 							End If
-						#else
-							If QWString(stCurrentMenu->ReadPropertyFunc(Ctrls(RectsCount), "Caption")) = "-" Then
-								.TextOut Rects(RectsCount).Left + 5, Rects(RectsCount).Top + 3, "|", IIf(g_darkModeEnabled AndAlso RectsCount <> ActiveRect, darkTextColor, BGR(0, 0, 0)), -1
-							Else
-								.TextOut Rects(RectsCount).Left + 5, Rects(RectsCount).Top + 3, QWString(stCurrentMenu->ReadPropertyFunc(Ctrls(RectsCount), "Caption")), IIf(QBoolean(stCurrentMenu->ReadPropertyFunc(Ctrls(RectsCount), "Enabled")), IIf(g_darkModeEnabled AndAlso RectsCount <> ActiveRect, darkTextColor, BGR(0, 0, 0)), BGR(109, 109, 109)), -1
-							End If
-						#endif
 					End If
 				End If
 			Next i
@@ -343,11 +322,7 @@ Private Sub frmMenuEditor.Form_Paint(ByRef Sender As Control, ByRef Canvas As My
 			If CurrentToolBar Then
 				Dim As BitmapType AddButton
 				AddButton.LoadFromResourceName("UserControl")
-				#ifdef __USE_GTK__
 					
-				#else
-					.DrawTransparent ScaleX(Rects(RectsCount).Left + IIf(IsToolBarList, 3, (Rects(RectsCount).Right - Rects(RectsCount).Left - BitmapWidth) / 2)), ScaleY(Rects(RectsCount).Top + IIf(Rects(RectsCount).Bottom - Rects(RectsCount).Top - 6 < BitmapHeight, 3, 3)), AddButton.Handle
-				#endif
 			Else
 				.TextOut Rects(RectsCount).Left + 5, Rects(RectsCount).Top + 3, ML("Type here"), BGR(109, 109, 109), -1
 			End If
@@ -474,12 +449,7 @@ Private Sub frmMenuEditor.Form_Paint(ByRef Sender As Control, ByRef Canvas As My
 									If pBitmap <> 0 Then
 										BitmapHandle = stCurrentMenu->ReadPropertyFunc(pBitmap, "Handle")
 										If BitmapHandle <> 0 Then
-											#ifdef __USE_GTK__
 												
-											#else
-												.DrawTransparent ScaleX(Rects(RectsCount).Left - 25 + 3), ScaleY(Rects(RectsCount).Top + 2), *Cast(HBITMAP Ptr, BitmapHandle)
-												'.DrawStretch Rects(RectsCount).Left - 25 + 3, Rects(RectsCount).Top + 2, 16, 16, *Cast(HBITMAP Ptr, BitmapHandle)
-											#endif
 										End If
 									End If
 									Dim As WString Ptr pCaption = stCurrentMenu->ReadPropertyFunc(Ctrls(RectsCount), "Caption")

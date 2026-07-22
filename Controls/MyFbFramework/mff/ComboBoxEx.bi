@@ -18,7 +18,6 @@ Namespace My.Sys.Forms
 	'        cbeDropDownList
 	'        cbeOwnerDrawFixed
 	'        cbeOwnerDrawVariable
-	'    End Enum
 	
 	'`ComboBoxItem` - Represents a single item in a combo box control with support for hierarchical display and multiple icon states (Windows, Linux).
 	Private Type ComboBoxItem Extends My.Sys.Object
@@ -32,10 +31,8 @@ Namespace My.Sys.Forms
 		FOverlayIndex   As Integer
 		FIndent   As Integer
 	Public:
-		#ifdef __USE_GTK__
 			'Native tree iterator handle (GTK+)
 			TreeIter As GtkTreeIter
-		#endif
 		'Reference to parent ComboBox
 		Parent   As Control Ptr
 		'Returns item's position in parent collection
@@ -105,13 +102,8 @@ Namespace My.Sys.Forms
 		Declare Sub UpdateListHeight
 		
 	Public:
-		#ifdef __USE_GTK__
 			'Pointer to native list storage structure.
 			ListStore As GtkListStore Ptr
-		#elseif 0
-			'Enables dark theme rendering.
-			Declare Virtual Sub SetDark(Value As Boolean)
-		#endif
 		'Collection of image-text list items.
 		Items             As ComboBoxExItems
 		'ImageList containing icons for list items.

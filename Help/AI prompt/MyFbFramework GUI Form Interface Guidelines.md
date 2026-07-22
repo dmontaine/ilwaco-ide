@@ -113,13 +113,12 @@ This error occurs when preprocessor directives are missing the required `#` pref
 | Invalid Syntax | Valid Syntax | Missing Element |
 |---------------------|----------------------|-----------------|
 | `include once ...` | `#include once ...` | `#` prefix |
-| `ifdef __FB_WIN32__`| `#ifdef __FB_WIN32__`| Leading `#` |
 | `cmdline "res.rc"` | `#cmdline "res.rc"` | Directive marker|
  3. Auto-Correction Mechanism
  Auto-insert # when detecting known preprocessor keywords at line start
  **Pattern Recognition**:
 ```plaintext
- ^\s*(include|ifdef|ifndef|endif|cmdline|define)\b ¡ú Add #
+ ^\s*(include|ifdef|ifndef|endif|cmdline|define)\b Â¡Ãº Add #
  ``` 
 ### Reserved keywords
  1. Variable Naming
@@ -153,9 +152,6 @@ You must follow these specific MFF rules:
 '\#Region "Form"
 \#if defined(__FB_MAIN__) AndAlso Not defined(__MAIN_FILE__)
 \#define __MAIN_FILE__
-\#ifdef __FB_WIN32__
-\#cmdline "Form1.rc"
-\#endif
 Const _MAIN_FILE_ = __FILE__
 #endif
  \#include once "mff/<component>.bi" 'Required header preprocessor directive

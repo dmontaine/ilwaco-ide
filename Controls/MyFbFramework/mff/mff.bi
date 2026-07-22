@@ -3,20 +3,7 @@
 '#  This file is part of MyFBFramework                                         #
 '#  Authors: Xusinboy Bekchanov                                                #
 '###############################################################################
-'#define __USE_GTK3__
-	#ifdef __FB_64BIT__
-		#ifdef __USE_GTK3__
 			#cmdline "-x ../libmff64_gtk3.so"
-		#else
-			#cmdline "-x ../libmff64_gtk2.so"
-		#endif
-	#else
-		#ifdef __USE_GTK3__
-			#cmdline "-x ../libmff32_gtk3.so"
-		#else
-			#cmdline "-x ../libmff32_gtk2.so"
-		#endif
-	#endif
 
 #define __EXPORT_PROCS__
 #define MEMCHECK 0
@@ -105,7 +92,7 @@
 #include once "UpDown.bi"
 #include once "UserControl.bi"
 #include once "VerticalBox.bi"
-#if defined(__USE_WEBKITGTK__) Or Not defined(__USE_GTK__)
+#if defined(__USE_WEBKITGTK__)
 	#include once "WebBrowser.bi"
 #endif
 #include once "WStringList.bi"
@@ -170,7 +157,7 @@ Using My.Sys.Forms
 		Case "updown": Ctrl = _New( UpDown)
 		Case "usercontrol": Ctrl = _New( UserControl)
 		Case "verticalbox": Ctrl = _New( VerticalBox)
-		#if defined(__USE_WEBKITGTK__) Or Not defined(__USE_GTK__)
+		#if defined(__USE_WEBKITGTK__)
 			Case "webbrowser": Ctrl = _New(WebBrowser)
 		#endif
 		End Select
@@ -313,7 +300,7 @@ Using My.Sys.Forms
 		Case "openfiledialog": _Delete( Cast(OpenFileDialog Ptr, Ctrl))
 		Case "savefiledialog": _Delete( Cast(SaveFileDialog Ptr, Ctrl))
 		Case "verticalbox": _Delete( Cast(VerticalBox Ptr, Ctrl))
-		#if defined(__USE_WEBKITGTK__) Or Not defined(__USE_GTK__)
+		#if defined(__USE_WEBKITGTK__)
 			Case "webbrowser": _Delete( Cast(WebBrowser Ptr, Ctrl))
 		#endif
 		Case Else: Return False

@@ -1,7 +1,4 @@
-﻿#ifdef __FB_WIN32__
-	'#Compile "GridDataTest.rc"
-#endif
-'#########################################################
+﻿'#########################################################
 '#  frmGridDataTest.bas                                  #
 '#  Authors: Liu ZiQI (2019)                             #
 '#########################################################
@@ -53,7 +50,6 @@ End If
 #include once "mff/IniFile.bi"
 
 Using My.Sys.Forms
-'Dim Shared As Form frmGridDataTest
 '#Region "Form"
 	Type frmGridDataTest Extends Form
 		Declare Static Sub CommandButton1_Click(ByRef Sender As Control)
@@ -92,7 +88,6 @@ Using My.Sys.Forms
 		Declare Constructor
 		
 		
-		'Dim As Panel Frame_Sql
 		Dim As GroupBox Frame_Sql
 		Dim As ListView ListView_Offset
 		Dim As CommandButton Command_OffsetSave
@@ -479,14 +474,12 @@ Private Sub frmGridDataTest.Form_Show(ByRef Designer As My.Sys.Object, ByRef Sen
 	fGridDataTest.MSHFGrid.Columns.Add "NO ", 0, 35, cfCenter, False, False, DT_String, , SortStyle.ssSortAscending
 	fGridDataTest.MSHFGrid.Columns.Add "Table" + WChr(13, 10) + "Name", 0, 130, cfLeft, True, False, CT_TextBox, , SortStyle.ssSortAscending
 	'   if fGridDataTest.MSHFGrid.DataBinding(SQLiteDB,sSql,FALSE)<=0 Then
-	'      Print "OPEN DataBase Records Failure.", sSql
 	'      'fGridDataTest.MSHFGrid.ListItems.Add  "1",0,1
 	'   end if
 	
 End Sub
 
 Private Sub frmGridDataTest.Form_Resize(ByRef Designer As My.Sys.Object, ByRef Sender As Control, NewWidth As Integer, NewHeight As Integer)
-'	Dim R As Rect
 '	fGridDataTest.TreeView1.Left=5
 '	R.Left=fGridDataTest.TreeView1.Width+10
 '	R.Top=fGridDataTest.TreeView1.Top
@@ -494,8 +487,6 @@ Private Sub frmGridDataTest.Form_Resize(ByRef Designer As My.Sys.Object, ByRef S
 '	fGridDataTest.TreeView1.Height=fGridDataTest.ClientHeight-60
 '	R.Bottom=fGridDataTest.TreeView1.Height/2
 '	'print "frmGridDataTest.Form_Resize ",R.Right
-'	If R.Right>0 Then
-'		If R.Bottom>75 AndAlso R.Right>150 Then
 '			fGridDataTest.Frame_Sql.SetBounds R.Left,R.top,R.Right,R.Bottom+50
 '			'fGridDataTest.MSHFGrid.SetBounds R.Left,150,190,R.Bottom-65
 '			'fGridDataTest.MSHFGridCont.SetBounds R.Left+205,150,R.Right-205,R.Bottom-65
@@ -510,9 +501,7 @@ Private Sub frmGridDataTest.Form_Resize(ByRef Designer As My.Sys.Object, ByRef S
 '			
 '			'InvalidateRect(fGridDataTest.Picture1.Handle,null,True) 'Refresh the current handle only. do not updated the child
 '			'UpdateWindow fGridDataTest.Picture1.Handle
-'		End If
 '		
-'	End If
 End Sub
 
 Private Sub frmGridDataTest.Form_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
@@ -527,11 +516,8 @@ End Sub
 Private Sub frmGridDataTest.CommandButton2_Click(ByRef Sender As Control)
 	Cast(frmGridDataTest Ptr, Sender.Parent)->CloseForm
 End Sub
-'Private Sub frmGridDataTest.cmdDraw_Click(ByRef Sender As Control)
-'	Dim R As Rect
 '	R.Right = fGridDataTest.ClientWidth - fGridDataTest.Picture1.Width - 55
 '	R.Bottom= fGridDataTest.Picture1.Height-fGridDataTest.Picture1.top-fGridDataTest.Picture1.top-10'fGridDataTest.ClientHeight - 20
-'	Static As logfont lf
 '	'    with Sender
 '	'        lf.lfHeight=20
 '	'        lf.lfunderline=1
@@ -546,7 +532,6 @@ End Sub
 '	'        .Canvas.TextOut(10, 128, "GUI-S is great !")
 '	'    end with
 '	
-'	With fGridDataTest
 '		' If .BrowsD.Execute Then
 '		'     .txtMFFPath.Text = .BrowsD.Directory
 '		' End If
@@ -570,9 +555,6 @@ End Sub
 '		'fGridDataTest.Picture1.line 124,128,444,498
 '		fGridDataTest.Canvas.line 0,0,524,428
 '		
-'	End With
-'End Sub
-'Private Sub frmGridDataTest.Picture1_Paint(ByRef Sender As Control, ByRef R As Rect,DC As HDC)
 '	'print "DC",DC
 '	' dim hBrush_HP As HBRUSH
 '	'hBrush_HP = CreateSolidBrush(BGR(255, 96, 96))
@@ -580,27 +562,20 @@ End Sub
 '	'Line(DC,154,198,R.Right,R.Bottom)
 '	'DeleteObject(hBrush_HP)
 '	fGridDataTest.cmdDraw_Click(Sender)
-'End Sub
 'AA1
 '########################################################################################
 'GRID CODE
 
 'GRIDDATA
 ' #IfDef __USE_GTK__
-'Sub frmGridDataTest.MSHFGridCont_SelectedItemChanged(selection As GtkTreeSelection Ptr, user_data As Any Ptr)
 '    '  print "RowIndex:ColIndex in SelectedItemChanged " ,RowIndex , ColIndex
 '    ' GridCtrlEdit->Visible = False
-'End Sub
-'#else
-' Sub frmGridDataTest.MSHFGridCont_SelectedItemChanged(ByRef Sender As GridData, Byval RowIndex as integer , BYVAL ColIndex as Integer,ByVal nmcdhDC as hDc )
 
-'     If MSHFGridCont.SelectedItem = 0 Then
 
 '         exit sub
 '     end if
 
 
-'  End Sub
 '#EndIf
 Sub frmGridDataTest.MSHFGridCont_EndScroll(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	'print "MSHFGridCont_EndScroll"
@@ -609,7 +584,6 @@ End Sub
 
 
 Sub frmGridDataTest.MSHFGridCont_ItemActivate(ByRef Designer As My.Sys.Object, ByRef Sender As Control, ByRef Item As GridDataItem Ptr)
-	'Dim Item As GridDataItem Ptr = MSHFGridCont.ListItems.Item(itemIndex)
 	' print "Item->Text(2)" + Item->Text(2)
 	' SelectSearchResult(Item->Text(3), Val(Item->Text(1)), Val(Item->Text(2)), Len(Sender.Text), Item->Tag)
 End Sub
@@ -624,7 +598,6 @@ End Sub
 
 
 Sub frmGridDataTest.MSHFGridCont_KeyDown(ByRef Designer As My.Sys.Object, ByRef Sender As Control, Key As Integer, Shift As Integer)
-	' Dim Item As GridDataItem Ptr = MSHFGridCont.SelectedItem
 	' print "MSHFGridCont_KeyDown", Item->Text(1)
 	
 End Sub
@@ -652,30 +625,22 @@ End Sub
 '#######################################################################################
 'GRIDDATA
 ' #IfDef __USE_GTK__
-'Sub frmGridDataTest.MSHFGrid_SelectedItemChanged(selection As GtkTreeSelection Ptr, user_data As Any Ptr)
 '    '  print "RowIndex:ColIndex in SelectedItemChanged " ,RowIndex , ColIndex
 '    ' GridCtrlEdit->Visible = False
-'End Sub
-'#else
-' Sub frmGridDataTest.MSHFGrid_SelectedItemChanged(ByRef Sender As GridData, Byval RowIndex as integer , BYVAL ColIndex as Integer,ByVal nmcdhDC as hDc )
 
-'     If MSHFGrid.SelectedItem = 0 Then
 
 '         exit sub
 '     end if
 
 
-'  End Sub
 '#EndIf
 Sub frmGridDataTest.MSHFGrid_EndScroll(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	'print "MSHFGrid_EndScroll"
-	'Dim As Rect lpRect
 	
 End Sub
 
 
 Sub frmGridDataTest.MSHFGrid_ItemActivate(ByRef Designer As My.Sys.Object, ByRef Sender As Control, ByRef Item As GridDataItem Ptr)
-	'Dim Item As GridDataItem Ptr = fGridDataTest.MSHFGrid.ListItems.Item(itemIndex)
 	Print "ItemActivate Item->Text(1)" + Item->Text(1)
 	' SelectSearchResult(Item->Text(3), Val(Item->Text(1)), Val(Item->Text(2)), Len(Sender.Text), Item->Tag)
 End Sub
@@ -690,7 +655,6 @@ End Sub
 
 
 Sub frmGridDataTest.MSHFGrid_KeyDown(ByRef Designer As My.Sys.Object, ByRef Sender As Control, Key As Integer, Shift As Integer)
-	' Dim Item As GridDataItem Ptr = MSHFGrid.SelectedItem
 	' print "MSHFGrid_KeyDown", Item->Text(1)
 	
 End Sub
@@ -721,25 +685,20 @@ Function frmGridDataTest.DataBindingCombo(ByRef tControl As ComboBoxEdit, db As 
     Dim nRows      As Long=0         ' 返回的记录集的行数
     Dim nColumns   As Long=0         ' 返回的记录集的列数
     Dim lpErrorSz  As ZString Ptr         ' 错误信息
-    'Dim zField     As ZString Ptr   ' 返回给定表的字段（在lpTable数组元素）
     Dim iFields    As Long=0         ' 返回表返回的字段数
     Dim iRow       As Long=0
     Dim iCol       As Long=0
     Dim iResult    As Long         ' 行或错误的数量由我函数返回
 
     If sqlite3_get_table(db, sSql, @lpTable, @nRows, @nColumns, @lpErrorSz) = 0 Then '成功
-        'Print "BindData Reading Data ",nRows, nColumns
         If nRows = 0 OrElse nColumns<1  Then
             'declare sub sqlite3_free_table(byval result as zstring ptr ptr)
-            'Print "No Data ******* ",nRows, nColumns
             sqlite3_free_table lpTable  '不论数据库查询是否成功，都释放 char** 查询结果
             lpTable=0
             Return  -1
         End If
         If AddHeader Then
-            'For i = 0 To nColumns-1
                 'tControl.Columns.Add *lpTable[i], 0, 100,cfCenter,DT_String,False,CT_TextBox,,ssSortAscending
-            'Next
         End If
         iFields = ((nRows+1) * nColumns)-1
         'tControl.AddItem *lpTable[nColumns]
@@ -774,17 +733,14 @@ Function frmGridDataTest.DataBindingGrid(ByRef tControl As GridData, db As sqlit
     Dim nRows      As Long=0         ' 返回的记录集的行数
     Dim nColumns   As Long=0         ' 返回的记录集的列数
     Dim lpErrorSz  As ZString Ptr         ' 错误信息
-    'Dim zField     As ZString Ptr   ' 返回给定表的字段（在lpTable数组元素）
     Dim iFields    As Long=0         ' 返回表返回的字段数
     Dim iRow       As Long=0
     Dim iCol       As Long=0
     Dim iResult    As Long         ' 行或错误的数量由我函数返回
 
     If sqlite3_get_table(db, sSql, @lpTable, @nRows, @nColumns, @lpErrorSz) = 0 Then '成功
-        'Print "BindData Reading Data ",nRows, nColumns
         If nRows = 0 OrElse nColumns<1  Then
             'declare sub sqlite3_free_table(byval result as zstring ptr ptr)
-            'Print "No Data ******* ",nRows, nColumns
             sqlite3_free_table lpTable  '不论数据库查询是否成功，都释放 char** 查询结果
             tControl.Columns.Add "NO", 0, 43,cfCenter,CT_Header,False,CT_Header,,ssSortAscending
             tControl.Columns.Add "  ", 0,130,cfCenter,DT_String,False,CT_TextBox,,ssSortAscending
@@ -805,7 +761,6 @@ Function frmGridDataTest.DataBindingGrid(ByRef tControl As GridData, db As sqlit
         tControl.ListItems.Item(iRow)->Text(0) = Str(iRow+1)
         iFields = ((nRows+1) * nColumns)-1
         'fGridDataTest.prProgress.MaxValue=100
-        'Print "BindData Columns.Add ",nRows, nColumns,iFields
         For i = nColumns To iFields
              pApp->DoEvents
             'fGridDataTest.prProgress.Position=i*100/iFields
@@ -846,7 +801,6 @@ End Function
 'fGridDataTest.Show
 'App.MainForm = @frmGridDataTest
 'App.Run
-'End
 
 End
 ErrorQ:

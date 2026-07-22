@@ -9,15 +9,8 @@
 
 Namespace My.Sys.Forms
 	#define QWebBrowser(__Ptr__) (*Cast(WebBrowser Ptr, __Ptr__))
-	#ifdef __USE_WEBVIEW2__
-		Dim Shared Handles As PointerList
-	#endif
 	Type NewWindowRequestedEventArgs
-		#ifdef __USE_WEBVIEW2__
-			Handle As ICoreWebView2NewWindowRequestedEventArgs Ptr
-		#else
-			Handle As Any Ptr
-		#endif
+		Handle As Any Ptr
 		Declare Property Handled As Boolean
 		Declare Property Handled(Value As Boolean)
 		Declare Function GetIsUserInitiated() As Boolean

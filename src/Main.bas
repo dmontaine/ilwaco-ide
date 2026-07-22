@@ -46,11 +46,7 @@ Dim Shared As Boolean bQuitting
 #include once "frmSplash.bi"
 pfSplash->MainForm = False
 pfSplash->Show
-#ifdef __FB_64BIT__
 	pfSplash->lblSplash1.Text = "(" & ML("Version") & " " & pApp->Version & "  " & ML("64-bit") & ")"
-#else
-	pfSplash->lblSplash1.Text = "(" & ML("Version") & " " & pApp->Version & "  " & ML("32-bit") & ")"
-#endif
 pApp->DoEvents
 
 Dim Shared As VisualFBEditor.Application VisualFBEditorApp
@@ -78,14 +74,14 @@ Dim Shared As MenuItem Ptr miCode, miForm, miCodeAndForm, miGotoCodeForm, miColl
 Dim Shared As MenuItem Ptr miAlignLefts, miAlignCenters, miAlignRights, miAlignTops, miAlignMiddles, miAlignBottoms, miAlignToGrid, miMakeSameSizeWidth, miMakeSameSizeHeight, miMakeSameSizeBoth, miSizeToGrid, miHorizontalSpacingMakeEqual, miHorizontalSpacingIncrease, miHorizontalSpacingDecrease, miHorizontalSpacingRemove, miVerticalSpacingMakeEqual, miVerticalSpacingIncrease, miVerticalSpacingDecrease, miVerticalSpacingRemove, miCenterInParentHorizontally, miCenterInParentVertically, miOrderBringToFront, miOrderSendToBack, miLockControls
 Dim Shared As MenuItem Ptr miShowWithFolders, miShowWithoutFolders, miShowAsFolder
 Dim Shared As ToolButton Ptr tbtAlignLefts, tbtAlignCenters, tbtAlignRights, tbtAlignTops, tbtAlignMiddles, tbtAlignBottoms, tbtAlignToGrid, tbtMakeSameSizeWidth, tbtMakeSameSizeHeight, tbtMakeSameSizeBoth, tbtSizeToGrid, tbtHorizontalSpacingMakeEqual, tbtHorizontalSpacingIncrease, tbtHorizontalSpacingDecrease, tbtHorizontalSpacingRemove, tbtVerticalSpacingMakeEqual, tbtVerticalSpacingIncrease, tbtVerticalSpacingDecrease, tbtVerticalSpacingRemove, tbtCenterInParentHorizontally, tbtCenterInParentVertically, tbtOrderBringToFront, tbtOrderSendToBack, tbtLockControls
-Dim Shared As ToolButton Ptr tbtSave, tbtSaveAll, tbtSyntaxCheck, tbtSuggestions, tbtCompile, tbtUndo, tbtRedo, tbtCut, tbtCopy, tbtPaste, tbtBlockComment, tbtSingleComment, tbtUncommentBlock, tbtFormat, tbtUnformat, tbtCompleteWord, tbtParameterInfo, tbtFind, tbtUseDirect2D, tbtRemoveFileFromProject, tbtStartWithCompile, tbtStart, tbtBreak, tbtEnd, tbt32Bit, tbt64Bit, tbtUseDebugger, tbtNotSetted, tbtConsole, tbtGUI, tbtStepInto, tbtStepOver, tbtStepOut, tbtRunToCursor, tbtToggleBreakpoint, tbtSetNextStatement, tbtShowNextStatement
+Dim Shared As ToolButton Ptr tbtSave, tbtSaveAll, tbtSyntaxCheck, tbtSuggestions, tbtCompile, tbtUndo, tbtRedo, tbtCut, tbtCopy, tbtPaste, tbtBlockComment, tbtSingleComment, tbtUncommentBlock, tbtFormat, tbtUnformat, tbtCompleteWord, tbtParameterInfo, tbtFind, tbtRemoveFileFromProject, tbtStartWithCompile, tbtStart, tbtBreak, tbtEnd, tbt32Bit, tbt64Bit, tbtUseDebugger, tbtNotSetted, tbtConsole, tbtGUI, tbtStepInto, tbtStepOver, tbtStepOut, tbtRunToCursor, tbtToggleBreakpoint, tbtSetNextStatement, tbtShowNextStatement
 Dim Shared As SaveFileDialog SaveD
 Dim Shared As ReBar MainReBar, rbLeft, rbRight, rbBottom
 Dim Shared As List Tools, TabPanels, ControlLibraries
 Dim Shared As WStringOrStringList Comps, GlobalAsmFunctionsHelp, GlobalFunctionsHelp, Snippets, TypesInFunc, EnumsInFunc
 Dim Shared As WStringList AddIns, IncludeFiles, LoadPaths, IncludePaths, LibraryPaths, MRUAIChat, MRUFiles, MRUFolders, MRUProjects, MRUSessions, ProfilingFunctions ' add Sessions
 Dim Shared As WString Ptr RecentFiles, RecentFile, RecentProject, RecentFolder, RecentSession, RecentAIChat
-Dim Shared As Dictionary Helps, HotKeys, Compilers, MakeTools, Debuggers, Terminals, OtherEditors, BuildConfigurations, mlCompiler, mlTemplates, AIAgents, mpKeys, mcKeys
+Dim Shared As Dictionary Helps, HotKeys, Compilers, MakeTools, Debuggers, Terminals, OtherEditors, BuildConfigurations, AIAgents
 Dim Shared As ListView lvProblems, lvSuggestions, lvSearch, lvToDo, lvMemory
 Dim Shared As ProgressBar prProgress
 Dim Shared As CommandButton btnPropertyValue
@@ -155,7 +151,6 @@ pIncludePaths = @IncludePaths
 pLibraryPaths = @LibraryPaths
 pfSplash->lblProcess.Text = ML("Load On Startup") & ": " & ML("Settings")
 
-'LoadLanguageTexts
 LoadSettings
 
 #include once "file.bi"
@@ -242,19 +237,10 @@ Namespace VisualFBEditor
 End Namespace
 
 Function MS cdecl(ByRef V As WString, ...) As UString
-	Dim As UString Result
-	Dim As Boolean bFind
-	If LCase(App.CurLanguage) <> "english" Then
-		Dim As Integer tIndex = mlKeys.IndexOfKey(V)
-		If tIndex >= 0 Then
-			Result = mlKeys.Item(tIndex)->Text
-			bFind = True
-		End If
-	End If
-	If Not bFind Then Result = V
+	Dim As UString Result = V
 	Dim args As Cva_List
 	Cva_Start(args, V)
-	For i As Integer = 1 To Min(InStrCount(V, "$"), InStrCount(Result, "$"))
+	For i As Integer = 1 To InStrCount(V, "$")
 		Result = Replace(Result, "$" & Trim(Str(i)), * (Cva_Arg(args, WString Ptr)))
 	Next
 	MS = Result
@@ -262,64 +248,14 @@ Function MS cdecl(ByRef V As WString, ...) As UString
 End Function
 
 Function MLCompilerFun(ByRef V As WString) ByRef As WString
-	If LCase(App.CurLanguage) = "english" Then Return V
-	Dim As Integer tIndex = mlCompiler.IndexOfKey(V) ' For improve the speed
-	If tIndex >= 0 Then Return mlCompiler.Item(tIndex)->Text Else Return V
+	Return V
 End Function
 
-'David Change For the comment of control's Properties
 Function MC(ByRef V As WString) ByRef As WString
-	If (Not gLocalProperties) Then Return V
-	Dim As WString * 2048 TempV = ""
-	Dim As Integer Posi = InStrRev(V, ".")
-	TempV = IIf(Posi > 0, Mid(V, Posi + 1), V)
-	Dim As Integer tIndex = mcKeys.IndexOfKey(TempV) 'David Changed
-	If tIndex >= 0 Then Return mcKeys.Item(tIndex)->Text
 	Return V
 End Function
 
 Function MP(ByRef V As WString) ByRef As WString
-	If (Not gLocalProperties) OrElse LCase(App.CurLanguage) = "english" Then Return V
-	Dim As Integer tIndex = -1, tIndex2 = -1
-	If InStr(V,".") Then
-		Static As WString * 2048 TempWstr = ""
-		Dim As WString Ptr LineParts(Any)
-		Split(V, ".", LineParts())
-		For k As Integer = 0 To UBound(LineParts)
-			tIndex = mpKeys.IndexOfKey(*LineParts(k))
-			If tIndex >=0 Then
-				If k = 0 Then
-					TempWstr = mpKeys.Item(tIndex)->Text
-				Else
-					TempWstr &= "." & mpKeys.Item(tIndex)->Text
-				End If
-			Else
-				If k=0 Then
-					TempWstr = *LineParts(k)
-				Else
-					TempWstr &= "." & *LineParts(k)
-				End If
-			End If
-			_Deallocate(LineParts(k))
-		Next
-		Erase LineParts
-		If TempWstr = "" Then
-			Return V
-		Else
-			Return TempWstr
-		End If
-	Else
-		tIndex = mpKeys.IndexOfKey(V)
-		If tIndex >= 0 Then
-			If mpKeys.Item(tIndex)->Text = "" Then
-				Return V
-			Else
-				Return mpKeys.Item(tIndex)->Text
-			End If
-		Else
-			Return V
-		End If
-	End If
 	Return V
 End Function
 
@@ -368,12 +304,10 @@ Sub cboPropertyValue_Change(ByRef Designer As My.Sys.Object, ByRef Sender As Con
 	If Trim(cboPropertyValue.Text) = "" Then
 		Exit Sub
 	End If
-	#ifdef __USE_GTK__
 		If bNotChange Then
 			bNotChange = False
 			Exit Sub
 		End If
-	#endif
 	PropertyChanged Sender, cboPropertyValue.Text, True
 End Sub
 
@@ -390,18 +324,11 @@ Function GetFullPathInSystem(ByRef Path As WString) As UString
 		Return Path
 	Else
 		Dim As WString * MAX_PATH fullPath
-		#ifdef __USE_GTK__
 			If FileExists(ExePath & Slash & Path) Then
 				fullPath = ExePath & Slash & Path
 			Else
 				fullPath = WStr(*g_find_program_in_path(Path))
 			End If
-		#else
-			Dim As WString Ptr lpFilePart
-			If SearchPath(NULL, Path, ".exe", MAX_PATH - 1, @fullPath, 0) = 0 Then
-				
-			End If
-		#endif
 		Return fullPath
 	End If
 End Function
@@ -531,27 +458,12 @@ Function GetExeFileName(ByRef FileName As WString, ByRef sLine As WString) As US
 	Pos1 = InStrRev(pFileName, ".")
 	If Pos1 = 0 Then Pos1 = Len(pFileName) + 1
 	If Pos1 > 0 Then
-		#ifdef __USE_GTK__
 			Pos2 = InStrRev(pFileName, Slash)
 			If Pos2 > 0 AndAlso InStr(CompileWith, "-dll") > 0 Then
 				Return Left(pFileName, Pos2) & "lib" & Mid(pFileName, Pos2 + 1, Pos1 - Pos2 - 1) & ".so"
 			Else
 				Return IIf(InStr(CompileWith, "-dll") + InStr(CompileWith, "-lib") > 0, "lib", "") & Left(pFileName, Pos1 - 1) & IIf(InStr(CompileWith, "-dll"), ".so", IIf(InStr(CompileWith, "-lib"), ".o", ""))
 			End If
-		#else
-			If InStr(CompileWith, "-target js-asmjs") Then
-				Return Left(pFileName, Pos1 - 1) & ".html"
-			ElseIf InStr(CompileWith, "-target ") Then
-				Pos2 = InStrRev(pFileName, Slash)
-				If Pos2 > 0 AndAlso InStr(CompileWith, "-dll") + InStr(CompileWith, "-lib") > 0 Then
-					Return Left(pFileName, Pos2) & "lib" & Mid(pFileName, Pos2 + 1, Pos1 - Pos2 - 1) & ".so"
-				Else
-					Return IIf(InStr(CompileWith, "-dll") + InStr(CompileWith, "-lib") > 0, "lib", "") & Left(pFileName, Pos1 - 1) & IIf(InStr(CompileWith, "-dll"), ".so", IIf(InStr(CompileWith, "-lib"), ".o", ""))
-				End If
-			Else
-				Return Left(pFileName, Pos1 - 1) & IIf(InStr(CompileWith, "-dll"), ".dll", ".exe")
-			End If
-		#endif
 	End If
 End Function
 
@@ -610,11 +522,7 @@ Function Compile(Parameter As String = "", bAll As Boolean = False) As Integer
 			Continue For
 		Else
 			ChDir(ExePath)
-			#ifdef __USE_GTK__
 				If g_find_program_in_path(ToUtf8(*FbcExe)) = NULL Then
-			#else
-				If Not FileExists(*FbcExe) Then
-			#endif
 				ThreadsEnter()
 				ShowMessages ML("File") & " """ & *FbcExe & """ " & ML("not found") & "!"
 				ThreadsLeave()
@@ -753,9 +661,7 @@ Function Compile(Parameter As String = "", bAll As Boolean = False) As Integer
 		End If
 		If CInt(Parameter = "Make") OrElse CInt(CInt(Parameter = "Run" OrElse Parameter = "RunWithDebug") AndAlso CInt(UseMakeOnStartWithCompile) AndAlso CInt(FileExists(GetFolderName(*MainFile) & "/makefile") OrElse FileExists(*ProjectPath & "/makefile"))) Then
 			Dim As String Colon = ""
-			#ifdef __USE_GTK__
 				Colon = ":"
-			#endif
 			WLet(PipeCommand, """" & *MakeToolPath1 & """ FBC" & Colon & "=""""""" & *FbcExe & """"""" XFLAG" & Colon & "=""-x """"" & *ExeName & """""""" & IIf(UseDebugger, " GFLAG" & Colon & "=-g", "") & " " & *Make1Arguments)
 		ElseIf Parameter = "MakeClean" Then
 			WLet(PipeCommand, """" & *MakeToolPath2 & """ " & *Make2Arguments)
@@ -825,11 +731,7 @@ Function Compile(Parameter As String = "", bAll As Boolean = False) As Integer
 		Dim As Boolean Log2_, ERRGoRc
 		Dim As Integer Result = -1
 		Dim Buff As WString * 2048 ' for V1.07 Line Input not working fine
-		#ifdef __USE_GTK__
 			WAdd(PipeCommand, " 2> """ + *LogFileName2 + """") 
-		#else
-			'WLetEx PipeCommand, """" & *PipeCommand & " 2> """ + *LogFileName2 + """" & """", True
-		#endif
 			ThreadsEnter()
 			ShowMessages(Str(Time) + ": " + IIf(Parameter = "MakeClean", ML("Clean"), ML("Compilation")) & ": " & *PipeCommand + WChr(13) + WChr(10))
 			ThreadsLeave()
@@ -860,7 +762,6 @@ Function Compile(Parameter As String = "", bAll As Boolean = False) As Integer
 			End If
 			Dim As String TmpStrKey = "@freebasic compiler@copyright@standalone@target@backend@compiling@compiling rc@compiling rc failed@compiling c@assembling@linking@obj@creating@restarting@creating import library@archiving@"
 			Dim As WString * 2048 TmpStr
-			#ifdef __USE_GTK__
 				Dim As Integer Fn = FreeFile_
 				If Open Pipe(*PipeCommand For Input As #Fn) = 0 Then
 					While Not EOF(Fn)
@@ -905,150 +806,9 @@ Function Compile(Parameter As String = "", bAll As Boolean = False) As Integer
 					Wend
 				End If
 				CloseFile_(Fn)
-			#else
-				Dim As Integer BufferSize = 128
-				Dim si As STARTUPINFO
-				Dim pi As PROCESS_INFORMATION
-				Dim sa As SECURITY_ATTRIBUTES
-				Dim hReadPipe As HANDLE
-				Dim hWritePipe As HANDLE
-				Dim sBuffer As ZString * 2048
-				Dim sOutput As UString
-				Dim bytesRead As DWORD
-				Dim result_ As Integer
-				
-				sa.nLength = SizeOf(SECURITY_ATTRIBUTES)
-				sa.lpSecurityDescriptor = NULL
-				sa.bInheritHandle = True
-				
-				If CreatePipe(@hReadPipe, @hWritePipe, @sa, ByVal 0) = 0 Then
-					ShowMessages(ML("Error: Couldn't Create Pipe"), False)
-					CompileResult = 0
-					Continue For
-				End If
-				
-				si.cb = Len(STARTUPINFO)
-				si.dwFlags = STARTF_USESTDHANDLES Or STARTF_USESHOWWINDOW
-				si.hStdOutput = hWritePipe
-				si.hStdError = hWritePipe
-				si.hStdInput  = hReadPipe
-				si.wShowWindow = 0
-				
-				If CreateProcess(PipeApplicationName, PipeCommand, @sa, @sa, 1, NORMAL_PRIORITY_CLASS Or CREATE_NEW_CONSOLE, ByVal 0, ByVal 0, @si, @pi) = 0 Then
-					ShowMessages(ML("Error: Couldn't Create Process") & ": " & GetErrorString(GetLastError), False)
-					CompileResult = 0
-					Continue For
-				End If
-				
-				CloseHandle hWritePipe
-				Dim As Integer Pos1, PosFirstErr, FirstErrFlag
-				Do
-					result_ = ReadFile(hReadPipe, @sBuffer, BufferSize, @bytesRead, ByVal 0)
-					sBuffer = Left(sBuffer, bytesRead)
-					If CBool(FirstErrFlag < 2) AndAlso CBool(InStr(sBuffer, "compiling:")) Then sBuffer += Chr(10) : FirstErrFlag += 1: BufferSize = 2048
-					Pos1 = InStrRev(sBuffer, Chr(10))
-					If Pos1 > 0 Then
-						sOutput += Left(sBuffer, Pos1 - 1)
-						Dim res() As WString Ptr
-						If CBool(InStr(sOutput, "GoRC.exe' terminated with exit code") > 0) OrElse CBool(InStr(sOutput, "of Resource Script ") > 0) Then
-							sOutput = Replace(sOutput, Chr(13, 10), " ")
-							ERRGoRc = True
-						End If
-						Dim As String buffer = Str(sOutput)
-						Dim As Integer wideCharsNeeded = MultiByteToWideChar(CP_ACP, 0, StrPtr(buffer), -1, NULL, 0)
-						sOutput.Resize wideCharsNeeded
-						MultiByteToWideChar(CP_ACP, 0, StrPtr(buffer), -1, sOutput.m_Data, wideCharsNeeded)
-						Split sOutput, Chr(10), res()
-						For i As Integer = 0 To UBound(res) 'Copyright
-							*res(i) = Trim(*res(i), Any !"\t\n\r ")
-							If Len(*res(i)) < 10 OrElse StartsWith(Trim(*res(i)), "|") Then Continue For
-							Dim As Integer nPos = InStr(*res(i), ":")
-							If nPos < 1 Then nPos = InStr(*res(i), " ")
-							If nPos < 1 Then
-								nPos = Len(*res(i)) + 1
-								TmpStr = Trim(*res(i))
-							Else
-								TmpStr = Trim(Left(*res(i), nPos - 1))
-							End If
-							Dim As Boolean bErrorInfo = InStr(LCase(TmpStrKey), "@" & LCase(TmpStr) & "@") OrElse InStr(LCase(*res(i)), "ld.exe") > 0
-							If Not bErrorInfo Then
-								bFlagErr = SplitError(*res(i), ErrFileName, ErrTitle, iLine)
-								If iLine > 0 OrElse InStr(LCase(*ErrTitle), "runtime error") > 0 Then
-									If bFlagErr = 2 Then
-										NumberErr += 1
-									ElseIf bFlagErr = 1 Then
-										NumberWarning += 1
-									Else
-										NumberInfo += 1
-									End If
-									
-								End If
-								If bFlagErr >= 0 AndAlso *ErrFileName <> "" AndAlso iLine> 0 Then
-									If InStr(*ErrFileName, "/") = 0 AndAlso InStr(*ErrFileName, "\") = 0 Then WLetEx(ErrFileName, GetFolderName(*MainFile) & *ErrFileName)
-									lvProblems.ListItems.Add *ErrTitle, IIf(bFlagErr = 1, "Warning", IIf(bFlagErr = 2, "Error", "Info"))
-									lvProblems.ListItems.Item(lvProblems.ListItems.Count - 1)->Text(1) = WStr(iLine)
-									lvProblems.ListItems.Item(lvProblems.ListItems.Count - 1)->Text(2) = *ErrFileName
-									FirstErrFlag += 1
-									ShowMessages(*res(i), False)
-								Else
-									ShowMessages(Str(Time) & ": " & *res(i), False)
-								End If
-							Else
-								If StartsWith(TmpStr, "FreeBASIC") Then
-									nPos = Len(*res(i)) + 1
-									TmpStr = Replace(Replace(*res(i), "FreeBASIC Compiler", ML("FreeBASIC Compiler")), "Version", ML("Version"))
-									Var Pos1 = InStr(TmpStr, "built for ")
-									If Pos1 > 0 Then
-										TmpStr = Left(TmpStr, Pos1 - 1) & MS("built for $1", Mid(TmpStr, Pos1 + 10))
-									End If
-								ElseIf StartsWith(TmpStr, "Copyright") Then
-									nPos = Len(*res(i)) + 1
-									TmpStr = Replace(Replace(*res(i), "Copyright", ML("Copyright")), "The FreeBASIC development team.", ML("The FreeBASIC development team."))
-								End If
-								#if 0
-									ML("standalone")
-									ML("target")
-									ML("backend")
-									ML("compiling")
-									ML("compiling C")
-									ML("assembling")
-									ML("compiling rc")
-									ML("linking")
-									ML("OBJ file not made")
-									ML("creating import library")
-									ML("compiling rc failed")
-									ML("Restarting fbc")
-									ML("creating")
-									ML("archiving")
-									ML("Error")
-									ML("Warning")
-								#endif
-								ThreadsEnter()
-								ShowMessages Str(Time) & ": " & ML(TmpStr) & " " & Trim(Mid(*res(i), nPos))
-								ThreadsLeave()
-							End If
-							_Deallocate(res(i)): res(i) = 0
-							sOutput = ""
-						Next i
-						Erase res
-						If sBuffer <> "" Then sOutput = Mid(sBuffer, Pos1 + 1)
-					Else
-						sOutput += sBuffer
-					End If
-				Loop While result_
-				
-				CloseHandle pi.hProcess
-				CloseHandle pi.hThread
-				CloseHandle hReadPipe
-			#endif
 			If NumberErr > 0 Then Exit For
 		Next cc
-		#ifdef __USE_GTK__
 			Yaratilmadi = g_find_program_in_path(ToUtf8(*ExeName)) = NULL
-		#else
-			Yaratilmadi = Dir(*ExeName) = ""
-		#endif
-		#ifdef __USE_GTK__
 			Dim Fn As Integer = FreeFile_
 			Result = -1
 			Result = Open(*LogFileName2 For Input Encoding "utf-8" As #Fn)
@@ -1077,7 +837,6 @@ Function Compile(Parameter As String = "", bAll As Boolean = False) As Integer
 				Wend
 			End If
 			CloseFile_(Fn)
-		#endif
 		ThreadsEnter()
 		ShowMessages("")
 		If lvProblems.ListItems.Count <> 0 Then
@@ -1191,9 +950,7 @@ Sub SelectSearchResult(ByRef FileName As WString, iLine As Integer, ByVal iSelSt
 		If iSelStart = -1 AndAlso tb->txtCode.LinesCount > iLine - 1 Then iSelStart = InStr(LCase(tb->txtCode.Lines(iLine - 1)), LCase(SearchText))
 		If iSelLength = -1 Then iSelLength = Len(SearchText)
 	End If
-	#ifdef __USE_GTK__
 		pApp->DoEvents
-	#endif
 	tb->txtCode.TopLine = iLine - tb->txtCode.VisibleLinesCount / 2
 	tb->txtCode.SetSelection iLine - 1, iLine - 1, iSelStart - 1, iSelStart + iSelLength - 1
 End Sub
@@ -1501,11 +1258,7 @@ Function AddProject(ByRef FileName As WString = "", pFilesList As WStringList Pt
 					Buff = Trim(Mid(Buff, Pos1+1 ))
 					ee = _New( ExplorerElement)
 					If CInt(InStr(Buff, ":") = 0) OrElse CInt(StartsWith(Buff, "/")) Then
-						#ifdef __USE_GTK__
 							WLet(ee->FileName, GetFolderName(FileName) & Buff)
-						#else
-							WLet(ee->FileName, GetFolderName(FileName) & Replace(Buff, "/", "\"))
-						#endif
 					Else
 						WLet(ee->FileName, Buff)
 					End If
@@ -1724,11 +1477,7 @@ End Sub
 
 Sub OpenUrl(ByVal url As String)
 	Dim As String cmd
-	#ifdef __USE_GTK__
 		cmd = "xdg-open " & url
-	#else
-		cmd =  "start /b " & url
-	#endif
 	'Shell cmd
 	PipeCmd "", cmd
 End Sub
@@ -1903,13 +1652,7 @@ Function FolderCopy(FromDir As UString, ToDir As UString) As Integer
 		If (Attr And fbDirectory) <> 0 Then
 			If f <> "." AndAlso f <> ".." Then Folders.Add FromDir & IIf(EndsWith(FromDir, Slash), "", Slash) & f
 		Else
-			#ifdef __USE_GTK__
 				FileCopy FromDir & Slash & f, ToDir & Slash & f
-			#else
-				fsrc = FromDir & Slash & f
-				fdest = ToDir & Slash & f
-				CopyFileW @fsrc, @fdest, False
-			#endif
 		End If
 		f = Dir(Attr)
 	Wend
@@ -2466,7 +2209,6 @@ Sub RunHelp(Param As Any Ptr)
 		ShowMessages ML("File") & " " & CurrentHelpPath & " " & ML("not found")
 		ThreadsLeave()
 	Else
-		#ifdef __USE_GTK__
 			Dim As WString * MAX_PATH wszKeyword
 			If Param <> 0 Then wszKeyword = Cast(HelpOptions Ptr, Param)->CurrentWord
 			If wszKeyword = "" AndAlso Param = 0 AndAlso tb <> 0 Then wszKeyword = tb->txtCode.GetWordAtCursor
@@ -2475,7 +2217,6 @@ Sub RunHelp(Param As Any Ptr)
 			Else
 				PipeCmd "", ExePath & "/CHMVIEW " & CurrentHelpPath & " -k " & wszKeyword, False
 			End If
-		#endif
 	End If
 End Sub
 
@@ -2672,11 +2413,7 @@ Sub OpenProjectFolder
 	Dim As ExplorerElement Ptr ee = ptn->Tag
 	If ee = 0 Then Exit Sub
 	If WGet(ee->FileName) <> "" Then
-		#ifdef __USE_GTK__
 			Shell "xdg-open """ & GetFolderName(*ee->FileName) & """"
-		#else
-			PipeCmd "", "explorer """ & Replace(GetFolderName(*ee->FileName), "/", "\") & """"
-		#endif
 	End If
 End Sub
 
@@ -2949,32 +2686,25 @@ Sub SetDebugTabsVisible(bVisible As Boolean)
 	Static As Boolean bAlreadyVisible = True
 	If bVisible = bAlreadyVisible Then Exit Sub
 	bAlreadyVisible = bVisible
-	If bVisible Then
-		AddBottomDebugTab tpImmediate
-		AddBottomDebugTab tpLocals
-		AddBottomDebugTab tpGlobals
-		AddBottomDebugTab tpProcedures
-		AddBottomDebugTab tpThreads
-		AddBottomDebugTab tpWatches
-		AddBottomDebugTab tpMemory
-		AddBottomDebugTab tpProfiler
-	Else
-		RemoveBottomDebugTab tpImmediate
-		RemoveBottomDebugTab tpLocals
-		RemoveBottomDebugTab tpGlobals
-		RemoveBottomDebugTab tpProcedures
-		RemoveBottomDebugTab tpThreads
-		RemoveBottomDebugTab tpWatches
-		RemoveBottomDebugTab tpMemory
-		RemoveBottomDebugTab tpProfiler
-	End If
+	If tpImmediate <> 0 Then tpImmediate->Visible = bVisible
+	If tpLocals <> 0 Then tpLocals->Visible = bVisible
+	If tpGlobals <> 0 Then tpGlobals->Visible = bVisible
+	If tpProcedures <> 0 Then tpProcedures->Visible = bVisible
+	If tpThreads <> 0 Then tpThreads->Visible = bVisible
+	If tpWatches <> 0 Then tpWatches->Visible = bVisible
+	If tpMemory <> 0 Then tpMemory->Visible = bVisible
+	If tpProfiler <> 0 Then tpProfiler->Visible = bVisible
 End Sub
 
 Sub ChangeUseDebugger(bUseDebugger As Boolean, ChangeObject As Integer = -1)
+	Static As Boolean bInChange = False
+	If bInChange Then Exit Sub
+	bInChange = True
 	UseDebugger = bUseDebugger
 	If ChangeObject <> 0 Then tbtUseDebugger->Checked = bUseDebugger
 	If ChangeObject <> 1 AndAlso mnuUseDebugger->Checked <> UseDebugger Then mnuUseDebugger->Checked = bUseDebugger
 	SetDebugTabsVisible bUseDebugger
+	bInChange = False
 End Sub
 
 Sub ChangeLockControls(bLockControls As Boolean, ChangeObject As Integer = -1)
@@ -3286,13 +3016,7 @@ Function GetTypeControl(ControlType As String) As Integer
 End Function
 
 Sub pnlToolBox_Resize(ByRef Designer As My.Sys.Object, ByRef Sender As Control, NewWidth As Integer = -1, NewHeight As Integer = -1)
-	#ifdef __USE_GTK__
 		tbToolBox.SetBounds 0, 0, NewWidth, NewHeight
-	#else
-		scrTool.MaxValue = Max(0, tbToolBox.Height - NewHeight)
-		scrTool.Visible = scrTool.MaxValue <> 0
-		tbToolBox.SetBounds 0, 0, NewWidth - IIf(scrTool.MaxValue <> 0, scrTool.Width, 0), NewHeight
-	#endif
 End Sub
 
 
@@ -3337,19 +3061,11 @@ Function GetRelativePath(ByRef Path As WString, ByRef FromFile As WString = "") 
 				Result = GetOSPath(GetFullPath(GetFullPath(CtlLibrary->IncludeFolder, CtlLibrary->Path)) & IIf(EndsWith(CtlLibrary->IncludeFolder, "\") OrElse EndsWith(CtlLibrary->IncludeFolder, "/"), "", Slash) & Path)
 				If FileExists(Result) Then Return Result
 			Next
-			#ifdef __USE_GTK__
 				Result = GetOSPath(GetFolderName(GetFolderName(GetFullPath(*Compiler32Path))) & "include/freebasic/" & Path)
-			#else
-				Result = GetOSPath(GetFolderName(GetFullPath(*Compiler32Path)) & "inc\" & Path)
-			#endif
 			If FileExists(Result) Then
 				Return Result
 			Else
-				#ifdef __USE_GTK__
 					Result = GetOSPath(GetFolderName(GetFolderName(GetFullPath(*Compiler64Path))) & "include/freebasic/" & Path)
-				#else
-					Result = GetOSPath(GetFolderName(GetFullPath(*Compiler64Path)) & "inc\" & Path)
-				#endif
 				If FileExists(Result) Then
 					Return Result
 				Else
@@ -3419,9 +3135,7 @@ Sub LoadFunctions(ByRef Path As WString, LoadParameter As LoadParam = FilePathAn
 		End If
 		If @Types = @Comps Then
 			pfSplash->lblProcess.Text = Path
-			#ifdef __USE_GTK__
 				pApp->DoEvents
-			#endif
 		End If
 	End If
 	Var Idx = -1
@@ -4685,12 +4399,8 @@ Sub LoadHelp
 	Dim As WStringOrStringList Ptr pFunctions = @Globals.Functions
 	Dim As Boolean InEnglish
 	Dim As Integer Fn = FreeFile_, tEncode
-	If LCase(App.CurLanguage) = "english" OrElse Dir(ExePath & "/Settings/Others/KeywordsHelp." & App.CurLanguage & ".txt") = "" Then
-		InEnglish = True
-		WLet(KeywordsHelpPath, ExePath & "/Settings/Others/KeywordsHelp.txt")
-	Else
-		WLet(KeywordsHelpPath, ExePath & "/Settings/Others/KeywordsHelp." & App.CurLanguage & ".txt")
-	End If
+	InEnglish = True
+	WLet(KeywordsHelpPath, ExePath & "/Settings/Others/KeywordsHelp.txt")
 	Dim As Integer Result = -1
 	Result = Open(*KeywordsHelpPath For Input Encoding "utf-8" As #Fn)
 	If Result <> 0 Then Result = Open(*KeywordsHelpPath For Input Encoding "utf-16" As #Fn)
@@ -4832,7 +4542,7 @@ Sub LoadHelp
 					End If
 				ElseIf Parag = parDescription Then
 					If Not bDescriptionEnd Then
-						Pos1 = InStr(Buff, MLDot) 'you must add "." to your language file for good local showing
+						Pos1 = InStr(Buff, MLDot)
 						If Pos1 = InStr(Buff, "...") Then Pos1 = InStr(Pos1 + 3, Buff, MLDot)
 						If Pos1 > 0 Then
 							Buff = Left(Buff, Pos1) & " <a href=""" & *KeywordsHelpPath & "|" & Str(LineNumber) & "|" & MLMoreDetails & "|" & StartBuff & """>" & MLMoreDetails & !"</a>\r"
@@ -4866,12 +4576,8 @@ Sub LoadHelp
 	pFunctions = @GlobalAsmFunctionsHelp
 	InEnglish = False
 	Fn = FreeFile_
-	If LCase(App.CurLanguage) = "english" OrElse Dir(ExePath & "/Settings/Others/AsmKeywordsHelp." & App.CurLanguage & ".txt") = "" Then
-		InEnglish = True
-		WLet(AsmKeywordsHelpPath, ExePath & "/Settings/Others/AsmKeywordsHelp.txt")
-	Else
-		WLet(AsmKeywordsHelpPath, ExePath & "/Settings/Others/AsmKeywordsHelp." & App.CurLanguage & ".txt")
-	End If
+	InEnglish = True
+	WLet(AsmKeywordsHelpPath, ExePath & "/Settings/Others/AsmKeywordsHelp.txt")
 	Result = -1
 	Result = Open(*AsmKeywordsHelpPath For Input Encoding "utf-8" As #Fn)
 	If Result <> 0 Then Result = Open(*AsmKeywordsHelpPath For Input Encoding "utf-16" As #Fn)
@@ -5078,19 +4784,7 @@ Sub LoadToolBox(ForLibrary As Library Ptr = 0)
 	Dim As UString MFF, Temp
 	Dim As UInteger Attr
 	Dim As Library Ptr MFFCtlLibrary
-		#ifdef __USE_GTK3__
-				#ifdef __FB_64BIT__
-					MFF = IIf(i = 0, "Controls/MyFbFramework/libmff64_gtk3.so", "")
-				#else
-					MFF = IIf(i = 0, "Controls/MyFbFramework/libmff32_gtk3.so", "")
-				#endif
-		#else
-				#ifdef __FB_64BIT__
-					MFF = IIf(i = 0, "Controls/MyFbFramework/libmff64_gtk2.so", "")
-				#else
-					MFF = IIf(i = 0, "Controls/MyFbFramework/libmff32_gtk2.so", "")
-				#endif
-		#endif
+				MFF = IIf(i = 0, "Controls/MyFbFramework/libmff64_gtk3.so", "")
 	If ForLibrary = 0 Then
 		IncludeMFFPath = iniSettings.ReadBool("Options", "IncludeMFFPath", True)
 		WLet(MFFPath, iniSettings.ReadString("Options", "MFFPath", "./Controls/MyFbFramework"))
@@ -5131,10 +4825,8 @@ Sub LoadToolBox(ForLibrary As Library Ptr = 0)
 			MsgBox ML("File not loaded") & ": " & WChr(13, 10) & WChr(13, 10) & GetFullPath(CtlLibrary->Path) & WChr(13, 10) & WChr(13, 10) & ML("Can not load control to toolbox")
 		End If
 		If Not CtlLibrary->Enabled Then Continue For
-		#ifdef __USE_GTK__
 			gtk_icon_theme_append_search_path(gtk_icon_theme_get_default(), ToUtf8(GetOSPath(GetFolderName(GetFullPath(CtlLibrary->Path)) & "/resources")))
 			gtk_icon_theme_append_search_path(gtk_icon_theme_get_default(), ToUtf8(GetOSPath(GetFolderName(GetFullPath(CtlLibrary->Path)) & "/Resources")))
-		#endif
 		IncludePath = GetFullPath(GetFullPath(CtlLibrary->HeadersFolder, CtlLibrary->Path))
 		If Not EndsWith(IncludePath, Slash) Then IncludePath &= Slash
 		f = Dir(IncludePath & "*.bi")
@@ -5172,769 +4864,141 @@ Sub LoadToolBox(ForLibrary As Library Ptr = 0)
 		iOld = iNew
 	Next i
 	' HTML STYLE
-	#if 0
-		If Dir(wikiFolder) = "" Then MkDir wikiFolder
-		Dim As String ControlParent, TmpControlName, TmpControlChildName, TmpControlSubName
-		Dim As String ControlTypArr(0 To 4) = {"type", "Control", "Container Control", "component", "Dialog"}
-		Dim As Integer Posi
-		Dim As Dictionary ControlParentDict
-		If Dir(ExePath & "/Controls/MyFbFramework/ControlParent.csv") <> "" Then
-			ControlParentDict.LoadFromFile(ExePath & "/Controls/MyFbFramework/ControlParent.csv")
-		Else
-			ControlParentDict.Add "NULL", "NULL"
-		End If
+' Markdown STYLE
+'This is a component of the MyFbFramework, which is part of the freeBasic framework and belongs to the container control.
 		
-		For i = 0 To Comps.Count - 1
-			tbi = Cast(TypeElement Ptr, Comps.Object(i))
-			If tbi = 0 OrElse tbi->CtlLibrary <> MFFCtlLibrary Then Continue For
-			Dim As Integer Fn = FreeFile_
-			Open wikiFolder & Comps.Item(i) & ".mediawiki" For Output As #Fn
-			Print #Fn, "== Definition =="
-			If Trim(tbi->OwnerNamespace) <> "" Then Print #Fn, "Namespace: [[" & tbi->OwnerNamespace & "]]"
-			If tbi->ControlType = 0 Then
-				Posi = ControlParentDict.IndexOfKey(Comps.Item(i))
-				If Posi <> -1 Then TmpControlName = ControlParentDict.Item(Posi)->Text Else TmpControlName= ""
-				Print #Fn,  "```" & Comps.Item(i) & "``` is a type or collection of the " & TmpControlName & " control, part of the freeBasic framework MyFbFramework."
-			Else
-				TmpControlName = Comps.Item(i)
-				Print #Fn,  "```" & Comps.Item(i) & "``` is a " & ControlTypArr(tbi->ControlType) & " within the MyFbFramework."
-				Print #Fn, "The " & TmpControlName & " control structure is highly analogous to the VB6, vb.net " & TmpControlName & " control, with similar components, properties, and behaviors but uses the syntax and conventions defined by the MyFbFramework."
-			End If
+'This is part of the MyFbFramework FreeBasic framework. It belongs to the container control.
+'This is part of the properties of the grid control. It belongs to the .
+		
+'The Grid control is similar in functionality to the DataGridView in VB.Net but uses the syntax and conventions defined by the MyFbFramework.
+If Dir(wikiFolder) = "" Then MkDir wikiFolder
+Dim As String ControlParent, TmpControlName, TmpControlChildName, TmpControlSubName, StringToC, tmpDefinition
+Dim As String ControlTypArr(0 To 4) = {"type", "Control", "Container Control", "component", "Dialog"}
+Dim As Integer Posi
+Dim As Boolean bNotEmpty
+Dim As Dictionary ControlParentDict
+Dim As WString Ptr FileContentPtr, FileContentPtr1, FileContentEmpty
+Dim As FileEncodings FileEncoding = FileEncodings.Utf8
+Dim As NewLineTypes NewLineType, NewLineType1
+If Dir(ExePath & "/Controls/MyFbFramework/ControlParent.csv") <> "" Then
+	ControlParentDict.LoadFromFile(ExePath & "/Controls/MyFbFramework/ControlParent.csv")
+Else
+	ControlParentDict.Add "NULL", "NULL"
+End If
+For i = 0 To Comps.Count - 1
+	tbi = Cast(TypeElement Ptr, Comps.Object(i))
+	If tbi = 0 OrElse tbi->CtlLibrary <> MFFCtlLibrary Then Continue For
+	If tbi->ControlType = 0 Then
+		Posi = ControlParentDict.IndexOfKey(Comps.Item(i))
+		If Posi <> -1 Then TmpControlName = ControlParentDict.Item(Posi)->Text Else TmpControlName= ""
+		tmpDefinition = "`" & Comps.Item(i) & "` is a type or collection of the " & TmpControlName & " control, part of the freeBasic framework MyFbFramework."
+	Else
+		TmpControlName = Comps.Item(i)
+		tmpDefinition = "```" & Comps.Item(i) & "``` is a " & ControlTypArr(tbi->ControlType) & " within the MyFbFramework."
+		tmpDefinition &= "The " & TmpControlName & " control structure is highly analogous to the VB6, vb.net " & TmpControlName & " control, with similar components, properties, and behaviors but uses the syntax and conventions defined by the MyFbFramework."
+	End If
 			
-			Print #Fn, ""
-			Print #Fn, "'''" & Comps.Item(i) & "''' - " & tbi->Comment
-			Print #Fn, ""
-			Print #Fn, "== Properties =="
-			Print #Fn, "<table>"
-			Print #Fn, "<thead>"
-			Print #Fn, "<tr class=""header"">"
-			Print #Fn, "<th>Name</th>"
-			Print #Fn, "<th>Description</th>"
-			Print #Fn, "</tr>"
-			Print #Fn, "</thead>"
-			Print #Fn, "<tbody>"
-			FPropertyItems.Clear
-			TabWindow.FillProperties Comps.Item(i)
-			FPropertyItems.Sort
-			For j As Integer = 0 To FPropertyItems.Count - 1
-				te = FPropertyItems.Object(j)
-				If te = 0 OrElse te->ElementType <> ElementTypes.E_Field AndAlso te->ElementType <> ElementTypes.E_Property Then Continue For
-				Var Pos1 = InStr(te->DisplayName, "[")
-				If Pos1 > 0 Then wikiTitle = Trim(Left(te->DisplayName, Pos1 - 1)) Else wikiTitle = te->DisplayName
-				Print #Fn, "<tr class=""property"">"
-				Print #Fn, "<td><a href=""" & wikiTitle & """>" & FPropertyItems.Item(j) & "</a></td>"
-				Print #Fn, "<td>" & te->Comment & "</td>"
-				Print #Fn, "</tr>"
-				Dim As Integer Fn1 = FreeFile_
-				Open wikiFolder & wikiTitle & ".mediawiki" For Output As #Fn1
-				Print #Fn1, "<h2>" & wikiTitle & " Property" & "</h2>"
-				Print #Fn1, te->Comment
-				If tbi->OwnerNamespace <> "" Then
-					Print #Fn1, "<h2>Definition</h2>"
-					Print #Fn1, "Namespace: [[" & tbi->OwnerNamespace & "]]"
-				End If
-				Posi = InStr(wikiTitle, ".")
-				If Posi > 0 Then
-					TmpControlChildName = Left(wikiTitle, Posi - 1)
-					TmpControlSubName = Mid(wikiTitle, Posi + 1)
-				Else
-					TmpControlChildName = ""
-					TmpControlSubName = wikiTitle
-				End If
-				
-				If Posi > 0 Then
-					If TmpControlName <> "" AndAlso TmpControlName <> TmpControlChildName Then
-						Print #Fn1,  "```" & TmpControlSubName & "``` is property of the " & TmpControlChildName & " within the " & TmpControlName & " control, part of the freeBasic framework MyFbFramework."
-					Else
-						Print #Fn1,  "```" & TmpControlSubName & "``` is property of the "  & TmpControlChildName & " control, part of the freeBasic framework MyFbFramework."
-					End If
-				End If
-				
-				Print #Fn1, "<h2>Syntax</h2>"
-				Print #Fn1, "```fb"
-				Print #Fn1, te->Parameters
-				Print #Fn1, "```"
-				Print #Fn1, "<h2>Property Value</h2>"
-				Print #Fn1, GetTypeLink(te->TypeName)
-				Print #Fn1, "<h2>See also</h2>"
-				Print #Fn1, "* [[" & Left(te->DisplayName, InStr(te->DisplayName, ".") - 1) & "]]"
-				If Trim(TmpControlChildName) <> "" Then Print #Fn1, "`" & TmpControlChildName & "`[[" & TmpControlChildName & ".mediawiki]]"
-				If TmpControlName <> "" AndAlso TmpControlName <> TmpControlChildName Then Print #Fn1, "[`" & TmpControlName & "`](" & TmpControlName & ".mediawiki)"
-				CloseFile_(Fn1)
-			Next
-			Print #Fn, "</tbody>"
-			Print #Fn, "</table>"
-			Print #Fn, "== Methods =="
-			Print #Fn, "<table>"
-			Print #Fn, "<thead>"
-			Print #Fn, "<tr class=""header"">"
-			Print #Fn, "<th>Name</th>"
-			Print #Fn, "<th>Description</th>"
-			Print #Fn, "</tr>"
-			Print #Fn, "</thead>"
-			Print #Fn, "<tbody>"
-			For j As Integer = 0 To FPropertyItems.Count - 1
-				te = FPropertyItems.Object(j)
-				If te = 0 OrElse te->ElementType <> ElementTypes.E_Function AndAlso te->ElementType <> ElementTypes.E_Sub AndAlso te->ElementType <> ElementTypes.E_Define AndAlso te->ElementType <> ElementTypes.E_Macro Then Continue For
-				Var Pos1 = InStr(te->DisplayName, "[")
-				If Pos1 > 0 Then wikiTitle = Trim(Left(te->DisplayName, Pos1 - 1)) Else wikiTitle = te->DisplayName
-				Print #Fn, "<tr class=""method"">"
-				Print #Fn, "<td><a href=""" & wikiTitle & """>" & FPropertyItems.Item(j) & "</a></td>"
-				Print #Fn, "<td>" & te->Comment & "</td>"
-				Print #Fn, "</tr>"
-				If Not teList.Contains(te) Then
-					teList.Add te
-					Dim As Integer Fn1 = FreeFile_
-					Open wikiFolder & wikiTitle & ".mediawiki" For Output As #Fn1
-					Print #Fn1, "<h2>" & wikiTitle & " Method" & "</h2>"
-					Print #Fn1, te->Comment
-					If tbi->OwnerNamespace <> "" Then
-						Print #Fn1, "<h2>Definition</h2>"
-						Print #Fn1, "Namespace: [[" & tbi->OwnerNamespace & "]]"
-					End If
-					Posi = InStr(wikiTitle, ".")
-					If Posi > 0 Then
-						TmpControlChildName = Left(wikiTitle, Posi - 1)
-						TmpControlSubName = Mid(wikiTitle, Posi + 1)
-					Else
-						TmpControlChildName = ""
-						TmpControlSubName = wikiTitle
-					End If
-					If Posi > 0 Then
-						If TmpControlName <> "" AndAlso TmpControlName <> TmpControlChildName Then
-							Print #Fn1,  "```" & TmpControlSubName & "``` is method of the " & TmpControlChildName & " within the " & TmpControlName & " control, part of the freeBasic framework MyFbFramework."
-						Else
-							Print #Fn1,  "```" & TmpControlSubName & "``` is method of the " & TmpControlChildName & " control, part of the freeBasic framework MyFbFramework."
-						End If
-					End If
-					
-					Print #Fn1, "<h2>Syntax</h2>"
-					Print #Fn1, "```fb"
-					Print #Fn1, IIf(te->ElementType = ElementTypes.E_Function, "Declare Function", "Declare Sub") & " " & te->Parameters
-					Print #Fn1, "```"
-					Print #Fn1, ""
-					Pos1 = InStr(te->Parameters, "(")
-					If Pos1 > 0 Then
-						SplitParameters te->Parameters, Pos1, Mid(te->Parameters, Pos1 + 1, Len(te->Parameters) - Pos1 - 1), te->FileName, te, te->StartLine, 0, ECLines, te->InCondition, te->Declaration, False
-						Print #Fn1, "<h2>Parameters</h2>"
-						Print #Fn1, "{|"
-						Print #Fn1, "|'''Part'''||'''Type'''||'''Description'''"
-						For k As Integer = 0 To te->Elements.Count - 1
-							If Trim(te->Elements.Item(k)) = "" Then Continue For
-							te1 = te->Elements.Object(k)
-							Print #Fn1, "|-"
-							Print #Fn1, "|<code>" & te->Elements.Item(k) & "</code>||" & GetTypeLink(te1->TypeName) & "||" & te1->Comment
-						Next
-						Print #Fn1, "|}"
-					End If
-					If te->ElementType = ElementTypes.E_Function Then
-						Print #Fn1, ""
-						Print #Fn1, "<h2>Return Value</h2>"
-						Print #Fn1, GetTypeLink(te->TypeName)
-					End If
-					Print #Fn1, "<h2>See also</h2>"
-					Print #Fn1, "* [[" & Left(te->DisplayName, InStr(te->DisplayName, ".") - 1) & "]]"
-					If TmpControlName <> "" AndAlso TmpControlName <> TmpControlChildName Then Print #Fn1, "[`" & TmpControlName & "`](" & TmpControlName & ".mediawiki)"
-					CloseFile_(Fn1)
-				End If
-			Next
-			Print #Fn, "</tbody>"
-			Print #Fn, "</table>"
-			Print #Fn, "== Events =="
-			If FPropertyItems.Count > 0 Then
-				Print #Fn, "<table>"
-				Print #Fn, "<thead>"
-				Print #Fn, "<tr class=""header"">"
-				Print #Fn, "<th>Name</th>"
-				Print #Fn, "<th>Description</th>"
-				Print #Fn, "</tr>"
-				Print #Fn, "</thead>"
-				Print #Fn, "<tbody>"
-				For j As Integer = 0 To FPropertyItems.Count - 1
-					te = FPropertyItems.Object(j)
-					If te = 0 OrElse te->ElementType <> ElementTypes.E_Event Then Continue For
-					Var Pos1 = InStr(te->DisplayName, "[")
-					If Pos1 > 0 Then wikiTitle = Trim(Left(te->DisplayName, Pos1 - 1)) Else wikiTitle = te->DisplayName
-					Print #Fn, "<tr class=""event"">"
-					Print #Fn, "<td><a href=""" & wikiTitle & """>" & FPropertyItems.Item(j) & "</a></td>"
-					Print #Fn, "<td>" & te->Comment & "</td>"
-					Print #Fn, "</tr>"
-					If Not teList.Contains(te) Then
-						teList.Add te
-						Dim As Integer Fn1 = FreeFile_
-						Open wikiFolder & wikiTitle & ".mediawiki" For Output As #Fn1
-						Print #Fn1, "<h2>" & wikiTitle & " Event" & "</h2>"
-						Print #Fn1, te->Comment
-						If tbi->OwnerNamespace <> "" Then
-							Print #Fn1, "<h2>Definition</h2>"
-							Print #Fn1, "Namespace: [[" & tbi->OwnerNamespace & "]]"
-						End If
-						Posi = InStr(wikiTitle, ".")
-						If Posi > 0 Then
-							TmpControlChildName = Left(wikiTitle, Posi - 1)
-							TmpControlSubName = Mid(wikiTitle, Posi + 1)
-						Else
-							TmpControlChildName = ""
-							TmpControlSubName = wikiTitle
-						End If
-						If Posi > 0 Then
-							If TmpControlName <> "" AndAlso TmpControlName <> TmpControlChildName Then
-								Print #Fn1,  "``" & TmpControlSubName & "``` is event of the " & TmpControlChildName & " within the " & TmpControlName & " control, part of the freeBasic framework MyFbFramework."
-							Else
-								Print #Fn1,  "```" & TmpControlSubName & "``` is event of the "  & TmpControlChildName & " control, part of the freeBasic framework MyFbFramework."
-							End If
-						End If
-						
-						Print #Fn1, "<h2>Syntax</h2>"
-						Print #Fn1, "```fb"
-						Print #Fn1, te->Parameters
-						Print #Fn1, "```"
-						Print #Fn1, ""
-						Pos1 = InStr(te->Parameters, "(")
-						If Pos1 > 0 Then
-							SplitParameters te->Parameters, Pos1, Mid(te->Parameters, Pos1 + 1, Len(te->Parameters) - Pos1 - 1), te->FileName, te, te->StartLine, 0, ECLines, te->InCondition, te->Declaration, False
-							Print #Fn1, "<h2>Parameters</h2>"
-							Print #Fn1, "{|"
-							Print #Fn1, "|'''Part'''||'''Type'''||'''Description'''"
-							For k As Integer = 0 To te->Elements.Count - 1
-								If Trim(te->Elements.Item(k)) = "" Then Continue For
-								te1 = te->Elements.Object(k)
-								Print #Fn1, "|-"
-								Print #Fn1, "|<code>" & te->Elements.Item(k) & "</code>||" & GetTypeLink(te1->TypeName) & "||" & IIf(te1->Name = "Designer", "The designer of the object that received the signal. When an object is created without a designer, the designer will be empty. This can be checked with the command: <code>Designer.IsEmpty()</code>", IIf(te1->Name = "Sender", "The object which received the signal", te1->Comment))
-							Next
-							Print #Fn1, "|}"
-						End If
-						If StartsWith(LCase(te->TypeName), "function(") Then
-							Print #Fn1, ""
-							Print #Fn1, "<h2>Return Value</h2>"
-							Print #Fn1, GetTypeLink(te->TypeName)
-						End If
-						Print #Fn1, ""
-						Print #Fn1, "<h2>See also</h2>"
-						Print #Fn1, "* [[" & Left(te->DisplayName, InStr(te->DisplayName, ".") - 1) & "]]"
-						If TmpControlName <> "" AndAlso TmpControlName <> TmpControlChildName Then Print #Fn1, "[`" & TmpControlName & "`](" & TmpControlName & ".md)"
-						CloseFile_(Fn1)
-					End If
-				Next
-			Else
-				Print #Fn, "(No events defined for this component)"
-			End If
-			Print #Fn, "</tbody>"
-			Print #Fn, "</table>"
-			If tbi->OwnerNamespace <> "" Then
-				Print #Fn, "<h2>See also</h2>"
-				Print #Fn, "* [[" & tbi->OwnerNamespace & "]]"
-			End If
-			CloseFile_(Fn)
-		Next i
-		For i = 0 To Globals.Enums.Count - 1
-			tbi = Cast(TypeElement Ptr, Globals.Enums.Object(i))
-			If tbi = 0 OrElse tbi->CtlLibrary <> MFFCtlLibrary Then Continue For
-			Dim As Integer Fn = FreeFile_
-			Open wikiFolder & Globals.Enums.Item(i) & ".mediawiki" For Output As #Fn
-			Print #Fn, "<h2>" & Globals.Enums.Item(i) & " Enum</h2>"
-			Print #Fn,  "`" & Globals.Enums.Item(i) & "` is a global enum within the MyFbFramework."
-			Print #Fn, tbi->Comment
-			If tbi->OwnerNamespace <> "" Then
-				Print #Fn, "<h2>Definition</h2>"
-				If Trim(tbi->OwnerNamespace) <> "" Then Print #Fn, "Namespace: [[" & tbi->OwnerNamespace & "]]"
-			End If
-			Print #Fn, "<h2>Fields</h2>"
-			Print #Fn, "<table>"
-			Print #Fn, "<tbody>"
-			For j As Integer = 0 To tbi->Elements.Count - 1
-				te = tbi->Elements.Object(j)
-				If te = 0 Then Continue For
-				Print #Fn, "<tr class=""property"">"
-				Print #Fn, "<td>" & tbi->Elements.Item(j) & "</td>"
-				Print #Fn, "<td>" & te->Value & "</td>"
-				Print #Fn, "<td>" & te->Comment & "</td>"
-				Print #Fn, "</tr>"
-			Next
-			Print #Fn, "</tbody>"
-			Print #Fn, "</table>"
-			If tbi->OwnerNamespace <> "" Then
-				Print #Fn, "<h2>See also</h2>"
-				Print #Fn, "* [[" & tbi->OwnerNamespace & "]]"
-			End If
-			CloseFile_(Fn)
-		Next i
-		For i = 0 To Globals.Namespaces.Count - 1
-			tbi = Cast(TypeElement Ptr, Globals.Namespaces.Object(i))
-			If tbi = 0 OrElse tbi->CtlLibrary <> MFFCtlLibrary Then Continue For
-			If Not teList.Contains(tbi) Then
-				teList.Add tbi
-				Dim As Boolean bNamespaces, bTypes, bEnums, bDefines, bMacros, bMethods, bConstants, bVariables
-				For ii As Integer = 0 To Globals.Namespaces.Count - 1
-					tbi1 = Cast(TypeElement Ptr, Globals.Namespaces.Object(ii))
-					If tbi1 = 0 OrElse tbi1->CtlLibrary <> MFFCtlLibrary Then Continue For
-					If tbi1->Name <> tbi->Name Then Continue For
-					For j As Integer = 0 To tbi1->Elements.Count - 1
-						te = tbi1->Elements.Object(j)
-						If te = 0 Then Continue For
-						Select Case te->ElementType
-						Case E_Namespace: bNamespaces = True
-						Case E_Type, E_TypeCopy, E_Class, E_Union: bTypes = True
-						Case E_Enum: bEnums = True
-						Case E_Define: bDefines = True
-						Case E_Macro: bMacros = True
-						Case E_Function, E_Sub: bMethods = True
-						Case E_Constant: bConstants = True
-						Case E_CommonVariable, E_LocalVariable, E_ExternVariable, E_SharedVariable: bVariables = True
-						End Select
-					Next
-				Next
-				Dim As Integer Fn = FreeFile_
-				Open wikiFolder & tbi->FullName & ".mediawiki" For Output As #Fn
-				Print #Fn,  "`" & tbi->FullName & "` is a global namespaces within the MyFbFramework."
-				Print #Fn, tbi->Comment
-				Print #Fn, ""
-				If bNamespaces Then
-					Dim As WStringList Namespaces
-					Print #Fn, "== Namespaces =="
-					Print #Fn, "<table>"
-					Print #Fn, "<tbody>"
-					For ii As Integer = 0 To Globals.Namespaces.Count - 1
-						tbi1 = Cast(TypeElement Ptr, Globals.Namespaces.Object(ii))
-						If tbi1 = 0 OrElse tbi1->Name <> tbi->Name Then Continue For
-						For j As Integer = 0 To tbi1->Elements.Count - 1
-							te = tbi1->Elements.Object(j)
-							If te = 0 OrElse te->ElementType <> E_Namespace Then Continue For
-							If te->CtlLibrary <> MFFCtlLibrary Then Continue For
-							If Not Namespaces.Contains(te->Name) Then
-								Namespaces.Add te->Name
-								Print #Fn, "<tr class=""namespace"">"
-								Print #Fn, "<td><a href=""" & te->FullName & """>" & te->Name & "</a></td>"
-								Print #Fn, "<td>" & te->Comment & "</td>"
-								Print #Fn, "</tr>"
-							End If
-						Next
-					Next
-					Print #Fn, "</tbody>"
-					Print #Fn, "</table>"
-					Print #Fn, ""
-				End If
-				If bTypes Then
-					Print #Fn, "== Types =="
-					Print #Fn, "<table>"
-					Print #Fn, "<tbody>"
-					For ii As Integer = 0 To Globals.Namespaces.Count - 1
-						tbi1 = Cast(TypeElement Ptr, Globals.Namespaces.Object(ii))
-						If tbi1 = 0 OrElse tbi1->Name <> tbi->Name Then Continue For
-						For j As Integer = 0 To tbi1->Elements.Count - 1
-							te = tbi1->Elements.Object(j)
-							 If te = 0 OrElse (te->ElementType <> E_Type AndAlso te->ElementType <> E_TypeCopy AndAlso te->ElementType <> E_Union AndAlso te->ElementType <> E_Class) Then Continue For
-							If te->CtlLibrary <> MFFCtlLibrary Then Continue For
-							Print #Fn, "<tr class=""type"">"
-							Print #Fn, "<td><a href=""" & te->Name & """>" & te->Name & "</a></td>"
-							Print #Fn, "<td>" & te->Comment & "</td>"
-							Print #Fn, "</tr>"
-						Next
-					Next
-					Print #Fn, "</tbody>"
-					Print #Fn, "</table>"
-					Print #Fn, ""
-				End If
-				If bEnums Then
-					Print #Fn, "== Enums =="
-					Print #Fn, "<table>"
-					Print #Fn, "<tbody>"
-					For ii As Integer = 0 To Globals.Namespaces.Count - 1
-						tbi1 = Cast(TypeElement Ptr, Globals.Namespaces.Object(ii))
-						 If tbi1 = 0 OrElse tbi1->Name <> tbi->Name Then Continue For
-						For j As Integer = 0 To tbi1->Elements.Count - 1
-							te = tbi1->Elements.Object(j)
-							 If te = 0 OrElse te->ElementType <> E_Enum Then Continue For
-							If te->CtlLibrary <> MFFCtlLibrary Then Continue For
-							Print #Fn, "<tr class=""enum"">"
-							Print #Fn, "<td><a href=""" & te->Name & """>" & te->Name & "</a></td>"
-							Print #Fn, "<td>" & te->Comment & "</td>"
-							Print #Fn, "</tr>"
-						Next
-					Next
-					Print #Fn, "</tbody>"
-					Print #Fn, "</table>"
-					Print #Fn, ""
-				End If
-				If bDefines Then
-					Print #Fn, "== Defines =="
-					Print #Fn, "<table>"
-					Print #Fn, "<tbody>"
-					For ii As Integer = 0 To Globals.Namespaces.Count - 1
-						tbi1 = Cast(TypeElement Ptr, Globals.Namespaces.Object(ii))
-						 If tbi1 = 0 OrElse tbi1->Name <> tbi->Name Then Continue For
-						For j As Integer = 0 To tbi1->Elements.Count - 1
-							te = tbi1->Elements.Object(j)
-							 If te = 0 OrElse (te->ElementType <> E_Define AndAlso te->ElementType <> E_Macro) Then Continue For
-							If te->CtlLibrary <> MFFCtlLibrary Then Continue For
-							Print #Fn, "<tr class=""define"">"
-							Print #Fn, "<td><a href=""" & te->FullName & """>" & te->Name & "</a></td>"
-							Print #Fn, "<td>" & te->Comment & "</td>"
-							Print #Fn, "</tr>"
-						Next
-					Next
-					Print #Fn, "</tbody>"
-					Print #Fn, "</table>"
-					Print #Fn, ""
-				End If
-				If bMacros Then
-					Print #Fn, "== Macros =="
-					Print #Fn, "<table>"
-					Print #Fn, "<tbody>"
-					For ii As Integer = 0 To Globals.Namespaces.Count - 1
-						tbi1 = Cast(TypeElement Ptr, Globals.Namespaces.Object(ii))
-						If tbi1 = 0 OrElse tbi1->Name <> tbi->Name Then Continue For
-						For j As Integer = 0 To tbi1->Elements.Count - 1
-							te = tbi1->Elements.Object(j)
-							If te = 0 OrElse (te->ElementType <> E_Define AndAlso te->ElementType <> E_Macro) Then Continue For
-							If te->CtlLibrary <> MFFCtlLibrary Then Continue For
-							Print #Fn, "<tr class=""macro"">"
-							Print #Fn, "<td><a href=""" & te->FullName & """>" & te->Name & "</a></td>"
-							Print #Fn, "<td>" & te->Comment & "</td>"
-							Print #Fn, "</tr>"
-						Next
-					Next
-					Print #Fn, "</tbody>"
-					Print #Fn, "</table>"
-					Print #Fn, ""
-				End If
-				If bMethods Then
-					Print #Fn, "== Methods =="
-					Print #Fn, "<table>"
-					Print #Fn, "<tbody>"
-					For ii As Integer = 0 To Globals.Namespaces.Count - 1
-						tbi1 = Cast(TypeElement Ptr, Globals.Namespaces.Object(ii))
-						If tbi1 = 0 OrElse tbi1->Name <> tbi->Name Then Continue For
-						For j As Integer = 0 To tbi1->Elements.Count - 1
-							te = tbi1->Elements.Object(j)
-							If te = 0 OrElse (te->ElementType <> ElementTypes.E_Function AndAlso te->ElementType <> ElementTypes.E_Sub) Then Continue For
-							If te->CtlLibrary <> MFFCtlLibrary Then Continue For
-							If te->Declaration Then Continue For
-							Print #Fn, "<tr class=""method"">"
-							Print #Fn, "<td><a href=""" & te->FullName & """>" & te->Name & "</a></td>"
-							Print #Fn, "<td>" & te->Comment & "</td>"
-							Print #Fn, "</tr>"
-						Next
-					Next
-					Print #Fn, "</tbody>"
-					Print #Fn, "</table>"
-					Print #Fn, ""
-				End If
-				If bConstants Then
-					Print #Fn, "== Constants =="
-					Print #Fn, "<table>"
-					Print #Fn, "<tbody>"
-					For ii As Integer = 0 To Globals.Namespaces.Count - 1
-						tbi1 = Cast(TypeElement Ptr, Globals.Namespaces.Object(ii))
-						If tbi1 = 0 OrElse tbi1->Name <> tbi->Name Then Continue For
-						For j As Integer = 0 To tbi1->Elements.Count - 1
-							te = tbi1->Elements.Object(j)
-							If te = 0 OrElse te->ElementType <> ElementTypes.E_Constant Then Continue For
-							If te->CtlLibrary <> MFFCtlLibrary Then Continue For
-							Print #Fn, "<tr class=""constant"">"
-							Print #Fn, "<td><a href=""" & te->Name & """>" & te->Name & "</a></td>"
-							Print #Fn, "<td>" & te->Comment & "</td>"
-							Print #Fn, "</tr>"
-						Next
-					Next
-					Print #Fn, "</tbody>"
-					Print #Fn, "</table>"
-					Print #Fn, ""
-				End If
-				If bVariables Then
-					Print #Fn, "== Variables =="
-					Print #Fn, "<table>"
-					Print #Fn, "<tbody>"
-					For ii As Integer = 0 To Globals.Namespaces.Count - 1
-						tbi1 = Cast(TypeElement Ptr, Globals.Namespaces.Object(ii))
-						If tbi1 = 0 OrElse tbi1->Name <> tbi->Name Then Continue For
-						For j As Integer = 0 To tbi1->Elements.Count - 1
-							te = tbi1->Elements.Object(j)
-							If te = 0 OrElse (te->ElementType <> ElementTypes.E_CommonVariable AndAlso te->ElementType <> ElementTypes.E_LocalVariable AndAlso te->ElementType <> ElementTypes.E_ExternVariable AndAlso te->ElementType <> ElementTypes.E_SharedVariable) Then Continue For
-							If te->CtlLibrary <> MFFCtlLibrary Then Continue For
-							Print #Fn, "<tr class=""variable"">"
-							Print #Fn, "<td><a href=""" & te->Name & """>" & te->Name & "</a></td>"
-							Print #Fn, "<td>" & te->Comment & "</td>"
-							Print #Fn, "</tr>"
-						Next
-					Next
-					Print #Fn, "</tbody>"
-					Print #Fn, "</table>"
-					Print #Fn, ""
-				End If
-				CloseFile_(Fn)
-			End If
-		Next i
-		For i = 0 To Globals.Functions.Count - 1
-			tbi = Cast(TypeElement Ptr, Globals.Functions.Object(i))
-			If tbi = 0 OrElse tbi->Declaration Then Continue For
-			If tbi->ElementType <> ElementTypes.E_Define AndAlso tbi->ElementType <> ElementTypes.E_Macro AndAlso tbi->ElementType <> ElementTypes.E_Function AndAlso tbi->ElementType <> ElementTypes.E_Sub Then Continue For
-			If tbi->CtlLibrary <> MFFCtlLibrary Then Continue For
-			Dim As Integer Fn1 = FreeFile_
-			Open wikiFolder & tbi->FullName & ".mediawiki" For Output As #Fn1
-			Print #Fn1, "<h2>" & tbi->FullName & IIf(tbi->ElementType = ElementTypes.E_Function, " Function", IIf(tbi->ElementType = ElementTypes.E_Sub, " Method", IIf(tbi->ElementType = ElementTypes.E_Define, " Define", IIf(tbi->ElementType = ElementTypes.E_Macro, " Macro", "")))) & "</h2>"
-			Dim As WString Ptr Lines()
-			Split(tbi->Comment, Chr(13) & Chr(10), Lines())
-			For iLine As Integer = 0 To UBound(Lines)
-				If Trim(*Lines(iLine), Any !"\t ") <> "Parameters" AndAlso Trim(*Lines(iLine), Any !"\t ") <> "Return Value" AndAlso Trim(*Lines(iLine), Any !"\t ") <> "See also" Then
-					Print #Fn1, LTrim(*Lines(iLine), Any !"\t ")
-				End If
-			Next
-			If tbi->OwnerNamespace <> "" Then
-				Print #Fn1, "<h2>Definition</h2>"
-				Print #Fn1, "Namespace: [[" & tbi->OwnerNamespace & "]]"
-			End If
-			Print #Fn1, "`" & tbi->FullName & "` Is a global " & IIf(tbi->ElementType = ElementTypes.E_Function, "function", IIf(tbi->ElementType = ElementTypes.E_Sub, "sub", IIf(tbi->ElementType = ElementTypes.E_Define, "definition", IIf(tbi->ElementType = ElementTypes.E_Macro, "macro", "")))) & " within the MyFbFramework."
-			Print #Fn1, "<h2>Syntax</h2>"
-			Print #Fn1, ""
-			Print #Fn1, "```fb"
-			Print #Fn1, IIf(tbi->ElementType = ElementTypes.E_Function, "Function", IIf(tbi->ElementType = ElementTypes.E_Sub, "Sub", IIf(tbi->ElementType = ElementTypes.E_Define, "#define", IIf(tbi->ElementType = ElementTypes.E_Macro, "#macro", "")))) & " " & tbi->Parameters
-			Print #Fn1, "```"
-			Print #Fn1, ""
-			Var Pos1 = InStr(tbi->Parameters, "(")
-			If Pos1 > 0 Then
-				SplitParameters tbi->Parameters, Pos1, Mid(tbi->Parameters, Pos1 + 1, Len(tbi->Parameters) - Pos1 - 1), tbi->FileName, tbi, tbi->StartLine, 0, ECLines, tbi->InCondition, tbi->Declaration, False
-				Print #Fn1, "<h2>Parameters</h2>"
-				Print #Fn1, "{|"
-				Print #Fn1, "|'''Part'''||'''Type'''||'''Description'''"
-				For k As Integer = 0 To tbi->Elements.Count - 1
-					te1 = tbi->Elements.Object(k)
-					If te1 = 0 Then Continue For
-					Dim As UString Comment = IIf(te1->Value = "", "Required. ", "Optional. ")
-					Dim As Boolean bFinded
-					For kk As Integer = iLine To UBound(Lines)
-						If LCase(Trim(*Lines(kk), Any !"\t ")) = LCase(tbi->Elements.Item(k)) Then
-							bFinded = True
-						ElseIf bFinded Then
-							If Trim(*Lines(kk), Any !"\t ") = "Return Value" OrElse Trim(*Lines(kk), Any !"\t ") = "Remarks" OrElse Trim(*Lines(kk), Any !"\t ") = "Example" OrElse Trim(*Lines(kk), Any !"\t ") = "See also" OrElse (k < tbi->Elements.Count - 1 AndAlso LCase(Trim(*Lines(kk), Any !"\t ")) = LCase(tbi->Elements.Item(k + 1))) Then
-								iLine = kk
-								Exit For
-							Else
-								Comment = Comment & IIf(Comment = "", "", !"\r") & Trim(*Lines(kk), Any !"\t ")
-							End If
-						End If
-					Next
-					If Trim(tbi->Elements.Item(k)) = "" Then Continue For
-					Print #Fn1, "|-"
-					Print #Fn1, "|<code>" & tbi->Elements.Item(k) & "</code>||" & GetTypeLink(te1->TypeName) & "||" & te1->Comment & Comment
-				Next
-				Print #Fn1, "|}"
-			End If
-			If tbi->ElementType = ElementTypes.E_Function Then
-				Print #Fn1, ""
-				Print #Fn1, "<h2>Return Value</h2>"
-				Print #Fn1, GetTypeLink(tbi->TypeName)
-				Print #Fn1, ""
-				Dim bFinded As Boolean
-				For kk As Integer = iLine To UBound(Lines)
-					If Trim(*Lines(kk), Any !"\t ") = "Return Value" Then
-						bFinded = True
-					ElseIf bFinded Then
-						If Trim(*Lines(kk), Any !"\t ") = "Remarks" OrElse Trim(*Lines(kk), Any !"\t ") = "Example" OrElse Trim(*Lines(kk), Any !"\t ") = "See also" Then
-							iLine = kk
-							Exit For
-						Else
-							Print #Fn1, Trim(*Lines(kk), Any !"\t ")
-						End If
-					End If
-				Next
-			End If
-			Dim As Boolean bSeeAlso, bExample
-			For kk As Integer = iLine To UBound(Lines)
-				If LTrim(*Lines(kk), Any !"\t ") = "Remarks" Then
-					If bExample Then
-						Print #Fn1, "```"
-						bExample = False
-					End If
-					Print #Fn1, "<h2>" & LTrim(*Lines(kk), Any !"\t ") & "</h2>"
-				ElseIf LTrim(*Lines(kk), Any !"\t ") = "Example" Then
-					bExample = True
-					Print #Fn1, "<h2>" & LTrim(*Lines(kk), Any !"\t ") & "</h2>"
-					Print #Fn1, "```fb"
-				ElseIf LTrim(*Lines(kk), Any !"\t ") = "See also" Then
-					If bExample Then
-						Print #Fn1, "```"
-						bExample = False
-					End If
-					bSeeAlso = True
-					Print #Fn1, "<h2>" & LTrim(*Lines(kk), Any !"\t ") & "</h2>"
-				ElseIf bSeeAlso Then
-					If Trim(*Lines(kk), Any !"\t ") = "" Then Continue For
-					Print #Fn1, "* [[" & LTrim(*Lines(kk), Any !"\t ") & "]]"
-				ElseIf bExample Then
-					Print #Fn1, Lines(kk)
-				Else
-					Print #Fn1, LTrim(*Lines(kk), Any !"\t ")
-				End If
-			Next
-			If tbi->OwnerNamespace <> "" AndAlso Not bSeeAlso Then
-				Print #Fn1, "<h2>See also</h2>"
-				Print #Fn1, "* [[" & te->OwnerNamespace & "]]"
-			End If
-			CloseFile_(Fn1)
-			For kk As Integer = 0 To UBound(Lines)
-				if Lines(kk) Then _Deallocate(*Lines(kk))
-			Next
-			Erase Lines
-		Next i
-		
-		For i = 0 To Globals.Args.Count - 1
-			tbi = Cast(TypeElement Ptr, Globals.Args.Object(i))
-			If tbi = 0 OrElse tbi->CtlLibrary <> MFFCtlLibrary Then Continue For
-			If tbi->Name <> "App" AndAlso tbi->Name <> "Clipboard" AndAlso tbi->Name <> "DebugWindowHandle" AndAlso tbi->Name <> "DefaultFont" Then Continue For
-			Dim As Integer Fn = FreeFile_
-			Open wikiFolder & tbi->Name & ".mediawiki" For Output As #Fn
-			Print #Fn, "== Definition =="
-			If Trim(tbi->OwnerNamespace) <> "" Then Print #Fn, "Namespace: " & tbi->OwnerNamespace
-			Print #Fn,  "`" & tbi->Name & "` is a global variable in MyFbFramework."
-			Print #Fn, ""
-			Print #Fn, "'''" & tbi->Name & "''' - " & tbi->Comment
-			Print #Fn, ""
-			Print #Fn, "<pre>"
-			Print #Fn, tbi->Parameters
-			Print #Fn, "</pre>"
-			Print #Fn, ""
-			Print #Fn, "== Property Value =="
-			Print #Fn, GetTypeLink(tbi->TypeName)
-			CloseFile_(Fn)
-		Next i
-	#else
-		' Markdown STYLE
-		'This is a component of the MyFbFramework, which is part of the freeBasic framework and belongs to the container control.
-		
-		'This is part of the MyFbFramework FreeBasic framework. It belongs to the container control.
-		'This is part of the properties of the grid control. It belongs to the .
-		
-		'The Grid control is similar in functionality to the DataGridView in VB.Net but uses the syntax and conventions defined by the MyFbFramework.
-		If Dir(wikiFolder) = "" Then MkDir wikiFolder
-		Dim As String ControlParent, TmpControlName, TmpControlChildName, TmpControlSubName, StringToC, tmpDefinition
-		Dim As String ControlTypArr(0 To 4) = {"type", "Control", "Container Control", "component", "Dialog"}
-		Dim As Integer Posi
-		Dim As Boolean bNotEmpty
-		Dim As Dictionary ControlParentDict
-		Dim As WString Ptr FileContentPtr, FileContentPtr1, FileContentEmpty
-		Dim As FileEncodings FileEncoding = FileEncodings.Utf8
-		Dim As NewLineTypes NewLineType, NewLineType1
-		If Dir(ExePath & "/Controls/MyFbFramework/ControlParent.csv") <> "" Then
-			ControlParentDict.LoadFromFile(ExePath & "/Controls/MyFbFramework/ControlParent.csv")
-		Else
-			ControlParentDict.Add "NULL", "NULL"
-		End If
-		For i = 0 To Comps.Count - 1
-			tbi = Cast(TypeElement Ptr, Comps.Object(i))
-			If tbi = 0 OrElse tbi->CtlLibrary <> MFFCtlLibrary Then Continue For
-			If tbi->ControlType = 0 Then
-				Posi = ControlParentDict.IndexOfKey(Comps.Item(i))
-				If Posi <> -1 Then TmpControlName = ControlParentDict.Item(Posi)->Text Else TmpControlName= ""
-				tmpDefinition = "`" & Comps.Item(i) & "` is a type or collection of the " & TmpControlName & " control, part of the freeBasic framework MyFbFramework."
-			Else
-				TmpControlName = Comps.Item(i)
-				tmpDefinition = "```" & Comps.Item(i) & "``` is a " & ControlTypArr(tbi->ControlType) & " within the MyFbFramework."
-				tmpDefinition &= "The " & TmpControlName & " control structure is highly analogous to the VB6, vb.net " & TmpControlName & " control, with similar components, properties, and behaviors but uses the syntax and conventions defined by the MyFbFramework."
-			End If
+	WAdd(FileContentPtr, Chr(13, 10) & "## " & Comps.Item(i))
+	WAdd(FileContentPtr, Chr(13, 10) & "### Definition")
+	If Trim(tbi->OwnerNamespace) <> "" Then WAdd(FileContentPtr, Chr(13, 10) & "Namespace: " & tbi->OwnerNamespace & " ")
+	FPropertyItems.Clear
+	TabWindow.FillProperties Comps.Item(i)
+	FPropertyItems.Sort
+	WAdd(FileContentPtr, Chr(13, 10))
+	WAdd(FileContentPtr, Chr(13, 10) & "`" & Comps.Item(i) & "` - " & IIf(Trim(tbi->Comment) <> "", WStr(tbi->Comment), WStr(tmpDefinition)))
+	WAdd(FileContentPtr, Chr(13, 10))
+	bNotEmpty = False
+	WAdd(FileContentPtr, Chr(13, 10) & "### Properties")
+	WLet(FileContentPtr1, Chr(13, 10) & "|Name|Description|Syntax|")
+	WAdd(FileContentPtr1, Chr(13, 10) & "| :---- | :---- | :---- |")
+	For j As Integer = 0 To FPropertyItems.Count - 1
+		te = FPropertyItems.Object(j)
+		If te = 0 OrElse te->ElementType <> ElementTypes.E_Field AndAlso te->ElementType <> ElementTypes.E_Property Then Continue For
+		Var Pos1 = InStr(te->DisplayName, "[")
+		If Pos1 > 0 Then wikiTitle = Trim(Left(te->DisplayName, Pos1 - 1)) Else wikiTitle = te->DisplayName
+		WAdd(FileContentPtr1, Chr(13, 10) & "|" & FPropertyItems.Item(j) & "|" & Trim(te->Comment, Any !"\r\n\t ") & "|`" & te->Parameters & "`|")
+		bNotEmpty = True
+	Next
+	If bNotEmpty Then
+		WAdd(FileContentPtr, Chr(13, 10) & *FileContentPtr1)
+	Else
+		WAdd(FileContentPtr, Chr(13, 10) & "(No properties defined)")
+	End If
 			
-			WAdd(FileContentPtr, Chr(13, 10) & "## " & Comps.Item(i))
-			WAdd(FileContentPtr, Chr(13, 10) & "### Definition")
-			If Trim(tbi->OwnerNamespace) <> "" Then WAdd(FileContentPtr, Chr(13, 10) & "Namespace: " & tbi->OwnerNamespace & " ")
-			FPropertyItems.Clear
-			TabWindow.FillProperties Comps.Item(i)
-			FPropertyItems.Sort
-			WAdd(FileContentPtr, Chr(13, 10))
-			WAdd(FileContentPtr, Chr(13, 10) & "`" & Comps.Item(i) & "` - " & IIf(Trim(tbi->Comment) <> "", WStr(tbi->Comment), WStr(tmpDefinition)))
-			WAdd(FileContentPtr, Chr(13, 10))
-			bNotEmpty = False
-			WAdd(FileContentPtr, Chr(13, 10) & "### Properties")
-			WLet(FileContentPtr1, Chr(13, 10) & "|Name|Description|Syntax|")
-			WAdd(FileContentPtr1, Chr(13, 10) & "| :---- | :---- | :---- |")
-			For j As Integer = 0 To FPropertyItems.Count - 1
-				te = FPropertyItems.Object(j)
-				If te = 0 OrElse te->ElementType <> ElementTypes.E_Field AndAlso te->ElementType <> ElementTypes.E_Property Then Continue For
-				Var Pos1 = InStr(te->DisplayName, "[")
-				If Pos1 > 0 Then wikiTitle = Trim(Left(te->DisplayName, Pos1 - 1)) Else wikiTitle = te->DisplayName
-				WAdd(FileContentPtr1, Chr(13, 10) & "|" & FPropertyItems.Item(j) & "|" & Trim(te->Comment, Any !"\r\n\t ") & "|`" & te->Parameters & "`|")
-				bNotEmpty = True
-			Next
-			If bNotEmpty Then
-				WAdd(FileContentPtr, Chr(13, 10) & *FileContentPtr1)
-			Else
-				WAdd(FileContentPtr, Chr(13, 10) & "(No properties defined)")
-			End If
-			
-			WAdd(FileContentPtr, Chr(13, 10))
-			bNotEmpty = False
-			WAdd(FileContentPtr, Chr(13, 10) & "### Methods")
-			WLet(FileContentPtr1, Chr(13, 10) & "|Name|Description|Syntax|")
-			WAdd(FileContentPtr1, Chr(13, 10) & "| :---- | :---- | :---- |")
-			For j As Integer = 0 To FPropertyItems.Count - 1
-				te = FPropertyItems.Object(j)
-				If te = 0 OrElse te->ElementType <> ElementTypes.E_Function AndAlso te->ElementType <> ElementTypes.E_Sub AndAlso te->ElementType <> ElementTypes.E_Define AndAlso te->ElementType <> ElementTypes.E_Macro Then Continue For
-				Var Pos1 = InStr(te->DisplayName, "[")
-				If Pos1 > 0 Then wikiTitle = Trim(Left(te->DisplayName, Pos1 - 1)) Else wikiTitle = te->DisplayName
-				WAdd(FileContentPtr1, Chr(13, 10) & "|" & FPropertyItems.Item(j) & "|" & Trim(te->Comment, Any !"\r\n\t ") & "|`" & IIf(te->ElementType = ElementTypes.E_Function, "Declare Function", "Declare Sub") & " " & te->Parameters & "`|")
-				bNotEmpty = True
-			Next
-			If bNotEmpty Then
-				WAdd(FileContentPtr, Chr(13, 10) & *FileContentPtr1)
-			Else
-				WAdd(FileContentPtr, Chr(13, 10) & "(No methods defined)")
-			End If
-			bNotEmpty = False
-			WAdd(FileContentPtr, Chr(13, 10) & "### Events")
-			WLet(FileContentPtr1, Chr(13, 10) & "|Name|Description|Syntax|")
-			WAdd(FileContentPtr1, Chr(13, 10) & "| :---- | :---- | :---- |")
-			For j As Integer = 0 To FPropertyItems.Count - 1
-				te = FPropertyItems.Object(j)
-				If te = 0 OrElse te->ElementType <> ElementTypes.E_Event Then Continue For
-				Var Pos1 = InStr(te->DisplayName, "[")
-				If Pos1 > 0 Then wikiTitle = Trim(Left(te->DisplayName, Pos1 - 1)) Else wikiTitle = te->DisplayName
-				WAdd(FileContentPtr1, Chr(13, 10) & "|" & FPropertyItems.Item(j) & "|" & Trim(te->Comment, Any !"\r\n\t ") & "|`" & te->Parameters & "`|")
-				bNotEmpty = True
-			Next
-			If bNotEmpty Then
-				WAdd(FileContentPtr, Chr(13, 10) & *FileContentPtr1)
-			Else
-				WAdd(FileContentPtr, Chr(13, 10) & "(No events defined)")
-			End If
-				AIContext.Add(Comps.Item(i), *FileContentPtr)
-			_Deallocate(FileContentPtr ): FileContentPtr = 0
-		Next i
-		WLet(FileContentPtr, "## " & "Globals Enums")
-		For i = 0 To Globals.Enums.Count - 1
-			tbi = Cast(TypeElement Ptr, Globals.Enums.Object(i))
-			If tbi = 0 OrElse tbi->CtlLibrary <> MFFCtlLibrary Then Continue For
-			WAdd(FileContentPtr, Chr(13, 10) & "### " & Globals.Enums.Item(i) & " Enum")
-			WAdd(FileContentPtr, Chr(13, 10) &  "`" & Globals.Enums.Item(i) & "` is a global enum within the MyFbFramework.")
-			WAdd(FileContentPtr, Chr(13, 10) & tbi->Comment)
-			If tbi->OwnerNamespace <> "" Then
-				WAdd(FileContentPtr, Chr(13, 10) & "#### Definition")
-				If Trim(tbi->OwnerNamespace) <> "" Then WAdd(FileContentPtr, Chr(13, 10) & "Namespace: " & tbi->OwnerNamespace)
-			End If
-			WAdd(FileContentPtr, Chr(13, 10) & "#### Fields")
-			WAdd(FileContentPtr, Chr(13, 10) & "|Name|Description|Syntax|")
-			WAdd(FileContentPtr, Chr(13, 10) & "| :---- | :---- | :---- |")
-			For j As Integer = 0 To tbi->Elements.Count - 1
-				te = tbi->Elements.Object(j)
-				If te = 0 Then Continue For
-				WAdd(FileContentPtr, Chr(13, 10) & "|`" & tbi->Elements.Item(j) & "`|" & te->Value & "|`" & te->Comment & "`|")
-			Next
-		Next i
-		AIContext.Add("Globals Enums", *FileContentPtr)
-		_Deallocate(FileContentPtr ): FileContentPtr = 0
-		If FileContentPtr1 Then Deallocate(FileContentPtr1 ): FileContentPtr1 = 0
-		WLet(FileContentPtr1, "## Globals Procedures")
-		WAdd(FileContentPtr1, Chr(13, 10) & "|Name|Type|Description|Syntax|")
-		WAdd(FileContentPtr1, Chr(13, 10) & "| :---- | :---- | :---- | :---- |")
+	WAdd(FileContentPtr, Chr(13, 10))
+	bNotEmpty = False
+	WAdd(FileContentPtr, Chr(13, 10) & "### Methods")
+	WLet(FileContentPtr1, Chr(13, 10) & "|Name|Description|Syntax|")
+	WAdd(FileContentPtr1, Chr(13, 10) & "| :---- | :---- | :---- |")
+	For j As Integer = 0 To FPropertyItems.Count - 1
+		te = FPropertyItems.Object(j)
+		If te = 0 OrElse te->ElementType <> ElementTypes.E_Function AndAlso te->ElementType <> ElementTypes.E_Sub AndAlso te->ElementType <> ElementTypes.E_Define AndAlso te->ElementType <> ElementTypes.E_Macro Then Continue For
+		Var Pos1 = InStr(te->DisplayName, "[")
+		If Pos1 > 0 Then wikiTitle = Trim(Left(te->DisplayName, Pos1 - 1)) Else wikiTitle = te->DisplayName
+		WAdd(FileContentPtr1, Chr(13, 10) & "|" & FPropertyItems.Item(j) & "|" & Trim(te->Comment, Any !"\r\n\t ") & "|`" & IIf(te->ElementType = ElementTypes.E_Function, "Declare Function", "Declare Sub") & " " & te->Parameters & "`|")
+		bNotEmpty = True
+	Next
+	If bNotEmpty Then
+		WAdd(FileContentPtr, Chr(13, 10) & *FileContentPtr1)
+	Else
+		WAdd(FileContentPtr, Chr(13, 10) & "(No methods defined)")
+	End If
+	bNotEmpty = False
+	WAdd(FileContentPtr, Chr(13, 10) & "### Events")
+	WLet(FileContentPtr1, Chr(13, 10) & "|Name|Description|Syntax|")
+	WAdd(FileContentPtr1, Chr(13, 10) & "| :---- | :---- | :---- |")
+	For j As Integer = 0 To FPropertyItems.Count - 1
+		te = FPropertyItems.Object(j)
+		If te = 0 OrElse te->ElementType <> ElementTypes.E_Event Then Continue For
+		Var Pos1 = InStr(te->DisplayName, "[")
+		If Pos1 > 0 Then wikiTitle = Trim(Left(te->DisplayName, Pos1 - 1)) Else wikiTitle = te->DisplayName
+		WAdd(FileContentPtr1, Chr(13, 10) & "|" & FPropertyItems.Item(j) & "|" & Trim(te->Comment, Any !"\r\n\t ") & "|`" & te->Parameters & "`|")
+		bNotEmpty = True
+	Next
+	If bNotEmpty Then
+		WAdd(FileContentPtr, Chr(13, 10) & *FileContentPtr1)
+	Else
+		WAdd(FileContentPtr, Chr(13, 10) & "(No events defined)")
+	End If
+		AIContext.Add(Comps.Item(i), *FileContentPtr)
+	_Deallocate(FileContentPtr ): FileContentPtr = 0
+Next i
+WLet(FileContentPtr, "## " & "Globals Enums")
+For i = 0 To Globals.Enums.Count - 1
+	tbi = Cast(TypeElement Ptr, Globals.Enums.Object(i))
+	If tbi = 0 OrElse tbi->CtlLibrary <> MFFCtlLibrary Then Continue For
+	WAdd(FileContentPtr, Chr(13, 10) & "### " & Globals.Enums.Item(i) & " Enum")
+	WAdd(FileContentPtr, Chr(13, 10) &  "`" & Globals.Enums.Item(i) & "` is a global enum within the MyFbFramework.")
+	WAdd(FileContentPtr, Chr(13, 10) & tbi->Comment)
+	If tbi->OwnerNamespace <> "" Then
+		WAdd(FileContentPtr, Chr(13, 10) & "#### Definition")
+		If Trim(tbi->OwnerNamespace) <> "" Then WAdd(FileContentPtr, Chr(13, 10) & "Namespace: " & tbi->OwnerNamespace)
+	End If
+	WAdd(FileContentPtr, Chr(13, 10) & "#### Fields")
+	WAdd(FileContentPtr, Chr(13, 10) & "|Name|Description|Syntax|")
+	WAdd(FileContentPtr, Chr(13, 10) & "| :---- | :---- | :---- |")
+	For j As Integer = 0 To tbi->Elements.Count - 1
+		te = tbi->Elements.Object(j)
+		If te = 0 Then Continue For
+		WAdd(FileContentPtr, Chr(13, 10) & "|`" & tbi->Elements.Item(j) & "`|" & te->Value & "|`" & te->Comment & "`|")
+	Next
+Next i
+AIContext.Add("Globals Enums", *FileContentPtr)
+_Deallocate(FileContentPtr ): FileContentPtr = 0
+If FileContentPtr1 Then Deallocate(FileContentPtr1 ): FileContentPtr1 = 0
+WLet(FileContentPtr1, "## Globals Procedures")
+WAdd(FileContentPtr1, Chr(13, 10) & "|Name|Type|Description|Syntax|")
+WAdd(FileContentPtr1, Chr(13, 10) & "| :---- | :---- | :---- | :---- |")
 For i = 0 To Globals.Functions.Count - 1
-			tbi = Cast(TypeElement Ptr, Globals.Functions.Object(i))
-			If tbi = 0 OrElse tbi->CtlLibrary <> MFFCtlLibrary Then Continue For
-			If tbi->ElementType <> ElementTypes.E_Define AndAlso tbi->ElementType <> ElementTypes.E_Macro AndAlso tbi->ElementType <> ElementTypes.E_Function AndAlso tbi->ElementType <> ElementTypes.E_Sub Then Continue For
-			If tbi->Declaration Then Continue For
-			WAdd(FileContentPtr1, Chr(13, 10) & "|" & Replace(tbi->FullName, "My.Sys.Forms.", "") & "|" & IIf(tbi->ElementType = ElementTypes.E_Function, " Function", IIf(tbi->ElementType = ElementTypes.E_Sub, " Method", IIf(tbi->ElementType = ElementTypes.E_Define, " Define", IIf(tbi->ElementType = ElementTypes.E_Macro, " Macro", "")))) & "|" )
-			WAdd(FileContentPtr1, "|`" & IIf(tbi->ElementType = ElementTypes.E_Function, "Function", IIf(tbi->ElementType = ElementTypes.E_Sub, "Sub", IIf(tbi->ElementType = ElementTypes.E_Define, "#define", IIf(tbi->ElementType = ElementTypes.E_Macro, "#macro", "")))) & " " & tbi->Parameters & "`|")
-		Next i
-		AIContext.Add("Globals Procedures", *FileContentPtr1)
-		_Deallocate(FileContentPtr1 ): FileContentPtr1 = 0
-	#endif
+	tbi = Cast(TypeElement Ptr, Globals.Functions.Object(i))
+	If tbi = 0 OrElse tbi->CtlLibrary <> MFFCtlLibrary Then Continue For
+	If tbi->ElementType <> ElementTypes.E_Define AndAlso tbi->ElementType <> ElementTypes.E_Macro AndAlso tbi->ElementType <> ElementTypes.E_Function AndAlso tbi->ElementType <> ElementTypes.E_Sub Then Continue For
+	If tbi->Declaration Then Continue For
+	WAdd(FileContentPtr1, Chr(13, 10) & "|" & Replace(tbi->FullName, "My.Sys.Forms.", "") & "|" & IIf(tbi->ElementType = ElementTypes.E_Function, " Function", IIf(tbi->ElementType = ElementTypes.E_Sub, " Method", IIf(tbi->ElementType = ElementTypes.E_Define, " Define", IIf(tbi->ElementType = ElementTypes.E_Macro, " Macro", "")))) & "|" )
+	WAdd(FileContentPtr1, "|`" & IIf(tbi->ElementType = ElementTypes.E_Function, "Function", IIf(tbi->ElementType = ElementTypes.E_Sub, "Sub", IIf(tbi->ElementType = ElementTypes.E_Define, "#define", IIf(tbi->ElementType = ElementTypes.E_Macro, "#macro", "")))) & " " & tbi->Parameters & "`|")
+Next i
+AIContext.Add("Globals Procedures", *FileContentPtr1)
+_Deallocate(FileContentPtr1 ): FileContentPtr1 = 0
 	
 
 	For i = 0 To ControlLibraries.Count - 1
@@ -5959,13 +5023,8 @@ End Sub
 
 Sub LoadTheme
 	iniTheme.Load ExePath & "/Settings/Themes/" & *CurrentTheme & ".ini"
-	#ifdef __USE_GTK__
 		NormalText.ForegroundOption = iniTheme.ReadInteger("Colors", "NormalTextForeground", clBlack)
 		NormalText.BackgroundOption = iniTheme.ReadInteger("Colors", "NormalTextBackground", clWhite)
-	#else
-		NormalText.ForegroundOption = iniTheme.ReadInteger("Colors", "NormalTextForeground", IIf(g_darkModeEnabled, darkTextColor, clBlack))
-		NormalText.BackgroundOption = iniTheme.ReadInteger("Colors", "NormalTextBackground", IIf(g_darkModeEnabled, darkBkColor, clWhite))
-	#endif
 	NormalText.FrameOption = iniTheme.ReadInteger("Colors", "NormalTextFrame", -1)
 	NormalText.Bold = iniTheme.ReadInteger("FontStyles", "NormalTextBold", 0)
 	NormalText.Italic = iniTheme.ReadInteger("FontStyles", "NormalTextItalic", 0)
@@ -6191,18 +5250,8 @@ End Sub
 
 Sub UpdateAllTabWindows
 	Dim As TabWindow Ptr tb
-	#ifdef __USE_GTK__
 		tb = Cast(TabWindow Ptr, ptabCode->SelectedTab)
 		If tb <> 0 Then tb->txtCode.Update
-	#else
-		For jj As Integer = 0 To TabPanels.Count - 1
-			Var ptabCode = @Cast(TabPanel Ptr, TabPanels.Item(jj))->tabCode
-			For i As Integer = 0 To ptabCode->TabCount - 1
-				tb = Cast(TabWindow Ptr, ptabCode->Tabs[i])
-				If tb <> 0 Then tb->txtCode.PaintControl True
-			Next
-		Next
-	#endif
 End Sub
 
 Sub LoadSettings
@@ -6315,22 +5364,14 @@ Sub LoadSettings
 	WLet(MakeToolPath1, MakeTools.Get(*CurrentMakeTool1, "make"))
 	WLet(CurrentMakeTool2, *DefaultMakeTool)
 	WLet(MakeToolPath2, MakeTools.Get(*CurrentMakeTool2, "make"))
-	#ifdef __FB_64BIT__
 		WLet(DefaultDebugger32, iniSettings.ReadString("Debuggers", "DefaultDebugger32", "Integrated GDB Debugger"))
-	#else
-		WLet(DefaultDebugger32, iniSettings.ReadString("Debuggers", "DefaultDebugger32", "Integrated IDE Debugger"))
-	#endif
 	DefaultDebuggerType32 = IIf(*DefaultDebugger32 = "Integrated IDE Debugger", IntegratedIDEDebugger, IIf(*DefaultDebugger32 = "Integrated GDB Debugger", IntegratedGDBDebugger, CustomDebugger))
 	WLet(CurrentDebugger32, *DefaultDebugger32)
 	CurrentDebuggerType32 = DefaultDebuggerType32
 	WLet(Debugger32Path, Debuggers.Get(*CurrentDebugger32, ""))
 	WLet(GDBDebugger32, iniSettings.ReadString("Debuggers", "GDBDebugger32", ""))
 	WLet(GDBDebugger32Path, Debuggers.Get(*GDBDebugger32, ""))
-	#ifdef __FB_64BIT__
 		WLet(DefaultDebugger64, iniSettings.ReadString("Debuggers", "DefaultDebugger64", "Integrated IDE Debugger"))
-	#else
-		WLet(DefaultDebugger64, iniSettings.ReadString("Debuggers", "DefaultDebugger64", "Integrated GDB Debugger"))
-	#endif
 	DefaultDebuggerType64 = IIf(*DefaultDebugger64 = "Integrated IDE Debugger", IntegratedIDEDebugger, IIf(*DefaultDebugger64 = "Integrated GDB Debugger", IntegratedGDBDebugger, CustomDebugger))
 	WLet(CurrentDebugger64, *DefaultDebugger64)
 	CurrentDebuggerType64 = DefaultDebuggerType64
@@ -6369,20 +5410,10 @@ Sub LoadSettings
 	WhenVisualFBEditorStarts = iniSettings.ReadInteger("Options", "WhenVisualFBEditorStarts", 2)
 	WLet(DefaultProjectFile, iniSettings.ReadString("Options", "DefaultProjectFile", "Files/Form.frm"))
 	DefaultFileFormat = iniSettings.ReadInteger("Options", "DefaultFileFormat", FileEncodings.Utf8BOM)
-	#ifdef __FB_WIN32__
-		DefaultNewLineFormat = iniSettings.ReadInteger("Options", "DefaultNewLineFormat", NewLineTypes.WindowsCRLF)
-	#elseif __FB_DARWIN__
-		DefaultNewLineFormat = iniSettings.ReadInteger("Options", "DefaultNewLineFormat", NewLineTypes.MacOSCR)
-	#else
-		DefaultNewLineFormat = iniSettings.ReadInteger("Options", "DefaultNewLineFormat", NewLineTypes.LinuxLF)
-	#endif
+	DefaultNewLineFormat = iniSettings.ReadInteger("Options", "DefaultNewLineFormat", NewLineTypes.LinuxLF)
 	LastOpenedFileType = iniSettings.ReadInteger("Options", "LastOpenedFileType", 0)
 	AutoComplete = iniSettings.ReadBool("Options", "AutoComplete", True)
-	#ifdef __USE_GTK__
 		AutoSuggestions = iniSettings.ReadBool("Options", "AutoSuggestions", False)
-	#else
-		AutoSuggestions = iniSettings.ReadBool("Options", "AutoSuggestions", True)
-	#endif
 	AutoIndentation = iniSettings.ReadBool("Options", "AutoIndentation", True)
 	ShowSpaces = iniSettings.ReadBool("Options", "ShowSpaces", True)
 	ShowKeywordsToolTip = iniSettings.ReadBool("Options", "ShowKeywordsTooltip", True)
@@ -6391,7 +5422,6 @@ Sub LoadSettings
 	GlobalSettings.ShowClassesExplorerOnOpenWindow = iniSettings.ReadBool("Options", "ShowClassesExplorerOnOpenWindow", True)
 	ShowHorizontalSeparatorLines = iniSettings.ReadBool("Options", "ShowHorizontalSeparatorLines", True)
 	ShowHolidayFrame = iniSettings.ReadBool("Options", "ShowHolidayFrame", True)
-	UseDirect2D = iniSettings.ReadBool("Options", "UseDirect2D", True)
 	HighlightBrackets = iniSettings.ReadBool("Options", "HighlightBrackets", True)
 	HighlightCurrentLine = iniSettings.ReadBool("Options", "HighlightCurrentLine", True)
 	HighlightCurrentWord = iniSettings.ReadBool("Options", "HighlightCurrentWord", True)
@@ -6417,17 +5447,11 @@ Sub LoadSettings
 	WLet(CurrentTheme, iniSettings.ReadString("Options", "CurrentTheme", "Default Theme"))
 	WLet(EditorFontName, iniSettings.ReadString("Options", "EditorFontName", "Courier New"))
 	EditorFontSize = iniSettings.ReadInteger("Options", "EditorFontSize", 10)
-	#ifdef __USE_GTK__
 		WLet(InterfaceFontName, iniSettings.ReadString("Options", "InterfaceFontName", "Ubuntu"))
 		InterfaceFontSize = iniSettings.ReadInteger("Options", "InterfaceFontSize", 11)
-	#else
-		WLet(InterfaceFontName, iniSettings.ReadString("Options", "InterfaceFontName", "Tahoma"))
-		InterfaceFontSize = iniSettings.ReadInteger("Options", "InterfaceFontSize", 8)
-	#endif
 	DisplayMenuIcons = iniSettings.ReadBool("Options", "DisplayMenuIcons", True)
 	ShowMainToolBar = iniSettings.ReadBool("Options", "ShowMainToolbar", True)
 	DarkMode = True ' Ilwaco is always dark
-	gLocalProperties = iniSettings.ReadBool("Options", "PropertiesLocal", False)
 	ProjectAutoSuggestions = False
 	
 	If *CurrentTheme = "Default Theme" Then
@@ -6454,117 +5478,6 @@ Sub LoadSettings
 	EditControlFrame.LoadFromFile(ExePath & "/Resources/Frame.png")
 End Sub
 
-Sub LoadLanguageTexts
-	If FileExists(SettingsPath) Then
-		iniSettings.Load SettingsPath
-	End If
-	App.CurLanguagePath = ExePath & "/Settings/Languages/"
-	App.CurLanguage = iniSettings.ReadString("Options", "Language", "english")
-	Dim As Boolean StartGeneral = True, StartKeyWords, StartProperty, StartCompiler, StartTemplates
-	If App.CurLanguage = "" Then
-		mpKeys.Add "#Til", "English"
-		mlKeys.Add "#Til", "English"
-		mlCompiler.Add "#Til", "English"
-		App.CurLanguage = "English"
-	Else
-		mlKeys.Clear
-		mcKeys.Clear
-		mpKeys.Clear
-		mlCompiler.Clear
-		Dim As Integer i, Pos1, Pos2
-		Dim As Integer Fn = FreeFile_, Result
-		Dim As WString * 2048 Buff, tKey
-		Dim As WString * MAX_PATH Filename = ExePath & "/Settings/Languages/" & App.CurLanguage & ".lng"
-		Result = Open(FileName For Input Encoding "utf-8" As #Fn)
-		If Result <> 0 Then Result = Open(FileName For Input Encoding "utf-16" As #Fn)
-		If Result <> 0 Then Result = Open(FileName For Input Encoding "utf-32" As #Fn)
-		If Result <> 0 Then Result = Open(FileName For Input As #Fn)
-		If Result = 0 Then
-			Do Until EOF(Fn)
-				Line Input #Fn, Buff
-				If LCase(Trim(Buff)) = "[keywords]" Then
-					StartKeyWords = True
-					StartProperty = False
-					StartCompiler = False
-					StartTemplates = False
-					StartGeneral = False
-				ElseIf LCase(Trim(Buff)) = "[property]" Then
-					StartKeyWords = False
-					StartProperty = True
-					StartCompiler = False
-					StartTemplates = False
-					StartGeneral = False
-				ElseIf LCase(Trim(Buff)) = "[compiler]" Then
-					StartKeyWords = False
-					StartProperty = False
-					StartCompiler = True
-					StartTemplates = False
-					StartGeneral = False
-				ElseIf LCase(Trim(Buff)) = "[templates]" Then
-					StartKeyWords = False
-					StartProperty = False
-					StartCompiler = False
-					StartTemplates = True
-					StartGeneral = False
-				ElseIf LCase(Trim(Buff)) = "[general]" Then
-					StartKeyWords = False
-					StartProperty = False
-					StartCompiler = False
-					StartTemplates = False
-					StartGeneral = True
-				End If
-				Pos1 = InStr(Buff, "=")
-				If Len(Trim(Buff, Any !"\t ")) > 0 AndAlso Pos1 > 0 Then
-					Pos2 = InStr(Pos1, Buff, "|")
-					'David Change For the Control Property's Language.
-					'note: "=" already convert To "~"
-					tKey = Trim(Mid(Buff, 1, Pos1 - 1), Any !"\t ")
-					Var Pos3 = InStr(Buff, "~")
-					If Pos3 > 0 AndAlso Pos3 < Pos1 Then Buff = Replace(Buff, "~", "=")
-					If StartGeneral = True Then
-						If Trim(Mid(Buff, Pos1 + 1), Any !"\t ") <> "" Then mlKeys.Add Trim(Left(Buff, Pos1 - 1), Any !"\t "), Trim(Mid(Buff, Pos1 + 1), Any !"\t ")
-					ElseIf StartProperty = True Then
-						If Pos2 > 0 Then
-							mpKeys.Add tKey, Trim(Mid(Buff, Pos1 + 1, Pos2 - Pos1 - 1), Any !"\t ")
-							If Len(Buff) - Pos2 <= 1 Then
-								mcKeys.Add tKey, Trim(Mid(Buff, 1, Pos1 - 1), Any !"\t ")  & IIf(Trim(Mid(Buff, 1, Pos1 - 1)) <> Trim(Mid(Buff, Pos1 + 1, Pos2 - Pos1 - 1)), "  " & Trim(Mid(Buff, Pos1 + 1, Pos2 - Pos1 - 1), Any !"\t "), WStr(""))   ' No comment
-							Else
-								mcKeys.Add tKey, Trim(Mid(Buff, 1, Pos1 - 1), Any !"\t ")  & IIf(Trim(Mid(Buff, 1, Pos1 - 1)) <> Trim(Mid(Buff, Pos1 + 1, Pos2 - Pos1 - 1)), "  " & Trim(Mid(Buff, Pos1 + 1, Pos2 - Pos1 - 1), Any !"\t "), WStr("")) & Chr(13, 10) & Trim(Mid(Buff, Pos2 + 1, Len(Buff) - Pos2), Any !"\t ")
-							End If
-						Else
-							mpKeys.Add tKey, Trim(Mid(Buff, Pos1 + 1, Len(Buff) - Pos2), Any !"\t ")
-							mcKeys.Add tKey, Trim(Mid(Buff, 1, Pos1 - 1), Any !"\t ") & "  " & Trim(Mid(Buff, Pos1 + 1, Len(Buff) - Pos2), Any !"\t ")
-						End If
-					ElseIf StartKeyWords = True Then
-						
-					ElseIf StartCompiler = True Then
-						If Trim(Mid(Buff, Pos1 + 1), Any !"\t ") <> "" Then mlCompiler.Add tKey, Trim(Mid(Buff, Pos1 + 1), Any !"\t ")
-					ElseIf StartTemplates = True Then
-						If Trim(Mid(Buff, Pos1 + 1), Any !"\t ") <> "" Then mlTemplates.Add tKey, Trim(Mid(Buff, Pos1 + 1), Any !"\t ")
-					End If
-				End If
-			Loop
-			mlKeys.SortKeys
-			mpKeys.SortKeys
-			mlCompiler.SortKeys
-			mlTemplates.SortKeys
-			CloseFile_(Fn)
-			Exit Sub
-		Else
-			MsgBox ML("Open file failure!") &  " " & Chr(13, 10) & ML("in function") & " Main.LoadLanguageTexts" & Chr(13, 10) & "  " & ExePath & "/Settings/Languages/" & App.CurLanguage & ".lng"
-		End If
-		CloseFile_(Fn)
-	End If
-	mlKeys.Clear
-	mcKeys.Clear
-	mpKeys.Clear
-	mlCompiler.Clear
-	mpKeys.Add "#Til", "English"
-	mlKeys.Add "#Til", "English"
-	mlCompiler.Add "#Til", "English"
-	App.CurLanguage = "english"
-End Sub
-
 Sub LoadHotKeys
 	Dim As Integer Fn = FreeFile_, Pos1
 	Dim As String Buff
@@ -6580,7 +5493,6 @@ Sub LoadHotKeys
 	CloseFile_(Fn)
 End Sub
 
-#ifdef __USE_GTK__
 	Dim Shared progress_bar_timer_id As UInteger
 	Function progress_cb(ByVal user_data As gpointer) As gboolean
 		gtk_progress_bar_pulse(GTK_PROGRESS_BAR(user_data))
@@ -6590,22 +5502,17 @@ End Sub
 			Return True
 		End If
 	End Function
-#endif
 
 Sub StartProgress
 	prProgress.Visible = True
-	#ifdef __USE_GTK__
 		progress_bar_timer_id = g_timeout_add(100, Cast(GSourceFunc, @progress_cb), prProgress.Handle)
-	#endif
 End Sub
 
 Sub StopProgress
-	#ifdef __USE_GTK__
 		If progress_bar_timer_id <> 0 Then
 			'g_source_remove_ progress_bar_timer_id
 			progress_bar_timer_id = 0
 		End If
-	#endif
 	prProgress.Visible = False
 End Sub
 
@@ -6624,14 +5531,8 @@ prProgress.Width = stBar.Panels[2]->Width + 3
 prProgress.Visible = False
 prProgress.Marquee = True
 
-#ifdef __USE_GTK__
 	prProgress.Height = 30
 	gtk_box_pack_end (GTK_BOX (gtk_statusbar_get_message_area (GTK_STATUSBAR(stBar.Handle))), prProgress.Handle, False, True, 10)
-#else
-	prProgress.SetMarquee True, 100
-	prProgress.Top = 3
-	prProgress.Parent = @stBar
-#endif
 
 
 Function HK(Key As String, Default As String = "", WithSpace As Boolean = False) As String
@@ -6753,7 +5654,6 @@ Sub CreateMenusAndToolBars
 	imgList.Add "Translate", "Translate"
 	imgList.Add "TranslateE", "TranslateE"
 	imgList.Add "WebBrowserItem", "WebBrowserItem"
-	imgList.Add "UseDirect2D", "UseDirect2D"
 	imgList.Add "AlignLefts", "AlignLefts"
 	imgList.Add "AlignCenters", "AlignCenters"
 	imgList.Add "AlignRights", "AlignRights"
@@ -7166,11 +6066,7 @@ Sub CreateMenusAndToolBars
 	Dim As MenuItem Ptr mi
 	Dim As UserToolType Ptr tt
 	Dim As WString * 260 ToolsINI
-	#ifdef __USE_GTK__
 		ToolsINI = ExePath & "/Tools/ToolsX.ini"
-	#else
-		ToolsINI = ExePath & "/Tools/Tools.ini"
-	#endif
 	If FileExists(ToolsINI) Then
 		Dim As Integer Fn = FreeFile_
 		Open ToolsINI For Input Encoding "utf8" As #Fn
@@ -7189,13 +6085,6 @@ Sub CreateMenusAndToolBars
 					tt->WorkingFolder = Mid(Buff, 15)
 				ElseIf StartsWith(Buff, "Accelerator=") Then
 					tt->Accelerator = Mid(Buff, 13)
-					#ifdef __USE_GTK__
-					#else
-						Dim As HICON IcoHandle
-						ExtractIconEx(GetFullPath(tt->Path), NULL, NULL, @IcoHandle, 1)
-						Bitm = IcoHandle
-						DestroyIcon IcoHandle
-					#endif
 					mi = miXizmat->Add(tt->Name & !"\t" & tt->Accelerator, Bitm, "Tools", @mClickTool)
 					Bitm.Handle = 0
 					mi->Tag = tt
@@ -7322,10 +6211,6 @@ Sub CreateMenusAndToolBars
 	tbStandard.Buttons.Add tbsSeparator
 	tbtFind = tbStandard.Buttons.Add(, "Find", , @mClick, "Find", , ML("Find") & HK("Find", "Ctrl+F", True), True, ToolButtonState.tstNone)
 	tbStandard.Buttons.Add tbsSeparator
-	tbtUseDirect2D = tbStandard.Buttons.Add(tbsCheck, "UseDirect2D", , @mClick, "UseDirect2D", , ML("Use Direct2D (For Windows)") & HK("UseDirect2D"), True)
-	Var b = UseDirect2D
-	tbtUseDirect2D->Checked = UseDirect2D
-	UseDirect2D = b
 	'tbStandard.Buttons.Add tbsSeparator
 	tbEdit.Name = "Edit"
 	tbEdit.ImagesList = @imgList
@@ -7417,41 +6302,17 @@ Sub CreateMenusAndToolBars
 	tbtConsole = tbProject.Buttons.Add(Cast(ToolButtonStyle, tbsAutosize Or tbsCheckGroup), "Console", , @mClick, "Console", , ML("Console"), True)
 	tbtGUI = tbProject.Buttons.Add(Cast(ToolButtonStyle, tbsAutosize Or tbsCheckGroup), "Form", , @mClick, "GUI", , ML("GUI"), True)
 	tbProject.Buttons.Add tbsSeparator
-	#ifdef __USE_GTK__
 		tbt32Bit = tbProject.Buttons.Add(tbsCheckGroup, "B32", , @mClick, "B32", , ML("32-bit"), True)
 		tbt64Bit = tbProject.Buttons.Add(tbsCheckGroup, "B64", , @mClick, "B64", , ML("64-bit"), True)
-	#else
-		tbt32Bit = tbProject.Buttons.Add(Cast(ToolButtonStyle, tbsAutosize Or tbsCheckGroup), "B32", , @mClick, "B32", , ML("32-bit"), True)
-		tbt64Bit = tbProject.Buttons.Add(Cast(ToolButtonStyle, tbsAutosize Or tbsCheckGroup), "B64", , @mClick, "B64", , ML("64-bit"), True)
-	#endif
-	#ifdef __FB_64BIT__
 		tbt64Bit->Checked = True
-	#else
-		tbt32Bit->Checked = True
-	#endif
 	tbProject.Buttons.Add tbsSeparator
 	tbButton = tbProject.Buttons.Add(Cast(ToolButtonStyle, tbsWholeDropdown Or tbsAutosize), "Apply", , @mClick, "Use", ML("Use"), ML("Use"), True)
 	Var mnuDefault = tbButton->DropDownMenu.Add(ML("Default"), "", "Default:", @mClickUseDefine, True)
 	tbButton->DropDownMenu.Add "-"
-	Var mnuWinAPI = tbButton->DropDownMenu.Add("WinAPI", "", "WinAPI", @mClickUseDefine)
-	Var mnuDefaultWinAPI = mnuWinAPI->Add(ML("Default"), "", "DefaultWinAPI:__USE_WINAPI__", @mClickUseDefine, True)
-	mnuWinAPI->Add "-"
-	mnuWinAPI->Add "Windows NT 4.0", "", "WindowsNT4:__USE_WINAPI__ -d _WIN32_WINNT=&h0400", @mClickUseDefine, True
-	mnuWinAPI->Add "Windows 2000", "", "Windows2000:__USE_WINAPI__ -d _WIN32_WINNT=&h0500", @mClickUseDefine, True
-	mnuWinAPI->Add "Windows XP", "", "WindowsXP:__USE_WINAPI__ -d _WIN32_WINNT=&h0501", @mClickUseDefine, True
-	mnuWinAPI->Add "Windows Server 2003", "", "WindowsServer2003:__USE_WINAPI__ -d _WIN32_WINNT=&h0502", @mClickUseDefine, True
-	mnuWinAPI->Add "Windows Vista", "", "WindowsVista:__USE_WINAPI__ -d _WIN32_WINNT=&h0600", @mClickUseDefine, True
-	mnuWinAPI->Add "Windows Server 2008", "", "WindowsServer2008:__USE_WINAPI__ -d _WIN32_WINNT=&h0600", @mClickUseDefine, True
-	mnuWinAPI->Add "Windows 7", "", "Windows7:__USE_WINAPI__ -d _WIN32_WINNT=&h0601", @mClickUseDefine, True
-	mnuWinAPI->Add "Windows 8", "", "Windows8:__USE_WINAPI__ -d _WIN32_WINNT=&h0602", @mClickUseDefine, True
-	mnuWinAPI->Add "Windows 8.1", "", "Windows8_1:__USE_WINAPI__ -d _WIN32_WINNT=&h0603", @mClickUseDefine, True
-	mnuWinAPI->Add "Windows 10", "", "Windows10:__USE_WINAPI__ -d _WIN32_WINNT=&h0A00", @mClickUseDefine, True
 	Var mnuGTK = tbButton->DropDownMenu.Add("GTK", "", "GTK", @mClickUseDefine)
 	mnuGTK->Add ML("Default"), "", "Default:__USE_GTK__", @mClickUseDefine, True
 	mnuGTK->Add "-"
-	mnuGTK->Add "GTK2", "", "GTK2:__USE_GTK__ -d __USE_GTK2__", @mClickUseDefine, True
 	mnuGTK->Add "GTK3", "", "GTK3:__USE_GTK__ -d __USE_GTK3__", @mClickUseDefine, True
-	mnuGTK->Add "GTK4", "", "GTK4:__USE_GTK__ -d __USE_GTK4__", @mClickUseDefine, True
 	Var mnuJNI = tbButton->DropDownMenu.Add("JNI", "", "JNI", @mClickUseDefine)
 	mnuJNI->Add ML("Default"), "", "Default:__USE_JNI__", @mClickUseDefine, True
 	mnuJNI->Add "-"
@@ -7579,12 +6440,7 @@ splBottom.Align = SplitterAlignmentConstants.alBottom
 
 Sub CloseLeft()
 	splLeft.Visible = False
-	#ifdef __USE_GTK__
 		pnlLeft.Width = 30
-	#else
-		tabLeft.SelectedTabIndex = -1
-		pnlLeft.Width = tabLeft.ItemWidth(0) + 2
-	#endif
 	pnlLeftPin.Visible = False
 	frmMain.RequestAlign
 End Sub
@@ -7603,12 +6459,7 @@ End Sub
 
 Sub CloseRight()
 	splRight.Visible = False
-	#ifdef __USE_GTK__
 		pnlRight.Width = 30
-	#else
-		tabRight.SelectedTabIndex = -1
-		pnlRight.Width = tabRight.ItemWidth(0) + 2
-	#endif
 	pnlRightPin.Visible = False
 	frmMain.RequestAlign
 End Sub
@@ -7625,12 +6476,7 @@ End Sub
 
 Sub CloseBottom()
 	splBottom.Visible = False
-	#ifdef __USE_GTK__
 		pnlBottom.Height = 25
-	#else
-		ptabBottom->SelectedTabIndex = -1
-		pnlBottom.Height = ptabBottom->ItemHeight(0) + 2
-	#endif
 	pnlBottomPin.Visible = False
 	frmMain.RequestAlign
 End Sub
@@ -7720,7 +6566,6 @@ Function ToolType.GetCommand(ByRef FileName As WString = "", WithoutProgram As B
 End Function
 
 Sub tvExplorer_NodeActivate(ByRef Designer As My.Sys.Object, ByRef Sender As Control, ByRef Item As TreeNode)
-	#ifdef __USE_GTK__
 		If Item.Nodes.Count > 0 Then
 			If Item.IsExpanded Then
 				Item.Collapse
@@ -7728,7 +6573,6 @@ Sub tvExplorer_NodeActivate(ByRef Designer As My.Sys.Object, ByRef Sender As Con
 				Item.Expand
 			End If
 		End If
-	#endif
 	RestoreStatusText
 	If Item.ImageKey = "Opened" Then Exit Sub
 	If Item.ImageKey = "Project" AndAlso Item.ParentNode = 0 Then Exit Sub
@@ -7817,14 +6661,10 @@ Sub tvExplorer_DblClick(ByRef Designer As My.Sys.Object, ByRef Sender As Control
 End Sub
 
 Sub tvExplorer_KeyDown(ByRef Designer As My.Sys.Object, ByRef Sender As Control, Key As Integer, Shift As Integer)
-	#ifdef __USE_GTK__
 		Select Case Key
 		Case GDK_KEY_Left
 			
 		End Select
-	#else
-		If Key = VK_RETURN Then tvExplorer_DblClick Designer, Sender
-	#endif
 End Sub
 
 Function GetParentNode(tn As TreeNode Ptr) As TreeNode Ptr
@@ -8006,11 +6846,7 @@ tvExplorer.OnAfterLabelEdit = @tvExplorer_AfterLabelEdit
 tvExplorer.ContextMenu = @mnuExplorer
 
 Sub tabLeft_SelChange(ByRef Designer As My.Sys.Object, ByRef Sender As Control, NewIndex As Integer)
-	#ifdef __USE_GTK__
 		If tabLeft.TabPosition = tpLeft And pnlLeft.Width = 30 Then
-	#else
-		If tabLeft.TabPosition = tpLeft And tabLeft.SelectedTabIndex <> -1 Then
-	#endif
 		ShowLeft
 	End If
 End Sub
@@ -8025,11 +6861,7 @@ Sub pnlLeft_Resize(ByRef Designer As My.Sys.Object, ByRef Sender As Control, New
 	If tabLeft.TabCount = 0 Then
 		tabLeftWidth = NewWidth
 	Else
-		#ifdef __USE_GTK__
 			If pnlLeft.Width <> 30 Then tabLeftWidth = NewWidth ': tabLeft.Width = pnlLeft.Width
-		#else
-			If tabLeft.SelectedTabIndex <> -1 Then tabLeftWidth = pnlLeft.Width
-		#endif
 	End If
 End Sub
 
@@ -8073,8 +6905,6 @@ tpAIAgent->Add @pnlAIAgent
 
 pnlAIAgent.Align = DockStyle.alClient
 pnlAIAgent.Width = tabLeftWidth
-#ifdef __USE_GTK__
-	#ifdef __USE_GTK3__
 		Function OverlayLeft_get_child_position(self As GtkOverlay Ptr, widget As GtkWidget Ptr, allocation As GdkRectangle Ptr, user_data As Any Ptr) As Boolean
 			Dim As gint x, y
 			Dim As Control Ptr tb = IIf(tabLeft.SelectedTab = tpProject, @tbExplorer, @tbForm)
@@ -8088,8 +6918,6 @@ pnlAIAgent.Width = tabLeftWidth
 			allocation->height = tbLeft.ScaleY(tbLeft.Height)
 			Return True
 		End Function
-	#endif
-#endif
 
 pnlLeftPin.Anchor.Right = AnchorStyle.asAnchor
 pnlLeftPin.Top = tabItemHeight
@@ -8097,8 +6925,6 @@ pnlLeftPin.Width = tbLeft.Width
 pnlLeftPin.Left = tabLeftWidth - pnlLeftPin.Width - 4
 pnlLeftPin.Height = tbLeft.Height
 pnlLeftPin.Parent = @pnlLeft
-#ifdef __USE_GTK__
-	#ifdef __USE_GTK3__
 		Dim As GtkWidget Ptr overlayLeft = gtk_overlay_new()
 		gtk_container_add(GTK_CONTAINER(overlayLeft), pnlLeft.Handle)
 		g_object_ref(pnlLeftPin.Handle)
@@ -8106,8 +6932,6 @@ pnlLeftPin.Parent = @pnlLeft
 		gtk_overlay_add_overlay(GTK_OVERLAY(overlayLeft), pnlLeftPin.Handle)
 		g_signal_connect(overlayLeft, "get-child-position", G_CALLBACK(@OverlayLeft_get_child_position), @pnlLeft)
 		pnlLeft.WriteProperty("overlaywidget", overlayLeft)
-	#endif
-#endif
 
 Function SetVisibleToTreeNode(Node As TreeNode Ptr, ByRef SearchText As WString) As Boolean
 	Dim As Boolean bVisible
@@ -8210,7 +7034,7 @@ tbAIAgent.Buttons.Add , "Intellicode", , @mClick, "AIIntellicode", , ML("Generat
 tbAIAgent.Buttons.Add , "TracepointError", , @mClick, "AITracepointError", , ML("Explain the selected compiler error message"), True
 tbAIAgent.Buttons.Add , "WebBrowserItem", , @mClick, "AIWebBrowserItem", , ML("Ignore the constraints of the provided references and perform regular search and analysis. Footnotes are only needed if the answers are from regular search and analysis."), True
 tbAIAgent.Buttons.Add , "ConvertC", , @mClick, "AIConvertCtoFB", , ML("Convert the given C source code into equivalent FreeBasic source code."), True
-tbAIAgent.Buttons.Add , "Translate", , @mClick, "AITranslate", , ML("Output with MARKDOWN source code, translate the selected message to") & " " &  ML(App.CurLanguage), True
+tbAIAgent.Buttons.Add , "Translate", , @mClick, "AITranslate", , ML("Output with MARKDOWN source code, translate the selected message to") & " " &  ML("English"), True
 tbAIAgent.Buttons.Add , "TranslateE", , @mClick, "AITranslateE", , ML("Output with MARKDOWN source code, translate the selected message to") & " " & ML("English"), True
 tbAIAgent.Buttons.Add , "Close", , @mClick, "AIRelease", , ML("Release the AI Agent"), True
 tbAIAgent.Buttons.Add tbsSeparator
@@ -8435,7 +7259,7 @@ Else
 	"  * Help: Provides access to help resources.")
 	
 End If
-WLet(AISystem_PromoptPtr, "Please use " & App.CurLanguage & " for your responses unless otherwise instructed." & _
+WLet(AISystem_PromoptPtr, "Please use English for your responses unless otherwise instructed." & _
 "You are FreeBasic programming expert. Use the provided MyFbFramework (MFF) knowledge base (<context></context>)\n")
 AIContext.Add("MyFbFramework (MFF) GUI Form Interface Guidelines", *AIPostDataPtr_1st)
 AIContext.Add("VisualFBEditor (VFBE) IDE Environment", *AIPostDataPtr_2nd)
@@ -8956,7 +7780,7 @@ Public Sub AIResetContext()
 	"""stream"": " & "true" & ", " & _
 	"""messages"": [" & _
 	"{""role"": ""system"", ""content"": """ & "Clear all historical context and start a completely new conversation."  & """}, " & _
-	"{""role"": ""user"", ""content"": """ & "Please use " & App.CurLanguage & " confirm the context has been reset." & """}]}"
+	"{""role"": ""user"", ""content"": """ & "Please confirm the context has been reset." & """}]}"
 	
 	If AIMessages.Count > 0 Then
 		Dim As WString * MAX_PATH FileName
@@ -9167,15 +7991,11 @@ Sub lvProperties_SelectedItemChanged(ByRef Designer As My.Sys.Object, ByRef Send
 	btnPropertyValue.Visible = False
 	cboPropertyValue.Visible = False
 	pnlColor.Visible = False
-	#ifdef __USE_GTK__
 		Dim As GdkRectangle gdkRect
 		Dim As GtkTreePath Ptr TreePath = gtk_tree_path_new_from_string(gtk_tree_model_get_string_from_iter(GTK_TREE_MODEL(lvProperties.TreeStore), @Item->TreeIter))
 		gtk_tree_view_get_cell_area(GTK_TREE_VIEW(lvProperties.Handle), TreePath, lvProperties.Columns.Column(1)->Column, @gdkRect)
 		gtk_tree_path_free(TreePath)
 		lpRect = Type(gdkRect.x - 2, gdkRect.y + lvProperties.Top + gdkRect.height + 2, gdkRect.x + gdkRect.width + 4, gdkRect.y + lvProperties.Top + 2 * gdkRect.height + 5)
-	#else
-		ListView_GetSubItemRect(lvProperties.Handle, Item->GetItemIndex, 1, LVIR_BOUNDS, @lpRect)
-	#endif
 	Var te = GetPropertyType(WGet(st->ReadPropertyFunc(tb->Des->SelectedControl, "ClassName")), PropertyName)
 	If te = 0 Then Exit Sub
 	'#ifndef __USE_GTK__
@@ -9262,11 +8082,7 @@ Sub lvProperties_SelectedItemChanged(ByRef Designer As My.Sys.Object, ByRef Send
 		cboPropertyValue.Width = cboPropertyValue.UnScaleX(lpRect.Right - lpRect.Left) + 2
 	End If
 	pnlPropertyValue.Visible = True
-	If LCase(App.CurLanguage) = "default" Then
-		txtLabelProperty.TextRTF = "{\urtf1\b " & GetItemText(Item) & "\b0\par " & te->Comment & "}"
-	Else
-		txtLabelProperty.TextRTF = "{\urtf1\b " & Replace(MC(GetItemText(Item)), !"\r\n", "\b0\par ") & "}"
-	End If
+	txtLabelProperty.TextRTF = "{\urtf1\b " & Replace(MC(GetItemText(Item)), !"\r\n", "\b0\par ") & "}"
 End Sub
 
 Sub lvEvents_SelectedItemChanged(ByRef Designer As My.Sys.Object, ByRef Sender As TreeListView, ByRef Item As TreeListViewItem Ptr)
@@ -9275,11 +8091,7 @@ Sub lvEvents_SelectedItemChanged(ByRef Designer As My.Sys.Object, ByRef Sender A
 	Dim As SymbolsType Ptr st = tb->Des->Symbols(tb->Des->SelectedControl)
 	If st = 0 OrElse st->ReadPropertyFunc = 0 Then Exit Sub
 	Var te = GetPropertyType(WGet(st->ReadPropertyFunc(tb->Des->SelectedControl, "ClassName")), GetItemText(Item))
-	If LCase(App.CurLanguage) = "default" Then
-		txtLabelEvent.TextRTF = "{\urtf1\b " & Item->Text(0) & "\b0\par " & te->Comment & "}"
-	Else
-		txtLabelEvent.TextRTF = "{\urtf1\b " & Replace(MC(Item->Text(0)), !"\r\n", "\b0\par ") & "}"
-	End If
+	txtLabelEvent.TextRTF = "{\urtf1\b " & Replace(MC(Item->Text(0)), !"\r\n", "\b0\par ") & "}"
 End Sub
 
 
@@ -9294,25 +8106,17 @@ Sub lvProperties_EndScroll(ByRef Designer As My.Sys.Object, ByRef Sender As Tree
 		pnlPropertyValue.Visible = False
 	Else
 		Dim As Rect lpRect
-		#ifdef __USE_GTK__
 			Dim As GdkRectangle gdkRect
 			Dim As GtkTreePath Ptr TreePath = gtk_tree_path_new_from_string(gtk_tree_model_get_string_from_iter(GTK_TREE_MODEL(lvProperties.TreeStore), @lvProperties.SelectedItem->TreeIter))
 			gtk_tree_view_get_cell_area(GTK_TREE_VIEW(lvProperties.Handle), TreePath, lvProperties.Columns.Column(1)->Column, @gdkRect)
 			gtk_tree_path_free(TreePath)
 			lpRect = Type(gdkRect.x - 2, gdkRect.y + lvProperties.Top + gdkRect.height + 2, gdkRect.x + gdkRect.width + 4, gdkRect.y + lvProperties.Top + 2 * gdkRect.height + 5)
-		#else
-			ListView_GetSubItemRect(lvProperties.Handle, lvProperties.SelectedItem->GetItemIndex, 1, LVIR_BOUNDS, @lpRect)
-		#endif
 		pnlPropertyValue.SetBounds pnlPropertyValue.UnScaleX(lpRect.Left), pnlPropertyValue.UnScaleY(lpRect.Top), pnlPropertyValue.UnScaleX(lpRect.Right - lpRect.Left), pnlPropertyValue.UnScaleY(lpRect.Bottom - lpRect.Top - 1)
-		#ifdef __USE_GTK__
 			If pnlPropertyValue.Top < lvProperties.Top + gdkRect.height OrElse pnlPropertyValue.Top + pnlPropertyValue.Height > lvProperties.Top + lvProperties.Height Then
 				pnlPropertyValue.Visible = False
 			Else
 				pnlPropertyValue.Visible = True
 			End If
-		#else
-			pnlPropertyValue.Visible = True
-		#endif
 	End If
 End Sub
 
@@ -9380,11 +8184,7 @@ lvEvents.Columns.Add ML("Event"), , 70
 lvEvents.Columns.Add ML("Value"), , -2
 lvEvents.OnSelectedItemChanged = @lvEvents_SelectedItemChanged
 lvEvents.OnItemKeyDown = @lvEvents_KeyDown
-#ifdef __USE_GTK__
 	lvEvents.OnItemActivate = @lvEvents_ItemDblClick
-#else
-	lvEvents.OnItemDblClick = @lvEvents_ItemDblClick
-#endif
 lvEvents.OnResize = @lvEvents_Resize
 lvEvents.Images = @imgListStates
 
@@ -9441,11 +8241,7 @@ Sub tabRight_DblClick(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 End Sub
 
 Sub tabRight_SelChange(ByRef Designer As My.Sys.Object, ByRef Sender As Control, NewIndex As Integer)
-	#ifdef __USE_GTK__
 		If tabRight.TabPosition = tpRight And pnlRight.Width = 30 Then
-	#else
-		If tabRight.TabPosition = tpRight And tabRight.SelectedTabIndex <> -1 Then
-	#endif
 		ShowRight
 	End If
 End Sub
@@ -9698,11 +8494,7 @@ Sub pnlRight_Resize(ByRef Designer As My.Sys.Object, ByRef Sender As Control, Ne
 	If tabRight.TabCount = 0 Then
 		tabRightWidth = NewWidth
 	Else
-		#ifdef __USE_GTK__
 			If pnlRight.Width <> 30 Then tabRightWidth = NewWidth: tabRight.SetBounds(0, 0, tabRightWidth, NewHeight)
-		#else
-			If tabRight.SelectedTabIndex <> -1 Then tabRightWidth = tabRight.Width: If GetRightClosedStyle Then pnlRightPin.Left = tabRightWidth - pnlRightPin.Width - tabItemHeight
-		#endif
 	End If
 End Sub
 
@@ -9713,11 +8505,7 @@ pnlRight.OnResize = @pnlRight_Resize
 tabRight.Name = "tabRight"
 tabRight.GroupName = "ToolWindow"
 tabRight.Width = tabRightWidth
-#ifdef __USE_GTK__
 	tabRight.Align = DockStyle.alRight
-#else
-	tabRight.Align = DockStyle.alClient
-#endif
 tabRight.OnClick = @tabRight_Click
 tabRight.OnDblClick = @tabRight_DblClick
 tabRight.OnSelChange = @tabRight_SelChange
@@ -9734,12 +8522,8 @@ tpEvents->Add @txtLabelEvent
 tpEvents->Add @splEvents
 tpEvents->Add @lvEvents
 pnlRight.Add @tabRight
-#ifdef __USE_GTK__
 	tpProperties->Add @pnlPropertyValue
-#endif
 
-#ifdef __USE_GTK__
-	#ifdef __USE_GTK3__
 		Function OverlayRight_get_child_position(self As GtkOverlay Ptr, widget As GtkWidget Ptr, allocation As GdkRectangle Ptr, user_data As Any Ptr) As Boolean
 			Dim As gint x, y, x1, y1
 			Dim As Control Ptr tb = IIf(tabRight.SelectedTab = tpProperties, @tbProperties, @tbEvents)
@@ -9755,16 +8539,12 @@ pnlRight.Add @tabRight
 			allocation->height = tbRight.ScaleY(tbRight.Height)
 			Return True
 		End Function
-	#endif
-#endif
 pnlRightPin.Anchor.Right = AnchorStyle.asAnchor
 pnlRightPin.Top = tabItemHeight
 pnlRightPin.Width = 23
 pnlRightPin.Left = tabRightWidth - pnlRightPin.Width - 4
 pnlRightPin.Height = tbRight.Height
 pnlRightPin.Parent = @pnlRight
-#ifdef __USE_GTK__
-	#ifdef __USE_GTK3__
 		Dim As GtkWidget Ptr overlayRight = gtk_overlay_new()
 		gtk_container_add(GTK_CONTAINER(overlayRight), pnlRight.Handle)
 		g_object_ref(pnlRightPin.Handle)
@@ -9772,8 +8552,6 @@ pnlRightPin.Parent = @pnlRight
 		gtk_overlay_add_overlay(GTK_OVERLAY(overlayRight), pnlRightPin.Handle)
 		g_signal_connect(overlayRight, "get-child-position", G_CALLBACK(@OverlayRight_get_child_position), @pnlRight)
 		pnlRight.WriteProperty("overlaywidget", overlayRight)
-	#endif
-#endif
 
 Function SetVisibleToTreeListViewItem(Sender As TreeListView, Node As TreeListViewItem Ptr, ByRef SearchText As WString) As Boolean
 	Dim As Boolean bVisible
@@ -9896,11 +8674,7 @@ Sub txtImmediate_KeyDown(ByRef Designer As My.Sys.Object, ByRef Sender As Contro
 	Dim As Integer iLine = txtImmediate.GetLineFromCharIndex(txtImmediate.SelStart)
 	Dim As WString Ptr sLine ' = @txtImmediate.Lines(iLine) '  for got wrong value
 	Dim bCtrl As Boolean
-	#ifdef __USE_GTK__
 		bCtrl = Shift And GDK_CONTROL_MASK
-	#else
-		bCtrl = GetKeyState(VK_CONTROL) And 8000
-	#endif
 	'
 	WLet(sLine, txtImmediate.Lines(iLine))
 	If CInt(Not bCtrl) AndAlso CInt(WGet(sLine) <> "") AndAlso CInt(Not StartsWith(Trim(WGet(sLine)),"'")) Then
@@ -9968,11 +8742,7 @@ Sub txtImmediate_KeyDown(ByRef Designer As My.Sys.Object, ByRef Sender As Contro
 			If WGet(LogText) <> "" Then
 				MsgBox !"Compile error:\r\r" & *LogText, , mtWarning
 			Else
-				#ifdef __USE_GTK__
 					WLet(ExeName, ExePath & "/Temp/FBTemp")
-				#else
-					WLet(ExeName, ExePath & "\Temp\FBTemp.exe") ' > output.txt
-				#endif
 				PipeCmd "",  *ExeName
 				Fn = FreeFile_
 				If Open Pipe(*ExeName For Input Encoding "utf-8" As #Fn) = 0 Then '
@@ -10011,11 +8781,7 @@ txtImmediate.SetSel txtImmediate.GetTextLength, txtImmediate.GetTextLength
 
 Sub txtChangeLog_KeyDown(ByRef Designer As My.Sys.Object, ByRef Sender As Control, Key As Integer, Shift As Integer)
 	Dim bCtrl As Boolean
-	#ifdef __USE_GTK__
 		bCtrl = Shift And GDK_CONTROL_MASK
-	#else
-		bCtrl = GetKeyState(VK_CONTROL) And 8000
-	#endif
 	If CInt(Not bCtrl) OrElse Shift <> 1 Then mChangeLogEdited = True
 	If CInt(bCtrl) And Key =13 Then
 		txtChangeLog.SelText = __DATE_ISO__ & " " & Time & !"\t" & !"\t"  'Format(Now, "yyyy/mm/dd hh:mm:ss") & !"\t" & !"\t"
@@ -10175,11 +8941,7 @@ Sub tabBottom_DblClick(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 End Sub
 
 Sub tabBottom_SelChange(ByRef Designer As My.Sys.Object, ByRef Sender As Control, newIndex As Integer)
-	#ifdef __USE_GTK__
 		If ptabBottom->TabPosition = tpBottom And pnlBottom.Height = 25 Then
-	#else
-		If ptabBottom->TabPosition = tpBottom And ptabBottom->SelectedTabIndex <> -1 Then
-	#endif
 		ShowBottom
 	End If
 	Dim As TabPage Ptr tp = ptabBottom->SelectedTab
@@ -10215,11 +8977,7 @@ Sub tabBottom_SelChange(ByRef Designer As My.Sys.Object, ByRef Sender As Control
 End Sub
 
 Sub tabBottom_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control) '<...>
-	#ifdef __USE_GTK__
 		If ptabBottom->TabPosition = tpBottom And pnlBottom.Height = 25 Then
-	#else
-		If ptabBottom->TabPosition = tpBottom And ptabBottom->SelectedTabIndex <> -1 Then
-	#endif
 		ShowBottom
 	End If
 End Sub
@@ -10238,11 +8996,9 @@ Sub ShowMessages(ByRef msg As WString, ChangeTab As Boolean = True)
 	tabBottom.Update
 	txtOutput.Update
 	frmMain.Update
-	#ifdef __USE_GTK__
 		While gtk_events_pending()
 			gtk_main_iteration()
 		Wend
-	#endif
 	'    txtOutput.ScrollToCaret
 End Sub
 
@@ -10250,11 +9006,7 @@ Sub pnlBottom_Resize(ByRef Designer As My.Sys.Object, ByRef Sender As Control, N
 	If tabBottom.TabCount = 0 Then
 		tabBottomHeight = NewHeight
 	Else
-		#ifdef __USE_GTK__
 			If pnlBottom.Height <> 25 Then tabBottomHeight = NewHeight: ptabBottom->SetBounds 0, 0, NewWidth, tabBottomHeight
-		#else
-			If ptabBottom->SelectedTabIndex <> -1 Then tabBottomHeight = ptabBottom->Height
-		#endif
 	End If
 End Sub
 
@@ -10280,20 +9032,14 @@ tbBottom.Flat = True
 tbBottom.Wrapable = True
 tbBottom.Width = tbBottom.Height
 tbBottom.Parent = @pnlBottomPin
-#ifdef __USE_GTK__
 	gtk_orientable_set_orientation(GTK_ORIENTABLE(tbBottom.Handle), GTK_ORIENTATION_VERTICAL)
 	gtk_toolbar_set_style(GTK_TOOLBAR(tbBottom.Handle), GTK_TOOLBAR_ICONS)
-#endif
 
 'ptabBottom->Images.AddIcon bmp
 ptabBottom->Name = "tabBottom"
 ptabBottom->GroupName = "ToolWindow"
 ptabBottom->Height = tabBottomHeight
-#ifdef __USE_GTK__
 	ptabBottom->Align = DockStyle.alBottom
-#else
-	ptabBottom->Align = DockStyle.alClient
-#endif
 ptabBottom->Detachable = True
 ptabBottom->Reorderable = True
 tpOutput = AddToTabControl(ML("Output"), "Output", "tabBottom", 0)
@@ -10566,11 +9312,7 @@ Sub GetColors(ByRef cs As ECColorScheme, DefaultForeground As Integer = -1, Defa
 End Sub
 
 Sub SetAutoColors
-	#ifdef __USE_GTK__
 		GetColors NormalText, clBlack, clWhite
-	#else
-		GetColors NormalText, IIf(g_darkModeEnabled, darkTextColor, clBlack), IIf(g_darkModeEnabled, darkBkColor, clWhite)
-	#endif
 	GetColors Bookmarks, , , , clAqua
 	GetColors Breakpoints, NormalText.Background, clMaroon, , clMaroon
 	GetColors Comments, clGreen
@@ -10632,29 +9374,15 @@ Sub tbToolBox_ButtonActivate(ByRef Designer As My.Sys.Object, ByRef Sender As To
 		If tb->Des->FSelControl Then
 			tb->Des->SelectedControls.Clear
 		End If
-		#ifdef __USE_GTK__
 			tb->Des->MoveDots(cpnt, , (iWidth - 16) / 2, (iHeight - 16) / 2, 16, 16)
-		#else
-			tb->Des->MoveDots(cpnt)
-		#endif
 	Else
 		tb->Des->CreateControl(SelectedClass, FName, FName, ctr, (iWidth - 78) / 2, (iHeight - 36) / 2, 78, 36)
 		If tb->Des->FSelControl Then
 			tb->Des->SelectedControls.Clear
-			#ifdef __USE_GTK__
 				Dim bTrue As Boolean = True
 				If tb->Des->Symbols(tb->Des->SelectedControl) Then tb->Des->Symbols(tb->Des->SelectedControl)->WritePropertyFunc(tb->Des->SelectedControl, "Visible", @bTrue)
-			#else
-				LockWindowUpdate(tb->Des->FSelControl)
-				BringWindowToTop(tb->Des->FSelControl)
-			#endif
 			If tb->Des->OnInsertControl Then tb->Des->OnInsertControl(* (tb->Des), FClass, tb->Des->SelectedControl, 0, 0, (iWidth - 78) / 2, (iHeight - 36) / 2, 78, 36)
-			#ifdef __USE_GTK__
 				tb->Des->MoveDots(tb->Des->SelectedControl, , (iWidth - 78) / 2, (iHeight - 36) / 2, 78, 36)
-			#else
-				tb->Des->MoveDots(tb->Des->SelectedControl)
-				LockWindowUpdate(0)
-			#endif
 		Else
 			Dim cpnt As Any Ptr = tb->Des->CreateComponent(FClass, FName, ctr, (iWidth - 16) / 2, (iHeight - 16) / 2)
 			If cpnt Then
@@ -10662,11 +9390,7 @@ Sub tbToolBox_ButtonActivate(ByRef Designer As My.Sys.Object, ByRef Sender As To
 				If tb->Des->FSelControl Then
 					tb->Des->SelectedControls.Clear
 				End If
-				#ifdef __USE_GTK__
 					tb->Des->MoveDots(cpnt, , (iWidth - 16) / 2, (iHeight - 16) / 2, 16, 16)
-				#else
-					tb->Des->MoveDots(cpnt)
-				#endif
 			Else
 				tb->Des->SelectedControl = tb->Des->DesignControl
 				tb->Des->MoveDots(tb->Des->SelectedControl)
@@ -10675,13 +9399,7 @@ Sub tbToolBox_ButtonActivate(ByRef Designer As My.Sys.Object, ByRef Sender As To
 	End If
 End Sub
 
-#ifdef __USE_GTK__
 	tbToolBox.Align = DockStyle.alClient
-#else
-	imgListTools.Add "DropDown", "DropDown"
-	imgListTools.Add "DropRight", "DropRight"
-	imgListTools.Add "Kursor", "Cursor"
-#endif
 tbToolBox.Top = tbForm.Height
 tbToolBox.Flat = True
 tbToolBox.Wrapable = True
@@ -10728,13 +9446,11 @@ Function CheckCompilerPaths As Boolean
 		SetBundledCompilerPath()
 		Return True
 	End If
-	#ifdef __USE_GTK__
 		Dim As ZString Ptr PathFbc = g_find_program_in_path("fbc")
 		If PathFbc <> NULL Then
 			CompilerExe = WStr(*PathFbc)
 			g_free(PathFbc)
 		End If
-	#endif
 	If FileExists(CompilerExe) Then
 		SetBundledCompilerPath()
 		Return True
@@ -10745,12 +9461,6 @@ End Function
 
 Dim Shared As Boolean bSharedFind
 Sub frmMain_Create(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
-	#ifdef __USE_GTK__
-	#else
-		tabItemHeight = tabLeft.ItemHeight(0) + 4
-		pnlPropertyValue.SendToBack
-		pnlToolBox_Resize *pnlToolBox.Designer, pnlToolBox, pnlToolBox.Width, pnlToolBox.Height + 1
-	#endif
 	
 	pfSplash->lblProcess.Text = ML("Load On Startup") & ": " & ML("Toolbox")
 	LoadToolBox
@@ -10760,11 +9470,7 @@ Sub frmMain_Create(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	pnlRightPin.Height = tbRight.Height
 	pnlLeftPin.Height = tbLeft.Height
 	If Dir(ExePath & "/DebugInfo.log") <> "" Then
-		#ifdef __USE_GTK__
 			FileCopy ExePath & "/DebugInfo.log", ExePath & "/DebugInfo.bak"
-		#else
-			CopyFileW ExePath & "/DebugInfo.log", ExePath & "/DebugInfo.bak", False
-		#endif
 		Kill ExePath & "/DebugInfo.log"
 	End If
 	frmMain.Width = iniSettings.ReadInteger("MainWindow", "Width", 800)
@@ -10816,11 +9522,7 @@ Sub frmMain_Create(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		tviewthd = @tvThd
 		tviewwch = @tvWch
 	
-	#ifdef __FB_64BIT__
 		App.Title = App.Title & " (" & ML("64-bit") & ")"
-	#else
-		App.Title = App.Title & " (" & ML("32-bit") & ")"
-	#endif
 	frmMain.Text = App.Title
 	pfAbout->Label1.Text = App.Title
 		pfAbout->Label11.Text = ML("Version") & " " & WStr(VERSION)
@@ -10832,8 +9534,6 @@ Sub frmMain_Create(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	LoadTools
 	
 	bSharedFind = CheckCompilerPaths
-	
-	gLocalProperties = True
 	
 	mStartLoadSession = False
 	
@@ -10940,7 +9640,6 @@ End Function
 Sub frmMain_Show(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	Var MainMaximized = iniSettings.ReadBool("MainWindow", "Maximized", False)
 	If MainMaximized Then frmMain.WindowState = WindowStates.wsMaximized
-	#ifdef __USE_GTK__
 		tabItemHeight = tabLeft.ItemHeight(0) + 4 + 5
 		If Not GetLeftClosedStyle Then pnlLeftPin.Top = tabItemHeight
 		If Not GetRightClosedStyle Then pnlRightPin.Top = tabItemHeight
@@ -10950,9 +9649,6 @@ Sub frmMain_Show(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		tbBottom.Buttons.Item("AddWatch")->Visible = False
 		tbBottom.Buttons.Item("RemoveWatch")->Visible = False
 		tbBottom.Buttons.Item("Update")->Visible = False
-	#else
-		
-	#endif
 	
 	pfSplash->CloseForm
 	
@@ -11096,9 +9792,7 @@ Sub frmMain_Close(ByRef Designer As My.Sys.Object, ByRef Sender As Form, ByRef A
 	iniSettings.WriteString("MainWindow", "RecentSession", *RecentSession)
 	If mChangeLogEdited Then txtChangeLog.SaveToFile(ExePath & Slash & StringExtract(MainNode->Text, ".") & "_Change.log") '
 	UnLoadAddins
-	#ifdef __USE_GTK__
 		_exit(0)
-	#endif
 	Exit Sub
 	ErrorHandler:
 	MsgBox ErrDescription(Err) & " (" & Err & ") " & _
@@ -11139,17 +9833,9 @@ rbBottom.Align = DockStyle.alBottom
 
 frmMain.Name = "frmMain"
 frmMain.KeyPreview = True
-#ifdef __USE_GTK__
 	frmMain.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico")
-#else
-	frmMain.Icon.LoadFromResourceID(1)
-#endif
 frmMain.MainForm = True
-#ifdef __FB_64BIT__
 	frmMain.Text = "Visual FB Editor (x64)"
-#else
-	frmMain.Text = "Visual FB Editor (x32)"
-#endif
 frmMain.OnActiveControlChange = @frmMain_ActiveControlChanged
 frmMain.OnActivateApp = @frmMain_ActivateApp
 frmMain.OnKeyDown = @frmMain_KeyDown

@@ -205,7 +205,6 @@ Declare Function GetBlue(FColor As Long) As Integer
 #define RGBA_A( c ) ( CUInt( c ) Shr 24         )
 
 
-'End Namespace
 
 #include once "Pen.bi"
 #include once "Brush.bi"

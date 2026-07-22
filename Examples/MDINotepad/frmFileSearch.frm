@@ -3,10 +3,6 @@
 ' Freeware. Use at your own risk.
 
 '#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/Panel.bi"
 	#include once "mff/CommandButton.bi"
@@ -75,13 +71,8 @@
 			.Text = "File Search"
 			.Designer = @This
 				This.Icon.LoadFromFile(ExePath & "\FileSearch.ico")
-			#ifdef __FB_64BIT__
 				'...instructions for 64bit OSes...
 				.Caption = "VFBE File Search64"
-			#else
-				'...instructions for other OSes
-				.Caption = "VFBE File Search32"
-			#endif
 			.StartPosition = FormStartPosition.CenterParent
 			.OnCreate = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @Form_Create)
 			.OnResize = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control, NewWidth As Integer, NewHeight As Integer), @Form_Resize)

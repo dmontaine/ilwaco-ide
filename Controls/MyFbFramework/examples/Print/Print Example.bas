@@ -1,8 +1,4 @@
 ﻿'#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/PrintDocument.bi"
 	#include once "mff/Printer.bi"
@@ -347,10 +343,8 @@ End Sub
 
 Private Sub Form1Type.cboOrientation_Selected(ByRef Sender As ComboBoxEdit, ItemIndex As Integer)
 	If ItemIndex = 0 Then
-	'	If FPageHeight < FPageWidth Then Swap FPageWidth, FPageHeight
 		PrintPreviewControl1.Orientation = PrinterOrientation.poPortait
 	ElseIf ItemIndex = 1 Then
-	'	If FPageWidth < FPageHeight Then Swap FPageWidth, FPageHeight
 		PrintPreviewControl1.Orientation = PrinterOrientation.poLandscape
 	End If
 	'PrintPreviewControl1.Repaint

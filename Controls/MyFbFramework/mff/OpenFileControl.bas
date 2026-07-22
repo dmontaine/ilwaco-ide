@@ -72,37 +72,27 @@ Namespace My.Sys.Forms
 		Else
 			Options.Exclude ofAllowMultiSelect
 		End If
-		#ifdef __USE_GTK__
 			gtk_file_chooser_set_select_multiple(GTK_FILE_CHOOSER (widget), FMultiSelect)
-		#endif
 	End Property
 	
 	Private Property OpenFileControl.InitialDir ByRef As WString
+	Static EmptyWString As WString * 1
 		If FHandle Then
-			#ifdef __USE_GTK__
 				WLet(FInitialDir, WStr(*gtk_file_chooser_get_current_folder(GTK_FILE_CHOOSER (widget))))
-			#else
-				Dim As Integer iSize = 1024
-				Dim As WString * 1024 Path
-				If SendMessage(FHandle, CDM_GETFOLDERPATH, iSize, Cast(WPARAM, @Path)) > 0 Then
-					WLet(FInitialDir, Path)
-				End If
-			#endif
 		End If
-		If FInitialDir > 0 Then Return *FInitialDir Else Return ""
+		If FInitialDir > 0 Then Return *FInitialDir Else Return EmptyWString
 	End Property
 	
 	Private Property OpenFileControl.InitialDir(ByRef Value As WString)
 		FInitialDir    = _Reallocate(FInitialDir, (Len(Value) + 1) * SizeOf(WString))
 		*FInitialDir = Value
-		#ifdef __USE_GTK__
 			If WGet(FInitialDir) = "" Then WLet(FInitialDir, CurDir)
 			gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER (widget), ToUtf8(*FInitialDir))
-		#endif
 	End Property
 	
 	Private Property OpenFileControl.DefaultExt ByRef As WString
-		If FDefaultExt > 0 Then Return *FDefaultExt Else Return ""
+	Static EmptyWString As WString * 1
+		If FDefaultExt > 0 Then Return *FDefaultExt Else Return EmptyWString
 	End Property
 	
 	Private Property OpenFileControl.DefaultExt(ByRef Value As WString)
@@ -111,53 +101,37 @@ Namespace My.Sys.Forms
 	End Property
 	
 	Private Property OpenFileControl.FileName ByRef As WString
+	Static EmptyWString As WString * 1
 		If FHandle Then
-			#ifdef __USE_GTK__
 				WLet(FFileName, WStr(*gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(widget))))
 				If InStr(*FFileName, ".") = 0 Then
 					If *FDefaultExt <> "" Then WAdd FFileName, "." & *FDefaultExt
 				End If
-			#else
-				Dim As Integer iSize = 1024
-				Dim As WString * 1024 Path
-				If SendMessage(FHandle, CDM_GETFILEPATH, iSize, Cast(WPARAM, @Path)) > 0 Then
-					WLet(FFileName, Path)
-				End If
-			#endif
 		End If
-		If FFileName > 0 Then Return *FFileName Else Return ""
+		If FFileName > 0 Then Return *FFileName Else Return EmptyWString
 	End Property
 	
 	Private Property OpenFileControl.FileName(ByRef Value As WString)
 		WLet(FFileName, Value)
-		#ifdef __USE_GTK__
 			If WGet(FFileName) = "" Then
 				gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER (widget), !"\0")
 			Else
 				gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER (widget), ToUtf8(*FFileName))
 			End If
-		#endif
 	End Property
 	
 	Private Property OpenFileControl.FileTitle ByRef As WString
+	Static EmptyWString As WString * 1
 		If FHandle Then
 			FileName
-			#ifdef __USE_GTK__
 				Dim As Integer Pos1 = InStrRev(*FFileName, "/")
 				If Pos1 > 0 Then
 					WLet(FFileTitle, Mid(*FFileName, Pos1 + 1))
 				Else
 					WLet(FFileTitle, *FFileName)
 				End If
-			#else
-				Dim As Integer iSize = 1024
-				Dim As WString * 1024 Path
-				If SendMessage(FHandle, CDM_GETSPEC, iSize, Cast(WPARAM, @Path)) > 0 Then
-					WLet(FFileTitle, Path)
-				End If
-			#endif
 		End If
-		If FFileTitle > 0 Then Return *FFileTitle Else Return ""
+		If FFileTitle > 0 Then Return *FFileTitle Else Return EmptyWString
 	End Property
 	
 	Private Property OpenFileControl.FileTitle(ByRef Value As WString)
@@ -166,13 +140,13 @@ Namespace My.Sys.Forms
 	End Property
 	
 	Private Property OpenFileControl.Filter ByRef As WString
-		If FFilter > 0 Then Return *FFilter Else Return ""
+	Static EmptyWString As WString * 1
+		If FFilter > 0 Then Return *FFilter Else Return EmptyWString
 	End Property
 	
 	Private Property OpenFileControl.Filter(ByRef Value As WString)
 		FFilter    = _Reallocate(FFilter, (Len(Value) + 1) * SizeOf(WString))
 		*FFilter = Value
-		#ifdef __USE_GTK__
 			Dim As UString res()
 			If *FFilter <> "" Then
 				Split *FFilter, "|", res()
@@ -188,11 +162,9 @@ Namespace My.Sys.Forms
 				Next
 				If FFilterIndex <= FFilterCount Then gtk_file_chooser_set_filter(GTK_FILE_CHOOSER (widget), filefilter(FFilterIndex))
 			End If
-		#endif
 	End Property
 	
 	Private Property OpenFileControl.FilterIndex As Integer
-		#ifdef __USE_GTK__
 			Dim As GtkFileFilter Ptr choosedfilefilter = gtk_file_chooser_get_filter(GTK_FILE_CHOOSER(widget))
 			For i As Integer = 0 To UBound(filefilter)
 				If choosedfilefilter = filefilter(i) Then
@@ -200,15 +172,12 @@ Namespace My.Sys.Forms
 					Exit For
 				End If
 			Next i
-		#endif
 		Return FFilterIndex
 	End Property
 	
 	Private Property OpenFileControl.FilterIndex(Value As Integer)
 		FFilterIndex    = Value
-		#ifdef __USE_GTK__
 			If FFilterIndex <= FFilterCount Then gtk_file_chooser_set_filter(GTK_FILE_CHOOSER (widget), filefilter(FFilterIndex))
-		#endif
 	End Property
 	
 	
@@ -218,7 +187,6 @@ Namespace My.Sys.Forms
 	Private Sub OpenFileControl.CreateWnd
 	End Sub
 	
-	#ifdef __USE_GTK__
 		Private Sub OpenFileControl.FileChooser_CurrentFolderChanged(chooser As GtkFileChooser Ptr, user_data As Any Ptr)
 			Dim As OpenFileControl Ptr ofc = user_data
 			If ofc->OnFolderChange Then ofc->OnFolderChange(*ofc->Designer, *ofc)
@@ -233,28 +201,12 @@ Namespace My.Sys.Forms
 			Dim As OpenFileControl Ptr ofc = user_data
 			If ofc->OnSelectionChange Then ofc->OnSelectionChange(*ofc->Designer, *ofc)
 		End Sub
-	#endif
 	
 	Private Constructor OpenFileControl
-		#ifdef __USE_GTK__
 			widget =  gtk_file_chooser_widget_new (GTK_FILE_CHOOSER_ACTION_OPEN)
 			g_signal_connect(widget, "current-folder-changed", G_CALLBACK(@FileChooser_CurrentFolderChanged), @This)
 			g_signal_connect(widget, "file-activated", G_CALLBACK(@FileChooser_FileActivated), @This)
 			g_signal_connect(widget, "selection-changed", G_CALLBACK(@FileChooser_SelectionChanged), @This)
-		#else
-			Options.Include OFN_PATHMUSTEXIST
-			Options.Include OFN_FILEMUSTEXIST
-			Options.Include OFN_HIDEREADONLY
-			Options.Include OFN_ENABLESIZING
-			Options.Include OFN_EXPLORER
-			Options.Include OFN_ENABLEHOOK
-			'OFN_NONETWORKBUTTON
-			'OFN_LONGNAMES
-			'OFN_NODEREFERENCELINKS
-			'OFN_OVERWRITEPROMPT
-			'OFN_CREATEPROMPT
-			'OFN_DONTADDTORECENT
-		#endif
 		Child = @This
 		FTabIndex          = -1
 		FTabStop           = True

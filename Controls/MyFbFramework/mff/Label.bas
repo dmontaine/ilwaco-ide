@@ -95,13 +95,7 @@ Namespace My.Sys.Forms
 	
 	Private Property Label.Text(ByRef Value As WString)
 		Base.Text = Value
-		#ifdef __USE_GTK__
 			gtk_label_set_text(GTK_LABEL(widget), ToUtf8(Value))
-		#elseif 0
-			If FHandle Then
-				(*env)->CallVoidMethod(env, FHandle, GetMethodID("android/widget/TextView", "setText", "(Ljava/lang/CharSequence;)V"), (*env)->NewStringUTF(env, ToUtf8(FText)))
-			End If
-		#endif
 		SetAutoSize
 	End Property
 	
@@ -114,26 +108,11 @@ Namespace My.Sys.Forms
 		Else
 				Select Case FAlignment
 				Case AlignmentConstants.taLeft
-					#ifdef __USE_GTK3__
 						gtk_label_set_xalign(GTK_LABEL (widget), 0.0)
-					#else
-						gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_LEFT)
-						gtk_misc_set_alignment(GTK_MISC(widget), 0, 0)
-					#endif
 				Case AlignmentConstants.taCenter
-					#ifdef __USE_GTK3__
 						gtk_label_set_xalign(GTK_LABEL (widget), 0.5)
-					#else
-						gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_CENTER)
-						gtk_misc_set_alignment(GTK_MISC(widget), 0.5, 0)
-					#endif
 				Case AlignmentConstants.taRight
-					#ifdef __USE_GTK3__
 						gtk_label_set_xalign(GTK_LABEL (widget), 1.0)
-					#else
-						gtk_label_set_justify(GTK_LABEL(widget), GTK_JUSTIFY_RIGHT)
-						gtk_misc_set_alignment(GTK_MISC(widget), 1, 0)
-					#endif
 				End Select
 		End If
 		RecreateWnd
@@ -143,24 +122,8 @@ Namespace My.Sys.Forms
 		Size.Width = This.Width
 		Size.Height = This.Height
 		If CBool(Font.Orientation = 0) AndAlso FAutoSize Then
-			#ifdef __USE_GTK__
 				Size.Width = Canvas.TextWidth(FText)
 				Size.Height = Canvas.TextHeight(FText)
-			#elseif 0
-				
-			#elseif 0
-				If FHandle Then
-					Dim Sz As ..Size
-					Dim As HDC Dc = GetDC(Handle)
-					If Dc > 0 Then
-						Dim As .HANDLE PrevFont = SelectObject(Dc, Cast(HFONT, SendMessage(FHandle, WM_GETFONT, 0, 0)))
-						GetTextExtentPoint32(Dc, FText.vptr, Len(FText), @Sz)
-						Size.Width = Sz.cx
-						Size.Height = Sz.cy
-						SelectObject(Dc, PrevFont)
-					End If
-				End If
-			#endif
 		End If
 	End Sub
 	
@@ -241,11 +204,7 @@ Namespace My.Sys.Forms
 	Private Property Label.WordWraps(Value As Boolean)
 		If Value <> FWordWraps Then
 			FWordWraps = Value
-			#ifdef __USE_GTK__
 				gtk_label_set_line_wrap(GTK_LABEL(widget), Value)
-			#else
-				ChangeLabelStyle
-			#endif
 		End If
 	End Property
 	
@@ -266,39 +225,12 @@ Namespace My.Sys.Forms
 	End Operator
 	
 	Private Constructor Label
-		#ifdef __USE_GTK__
 			widget = gtk_label_new("")
-			#ifdef __USE_GTK3__
 				gtk_label_set_xalign (GTK_LABEL (widget), 0.0)
-			#else
-				gtk_misc_set_alignment(GTK_MISC(widget), 0, 0)
-			#endif
 			gtk_label_set_line_wrap(GTK_LABEL(widget), True)
-			#ifdef __USE_GTK3__
 				eventboxwidget = gtk_event_box_new()
 				gtk_container_add(GTK_CONTAINER(eventboxwidget), widget)
-			#endif
 			This.RegisterClass "Label", @This
-		#elseif 0
-			AStyle(0)           = 0
-			AStyle(1)           = SS_BITMAP
-			AStyle(2)           = SS_ICON
-			AStyle(3)           = SS_ICON
-			AStyle(4)           = SS_ENHMETAFILE
-			AStyle(5)           = SS_OWNERDRAW
-			AAlignment(0)       = SS_LEFT
-			AAlignment(1)       = SS_CENTER
-			AAlignment(2)       = SS_RIGHT
-			ABorder(0)          = 0
-			ABorder(1)          = SS_SIMPLE
-			ABorder(2)          = SS_SUNKEN
-			ACenterImage(0)     = SS_RIGHTJUST
-			ACenterImage(1)     = SS_CENTERIMAGE
-			ARealSizeImage(0)   = 0
-			ARealSizeImage(1)   = SS_REALSIZEIMAGE
-			AWordWraps(0)       = SS_ENDELLIPSIS
-			AWordWraps(1)       = 0
-		#endif
 		Graphic.Ctrl = @This
 		Graphic.OnChange = @GraphicChange
 		FRealSizeImage   = 1

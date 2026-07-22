@@ -21,7 +21,6 @@ Namespace My.Sys.Forms
 			Case "multicolumn": Return @FMultiColumn
 			Case "ctl3d": Return @FCtl3D
 			Case "integralheight": Return @FIntegralHeight
-				'Case "itemcount": Return @FItemCount
 			Case "itemheight": Return @FItemHeight
 			Case "itemindex": Return @FItemIndex
 			Case "horizontalscrollbar": Return @FHorizontalScrollBar
@@ -81,20 +80,13 @@ Namespace My.Sys.Forms
 	End Property
 	
 	Private Property ListControl.Selected(Index As Integer) As Boolean
-		#ifdef __USE_GTK__
 			Dim As GtkTreeIter iter
 			gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(ListStore), @iter, Trim(Str(Index)))
 			TreeSelection = gtk_tree_view_get_selection(GTK_TREE_VIEW(widget))
 			Return gtk_tree_selection_iter_is_selected(TreeSelection, @iter)
-		#elseif 0
-			If Handle Then Return Perform(LB_GETSEL, Index, 0)
-		#else
-			Return False
-		#endif
 	End Property
 	
 	Private Property ListControl.Selected(Index As Integer, Value As Boolean)
-		#ifdef __USE_GTK__
 			Dim As GtkTreeIter iter
 			gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(ListStore), @iter, Trim(Str(Index)))
 			If Value Then
@@ -102,27 +94,16 @@ Namespace My.Sys.Forms
 			Else
 				gtk_tree_selection_unselect_iter(TreeSelection, @iter)
 			End If
-		#elseif 0
-			If Handle Then Perform(LB_SETSEL, abs_(Value), Index)
-		#endif
 	End Property
 	
 	Private Sub ListControl.SelectAll
-		#ifdef __USE_GTK__
 			If widget Then
 				gtk_tree_selection_select_all(TreeSelection)
 			End If
-		#elseif 0
-			If Handle Then Perform(LB_SETSEL, abs_(True), -1)
-		#endif
 	End Sub
 	
 	Private Sub ListControl.UnSelectAll
-		#ifdef __USE_GTK__
 			gtk_tree_selection_unselect_all(TreeSelection)
-		#elseif 0
-			If Handle Then Perform(LB_SETSEL, abs_(False), -1)
-		#endif
 	End Sub
 	
 	Private Property ListControl.SelectionMode As SelectionModes
@@ -131,28 +112,12 @@ Namespace My.Sys.Forms
 	
 	Private Property ListControl.SelectionMode(Value As SelectionModes)
 		FSelectionMode = Value
-		#ifdef __USE_GTK__
 			Select Case FSelectionMode
 			Case 0: gtk_tree_selection_set_mode(gtk_tree_view_get_selection(GTK_TREE_VIEW(widget)), GTK_SELECTION_NONE)
 			Case 1: gtk_tree_selection_set_mode(gtk_tree_view_get_selection(GTK_TREE_VIEW(widget)), GTK_SELECTION_SINGLE)
 			Case 2: gtk_tree_selection_set_mode(gtk_tree_view_get_selection(GTK_TREE_VIEW(widget)), GTK_SELECTION_MULTIPLE)
-				#ifdef __USE_GTK3__
 				Case 3: gtk_tree_selection_set_mode(gtk_tree_view_get_selection(GTK_TREE_VIEW(widget)), GTK_SELECTION_MULTIPLE)
-				#else
-				Case 3: gtk_tree_selection_set_mode(gtk_tree_view_get_selection(GTK_TREE_VIEW(widget)), GTK_SELECTION_EXTENDED)
-				#endif
 			End Select
-		#elseif 0
-			ChangeStyle LBS_NOSEL, False
-			ChangeStyle LBS_MULTIPLESEL, False
-			ChangeStyle LBS_EXTENDEDSEL, False
-			Select Case FSelectionMode
-			Case 0: ChangeStyle LBS_NOSEL, True
-			Case 1:
-			Case 2: ChangeStyle LBS_MULTIPLESEL, True
-			Case 3: ChangeStyle LBS_EXTENDEDSEL, True
-			End Select
-		#endif
 	End Property
 	
 	Private Property ListControl.TabIndex As Integer
@@ -212,11 +177,6 @@ Namespace My.Sys.Forms
 	End Property
 	
 	Private Property ListControl.ItemCount As Integer
-		'		#ifndef __USE_GTK__
-		'			If Handle Then
-		'				Return Perform(LB_GETCOUNT,0,0)
-		'			End If
-		'		#endif
 		Return Items.Count
 	End Property
 	
@@ -240,7 +200,6 @@ Namespace My.Sys.Forms
 	End Property
 	
 	Private Property ListControl.ItemIndex As Integer
-		#ifdef __USE_GTK__
 			Dim As GtkTreeIter iter
 			If SelectionMode = SelectionModes.smMultiSimple Or SelectionMode = SelectionModes.smMultiExtended Then
 				FSelCount = gtk_tree_selection_count_selected_rows(TreeSelection)
@@ -266,25 +225,11 @@ Namespace My.Sys.Forms
 					gtk_tree_path_free(path)
 				End If
 			End If
-		#elseif 0
-			If Handle Then
-				If SelectionMode = SelectionModes.smMultiSimple Or SelectionMode = SelectionModes.smMultiExtended Then
-					FItemIndex = Perform(LB_GETCARETINDEX, 0, 0)
-				Else
-					FItemIndex = Perform(LB_GETCURSEL, 0, 0)
-				End If
-			End If
-		#elseif 0
-			If FHandle Then
-				FItemIndex = GetSelectedIndex(FHandle)
-			End If
-		#endif
 		Return FItemIndex
 	End Property
 	
 	Private Property ListControl.ItemIndex(Value As Integer)
 		FItemIndex = Value
-		#ifdef __USE_GTK__
 			If ListStore Then
 				If Value = -1 Then
 					gtk_tree_selection_unselect_all(gtk_tree_view_get_selection(GTK_TREE_VIEW(widget)))
@@ -295,27 +240,10 @@ Namespace My.Sys.Forms
 					gtk_tree_view_scroll_to_cell(GTK_TREE_VIEW(widget), gtk_tree_model_get_path(GTK_TREE_MODEL(ListStore), @iter), NULL, False, 0, 0)
 				End If
 			End If
-		#elseif 0
-			If Handle Then
-				If SelectionMode = SelectionModes.smMultiSimple Or SelectionMode = SelectionModes.smMultiExtended Then
-					Perform(LB_SETCARETINDEX, FItemIndex, 0)
-				Else
-					Perform(LB_SETCURSEL,FItemIndex,0)
-				End If
-			End If
-		#elseif 0
-			If FHandle Then
-				SetSelectedIndex(FHandle, Value)
-			End If
-		#endif
 	End Property
 	
 	Private Property ListControl.SelCount As Integer
-		#ifdef __USE_GTK__
 			FSelCount = gtk_tree_selection_count_selected_rows(TreeSelection)
-		#elseif 0
-			FSelCount = Perform(LB_GETSELCOUNT, 0, 0)
-		#endif
 		Return FSelCount
 	End Property
 	
@@ -324,7 +252,6 @@ Namespace My.Sys.Forms
 	End Property
 	
 	Private Property ListControl.SelItems As Integer Ptr
-		#ifdef __USE_GTK__
 			FSelCount = gtk_tree_selection_count_selected_rows(TreeSelection)
 			ReDim AItems(FSelCount)
 			Dim As GtkTreeModel Ptr model = GTK_TREE_MODEL(ListStore)
@@ -340,12 +267,6 @@ Namespace My.Sys.Forms
 			g_list_foreach(list, Cast(GFunc, @gtk_tree_path_free), NULL)
 			g_list_free(list)
 			Return @AItems(0)
-		#elseif 0
-			FSelCount = Perform(LB_GETSELCOUNT, 0, 0)
-			ReDim AItems(FSelCount)
-			Perform(LB_GETSELITEMS, FSelCount, CInt(@AItems(0)))
-			SelItems = @AItems(0)
-		#endif
 		Return FSelItems
 	End Property
 	
@@ -404,28 +325,16 @@ Namespace My.Sys.Forms
 			Items.Add(FItem, Obj)
 			FNewIndex = Items.Count - 1
 		End If
-		#ifdef __USE_GTK__
 			Dim As GtkTreeIter iter
 			gtk_list_store_append (ListStore, @iter)
 			gtk_list_store_set(ListStore, @iter, 0, ToUtf8(FItem), -1)
-		#elseif 0
-			If Handle Then FNewIndex = Perform(LB_ADDSTRING, 0, CInt(@FItem))
-		#elseif 0
-			If Handle Then 
-				AddSelectItem(FHandle, FItem)
-			End If
-		#endif
 	End Sub
 	
 	Private Sub ListControl.RemoveItem(FIndex As Integer)
 		Items.Remove(FIndex)
-		#ifdef __USE_GTK__
 			Dim As GtkTreeIter iter
 			gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(ListStore), @iter, Trim(Str(FIndex)))
 			gtk_list_store_remove(ListStore, @iter)
-		#elseif 0
-			If Handle Then Perform(LB_DELETESTRING, FIndex, 0)
-		#endif
 	End Sub
 	
 	Private Sub ListControl.InsertItem(FIndex As Integer, ByRef FItem As WString, Obj As Any Ptr = 0)
@@ -435,22 +344,14 @@ Namespace My.Sys.Forms
 		End If
 		Items.Insert(FIndex, FItem, Obj)
 		FNewIndex = FIndex
-		#ifdef __USE_GTK__
 			Dim As GtkTreeIter iter
 			gtk_list_store_insert(ListStore, @iter, FIndex)
 			gtk_list_store_set (ListStore, @iter, 0, ToUtf8(FItem), -1)
-		#elseif 0
-			If Handle Then FNewIndex = Perform(LB_INSERTSTRING, FIndex, CInt(@FItem))
-		#endif
 	End Sub
 	
 	Private Sub ListControl.Clear
 		Items.Clear
-		#ifdef __USE_GTK__
 			gtk_list_store_clear(ListStore)
-		#elseif 0
-			Perform(LB_RESETCONTENT,0,0)
-		#endif
 	End Sub
 	Private Function ListControl.IndexOf(ByRef FItem As WString) As Integer
 			Return Items.IndexOf(FItem)
@@ -467,15 +368,6 @@ Namespace My.Sys.Forms
 			End If
 		End Sub
 	
-	#ifdef __USE_WASM__
-		Private Function ListControl.GetContent() As UString
-			Dim As UString FContent
-			For i As Integer = 0 To Items.Count - 1
-				FContent &= "<option value=""" & Str(i) & """>" & Items.Item(i) & "</option>"
-			Next
-			Return FContent
-		End Function
-	#endif
 	
 	Private Sub ListControl.ProcessMessage(ByRef Message As Message)
 		Base.ProcessMessage(Message)
@@ -487,16 +379,7 @@ Namespace My.Sys.Forms
 		F = FreeFile_
 		Open File For Output Encoding "utf-8" As #F
 		For i = 0 To ItemCount - 1
-			#ifdef __USE_GTK__
 				Print #F, Items.Item(i)
-			#elseif 0
-				Dim TextLen As Integer = Perform(LB_GETTEXTLEN, i, 0)
-				s = _CAllocate((TextLen + 1) * SizeOf(WString))
-				*s = Space(TextLen)
-				Perform(LB_GETTEXT, i, CInt(s))
-				Print #F, *s
-				_Deallocate(s)
-			#endif
 		Next i
 		CloseFile_(F)
 	End Sub
@@ -509,11 +392,7 @@ Namespace My.Sys.Forms
 		Open FileName For Input Encoding "utf-8" As #F
 		While Not EOF(F)
 			Line Input #F, s
-			#ifdef __USE_GTK__
 				AddItem s
-			#elseif 0
-				Perform(LB_ADDSTRING, 0, CInt(@s))
-			#endif
 		Wend
 		CloseFile_(F)
 	End Sub
@@ -524,7 +403,6 @@ Namespace My.Sys.Forms
 	
 	Private Constructor ListControl
 		With This
-			#ifdef __USE_GTK__
 				Dim As GtkTreeViewColumn Ptr col = gtk_tree_view_column_new()
 				Dim As GtkCellRenderer Ptr rendertext = gtk_cell_renderer_text_new()
 				scrolledwidget = gtk_scrolled_window_new(NULL, NULL)
@@ -543,7 +421,6 @@ Namespace My.Sys.Forms
 				gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(widget), False)
 				
 				.RegisterClass "ListControl", @This
-			#endif
 			FCtl3D             = False
 			FTabIndex          = -1
 			FTabStop           = True

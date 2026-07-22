@@ -1,4 +1,4 @@
-#ifndef __FBS_PLUG_CDTOR_BI__
+﻿#ifndef __FBS_PLUG_CDTOR_BI__
 #define __FBS_PLUG_CDTOR_BI__
 
 '' Copyright 2023 by Jeff Marshall

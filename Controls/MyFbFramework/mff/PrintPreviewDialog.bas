@@ -80,10 +80,8 @@ End Sub
 
 Private Sub PrintPreviewDialog.cboOrientation_Selected(ByRef Sender As ComboBoxEdit, ItemIndex As Integer)
 	If ItemIndex = 0 Then
-	'	If FPageHeight < FPageWidth Then Swap FPageWidth, FPageHeight
 		pnlPrintPreviewControl.Orientation = PrinterOrientation.poPortait
 	ElseIf ItemIndex = 1 Then
-	'	If FPageWidth < FPageHeight Then Swap FPageWidth, FPageHeight
 		pnlPrintPreviewControl.Orientation = PrinterOrientation.poLandscape
 	End If
 	'pnlPrintPreviewControl.Repaint

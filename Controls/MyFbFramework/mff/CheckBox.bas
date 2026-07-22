@@ -92,28 +92,12 @@ Namespace My.Sys.Forms
 	
 	Private Property CheckBox.Text(ByRef Value As WString)
 		Base.Text = Value
-		#ifdef __USE_GTK__
 			gtk_button_set_label(GTK_BUTTON(widget), ToUtf8(Value))
-		#elseif 0
-			If FHandle Then
-				(*env)->CallVoidMethod(env, FHandle, GetMethodID(*FClassAncestor, "setText", "(Ljava/lang/CharSequence;)V"), (*env)->NewStringUTF(env, ToUtf8(FText)))
-			End If
-		#elseif 0
-			If FAutoSize Then AutoSize = True
-		#endif
 	End Property
 	
 	Private Property CheckBox.Checked As Boolean
 		If FHandle Then
-			#ifdef __USE_GTK__
 				FChecked = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget))
-			#elseif 0
-				FChecked = Perform(BM_GETCHECK, 0, 0)
-			#elseif 0
-				FChecked = (*env)->CallBooleanMethod(env, FHandle, GetMethodID(*FClassAncestor, "isChecked", "()Z"))
-			#elseif 0
-				FChecked = GetChecked(Trim(Str(FHandle)) & "checkbox")
-			#endif
 		End If
 		Return FChecked
 	End Property
@@ -121,15 +105,7 @@ Namespace My.Sys.Forms
 	Private Property CheckBox.Checked(Value As Boolean)
 		FChecked = Value
 		If FHandle Then
-			#ifdef __USE_GTK__
 				gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(widget), Value)
-			#elseif 0
-				Perform(BM_SETCHECK, FChecked, 0)
-			#elseif 0
-				(*env)->CallVoidMethod(env, FHandle, GetMethodID(*FClassAncestor, "setChecked", "(Z)V"), _Abs(Value))
-			#elseif 0
-				SetChecked(Trim(Str(FHandle)) & "checkbox", Value)
-			#endif
 		End If
 	End Property
 	
@@ -137,11 +113,6 @@ Namespace My.Sys.Forms
 	End Sub
 	
 	
-	#ifdef __USE_WASM__
-		Private Function CheckBox.GetContent() As UString
-			Return "<input type=""checkbox"" id=""" & Trim(Str(@This)) & "checkbox""/>" & !"\r" & "<label for=""" & Trim(Str(@This)) & "checkbox"" id=""" & Trim(Str(@This)) & "label"">" & FText & "</label>"
-		End Function
-	#endif
 	
 	Private Sub CheckBox.ProcessMessage(ByRef Message As Message)
 		Base.ProcessMessage(Message)
@@ -151,31 +122,17 @@ Namespace My.Sys.Forms
 		Return Cast(Control Ptr, @This)
 	End Operator
 	
-	#ifdef __USE_GTK__
 		Private Sub CheckBox.CheckBox_Toggled(widget As GtkToggleButton Ptr, user_data As Any Ptr)
 			Dim As CheckBox Ptr but = user_data
 			If but->OnClick Then but->OnClick(*but->Designer, *but)
 		End Sub
-	#endif
 	
 	Private Constructor CheckBox
 		With This
 			.Child                  = @This
-			#ifdef __USE_GTK__
 				widget = gtk_check_button_new_with_label("")
 				.RegisterClass "CheckBox", @This
 				g_signal_connect(widget, "toggled", G_CALLBACK(@CheckBox_Toggled), @This)
-			#elseif 0
-				.RegisterClass "CheckBox", "Button"
-				WLet(FClassAncestor, "Button")
-				.ChildProc              = @WndProc
-			#elseif 0
-				WLet(FClassAncestor, "android/widget/CheckBox")
-			#elseif 0
-				WLet(FClassAncestor, "div")
-				FType = ""
-				FElementStyle = "overflow: hidden; display: flex; align-items: center"
-			#endif
 			WLet(FClassName, "CheckBox")
 			FTabIndex = -1
 			FTabStop = True

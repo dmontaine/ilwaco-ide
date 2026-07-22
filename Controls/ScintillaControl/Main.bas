@@ -1,10 +1,6 @@
 ﻿'Authors: Xusinboy Bekchanov (bxusinboy@mail.ru)
 
-#ifdef __FB_64BIT__
 	#cmdline "ScintillaControl.rc -dll -x ScintillaControl64.dll -gen gas64"
-#else
-	#cmdline "ScintillaControl.rc -dll -x ScintillaControl32.dll"
-#endif
 #define __EXPORT_PROCS__
 
 #include once "ScintillaControl.bi"

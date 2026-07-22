@@ -48,7 +48,6 @@ Public:
 	Declare Sub ClipRect(pX As Integer, pY As Integer, pW As Integer, pH As Integer, pMaxW As Integer, pMaxH As Integer)
 	
 	'Combines two 16-bit integers into one 32-bit integer (lower 16-bit integer, higher 16-bit integer)
-	'Declare Function MakeDWord(pHi As Integer, pLow As Integer) As Long
 	
 	' Background color value range: 0 - 15
 	Declare Property BackColor() As Integer
@@ -227,9 +226,6 @@ Private Sub ConsoleType.ClipRect(pX As Integer, pY As Integer, pW As Integer, pH
 	pX = 0: pY = 0: pW = 0: pH = 0
 End Sub
 
-'Private Function MakeDWord(pHi As Integer, pLow As Integer) As Long
-'	Return (CLng(pHi) * &H10000) Or (pLow And &HFFFF)
-'End Function
 
 Private Property ConsoleType.BackColor() As Integer
 	Dim tmp As CONSOLE_SCREEN_BUFFER_INFO

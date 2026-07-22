@@ -1,8 +1,4 @@
 ﻿'#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/TextBox.bi"
 	#include once "mff/CommandButton.bi"
@@ -359,14 +355,11 @@
 		End With
 	End Constructor
 	
-	'Dim Shared frmTinezone As frmTinezoneType
 	'
-	'#if _MAIN_FILE_ = __FILE__
 	'	App.DarkMode = True
 	'	frmTinezone.MainForm = True
 	'	frmTinezone.Show
 	'	App.Run
-	'#endif
 '#End Region
 
 Type REGTIMEZONEINFORMATION

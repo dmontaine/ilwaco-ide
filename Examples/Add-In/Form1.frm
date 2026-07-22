@@ -1,7 +1,4 @@
-﻿#ifdef __FB_WIN32__
-	#cmdline "Form1.rc"
-#endif
-'#Region "Form"
+﻿'#Region "Form"
 	#include once "mff/Form.bi"
 	
 	Using My.Sys.Forms

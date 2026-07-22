@@ -233,7 +233,6 @@ Namespace My.Sys.Forms
 			
 		End Type
 		
-		#ifdef __USE_GTK__
 			Private Type MouseHoverMessageType
 				Sender As PControl
 				X As Double
@@ -244,7 +243,6 @@ Namespace My.Sys.Forms
 			End Type
 			Dim Shared MouseHoverMessage As MouseHoverMessageType
 			Dim Shared hover_timer_id As UInteger
-		#endif
 		
 		'Defines the base class for controls, which are components with visual representation (Windows, Linux, Android, Web)
 		Private Type Control Extends Component
@@ -265,7 +263,6 @@ Namespace My.Sys.Forms
 			FHorizontalSpacing As Integer
 			FVerticalSpacing As Integer
 			FLastNotifyIcon As NotifyIcon Ptr
-			#ifdef __USE_GTK__
 				FParentWidget As GtkWidget Ptr
 				FClient As GtkWidget Ptr
 				AllocatedHeight As Integer
@@ -287,20 +284,6 @@ Namespace My.Sys.Forms
 				Declare Static Function Control_ExposeEvent(widget As GtkWidget Ptr, Event As GdkEventExpose Ptr, data1 As Any Ptr) As Boolean
 				Declare Static Sub DragDataReceived(self As GtkWidget Ptr, CONTEXT As GdkDragContext Ptr, x As gint, y As gint, Data As GtkSelectionData Ptr, info As guint, Time As guint, user_data As Any Ptr)
 				Declare Static Function ConfigureEventProc(widget As GtkWidget Ptr, Event As GdkEvent Ptr, user_data As Any Ptr) As Boolean
-			#elseif 0
-				FType As String
-				FElementStyle As String
-				FClass As String
-				Declare Virtual Function GetContent() As UString
-			#elseif 0
-				FParentHandle As HWND
-				FClient As HWND
-				As Integer FClientX, FClientY, FClientW, FClientH
-				FToolInfo          As TOOLINFO
-				FDarkMode          As Boolean
-				FDropTarget        As CDropTarget
-				FDropSource        As CDropSource
-			#endif
 			FBorderStyle       As Integer
 			FExStyle           As Integer
 			FAllowDrop         As Boolean
@@ -371,30 +354,13 @@ Namespace My.Sys.Forms
 			OnActiveControlChanged As Sub(ByRef Sender As Control)
 			OnHandleIsAllocated As Sub(ByRef Sender As Control)
 			OnHandleIsDestroyed As Sub(ByRef Sender As Control)
-			#ifdef __USE_GTK__
 				Declare Function RegisterClass(ByRef wClassName As WString, Obj As Any Ptr, WndProcAddr As Any Ptr = 0) As Boolean
 				Declare Static Function EventProc(widget As GtkWidget Ptr, Event As GdkEvent Ptr, user_data As Any Ptr) As Boolean
 				Declare Static Function EventAfterProc(widget As GtkWidget Ptr, Event As GdkEvent Ptr, user_data As Any Ptr) As Boolean
 				Declare Static Function hover_cb(ByVal user_data As gpointer) As gboolean
 				Declare Static Function Control_Scroll(self As GtkScrolledWindow Ptr, scroll As GtkScrollType Ptr, Horizontal As Boolean, user_data As Any Ptr) As Boolean
-			#elseif 0
-				Declare Static Function RegisterClass(ByRef wClassName As WString, ByRef wClassAncestor As WString = "", WndProcAddr As Any Ptr = 0) As Integer
-				Declare Static Function WindowProc(FWindow As HWND, MSG As UINT, WPARAM As WPARAM, LPARAM As LPARAM) As LRESULT
-				Declare Static Function DefWndProc(FWindow As HWND, MSG As UINT, WPARAM As WPARAM, LPARAM As LPARAM) As LRESULT
-				Declare Static Function CallWndProc(FWindow As HWND, MSG As UINT, WPARAM As WPARAM, LPARAM As LPARAM) As LRESULT
-				Declare Static Function SuperWndProc(FWindow As HWND, MSG As UINT, WPARAM As WPARAM, LPARAM As LPARAM) As LRESULT
-				Declare Function Perform(MSG As UINT, WPARAM As WPARAM, LPARAM As LPARAM) As LRESULT
-				Declare Virtual Sub SetDark(Value As Boolean)
-				Declare Sub AllocateHint
-			#endif
-			#ifdef __USE_GTK__
 				Declare Property ParentWidget As GtkWidget Ptr
 				Declare Property ParentWidget(Value As GtkWidget Ptr)
-			#elseif 0
-				Declare Property ParentHandle As HWND
-				Declare Property ParentHandle(Value As HWND)
-				ToolTipHandle       As HWND
-			#endif
 			Declare Sub GetMax(ByRef MaxWidth As Integer, ByRef MaxHeight As Integer)
 			Declare Virtual Sub ProcessMessageAfter(ByRef message As Message)
 		Public:
@@ -629,9 +595,6 @@ Namespace My.Sys.Forms
 		End Type
 		
 		Dim Shared CreationControl As Control Ptr
-	#endif
-	#ifdef __USE_JNI__
-		Dim Shared AppMainForm As Control Ptr
 	#endif
 End Namespace
 

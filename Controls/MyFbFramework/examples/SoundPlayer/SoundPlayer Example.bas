@@ -1,5 +1,4 @@
-#include "tests-common.bi"
-'#define FBSOUND_USE_DYNAMIC
+﻿#include "tests-common.bi"
 #define FBSOUND_USE_STATIC
 #include once "mff/SoundPlayer.bi"
 Dim As WString * 260 FileName

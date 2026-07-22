@@ -1,8 +1,4 @@
 ﻿'#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		'Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/Label.bi"
 	#include once "mff/TextBox.bi"
@@ -30,12 +26,6 @@
 	End Type
 	
 	Constructor frmAiOptionsType
-		#if _MAIN_FILE_ = __FILE__
-			With App
-				.CurLanguagePath = ExePath & "/Languages/"
-				.CurLanguage = My.Sys.Language
-			End With
-		#endif
 		' frmAiOptions
 		With This
 			.Name = "frmAiOptions"

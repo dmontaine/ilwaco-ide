@@ -47,14 +47,9 @@ Namespace My.Sys.Forms
 		#endif
 		'Processes Windows messages for the control
 		Declare Virtual Sub ProcessMessage(ByRef msg As Message)
-		#ifdef __USE_GTK__
 			_Box			As GtkWidget Ptr
 			_Icon			As GtkWidget Ptr
 			_Label			As GtkWidget Ptr
-		#else
-			'Checks if the window handle has been created
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-		#endif
 		'Determines if the control uses visual style colors for background
 		UseVisualStyleBackColor As Boolean
 		Declare Property Index As Integer

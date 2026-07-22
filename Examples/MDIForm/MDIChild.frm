@@ -2,10 +2,6 @@
 ' Freeware. Use at your own risk.
 
 '#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/TextBox.bi"
 	

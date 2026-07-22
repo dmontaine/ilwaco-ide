@@ -6,10 +6,6 @@
 '############################################################################################
 
 '#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/Panel.bi"
 	#include once "mff/Label.bi"
@@ -56,7 +52,6 @@
 		Declare Sub UpdateShow(ByRef CurrentValue As String = "")
 		
 		Dim As Panel pnlSudoCell(80), pnlBack
-		'Dim As Picture pnlBack
 		' 9 * (i + j * 9) + 8
 		Dim As Label lblSudoCellChild(728)
 		Dim As LinkLabel lblInfo
@@ -65,12 +60,6 @@
 	End Type
 	
 	Constructor Form1Type
-		#if _MAIN_FILE_ = __FILE__
-			With App
-				.CurLanguagePath = ExePath & "/"
-				.CurLanguage = My.Sys.Language
-			End With
-		#endif
 		' Form1
 		With This
 			.Name = "Form1"
@@ -267,7 +256,6 @@ Private Sub Form1Type.cmdSolveSudo_Click(ByRef Sender As Control)
 	SolveSudo(SudoAns(), SudoIn())
 	GameOver = True
 	'' 如果需要解对角线数独
-	'While (dialog_sudoku(sudoans[0])==0) {
 	'    solvesudo(sudoans, sudoin);
 	'    print_a_sudoku(sudoans);
 	'
@@ -295,16 +283,9 @@ Private Sub Form1Type.cmdSolveSudo_Click(ByRef Sender As Control)
 		Next
 	Next
 	
-	'Dim As String LineStr
-	'For i As Integer = 0 To 8
 	'	LineStr = "| "
-	'	For j As Integer = 0 To 8
 	'		LineStr &= " " & SudoAns(0, i, j) & " "
-	'		If j Mod 3 = 2 Then LineStr &=  "| "
-	'	Next j
 	'	Debug.Print LineStr
-	'	If i Mod 3 = 2 Then Debug.Print "  -- -- --   -- -- --   -- -- --"
-	'Next i
 	'
 	'[X-wing] 7在行0,2列1,4交叉点两行或两列的7只在交叉点上存在,意味着4个交叉点上的7一定存在两个,那么可以删去不在交叉点上的7
 	
@@ -326,11 +307,7 @@ Private Sub Form1Type.cmdFromClipBoard_Click(ByRef Sender As Control)
 		Next
 	Next
 	cmdSolveSudo.Enabled = True
-	'For i As Integer = 0 To 80
 	'	SudoIn(i \ 9, i Mod 9) = SudoString[i] - Asc("0")
-	'Print SudoIn(i \ 9, i Mod 9);
-	'If i Mod 9 = 8 Then Print
-	'Next i
 	' pnlSudoCell(0)
 	UpdateShow("")
 End Sub

@@ -70,11 +70,7 @@ Using My.Sys.Forms
 		' lblSplash1
 		With lblSplash1
 			.Name = "lblSplash1"
-			#ifdef __FB_64BIT__
 				.Text = ML("64-bit")
-			#else
-				.Text = ML("32-bit")
-			#endif
 			.TabIndex = 3
 			.Alignment = AlignmentConstants.taCenter
 			.BackColor = 0

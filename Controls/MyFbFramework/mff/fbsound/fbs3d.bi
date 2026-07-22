@@ -207,18 +207,6 @@ Sub fbs_Get_VolumePan(ByVal v As Single Ptr    , _
 ?207:      *v=0
 ?208:    EndIf
 ?209:  End If
-#if 0
-?211:  s.lastvolumes(s.wp)=*v
-?212:  s.lastpans   (s.wp) = *p
-?213:  s.wp+=1:If s.wp=4 Then s.wp=0
-?214:  *v=0:*p=0
-?215:  For i=0 To 3
-?216:    *v+=s.lastvolumes(i)
-?217:    *v+=s.lastpans   (i)
-?218:  Next
-?219:  *v=*v * 0.25
-?220:  *p=*p * 0.25
-#endif
 End Sub
 
 #endif ' NO_3D

@@ -291,7 +291,6 @@ Private Sub Form1Type.Form_Resize(ByRef Sender As Control, NewWidth As Integer, 
 End Sub
 
 Sub Taijitu(x As Integer, y As Integer, r As Integer)
-	'With Picture1.Canvas
 	'	.Circle x, y, 2 * r, 0, , , , F
 	'	.Line x, y - 2 * r, x, y + 2 * r, 7, B
 	'	.Paint x - r, y, 15, 7
@@ -299,7 +298,6 @@ Sub Taijitu(x As Integer, y As Integer, r As Integer)
 	'	.Circle x, y + r, r - 1,  0, , , , F
 	'	.Circle x, y - r, r / 3,  0, , , , F
 	'	.Circle x, y + r, r / 3, 15, , , , F
-	'End With
 End Sub
 
 Private Sub Form1Type.cmdGDIDraw_Click(ByRef Sender As Control)
@@ -310,7 +308,6 @@ Private Sub Form1Type.cmdGDIDraw_Click(ByRef Sender As Control)
 		.Pen.Color = clGreen
 		.Pen.Size = 1
 		.Pen.Style = 3 'PenStyle.psDashDot
-		'Print Picture1.BackColor
 		.FillMode = BrushFillMode.bmTransparent
 		.Line (-100, 0, 100, 0) '画X轴
 		.Line (0, 100, 0, -100) '画Y轴

@@ -20,13 +20,8 @@ Namespace My.Sys.Forms
 		PItem As PTreeListViewItem
 		FParentItem As PTreeListViewItem
 	Public:
-		#ifdef __USE_GTK__
 			'Finds item via GTK+ iterator data
 			Declare Function FindByIterUser_Data(User_Data As Any Ptr) As PTreeListViewItem
-		#else
-			'Locates item via native OS handle
-			Declare Function FindByHandle(Value As LPARAM) As PTreeListViewItem
-		#endif
 		'Reference to parent TreeListView control
 		Parent   As Control Ptr
 		Declare Property Count As Integer
@@ -85,15 +80,8 @@ Namespace My.Sys.Forms
 	Protected:
 		Declare Static Sub AddItems(Node As TreeListViewItem Ptr)
 	Public:
-		#ifdef __USE_GTK__
 			'GTK+ tree model iterator reference
 			TreeIter As GtkTreeIter
-		#else
-			'Native OS handle (WinAPI/GTK+)
-			Handle As LPARAM
-			'Returns position in parent collection
-			Declare Function GetItemIndex() As Integer
-		#endif
 		'Reference to parent TreeListView
 		Parent   As Control Ptr
 		'Child items collection
@@ -167,10 +155,8 @@ Namespace My.Sys.Forms
 		FVisible      As Boolean
 		FEditable    As Boolean
 	Public:
-		#ifdef __USE_GTK__
 			Dim As GtkTreeViewColumn Ptr Column
 			Dim As GtkCellRenderer Ptr rendertext
-		#endif
 		'Zero-based position in column collection
 		Index As Integer
 		'Reference to parent TreeListView control
@@ -212,10 +198,8 @@ Namespace My.Sys.Forms
 	Private Type TreeListViewColumns Extends My.Sys.Object
 	Private:
 		FColumns As List
-		#ifdef __USE_GTK__
 			Declare Static Sub Cell_Edited(renderer As GtkCellRendererText Ptr, path As gchar Ptr, new_text As gchar Ptr, user_data As Any Ptr)
 			Declare Static Sub Cell_Editing(cell As GtkCellRenderer Ptr, editable As GtkCellEditable Ptr, path As Const gchar Ptr, user_data As Any Ptr)
-		#endif
 	Public:
 		'Reference to parent TreeListView control
 		Parent   As Control Ptr
@@ -261,21 +245,12 @@ Namespace My.Sys.Forms
 		Declare Static Sub HandleIsDestroyed(ByRef Sender As Control)
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
 	Protected:
-		#ifdef __USE_GTK__
 			Dim As GtkCellRenderer Ptr rendertext
 			Declare Static Function TreeListView_TestExpandRow(tree_view As GtkTreeView Ptr, iter As GtkTreeIter Ptr, path As GtkTreePath Ptr, user_data As Any Ptr) As Boolean
 			Declare Static Sub TreeListView_Map(widget As GtkWidget Ptr, user_data As Any Ptr)
 			Declare Static Sub TreeListView_RowActivated(tree_view As GtkTreeView Ptr, path As GtkTreePath Ptr, column As GtkTreeViewColumn Ptr, user_data As Any Ptr)
 			Declare Static Sub TreeListView_Scroll(self As GtkAdjustment Ptr, user_data As Any Ptr)
 			Declare Static Sub TreeListView_SelectionChanged(selection As GtkTreeSelection Ptr, user_data As Any Ptr)
-		#elseif 0
-			Declare Static Function EditControlProc(hDlg As HWND, uMsg As UINT, wParam As WPARAM, lParam As LPARAM) As LRESULT
-			Declare Static Function GetTreeListViewItemByIndex(Node As TreeListViewItem Ptr, Item As Integer, ByRef iCount As Integer) As TreeListViewItem Ptr
-			Declare Function GetTreeListViewItem(Item As Integer) As TreeListViewItem Ptr
-			Declare Virtual Sub SetDark(Value As Boolean)
-			hHeader As HWND
-			headerTextColor As COLORREF
-		#endif
 	Public:
 		#ifndef ReadProperty_Off
 			'Loads persisted properties.
@@ -285,14 +260,12 @@ Namespace My.Sys.Forms
 			'Saves properties to storage.
 			Declare Function WriteProperty(ByRef PropertyName As String, Value As Any Ptr) As Boolean
 		#endif
-		#ifdef __USE_GTK__
 			'Pointer to native tree storage structure.
 			TreeStore As GtkTreeStore Ptr
 			'Selection mode (Single/Multiple).
 			TreeSelection As GtkTreeSelection Ptr
 			'Specifies column data types (Text/Image/Checkbox).
 			ColumnTypes As GType Ptr
-		#endif
 		'Initializes control components.
 		Declare Sub Init()
 		'Scrolls to make node visible.

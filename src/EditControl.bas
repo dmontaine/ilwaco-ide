@@ -121,7 +121,6 @@ Namespace My.Sys.Forms
 	Sub EditControl.MiddleScroll()
 	End Sub
 	
-	#ifdef __USE_GTK__
 		Function EditControl.Blink_cb(ByVal user_data As gpointer) As gboolean
 			Dim As EditControl Ptr ec = Cast(Any Ptr, user_data)
 			If ec->InFocus Then
@@ -136,29 +135,6 @@ Namespace My.Sys.Forms
 				Return False
 			End If
 		End Function
-	#else
-		Sub EditControl.EC_TimerProc(hwnd As HWND, uMsg As UINT, idEvent As UINT_PTR, dwTime As DWORD)
-			If ScrEC Then
-				If ScrEC->bInMiddleScroll Then
-					ScrEC->MiddleScroll
-				Else
-					KillTimer ScrEC->Handle, 1
-				End If
-			End If
-		End Sub
-		
-		Sub EditControl.EC_TimerProcBlink(hwnd As HWND, uMsg As UINT, idEvent As UINT_PTR, dwTime As DWORD)
-			If FocusEC Then
-				FocusEC->CaretPosShowed += 1
-				FocusEC->CaretOn = Not FocusEC->CaretOn
-				If FocusEC->CaretPosShowed < 4 Then
-					FocusEC->PaintControl
-				Else
-					FocusEC->PaintControl False, True
-				End If
-			End If
-		End Sub
-	#endif
 	
 	Sub EditControl.Breakpoint
 		FECLine = Content.Lines.Items[FSelEndLine]
@@ -269,22 +245,11 @@ Namespace My.Sys.Forms
 			pVScrollPos = @VScrollPosBottom
 		End If
 		*pVScrollPos = Min(GetCaretPosY(Value), Max(0, IIf(ActiveCodePane = 0, VScrollMaxTop, VScrollMaxBottom) - VisibleLinesCount(ActiveCodePane)))
-		#ifdef __USE_GTK__
 			If ActiveCodePane = 0 Then
 				gtk_adjustment_set_value(adjustmentvTop, *pVScrollPos)
 			Else
 				gtk_adjustment_set_value(adjustmentvBottom, *pVScrollPos)
 			End If
-		#else
-			si.cbSize = SizeOf (si)
-			si.fMask = SIF_POS
-			si.nPos = *pVScrollPos
-			If ActiveCodePane = 0 Then
-				SetScrollInfo(sbScrollBarvTop, SB_CTL, @si, True)
-			Else
-				SetScrollInfo(sbScrollBarvBottom, SB_CTL, @si, True)
-			End If
-		#endif
 		PaintControl
 	End Property
 	
@@ -366,11 +331,7 @@ Namespace My.Sys.Forms
 			FSelEndChar = HistoryItem->SelEndChar
 		End If
 		bOldCommented = True
-		#ifdef __USE_GTK__
 			If cr Then
-		#else
-			If Handle Then
-		#endif
 			If Not bWithoutPaint Then ScrollToCaret
 		End If
 		OldnCaretPosX = nCaretPosX
@@ -1393,11 +1354,7 @@ Namespace My.Sys.Forms
 		FSelStartLine = Min(Content.Lines.Count - 1, Max(0, iSelStartLine))
 		FSelEndLine = Min(Content.Lines.Count - 1, Max(0, iSelEndLine))
 		If Not WithoutShow Then
-			#ifdef __USE_GTK__
 				If Handle Then
-			#else
-				If Handle Then
-			#endif
 				ScrollToCaret
 			End If
 		End If
@@ -1429,7 +1386,7 @@ Namespace My.Sys.Forms
 			End If
 		ElseIf CInt(Not bOldCommented) AndAlso CInt(FHistory.Count > 0) Then
 			item = FHistory.Items[FHistory.Count - 1]
-			_FillHistory item, "Matn kiritildi"
+			_FillHistory item, "Text entered"
 			item->SelStartLine = FSelStartLine
 			item->SelEndLine = FSelEndLine
 			item->SelStartChar = FSelStartChar
@@ -1469,11 +1426,7 @@ Namespace My.Sys.Forms
 		If OldLinesCount <> LinesCount Then
 			If OnLineChange Then OnLineChange(*Designer, This, FSelEndLine, IIf(Abs(LinesCount - OldLinesCount) = 1, OldLine, -1))
 		End If
-		#ifdef __USE_GTK__
 			If widget AndAlso cr Then
-		#else
-			If Handle Then
-		#endif
 			ScrollToCaret
 		End If
 		ChangingStarted = False
@@ -1673,7 +1626,7 @@ Namespace My.Sys.Forms
 	
 	Sub EditControl.CutToClipboard
 		CopyToClipboard
-		ChangeText "", 0, "Belgilangan matn qirqib olindi"
+		ChangeText "", 0, "Selected text cut"
 	End Sub
 	
 	Sub EditControl.CopyCurrentLineToClipboard
@@ -1713,7 +1666,7 @@ Namespace My.Sys.Forms
 			WLet(FECLine->Text, "")
 			Content.Lines.Add(FECLine)
 		End If
-		ChangeText "", 0, "Matn almashtirildi"
+		ChangeText "", 0, "Text replaced"
 		Exit Sub
 		ErrL:
 		MsgBox ErrDescription(Err) & " (" & Err & ") " & _
@@ -1797,7 +1750,7 @@ Namespace My.Sys.Forms
 	End Property
 	
 	Property EditControl.SelText(ByRef Value As WString)
-		ChangeText Value, 0, "Matn qo`shildi"
+		ChangeText Value, 0, "Text added"
 	End Property
 	
 	Function EditControl.SelTextLength As Integer
@@ -1969,13 +1922,8 @@ Namespace My.Sys.Forms
 		Dim As String FileEncodingText, NewLine, FileEncodingSymbols
 		Dim As Boolean FileSaved
 		If FileEncoding = FileEncodings.Utf8 Then
-			'#ifdef __USE_WINAPI__
-			'	FileEncodingText = "utf-8"
-			'	FileEncodingSymbols = Chr(&HEF, &HBB, &HBF)
-			'#else
 			FileEncodingText = "ascii"
 			FileEncodingSymbols = ""
-			'#endif
 		ElseIf FileEncoding = FileEncodings.Utf8BOM Then
 			FileEncodingText = "utf-8"
 			FileEncodingSymbols = Chr(&HEF, &HBB, &HBF)
@@ -2032,7 +1980,7 @@ Namespace My.Sys.Forms
 	End Sub
 	
 	Sub EditControl.Clear
-		ChangeText "", 0, "Matn tozalandi"
+		ChangeText "", 0, "Text cleared"
 	End Sub
 	
 	Function EditControl.LinesCount As Integer
@@ -2545,42 +2493,18 @@ Namespace My.Sys.Forms
 			End If
 			
 			If OldHScrollPos <> *pHScrollPos Then
-				#ifdef __USE_GTK__
 					If bDividedX AndAlso ActiveCodePane = 0 Then
 						gtk_adjustment_set_value(adjustmenthLeft, *pHScrollPos)
 					Else
 						gtk_adjustment_set_value(adjustmenthRight, *pHScrollPos)
 					End If
-				#else
-					si.cbSize = SizeOf (si)
-					si.fMask = SIF_POS
-					si.nPos = *pHScrollPos
-					If bDividedX AndAlso ActiveCodePane = 0 Then
-						SetScrollInfo(sbScrollBarhLeft, SB_CTL, @si, True)
-					Else
-						SetScrollInfo(sbScrollBarhRight, SB_CTL, @si, True)
-					End If
-					'SetScrollInfo(FHandle, SB_HORZ, @si, True)
-				#endif
 			End If
 			If OldVScrollPos <> *pVScrollPos Then
-				#ifdef __USE_GTK__
 					If ActiveCodePane = 0 Then
 						gtk_adjustment_set_value(adjustmentvTop, *pVScrollPos)
 					Else
 						gtk_adjustment_set_value(adjustmentvBottom, *pVScrollPos)
 					End If
-				#else
-					si.cbSize = SizeOf (si)
-					si.fMask = SIF_POS
-					si.nPos = *pVScrollPos
-					If ActiveCodePane = 0 Then
-						SetScrollInfo(sbScrollBarvTop, SB_CTL, @si, True)
-					Else
-						SetScrollInfo(sbScrollBarvBottom, SB_CTL, @si, True)
-					End If
-					'SetScrollInfo(FHandle, SB_VERT, @si, True)
-				#endif
 			End If
 			'If OldHScrollPos <> HScrollPos Or OldVScrollPos <> VScrollPos Then PaintControl
 		End If
@@ -2595,35 +2519,14 @@ Namespace My.Sys.Forms
 			OrElse (ActiveCodePane = 0 AndAlso ((bDividedX AndAlso (HCaretPos > iDividedX - dwCharX)) OrElse (bDividedY AndAlso (VCaretPos > iDividedY - dwCharY)))) Then
 			HCaretPos = -1
 		End If
-		#ifdef __USE_GTK__
 			If Scroll Then
 				CaretOn = True
 				PaintControl
 			End If
 			'gtk_render_insertion_cursor(gtk_widget_get_style_context(widget), cr, 10, 10, layout, 0, PANGO_DIRECTION_LTR)
-		#else
-			If pRenderTarget <> 0 Then
-				If Scroll Then
-					CaretOn = True
-					PaintControl
-				End If
-			End If
-			'			If OldCaretVisible <> CaretVisible Then
-			'				If CaretVisible Then
-			'					ShowCaret FHandle
-			'				Else
-			'					HideCaret FHandle
-			'				End If
-			'			End If
-			'If CaretVisible Then
-			SetCaretPos(ScaleX(HCaretPos), ScaleY(VCaretPos))
-			'End If
-		#endif
 		OldLine = FSelEndLine
 		OldChar = FSelEndChar
-		#ifdef __USE_GTK__
 			If CaretPosShowed >= 4 Then gdk_threads_add_timeout(This.BlinkTime, Cast(GSourceFunc, @Blink_cb), @This)
-		#endif
 		CaretPosShowed = 0
 	End Sub
 	
@@ -2662,7 +2565,7 @@ Namespace My.Sys.Forms
 				End If
 			Else
 				UpdateLock
-				Changing("Oldga surish")
+				Changing("Undo")
 				For i As Integer = iSelStartLine To iSelEndLine - IIf(iSelEndChar = 0, 1, 0)
 					FECLine = Content.Lines.Items[i]
 					If TabAsSpaces AndAlso ChoosedTabStyle = 0 Then
@@ -2702,7 +2605,7 @@ Namespace My.Sys.Forms
 			Dim n As Integer
 			Dim As Integer iSelStartLine, iSelEndLine, iSelStartChar, iSelEndChar
 			GetSelection iSelStartLine, iSelEndLine, iSelStartChar, iSelEndChar
-			Changing("Ortga surish")
+			Changing("Redo")
 			For i As Integer = iSelStartLine To iSelEndLine - IIf(iSelEndChar = 0, 1, 0)
 				FECLine = Content.Lines.Items[i]
 				n = Len(*FECLine->Text) - Len(LTrim(*FECLine->Text))
@@ -2725,7 +2628,7 @@ Namespace My.Sys.Forms
 		Dim As Integer n, nStart
 		Dim As Integer iSelStartLine, iSelEndLine, iSelStartChar, iSelEndChar
 		GetSelection iSelStartLine, iSelEndLine, iSelStartChar, iSelEndChar
-		Changing("Izoh qilish")
+		Changing("Comment")
 		For i As Integer = iSelStartLine To iSelEndLine - IIf(iSelEndChar = 0, 1, 0)
 			FECLine = Content.Lines.Items[i]
 			If i = iSelStartLine Then
@@ -2747,7 +2650,7 @@ Namespace My.Sys.Forms
 		Dim As Integer n, Capacity
 		Dim As Integer iSelStartLine, iSelEndLine, iSelStartChar, iSelEndChar
 		GetSelection iSelStartLine, iSelEndLine, iSelStartChar, iSelEndChar
-		Changing("Blokli izoh qilish")
+		Changing("Block comment")
 		iSelEndLine = iSelEndLine - IIf(iSelEndChar = 0, 1, 0)
 		For i As Integer = iSelStartLine To iSelEndLine
 			FECLine = Content.Lines.Items[i]
@@ -2778,7 +2681,7 @@ Namespace My.Sys.Forms
 		Dim As Integer n, CommentFlag
 		Dim As Integer iSelStartLine, iSelEndLine, iSelStartChar, iSelEndChar
 		GetSelection iSelStartLine, iSelEndLine, iSelStartChar, iSelEndChar
-		Changing("Izohni olish")
+		Changing("Uncomment")
 		For i As Integer = iSelStartLine To iSelEndLine - IIf(iSelEndChar = 0, 1, 0)
 			FECLine = Content.Lines.Items[i]
 			If .Left(Trim(*FECLine->Text, Any !"\t "), 2) = "/'" Then
@@ -2837,21 +2740,8 @@ Namespace My.Sys.Forms
 		HScrollMaxRight = 1024 'Max(0, (MaxLineWidth - (dwClientX - LeftMargin - dwCharX))) \ dwCharX
 		HScrollVCRight = 10
 		If CBool(OldHScrollMaxRight <> HScrollMaxRight) OrElse CBool(OldHScrollVCRight <> HScrollVCRight) OrElse WithChange Then
-			#ifdef __USE_GTK__
 				gtk_adjustment_set_upper(adjustmenthRight, HScrollMaxRight)
 				'gtk_adjustment_configure(adjustmenth, gtk_adjustment_get_value(adjustmenth), 0, HScrollMax, 1, 10, HScrollMax)
-			#else
-				'If HScrollEnabledRight Then
-				si.cbSize = SizeOf(si)
-				si.fMask  = SIF_RANGE Or SIF_PAGE
-				si.nMin   = 0
-				si.nMax   = HScrollMaxRight
-				si.nPage  = HScrollVCRight
-				SetScrollInfo(sbScrollBarhRight, SB_CTL, @si, True)
-				'End If
-				'EnableWindow sbScrollBarhRight, HScrollEnabledRight
-				'SetScrollInfo(FHandle, SB_HORZ, @si, True)
-			#endif
 		End If
 		
 		If bDividedX Then
@@ -2863,23 +2753,8 @@ Namespace My.Sys.Forms
 			Var HScrollEnabledLeft = CBool(HScrollMaxLeft)
 			
 			If CBool(OldHScrollMaxLeft <> HScrollMaxLeft) OrElse CBool(OldHScrollVCLeft <> HScrollVCLeft) OrElse WithChange Then
-				#ifdef __USE_GTK__
 					gtk_adjustment_set_upper(adjustmenthLeft, HScrollMaxRight)
 					'gtk_adjustment_configure(adjustmentv, gtk_adjustment_get_value(adjustmentv), 0, VScrollMax, 1, 10, VScrollMax / 10)
-				#else
-					If HScrollEnabledLeft Then
-						si.cbSize = SizeOf(si)
-						si.fMask  = SIF_RANGE Or SIF_PAGE
-						si.nMin   = 0
-						si.nMax   = HScrollMaxLeft
-						si.nPage  = HScrollVCLeft
-						SetScrollInfo(sbScrollBarhLeft, SB_CTL, @si, True)
-					End If
-					'If OldHScrollEnabled <> HScrollEnabled Then
-					'EnableWindow sbScrollBarhTop, HScrollEnabledLeft
-					'End If
-					'SetScrollInfo(FHandle, SB_VERT, @si, True)
-				#endif
 			End If
 		End If
 		
@@ -2893,24 +2768,9 @@ Namespace My.Sys.Forms
 		Var VScrollEnabledBottom = CBool(VScrollMaxBottom)
 		
 		If CBool(OldVScrollMaxBottom <> VScrollMaxBottom) OrElse CBool(OldVScrollVCBottom <> VScrollVCBottom) OrElse WithChange Then
-			#ifdef __USE_GTK__
 				gtk_adjustment_set_upper(adjustmentvBottom, VScrollMaxBottom)
 				gtk_adjustment_set_page_size(adjustmentvBottom, 0)
 				'gtk_adjustment_configure(adjustmentv, gtk_adjustment_get_value(adjustmentv), 0, VScrollMax, 1, 10, VScrollMax / 10)
-			#else
-				If VScrollEnabledBottom Then
-					si.cbSize = SizeOf(si)
-					si.fMask  = SIF_RANGE Or SIF_PAGE
-					si.nMin   = 0
-					si.nMax   = VScrollMaxBottom
-					si.nPage  = VScrollVCBottom
-					SetScrollInfo(sbScrollBarvBottom, SB_CTL, @si, True)
-				End If
-				'If OldVScrollEnabled <> VScrollEnabled Then
-				EnableWindow sbScrollBarvBottom, VScrollEnabledBottom
-				'End If
-				'SetScrollInfo(FHandle, SB_VERT, @si, True)
-			#endif
 		End If
 		
 		If bDividedY OrElse bDividedX Then
@@ -2923,24 +2783,9 @@ Namespace My.Sys.Forms
 			Var VScrollEnabledTop = CBool(VScrollMaxTop)
 			
 			If CBool(OldVScrollMaxTop <> VScrollMaxTop) OrElse CBool(OldVScrollVCTop <> VScrollVCTop) OrElse WithChange Then
-				#ifdef __USE_GTK__
 					gtk_adjustment_set_upper(adjustmentvTop, VScrollMaxTop)
 					gtk_adjustment_set_page_size(adjustmentvTop, 0)
 					'gtk_adjustment_configure(adjustmentv, gtk_adjustment_get_value(adjustmentv), 0, VScrollMax, 1, 10, VScrollMax / 10)
-				#else
-					If VScrollEnabledTop Then
-						si.cbSize = SizeOf(si)
-						si.fMask  = SIF_RANGE Or SIF_PAGE
-						si.nMin   = 0
-						si.nMax   = VScrollMaxTop
-						si.nPage  = VScrollVCTop
-						SetScrollInfo(sbScrollBarvTop, SB_CTL, @si, True)
-					End If
-					'If OldVScrollEnabled <> VScrollEnabled Then
-					EnableWindow sbScrollBarvTop, VScrollEnabledTop
-					'End If
-					'SetScrollInfo(FHandle, SB_VERT, @si, True)
-				#endif
 			End If
 		End If
 		
@@ -2972,7 +2817,6 @@ Namespace My.Sys.Forms
 	'	End Sub
 	
 	Function EditControl.TextWidth(ByRef sText As WString) As Integer
-		#ifdef __USE_GTK__
 			pango_layout_set_text(layout, ToUtf8(sText), Len(ToUtf8(sText)))
 			If cr Then
 				pango_cairo_update_layout(cr, layout)
@@ -2985,20 +2829,6 @@ Namespace My.Sys.Forms
 			Dim As PangoRectangle extend
 			pango_layout_line_get_pixel_extents(pll, NULL, @extend)
 			Return UnScaleX(extend.width)
-		#else
-			If pRenderTarget <> 0 Then
-				Dim pLayout As IDWriteTextLayout Ptr = 0
-				Dim Metrics As DWRITE_TEXT_METRICS
-				pDWriteFactory->lpVtbl->CreateTextLayout(pDWriteFactory, @sText, Len(sText), pFormat, FLT_MAX, FLT_MAX, @pLayout)
-				If pLayout <> 0 Then
-					pLayout->lpVtbl->GetMetrics(pLayout, @Metrics)
-					pLayout->lpVtbl->Release(pLayout): pLayout = 0
-					Return UnScaleX(Metrics.widthIncludingTrailingWhitespace)
-				End If
-			Else
-				Return Canvas.TextWidth(sText)
-			End If
-		#endif
 	End Function
 	
 	Sub GetColor(iColor As Long, ByRef iRED As Double, ByRef iGREEN As Double, ByRef iBLUE As Double)
@@ -3013,13 +2843,10 @@ Namespace My.Sys.Forms
 		End Select
 	End Sub
 	
-	#ifdef __USE_GTK__
 		Sub cairo_rectangle(cr As cairo_t Ptr, x As Double, y As Double, x1 As Double, y1 As Double, z As Boolean)
 			.cairo_rectangle(cr, x, y, x1 - x, y1 - y)
 		End Sub
-	#endif
 	
-	#ifdef __USE_GTK__
 		Sub cairo_rectangle_(cr As cairo_t Ptr, x As Double, y As Double, x1 As Double, y1 As Double, z As Boolean)
 			'.cairo_rectangle(cr, x, y, x1 - x, y1 - y)
 			cairo_move_to (cr, x, y)
@@ -3028,7 +2855,6 @@ Namespace My.Sys.Forms
 			cairo_line_to (cr, x, y1)
 			cairo_line_to (cr, x, y)
 		End Sub
-	#endif
 	
 	Sub EditControl.PaintText(CodePane As Integer, iLine As Integer, ByRef sText As WString, iStart As Integer, iEnd As Integer, ByRef Colors As ECColorScheme, ByRef addit As WString = "", Bold As Boolean = False, Italic As Boolean = False, Underline As Boolean = False, ByRef CameOut As Boolean = False)
 		'Dim s As WString Ptr
@@ -3043,7 +2869,6 @@ Namespace My.Sys.Forms
 		iPPos = 0
 		WLet(FLineLeft, GetTabbedText(.Left(sText, iStart), iPPos))
 		WLet(FLineRight, GetTabbedText(Mid(sText, iStart + 1, iEnd - iStart) & addit, iPPos))
-		#ifdef __USE_GTK__
 			Dim As PangoRectangle extend, extend2
 			Dim As Double iRED, iGREEN, iBLUE
 			extend.width = TextWidth(*FLineLeft)
@@ -3081,97 +2906,6 @@ Namespace My.Sys.Forms
 			cairo_set_source_rgb(cr, Colors.ForegroundRed, Colors.ForegroundGreen, Colors.ForegroundBlue)
 			pango_cairo_show_layout_line(cr, pl)
 			CameOut = x + extend2.width + 1 > ScaleX(dwClientX)
-		#else
-			If HighlightCurrentWord AndAlso @Colors <> @Selection AndAlso CurWord = Trim(*FLineRight) AndAlso CurWord <> "" Then
-				If StartsWith(*FLineRight, " ") Then
-					Var n = Len(*FLineRight) - Len(Trim(*FLineRight))
-					PaintText(CodePane, iLine, sText, iStart + n, iEnd, Colors, addit, Bold, Italic, Underline, CameOut)
-					Exit Sub
-				End If
-				SetBkColor(bufDC, CurrentWord.Background)
-				'ElseIf @Colors = @NormalText Then
-				'	SetBKMode(bufDC, TRANSPARENT)
-			Else
-				If Colors.Background = -1 OrElse Colors.Background = NormalText.Background Then
-					SetBkMode(bufDC, TRANSPARENT)
-				Else
-					SetBkColor(bufDC, Colors.Background)
-				End If
-			End If
-			If pRenderTarget <> 0 Then
-				pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @Type<D2D1_COLOR_F>(Colors.ForegroundRed, Colors.ForegroundGreen, Colors.ForegroundBlue, 1.0), 0, @pBrushForeground)
-				pDWriteFactory->lpVtbl->CreateTextLayout(pDWriteFactory, FLineLeft, Len(*FLineLeft), pFormat, FLT_MAX, FLT_MAX, @pLayout)
-				If pLayout <> 0 Then
-					pLayout->lpVtbl->GetMetrics(pLayout, @Metrics)
-					sz.cx = Metrics.widthIncludingTrailingWhitespace
-					sz.cy = Metrics.height
-					pLayout->lpVtbl->Release(pLayout): pLayout = 0
-				End If
-				Var x = ScaleX(LeftMargin - IIf(bDividedX AndAlso CodePane = 0, HScrollPosLeft, HScrollPosRight) * dwCharX + IIf(bDividedX AndAlso CodePane = 1, iDividedX + 7, 0)) + IIf(iStart = 0, 0, sz.cx)
-				Var y = ScaleY((iLine - IIf(CodePane = 0, VScrollPosTop, VScrollPosBottom)) * dwCharY + IIf(bDividedY AndAlso CodePane = 1, iDividedY + 7, 0)) + 1
-				SetRect(@rc, IIf(bDividedX And CodePane = 1, ScaleX(iDividedX + 7), 0), y, _
-				ScaleX(IIf(bDividedX AndAlso CodePane = 0, iDividedX, dwClientX)), y + ScaleY(dwCharY))
-				pDWriteFactory->lpVtbl->CreateTextLayout(pDWriteFactory, FLineRight, Len(*FLineRight), pFormat, FLT_MAX, FLT_MAX, @pLayout)
-				If pLayout <> 0 Then
-					pRenderTarget->lpVtbl->PushAxisAlignedClip(pRenderTarget, @Type<D2D1_RECT_F>(rc.Left, rc.Top, rc.Right, rc.Bottom), D2D1_ANTIALIAS_MODE_PER_PRIMITIVE)
-					pLayout->lpVtbl->GetMetrics(pLayout, @Metrics)
-					sz.cx = Metrics.widthIncludingTrailingWhitespace
-					sz.cy = Metrics.height + 1
-					If HighlightCurrentWord AndAlso @Colors <> @Selection AndAlso CurWord = Trim(*FLineRight) AndAlso CurWord <> "" Then
-						Dim clr As D2D1_COLOR_F = Type<D2D1_COLOR_F>(CurrentWord.BackgroundRed, CurrentWord.BackgroundGreen, CurrentWord.BackgroundBlue, 1.0)
-						If pBrushBackground = 0 Then
-							pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @clr, 0, @pBrushBackground)
-						Else
-							pBrushBackground->lpVtbl->SetColor(pBrushBackground, @clr)
-						End If
-						pRenderTarget->lpVtbl->FillRectangle(pRenderTarget, @Type<D2D1_RECT_F>(x - 1, y - 1, x + sz.cx + 1, y + sz.cy - 1 - (sz.cy - ScaleY(dwCharY))), Cast(ID2D1Brush Ptr, pBrushBackground))
-					ElseIf Colors.Background <> -1 AndAlso Colors.Background <> NormalText.Background Then
-						Dim clr As D2D1_COLOR_F = Type<D2D1_COLOR_F>(Colors.BackgroundRed, Colors.BackgroundGreen, Colors.BackgroundBlue, 1.0)
-						If pBrushBackground = 0 Then
-							pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @clr, 0, @pBrushBackground)
-						Else
-							pBrushBackground->lpVtbl->SetColor(pBrushBackground, @clr)
-						End If
-						pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @clr, 0, @pBrushBackground)
-						pRenderTarget->lpVtbl->FillRectangle(pRenderTarget, @Type<D2D1_RECT_F>(x - 1, y - 1, x + sz.cx + 1, y + sz.cy - 1 - (sz.cy - ScaleY(dwCharY))), Cast(ID2D1Brush Ptr, pBrushBackground))
-					End If
-					pRenderTarget->lpVtbl->DrawTextLayout(pRenderTarget, Type<D2D1_POINT_2F>(x, y - (sz.cy - ScaleY(dwCharY))), pLayout, Cast(ID2D1Brush Ptr, pBrushForeground), D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT)
-					pRenderTarget->lpVtbl->PopAxisAlignedClip(pRenderTarget)
-					pLayout->lpVtbl->Release(pLayout): pLayout = 0
-					CameOut = x + sz.cx + 1 > ScaleX(dwClientX)
-				End If
-			Else
-				GetTextExtentPoint32(Canvas.Handle, FLineLeft, Len(*FLineLeft), @sz)
-				Var x = ScaleX(LeftMargin - IIf(bDividedX AndAlso CodePane = 0, HScrollPosLeft, HScrollPosRight) * dwCharX + IIf(bDividedX AndAlso CodePane = 1, iDividedX + 7, 0)) + IIf(iStart = 0, 0, sz.cx)
-				Var y = ScaleY((iLine - IIf(CodePane = 0, VScrollPosTop, VScrollPosBottom)) * dwCharY + IIf(bDividedY AndAlso CodePane = 1, iDividedY + 7, 0))
-				SetRect(@rc, IIf(bDividedX And CodePane = 1, ScaleX(iDividedX + 7), 0), y, _
-				ScaleX(IIf(bDividedX AndAlso CodePane = 0, iDividedX, dwClientX)), y + ScaleY(dwCharY))
-				GetTextExtentPoint32(bufDC, FLineRight, Len(*FLineRight), @sz)
-				SetTextColor(bufDC, Colors.Foreground)
-				If Bold Or Italic Or Underline Then
-					Canvas.Font.Bold = Bold
-					Canvas.Font.Italic = Italic
-					Canvas.Font.Underline = Underline
-					SelectObject(bufDC, This.Canvas.Font.Handle)
-				End If
-				'TextOut(bufDC, ScaleX(LeftMargin - IIf(bDividedX AndAlso CodePane = 0, HScrollPosLeft, HScrollPosRight) * dwCharX + IIf(bDividedX AndAlso CodePane = 1, iDividedX + 7, 0)) + IIf(iStart = 0, 0, Sz.cx), ScaleY((iLine - IIf(CodePane = 0, VScrollPosTop, VScrollPosBottom)) * dwCharY + IIf(bDividedY AndAlso CodePane = 1, iDividedY + 7, 0)), FLineRight, Len(*FLineRight))
-				'Dim As POLYTEXT ppt
-				'ppt.lpstr = FLineRight
-				'ppt.n = Len(*FLineRight)
-				'ppt.uiFlags = ETO_CLIPPED Or ETO_OPAQUE
-				'DrawText(bufDC, FLineRight, Len(*FLineRight), @rc, DT_SINGLELINE Or DT_NOPREFIX)
-				ExtTextOut bufDC, x, y, ETO_CLIPPED, @rc, FLineRight, Len(*FLineRight), 0
-				'PolyTextOut bufDC, @ppt, 1
-				If Colors.Background = -1 OrElse Colors.Background = NormalText.Background Then SetBkMode(bufDC, OPAQUE)
-				If Bold Or Italic Or Underline Then
-					Canvas.Font.Bold = False
-					Canvas.Font.Italic = False
-					Canvas.Font.Underline = False
-					SelectObject(bufDC, This.Canvas.Font.Handle)
-				End If
-				CameOut = x + sz.cx + 1 > ScaleX(dwClientX)
-			End If
-		#endif
 		If CBool(CurExecutedLine <> iLine) AndAlso CBool(OldExecutedLine <> iLine) AndAlso CBool(Not FECLine->EndsCompleted) Then
 			FECLine->Ends.Add iEnd, @Colors
 		End If
@@ -3182,7 +2916,6 @@ Namespace My.Sys.Forms
 		This.Canvas.Font = This.Font
 		WLet(CurrentFontName, *EditorFontName)
 		CurrentFontSize = EditorFontSize
-		#ifdef __USE_GTK__
 			cairo_select_font_face(cr, *EditorFontName, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD)
 			cairo_set_font_size(cr, EditorFontSize)
 			
@@ -3202,17 +2935,6 @@ Namespace My.Sys.Forms
 			pango_layout_line_get_pixel_extents(pl, NULL, @extend)
 			dwCharX = UnScaleX(extend.width)
 			dwCharY = UnScaleY(extend.height)
-		#else
-			Dim As HDC hd = GetDC(FHandle)
-			SelectObject(hd, This.Font.Handle)
-			GetTextMetrics(hd, @tm)
-			ReleaseDC(FHandle, hd)
-			If bufDC <> 0 Then SelectObject(bufDC, This.Font.Handle)
-			dwCharX = UnScaleX(tm.tmAveCharWidth)
-			dwCharY = UnScaleY(tm.tmHeight)
-			CreateCaret(FHandle, 0, 0, ScaleY(dwCharY))
-			ShowCaret FHandle
-		#endif
 		CalculateLeftMargin
 		
 		dwClientX = ClientWidth
@@ -3879,75 +3601,12 @@ Namespace My.Sys.Forms
 		If ShowHolidayFrame AndAlso WithFrame Then bFull = True
 		bFull = True
 		If FHoverTime <> CodeEditorHoverTime Then FHoverTime = CodeEditorHoverTime
-		#ifdef __USE_GTK__
 			If cr = 0 Then Exit Sub
 			If CurrentFontSize <> EditorFontSize OrElse *CurrentFontName <> *EditorFontName Then
 				This.Font.Name = *EditorFontName
 				This.Font.Size = EditorFontSize
 				FontSettings
 			End If
-		#else
-			Dim As Boolean bFontChanged
-			If pRenderTarget <> 0 AndAlso Not UseDirect2D Then
-				ReleaseDirect2D
-				KillTimer FHandle, 2
-				Var b = Focused
-				DestroyWindow(sbScrollBarvTop)
-				DestroyWindow(sbScrollBarvBottom)
-				DestroyWindow(sbScrollBarhLeft)
-				DestroyWindow(sbScrollBarhRight)
-				hwndTT = 0
-				hwndTTDropDown = 0
-				hwndTTMouseHover = 0
-				Var pmnuCode = ContextMenu
-				ContextMenu = 0
-				RecreateWnd
-				ContextMenu = pmnuCode
-				Width = Width - 1
-				Width = Width + 1
-				SetScrollsInfo True
-			ElseIf CBool(pRenderTarget = 0) AndAlso g_Direct2DEnabled AndAlso UseDirect2D AndAlso bPainted Then
-				SetClientSize
-				If Focused Then
-					KillTimer FHandle, 2
-					SetTimer FHandle, 2, BlinkTime, @EC_TimerProcBlink
-				End If
-			End If
-			If CurrentFontSize <> EditorFontSize OrElse *CurrentFontName <> *EditorFontName Then
-				This.Font.Name = *EditorFontName
-				This.Font.Size = EditorFontSize
-				FontSettings
-				bFull = True
-			End If
-			If pRenderTarget = 0 Then
-				hd = GetDC(FHandle)
-				If bufDC = 0 Then
-					bufDC = CreateCompatibleDC(hd)
-					bufBMP = CreateCompatibleBitmap(hd, ScaleX(dwClientX), ScaleY(dwClientY))
-					This.Canvas.Handle = bufDC
-					This.Canvas.HandleSetted = True
-					SelectObject(bufDC, This.Font.Handle)
-					SelectObject(bufDC, bufBMP)
-				ElseIf OlddwClientX <> dwClientX OrElse OlddwClientY <> dwClientY Then
-					DeleteDC bufDC
-					DeleteObject bufBMP
-					bufDC = CreateCompatibleDC(hd)
-					bufBMP = CreateCompatibleBitmap(hd, ScaleX(dwClientX), ScaleY(dwClientY))
-					This.Canvas.Handle = bufDC
-					This.Canvas.HandleSetted = True
-					SelectObject(bufDC, This.Font.Handle)
-					SelectObject(bufDC, bufBMP)
-				End If
-				This.Canvas.Handle = bufDC
-				This.Canvas.HandleSetted = True
-			Else
-				SelectObject(Canvas.Handle, This.Font.Handle)
-			End If
-			HideCaret(FHandle)
-			If pRenderTarget <> 0 Then
-				pRenderTarget->lpVtbl->BeginDraw(pRenderTarget)
-			End If
-		#endif
 		'iMin = Min(FSelEnd, FSelStart)
 		'iMax = Max(FSelEnd, FSelStart)
 		'iLineIndex = LineFromCharIndex(iMax)
@@ -4049,88 +3708,24 @@ Namespace My.Sys.Forms
 			QavsBoshi = 0
 			MatnBoshi = 0
 			Matn = ""
-			#ifdef __USE_GTK__
 				Dim As Double iRED, iGREEN, iBLUE
 				If bDividedY Then
 					If zz = 0 Then
-						#ifdef __USE_GTK3__
 							cairo_rectangle (cr, ScaleX(LeftMargin), 0.0, ScaleX(gtk_widget_get_allocated_width (widget)), ScaleY(iDividedY), True)
-						#else
-							cairo_rectangle (cr, ScaleX(LeftMargin), 0.0, ScaleX(widget->allocation.Width), ScaleY(iDividedY), True)
-						#endif
 					Else
-						#ifdef __USE_GTK3__
 							cairo_rectangle (cr, ScaleX(LeftMargin), ScaleY(iDividedY + 7), ScaleX(gtk_widget_get_allocated_width (widget)), ScaleY(gtk_widget_get_allocated_height(widget)), True)
-						#else
-							cairo_rectangle (cr, ScaleX(LeftMargin), ScaleY(iDividedY + 7), ScaleX(widget->allocation.Width), ScaleY(widget->allocation.Height), True)
-						#endif
 					End If
 				ElseIf bDividedX Then
 					If zz = 0 Then
-						#ifdef __USE_GTK3__
 							cairo_rectangle (cr, ScaleX(LeftMargin), 0, ScaleX(iDividedX), ScaleY(gtk_widget_get_allocated_height(widget)), True)
-						#else
-							cairo_rectangle (cr, ScaleX(LeftMargin), 0, ScaleX(iDividedX), ScaleY(widget->allocation.Height), True)
-						#endif
 					Else
-						#ifdef __USE_GTK3__
 							cairo_rectangle (cr, ScaleX(iDividedX + 7 + LeftMargin), 0, ScaleX(gtk_widget_get_allocated_width (widget)), ScaleY(gtk_widget_get_allocated_height(widget)), True)
-						#else
-							cairo_rectangle (cr, ScaleX(iDividedX + 7 + LeftMargin), 0, ScaleX(widget->allocation.Width), ScaleY(widget->allocation.Height), True)
-						#endif
 					End If
 				Else
-					#ifdef __USE_GTK3__
 						cairo_rectangle (cr, ScaleX(LeftMargin), 0.0, ScaleX(gtk_widget_get_allocated_width (widget)), ScaleY(gtk_widget_get_allocated_height (widget)), True)
-					#else
-						cairo_rectangle (cr, ScaleX(LeftMargin), 0.0, ScaleX(widget->allocation.Width), ScaleY(widget->allocation.height), True)
-					#endif
 				End If
 				cairo_set_source_rgb(cr, NormalText.BackgroundRed, NormalText.BackgroundGreen, NormalText.BackgroundBlue)
 				cairo_fill (cr)
-			#else
-				'			This.Canvas.Font.Name = *EditorFontName
-				'			This.Canvas.Font.Size = EditorFontSize
-				If pRenderTarget = 0 Then
-					This.Canvas.Brush.Color = NormalText.Background
-					This.Canvas.Pen.Color = FoldLines.Foreground
-				Else
-					Dim ClrFG As D2D1_COLOR_F = Type<D2D1_COLOR_F>(FoldLines.ForegroundRed, FoldLines.ForegroundGreen, FoldLines.ForegroundBlue, 1.0)
-					If pBrushForeground = 0 Then
-						pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @ClrFG, 0, @pBrushForeground)
-					Else
-						pBrushForeground->lpVtbl->SetColor(pBrushForeground, @ClrFG)
-					End If
-					Dim clr As D2D1_COLOR_F = Type<D2D1_COLOR_F>(NormalText.BackgroundRed, NormalText.BackgroundGreen, NormalText.BackgroundBlue, 1.0)
-					If pBrushBackground= 0 Then
-						pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @clr, 0, @pBrushBackground)
-					Else
-						pBrushBackground->lpVtbl->SetColor(pBrushBackground, @clr)
-					End If
-				End If
-				If bDividedY Then
-					If zz = 0 Then
-						SetRect(@rc, ScaleX(LeftMargin), 0, ScaleX(dwClientX), ScaleY(iDividedY))
-					Else
-						SetRect(@rc, ScaleX(LeftMargin), ScaleY(iDividedY + 7), ScaleX(dwClientX), ScaleY(dwClientY))
-					End If
-				ElseIf bDividedX Then
-					If zz = 0 Then
-						SetRect(@rc, ScaleX(LeftMargin), 0, ScaleX(iDividedX), ScaleY(dwClientY))
-					Else
-						SetRect(@rc, ScaleX(iDividedX + 7 + LeftMargin), 0, ScaleX(dwClientX), ScaleY(dwClientY))
-					End If
-				Else
-					SetRect(@rc, ScaleX(LeftMargin), 0, ScaleX(dwClientX), ScaleY(dwClientY))
-				End If
-				If bFull OrElse OlddwClientX <> dwClientX OrElse OlddwClientY <> dwClientY OrElse OldPaintedVScrollPos(zz) <> VScrollPos OrElse OldPaintedHScrollPos(zz) <> HScrollPos OrElse iOldDivideY <> iDivideY OrElse iOldDividedY <> iDividedY OrElse iOldDivideX <> iDivideX OrElse iOldDividedX <> iDividedX OrElse CInt(bOldDividedX <> bDividedX) OrElse CInt(bOldDividedY <> bDividedY) Then
-					If pRenderTarget = 0 Then
-						FillRect bufDC, @rc, This.Canvas.Brush.Handle
-					Else
-						pRenderTarget->lpVtbl->FillRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rc.Left, rc.Top, rc.Right, rc.Bottom), Cast(ID2D1Brush Ptr, pBrushBackground))
-					End If
-				End If
-			#endif
 			i = -1
 			Var OldI = i
 			If VScrollPos > 0 AndAlso VScrollPos <= Content.Lines.Count Then iC = Cast(EditControlLine Ptr, Content.Lines.Items[VScrollPos - 1])->CommentIndex
@@ -4871,38 +4466,14 @@ Namespace My.Sys.Forms
 						Dim As ..Rect rec
 						If z = FSelEndLine + 1 Then
 							rec = Type(ScaleX(Max(-1, LeftMargin + -HScrollPos * dwCharX) + CodePaneX), ScaleY((i - VScrollPos - 1) * dwCharY + dwCharY + 1 + CodePaneY), ScaleX(IIf(bDividedX AndAlso zz = 0, iDividedX, This.Width)), ScaleY((i - VScrollPos - 1) * dwCharY + dwCharY + 1 + CodePaneY))
-							#ifdef __USE_GTK__
 								cairo_set_source_rgb(cr, CurrentLine.FrameRed, CurrentLine.FrameGreen, CurrentLine.FrameBlue)
 								cairo_rectangle (cr, rec.Left, rec.Top, rec.Right, rec.Bottom, True)
 								cairo_stroke(cr)
-							#else
-								If pRenderTarget = 0 Then
-									This.Canvas.Pen.Color = CurrentLine.Frame
-									'SelectObject bufDC, This.Canvas.Pen.Handle
-									MoveToEx bufDC, rec.Left, rec.Top - 1, 0
-									LineTo bufDC, rec.Right, rec.Top - 1
-								Else
-									pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @Type<D2D1_COLOR_F>(CurrentLine.FrameRed, CurrentLine.FrameGreen, CurrentLine.FrameBlue, 1.0), 0, @pBrushForeground)
-									pRenderTarget->lpVtbl->DrawLine(pRenderTarget, Type<D2D1_POINT_2F>(rec.Left + 1, rec.Top), Type<D2D1_POINT_2F>(rec.Right, rec.Top), pBrushForeground, 1)
-									If pBrushForeground Then pBrushForeground->lpVtbl->Release(pBrushForeground): pBrushForeground = 0
-								End If
-							#endif
 						Else
 							rec = Type(ScaleX(Max(-1, LeftMargin + -HScrollPos * dwCharX) + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + CodePaneY), ScaleX(IIf(bDividedX AndAlso zz = 0, iDividedX, This.Width)), ScaleY((i - VScrollPos) * dwCharY + dwCharY + 1 + CodePaneY))
-							#ifdef __USE_GTK__
 								cairo_set_source_rgb(cr, CurrentLine.FrameRed, CurrentLine.FrameGreen, CurrentLine.FrameBlue)
 								cairo_rectangle (cr, rec.Left, rec.Top, rec.Right, rec.Bottom, True)
 								cairo_stroke(cr)
-							#else
-								If pRenderTarget = 0 Then
-									This.Canvas.Brush.Color = CurrentLine.Frame
-									FrameRect bufDC, @rec, This.Canvas.Brush.Handle
-								Else
-									pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @Type<D2D1_COLOR_F>(CurrentLine.FrameRed, CurrentLine.FrameGreen, CurrentLine.FrameBlue, 1.0), 0, @pBrushForeground)
-									pRenderTarget->lpVtbl->DrawRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rec.Left + 1, rec.Top + 1, rec.Right, rec.Bottom), Cast(ID2D1Brush Ptr, pBrushForeground), 1, NULL)
-									If pBrushForeground Then pBrushForeground->lpVtbl->Release(pBrushForeground): pBrushForeground = 0
-								End If
-							#endif
 						End If
 					End If
 					If zz = ActiveCodePane AndAlso (FSelStartLine <> FSelEndLine Or FSelStartChar <> FSelEndChar) Then
@@ -4939,7 +4510,6 @@ Namespace My.Sys.Forms
 								Var iStart = IIf(te->StartLine = z, te->StartChar, 0), iEnd = IIf(te->EndLine = z, te->EndChar, Len(*s))
 								WLet(FLineLeft, GetTabbedText(..Left(*s, iStart), iPPos))
 								WLet(FLineRight, GetTabbedText(Mid(*s, iStart + 1, iEnd - iStart) & IIf(z <> te->EndLine, " ", ""), iPPos))
-								#ifdef __USE_GTK__
 									Dim As PangoRectangle extend, extend2
 									extend.width = TextWidth(*FLineLeft)
 									pango_layout_set_text(layout, ToUtf8(*FLineRight), Len(ToUtf8(*FLineRight)))
@@ -4953,73 +4523,26 @@ Namespace My.Sys.Forms
 									cairo_set_source_rgb(cr, FoldLines.ForegroundRed, FoldLines.ForegroundGreen, FoldLines.ForegroundBlue)
 									.cairo_rectangle (cr, LeftMargin - IIf(bDividedX AndAlso zz = 0, HScrollPosLeft, HScrollPosRight) * dwCharX + extend.width + IIf(bDividedX AndAlso zz = 1, iDividedX + 7, 0), (i - IIf(zz = 0, VScrollPosTop, VScrollPosBottom)) * dwCharY + IIf(bDividedY AndAlso zz = 1, iDividedY + 7, 0), extend2.width, dwCharY)
 									cairo_stroke(cr)
-								#else
-									GetTextExtentPoint32(bufDC, FLineLeft, Len(*FLineLeft), @sz)
-									Var x = ScaleX(LeftMargin - IIf(bDividedX AndAlso zz = 0, HScrollPosLeft, HScrollPosRight) * dwCharX + IIf(bDividedX AndAlso zz = 1, iDividedX + 7, 0)) + IIf(iStart = 0, 0, sz.cx)
-									Var y = ScaleY((i - IIf(zz = 0, VScrollPosTop, VScrollPosBottom)) * dwCharY + IIf(bDividedY AndAlso zz = 1, iDividedY + 7, 0))
-									Dim As ..Rect rec = Type(x, y, x + dwCharX * Len(*FLineRight), y + dwCharY)
-									If pRenderTarget = 0 Then
-										This.Canvas.Brush.Color = FoldLines.Foreground
-										FrameRect bufDC, @rec, This.Canvas.Brush.Handle
-									Else
-										pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @Type<D2D1_COLOR_F>(FoldLines.ForegroundRed, FoldLines.ForegroundGreen, FoldLines.ForegroundBlue, 1.0), 0, @pBrushForeground)
-										pRenderTarget->lpVtbl->DrawRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rec.Left + 1, rec.Top + 1, rec.Right, rec.Bottom), Cast(ID2D1Brush Ptr, pBrushForeground), 1, NULL)
-										If pBrushForeground Then pBrushForeground->lpVtbl->Release(pBrushForeground): pBrushForeground = 0
-									End If
-								#endif
 							End If
 						Next
 					End If
 					If HighlightBrackets Then
 						If z = BracketsStartLine AndAlso BracketsStart > -1 Then
 							Dim As ..Rect rec = Type(ScaleX(LeftMargin + -HScrollPos * dwCharX + TextWidth(GetTabbedText(..Left(*s, BracketsStart))) + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + 1 + CodePaneY), ScaleX(LeftMargin + -HScrollPos * dwCharX + TextWidth(GetTabbedText(..Left(*s, BracketsStart))) + dwCharX + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + dwCharY + CodePaneY))
-							#ifdef __USE_GTK__
 								cairo_set_source_rgb(cr, CurrentBrackets.FrameRed, CurrentBrackets.FrameGreen, CurrentBrackets.FrameBlue)
 								cairo_rectangle (cr, rec.Left, rec.Top, rec.Right, rec.Bottom, True)
 								cairo_stroke(cr)
-							#else
-								If pRenderTarget = 0 Then
-									This.Canvas.Brush.Color = CurrentBrackets.Frame
-									FrameRect bufDC, @rec, This.Canvas.Brush.Handle
-								Else
-									pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @Type<D2D1_COLOR_F>(CurrentBrackets.FrameRed, CurrentBrackets.FrameGreen, CurrentBrackets.FrameBlue, 1.0), 0, @pBrushForeground)
-									pRenderTarget->lpVtbl->DrawRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rec.Left + 1, rec.Top + 1, rec.Right, rec.Bottom), Cast(ID2D1Brush Ptr, pBrushForeground), 1, NULL)
-									If pBrushForeground Then pBrushForeground->lpVtbl->Release(pBrushForeground): pBrushForeground = 0
-								End If
-							#endif
 						End If
 						If z = BracketsEndLine AndAlso BracketsEnd > -1 Then
 							Dim As ..Rect rec = Type(ScaleX(LeftMargin + -HScrollPos * dwCharX + TextWidth(GetTabbedText(..Left(*s, BracketsEnd))) + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + 1 + CodePaneY), ScaleX(LeftMargin + -HScrollPos * dwCharX + TextWidth(GetTabbedText(..Left(*s, BracketsEnd))) + dwCharX + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + dwCharY + CodePaneY))
-							#ifdef __USE_GTK__
 								cairo_set_source_rgb(cr, CurrentBrackets.FrameRed, CurrentBrackets.FrameGreen, CurrentBrackets.FrameBlue)
 								cairo_rectangle (cr, rec.Left, rec.Top, rec.Right, rec.Bottom, True)
 								cairo_stroke(cr)
-							#else
-								If pRenderTarget = 0 Then
-									This.Canvas.Brush.Color = CurrentBrackets.Frame
-									FrameRect bufDC, @rec, This.Canvas.Brush.Handle
-								Else
-									pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @Type<D2D1_COLOR_F>(CurrentBrackets.FrameRed, CurrentBrackets.FrameGreen, CurrentBrackets.FrameBlue, 1.0), 0, @pBrushForeground)
-									pRenderTarget->lpVtbl->DrawRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rec.Left + 1, rec.Top + 1, rec.Right, rec.Bottom), Cast(ID2D1Brush Ptr, pBrushForeground), 1, NULL)
-									If pBrushForeground Then pBrushForeground->lpVtbl->Release(pBrushForeground): pBrushForeground = 0
-								End If
-							#endif
 						End If
 					End If
-					#ifdef __USE_GTK__
 						cairo_set_line_width (cr, 1)
-					#endif
 					If ShowSpaces Then
-						#ifdef __USE_GTK__
 							cairo_set_source_rgb(cr, SpaceIdentifiers.ForegroundRed, SpaceIdentifiers.ForegroundGreen, SpaceIdentifiers.ForegroundBlue)
-						#else
-							If pRenderTarget = 0 Then
-								This.Canvas.Pen.Color = SpaceIdentifiers.Foreground 'rgb(100, 100, 100) 'clLtGray
-								'SelectObject(bufDC, This.Canvas.Pen.Handle)
-							Else
-								pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @Type<D2D1_COLOR_F>(SpaceIdentifiers.ForegroundRed, SpaceIdentifiers.ForegroundGreen, SpaceIdentifiers.ForegroundBlue, 1.0), 0, @pBrushForeground)
-							End If
-						#endif
 						'WLet FLineLeft, GetTabbedText(*s, 0)
 						jj = 1
 						jPos = 0
@@ -5030,24 +4553,13 @@ Namespace My.Sys.Forms
 								jPos += 1
 								If LeftMargin + -HScrollPos * dwCharX + (jPos - 1) * (dwCharX) + dwCharX / 2 > 0 Then
 									'WLet FLineLeft, GetTabbedText(Left(*s, jj - 1))
-									#ifdef __USE_GTK__
 										.cairo_rectangle(cr, ScaleX(LeftMargin + -HScrollPos * dwCharX + (jPos - 1) * (dwCharX) + dwCharX / 2 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + dwCharY / 2 + CodePaneY), 1, 1)
 										cairo_fill(cr)
-									#else
-										If pRenderTarget = 0 Then
-											'GetTextExtentPoint32(bufDC, @Wstr(Left(*FLineLeft, jj - 1)), jj - 1, @Sz) 'Len(*FLineLeft)
-											'SetPixel bufDC, LeftMargin + -HScrollPos * dwCharX + IIF(jPos = 0, 0, Sz.cx) + dwCharX / 2, (i - VScrollPos) * dwCharY + dwCharY / 2, clBtnShadow
-											SetPixel bufDC, ScaleX(LeftMargin + -HScrollPos * dwCharX + (jPos - 1) * (dwCharX) + dwCharX / 2 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + Int(dwCharY / 2) + CodePaneY), SpaceIdentifiers.Foreground
-										Else
-											pRenderTarget->lpVtbl->DrawRectangle(pRenderTarget, @Type<D2D1_RECT_F>(ScaleX(LeftMargin + -HScrollPos * dwCharX + (jPos - 1) * (dwCharX) + dwCharX / 2 + CodePaneX) + 1, ScaleY((i - VScrollPos) * dwCharY + Int(dwCharY / 2) + CodePaneY) + 1, ScaleX(LeftMargin + -HScrollPos * dwCharX + (jPos - 1) * (dwCharX) + dwCharX / 2 + CodePaneX) + 1, ScaleY((i - VScrollPos) * dwCharY + Int(dwCharY / 2) + CodePaneY) + 1), Cast(ID2D1Brush Ptr, pBrushForeground), 1, NULL)
-										End If
-									#endif
 								End If
 							ElseIf sChar = !"\t" Then
 								jPP = TabWidth - (jPos + TabWidth) Mod TabWidth
 								If LeftMargin + -HScrollPos * dwCharX + jPos * (dwCharX) + jPP * dwCharX > 0 Then
 									'WLet FLineLeft, GetTabbedText(Left(*s, jj - 1))
-									#ifdef __USE_GTK__
 										cairo_move_to(cr, ScaleX(LeftMargin + -HScrollPos * dwCharX + jPos * (dwCharX) + 2 + CodePaneX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + dwCharY / 2 + CodePaneY) - 0.5)
 										cairo_line_to(cr, ScaleX(LeftMargin + -HScrollPos * dwCharX + jPos * (dwCharX) + jPP * dwCharX - 3 + CodePaneX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + dwCharY / 2 + CodePaneY) - 0.5)
 										cairo_move_to(cr, ScaleX(LeftMargin + -HScrollPos * dwCharX + jPos * (dwCharX) + jPP * dwCharX - 7 + CodePaneX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + dwCharY / 2 - 3 + CodePaneY) - 0.5)
@@ -5055,21 +4567,6 @@ Namespace My.Sys.Forms
 										cairo_move_to(cr, ScaleX(LeftMargin + -HScrollPos * dwCharX + jPos * (dwCharX) + jPP * dwCharX - 7 + CodePaneX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + dwCharY / 2 + 3 + CodePaneY) - 0.5)
 										cairo_line_to(cr, ScaleX(LeftMargin + -HScrollPos * dwCharX + jPos * (dwCharX) + jPP * dwCharX - 4 + CodePaneX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + dwCharY / 2 + CodePaneY) - 0.5)
 										cairo_stroke (cr)
-									#else
-										If pRenderTarget = 0 Then
-											'GetTextExtentPoint32(bufDC, FLineLeft, Len(*FLineLeft), @Sz)
-											MoveToEx bufDC,   ScaleX(LeftMargin + -HScrollPos * dwCharX + jPos * (dwCharX) + 2 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + Int(dwCharY / 2) + CodePaneY), 0
-											LineTo bufDC,     ScaleX(LeftMargin + -HScrollPos * dwCharX + jPos * (dwCharX) + jPP * dwCharX - 3 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + Int(dwCharY / 2) + CodePaneY)
-											MoveToEx bufDC,   ScaleX(LeftMargin + -HScrollPos * dwCharX + jPos * (dwCharX) + jPP * dwCharX - 7 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + Int(dwCharY / 2) - 3 + CodePaneY), 0
-											LineTo bufDC,     ScaleX(LeftMargin + -HScrollPos * dwCharX + jPos * (dwCharX) + jPP * dwCharX - 4 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + Int(dwCharY / 2) + CodePaneY)
-											MoveToEx bufDC,   ScaleX(LeftMargin + -HScrollPos * dwCharX + jPos * (dwCharX) + jPP * dwCharX - 7 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + Int(dwCharY / 2) + 3 + CodePaneY), 0
-											LineTo bufDC,     ScaleX(LeftMargin + -HScrollPos * dwCharX + jPos * (dwCharX) + jPP * dwCharX - 4 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + Int(dwCharY / 2) + CodePaneY)
-										Else
-											pRenderTarget->lpVtbl->DrawLine(pRenderTarget, Type<D2D1_POINT_2F>(ScaleX(LeftMargin + -HScrollPos * dwCharX + jPos * (dwCharX) + 2 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + Int(dwCharY / 2) + CodePaneY) + 1), Type<D2D1_POINT_2F>(ScaleX(LeftMargin + -HScrollPos * dwCharX + jPos * (dwCharX) + jPP * dwCharX - 3 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + Int(dwCharY / 2) + CodePaneY) + 1), pBrushForeground, 1)
-											pRenderTarget->lpVtbl->DrawLine(pRenderTarget, Type<D2D1_POINT_2F>(ScaleX(LeftMargin + -HScrollPos * dwCharX + jPos * (dwCharX) + jPP * dwCharX - 7 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + Int(dwCharY / 2) - 3 + CodePaneY)), Type<D2D1_POINT_2F>(ScaleX(LeftMargin + -HScrollPos * dwCharX + jPos * (dwCharX) + jPP * dwCharX - 4 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + Int(dwCharY / 2) + CodePaneY)), pBrushForeground, 1)
-											pRenderTarget->lpVtbl->DrawLine(pRenderTarget, Type<D2D1_POINT_2F>(ScaleX(LeftMargin + -HScrollPos * dwCharX + jPos * (dwCharX) + jPP * dwCharX - 7 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + Int(dwCharY / 2) + 3 + CodePaneY) + 1), Type<D2D1_POINT_2F>(ScaleX(LeftMargin + -HScrollPos * dwCharX + jPos * (dwCharX) + jPP * dwCharX - 4 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + Int(dwCharY / 2) + CodePaneY) + 1), pBrushForeground, 1)
-										End If
-									#endif
 								End If
 								jPos += jPP
 							Else
@@ -5085,7 +4582,6 @@ Namespace My.Sys.Forms
 				'p = Pos1 + 1
 				'Loop While Pos1 > 0
 				'Canvas.Font.Bold = False
-				#ifdef __USE_GTK__
 					cairo_rectangle (cr, ScaleX(CodePaneX), ScaleY((i - VScrollPos) * dwCharY + CodePaneY), ScaleX(LeftMargin - 25 + CodePaneX), ScaleY((i - VScrollPos + 1) * dwCharY + CodePaneY), True)
 					cairo_set_source_rgb(cr, LineNumbers.BackgroundRed, LineNumbers.BackgroundGreen, LineNumbers.BackgroundBlue)
 					cairo_fill (cr)
@@ -5103,97 +4599,17 @@ Namespace My.Sys.Forms
 					#endif
 					pango_cairo_show_layout_line(cr, pl)
 					'cairo_show_text(cr, *FLineLeft)
-				#else
-					WLet(FLineLeft, WStr(z + 1))
-					If pRenderTarget = 0 Then
-						GetTextExtentPoint32(bufDC, FLineLeft, Len(*FLineLeft), @sz)
-						SetRect(@rc, ScaleX(CodePaneX), ScaleY((i - VScrollPos) * dwCharY + CodePaneY), ScaleX(LeftMargin - 25 + CodePaneX), ScaleY((i - VScrollPos + 1) * dwCharY + CodePaneY))
-						'SelectObject(bufDC, This.Canvas.Font.Handle)
-						This.Canvas.Brush.Color = LineNumbers.Background
-						'SelectObject(bufDC, This.Canvas.Brush.Handle)
-						FillRect bufDC, @rc, This.Canvas.Brush.Handle
-						SetBkMode(bufDC, TRANSPARENT)
-						SetTextColor(bufDC, LineNumbers.Foreground)
-						TextOut(bufDC, ScaleX(LeftMargin - 25 + CodePaneX) - sz.cx, ScaleY((i - VScrollPos) * dwCharY + CodePaneY), FLineLeft, Len(*FLineLeft))
-						SetBkMode(bufDC, OPAQUE)
-					Else
-						Dim ClrFG As D2D1_COLOR_F = Type<D2D1_COLOR_F>(LineNumbers.ForegroundRed, LineNumbers.ForegroundGreen, LineNumbers.ForegroundBlue, 1.0)
-						If pBrushForeground = 0 Then
-							pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @ClrFG, 0, @pBrushForeground)
-						Else
-							pBrushForeground->lpVtbl->SetColor(pBrushForeground, @ClrFG)
-						End If
-						Dim clr As D2D1_COLOR_F = Type<D2D1_COLOR_F>(LineNumbers.BackgroundRed, LineNumbers.BackgroundGreen, LineNumbers.BackgroundBlue, 1.0)
-						If pBrushBackground= 0 Then
-							pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @clr, 0, @pBrushBackground)
-						Else
-							pBrushBackground->lpVtbl->SetColor(pBrushBackground, @clr)
-						End If
-						pDWriteFactory->lpVtbl->CreateTextLayout(pDWriteFactory, FLineLeft, Len(*FLineLeft), pFormat, sz.cx + 100, sz.cy + 100, @pLayout)
-						If pLayout <> 0 Then
-							pLayout->lpVtbl->GetMetrics(pLayout, @Metrics)
-							sz.cx = Metrics.widthIncludingTrailingWhitespace
-							sz.cy = Metrics.height + 1
-							SetRect(@rc, ScaleX(CodePaneX), ScaleY((i - VScrollPos) * dwCharY + CodePaneY), ScaleX(LeftMargin - 25 + CodePaneX), ScaleY((i - VScrollPos + 1) * dwCharY + CodePaneY))
-							pRenderTarget->lpVtbl->FillRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rc.Left, rc.Top, rc.Right, rc.Bottom), Cast(ID2D1Brush Ptr, pBrushBackground))
-							pRenderTarget->lpVtbl->DrawTextLayout(pRenderTarget, Type<D2D1_POINT_2F>(ScaleX(LeftMargin - 25 + CodePaneX) - sz.cx, ScaleY((i - VScrollPos) * dwCharY + CodePaneY) + 1), pLayout, Cast(ID2D1Brush Ptr, pBrushForeground), D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT)
-							pLayout->lpVtbl->Release(pLayout): pLayout = 0
-						End If
-					End If
-				#endif
-				#ifdef __USE_GTK__
 					cairo_rectangle(cr, ScaleX(LeftMargin - 25 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + CodePaneY), ScaleX(LeftMargin + CodePaneX), ScaleY((i - VScrollPos + 1) * dwCharY + CodePaneY), True)
 					cairo_set_source_rgb(cr, NormalText.BackgroundRed, NormalText.BackgroundGreen, NormalText.BackgroundBlue)
 					cairo_fill (cr)
-				#else
-					SetRect(@rc, ScaleX(LeftMargin - 25 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + CodePaneY), ScaleX(LeftMargin + CodePaneX), ScaleY(Min(IIf(bDividedY AndAlso zz = 0, iDividedY, (i - VScrollPos + 1) * dwCharY), (i - VScrollPos + 1) * dwCharY) + CodePaneY))
-					If pRenderTarget = 0 Then
-						This.Canvas.Brush.Color = NormalText.Background
-						FillRect bufDC, @rc, This.Canvas.Brush.Handle
-					Else
-						Dim clr As D2D1_COLOR_F = Type<D2D1_COLOR_F>(NormalText.BackgroundRed, NormalText.BackgroundGreen, NormalText.BackgroundBlue, 1.0)
-						If pBrushBackground= 0 Then
-							pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @clr, 0, @pBrushBackground)
-						Else
-							pBrushBackground->lpVtbl->SetColor(pBrushBackground, @clr)
-						End If
-						pRenderTarget->lpVtbl->FillRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rc.Left, rc.Top, rc.Right, rc.Bottom), Cast(ID2D1Brush Ptr, pBrushBackground))
-					End If
-				#endif
 				If FECLine->Breakpoint Then
-					#ifdef __USE_GTK__
 						cairo_set_source_rgb(cr, IndicatorLines.ForegroundRed, IndicatorLines.ForegroundGreen, IndicatorLines.ForegroundBlue)
 						cairo_arc(cr, ScaleX(LeftMargin - 11 + CodePaneX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + 8 + CodePaneY) - 0.5, ScaleX(5), 0, 2 * G_PI)
 						cairo_fill_preserve(cr)
 						cairo_set_source_rgb(cr, Breakpoints.IndicatorRed, Breakpoints.IndicatorGreen, Breakpoints.IndicatorBlue)
 						cairo_stroke(cr)
-					#else
-						If pRenderTarget = 0 Then
-							This.Canvas.Pen.Color = IndicatorLines.Foreground
-							This.Canvas.Brush.Color = Breakpoints.Indicator
-							SelectObject(bufDC, This.Canvas.Brush.Handle)
-							SelectObject(bufDC, This.Canvas.Pen.Handle)
-							Ellipse bufDC, ScaleX(2 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + 2 + CodePaneY), ScaleX(dwCharY - 2 + CodePaneX), ScaleY((i - VScrollPos + 1) * dwCharY - 2 + CodePaneY)
-						Else
-							Dim ClrFG As D2D1_COLOR_F = Type<D2D1_COLOR_F>(IndicatorLines.ForegroundRed, IndicatorLines.ForegroundGreen, IndicatorLines.ForegroundBlue, 1.0)
-							If pBrushForeground = 0 Then
-								pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @ClrFG, 0, @pBrushForeground)
-							Else
-								pBrushForeground->lpVtbl->SetColor(pBrushForeground, @ClrFG)
-							End If
-							Dim clr As D2D1_COLOR_F = Type<D2D1_COLOR_F>(Breakpoints.BackgroundRed, Breakpoints.BackgroundGreen, Breakpoints.BackgroundBlue, 1.0)
-							If pBrushBackground= 0 Then
-								pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @clr, 0, @pBrushBackground)
-							Else
-								pBrushBackground->lpVtbl->SetColor(pBrushBackground, @clr)
-							End If
-							pRenderTarget->lpVtbl->FillEllipse(pRenderTarget, @Type<D2D1_ELLIPSE>(Type<D2D1_POINT_2F>(ScaleX(2 + CodePaneX + (dwCharY - 4) / 2), ScaleY((i - VScrollPos) * dwCharY + 2 + CodePaneY + (dwCharY - 4) / 2)), ScaleX((dwCharY - 4) / 2), ScaleY((dwCharY - 4) / 2)), Cast(ID2D1Brush Ptr, pBrushBackground))
-							pRenderTarget->lpVtbl->DrawEllipse(pRenderTarget, @Type<D2D1_ELLIPSE>(Type<D2D1_POINT_2F>(ScaleX(2 + CodePaneX + (dwCharY - 4) / 2), ScaleY((i - VScrollPos) * dwCharY + 2 + CodePaneY + (dwCharY - 4) / 2)), ScaleX((dwCharY - 4) / 2), ScaleY((dwCharY - 4) / 2)), Cast(ID2D1Brush Ptr, pBrushForeground), 1, NULL)
-						End If
-					#endif
 				End If
 				If FECLine->Bookmark Then
-					#ifdef __USE_GTK__
 						Var x = LeftMargin - 18, y = (i - VScrollPos) * dwCharY + 3
 						Var width1 = 14, height1 = 10, radius = 2
 						cairo_set_source_rgb(cr, Bookmarks.IndicatorRed, Bookmarks.IndicatorGreen, Bookmarks.IndicatorBlue)
@@ -5209,57 +4625,21 @@ Namespace My.Sys.Forms
 						cairo_fill_preserve(cr)
 						cairo_set_source_rgb(cr, IndicatorLines.ForegroundRed, IndicatorLines.ForegroundGreen, IndicatorLines.ForegroundBlue)
 						cairo_stroke(cr)
-					#else
-						If pRenderTarget = 0 Then
-							This.Canvas.Pen.Color = IndicatorLines.Foreground
-							This.Canvas.Brush.Color = Bookmarks.Indicator
-							'					SelectObject(bufDC, This.Canvas.Brush.Handle)
-							'					SelectObject(bufDC, This.Canvas.Pen.Handle)
-							RoundRect bufDC, ScaleX(2 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + 4 + CodePaneY), ScaleX(dwCharY - 2 + CodePaneX), ScaleY((i - VScrollPos + 1) * dwCharY - 4 + CodePaneY), ScaleX(5), ScaleY(5)
-						Else
-							Dim ClrFG As D2D1_COLOR_F = Type<D2D1_COLOR_F>(IndicatorLines.ForegroundRed, IndicatorLines.ForegroundGreen, IndicatorLines.ForegroundBlue, 1.0)
-							If pBrushForeground = 0 Then
-								pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @ClrFG, 0, @pBrushForeground)
-							Else
-								pBrushForeground->lpVtbl->SetColor(pBrushForeground, @ClrFG)
-							End If
-							Dim clr As D2D1_COLOR_F = Type<D2D1_COLOR_F>(Bookmarks.BackgroundRed, Bookmarks.BackgroundGreen, Bookmarks.BackgroundBlue, 1.0)
-							If pBrushBackground= 0 Then
-								pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @clr, 0, @pBrushBackground)
-							Else
-								pBrushBackground->lpVtbl->SetColor(pBrushBackground, @clr)
-							End If
-							pRenderTarget->lpVtbl->FillRoundedRectangle(pRenderTarget, @Type<D2D1_ROUNDED_RECT>(Type<D2D1_RECT_F>(ScaleX(2 + CodePaneX) + 1, ScaleY((i - VScrollPos) * dwCharY + 4 + CodePaneY) + 1, ScaleX(dwCharY - 2 + CodePaneX) - 1, ScaleY((i - VScrollPos + 1) * dwCharY - 4 + CodePaneY) - 1), ScaleX(2.5), ScaleY(2.5)), Cast(ID2D1Brush Ptr, pBrushBackground))
-						End If
-					#endif
 				End If
-				#ifdef __USE_GTK__
 					cairo_set_source_rgb(cr, FoldLines.ForegroundRed, FoldLines.ForegroundGreen, FoldLines.ForegroundBlue)
-				#endif
 				If SyntaxEdit AndAlso Not Content.CStyle Then
 					If ShowHorizontalSeparatorLines AndAlso CBool(FECLineNext <> 0) AndAlso FECLineNext->Visible Then
 						For ii As Integer = 0 To FECLineNext->Statements.Count - 1
 							FECStatement = FECLineNext->Statements.Items[ii]
 							If (FECStatement->ConstructionIndex >= C_P_Region) AndAlso (FECStatement->ConstructionPart = 0) Then
-								#ifdef __USE_GTK__
 									cairo_move_to(cr, ScaleX(LeftMargin + CodePaneX) - 0.5, ScaleY((i + 1 - VScrollPos) * dwCharY + CodePaneY) - 0.5)
 									cairo_line_to(cr, ScaleX(IIf(bDividedX AndAlso zz = 0, iDividedX, dwClientX)) - 0.5, ScaleY((i + 1 - VScrollPos) * dwCharY + CodePaneY) - 0.5)
 									cairo_stroke (cr)
-								#else
-									If pRenderTarget = 0 Then
-										This.Canvas.Pen.Color = FoldLines.Foreground
-										MoveToEx bufDC, ScaleX(LeftMargin + CodePaneX), ScaleY((i + 1 - VScrollPos) * dwCharY + CodePaneY), 0
-										LineTo bufDC, ScaleX(IIf(bDividedX AndAlso zz = 0, iDividedX, dwClientX)), ScaleY((i + 1 - VScrollPos) * dwCharY + CodePaneY)
-									Else
-										pRenderTarget->lpVtbl->DrawLine(pRenderTarget, Type<D2D1_POINT_2F>(ScaleX(LeftMargin + CodePaneX), ScaleY((i + 1 - VScrollPos) * dwCharY + CodePaneY) + 1), Type<D2D1_POINT_2F>(ScaleX(IIf(bDividedX AndAlso zz = 0, iDividedX, dwClientX)), ScaleY((i + 1 - VScrollPos) * dwCharY + CodePaneY) + 1), pBrushForeground, 1)
-									End If
-								#endif
 								Exit For
 							End If
 						Next ii
 					End If
 					If FECLine->Collapsible Then
-						#ifdef __USE_GTK__
 							'cairo_set_source_rgb(cr, abs(GetRed(clGray) / 255.0), abs(GetGreen(clGray) / 255.0), abs(GetBlue(clGray) / 255.0))
 							cairo_rectangle(cr, ScaleX(LeftMargin - 15 + CodePaneX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + 4 + CodePaneY) - 0.5, ScaleX(LeftMargin - 7 + CodePaneX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + 12 + CodePaneY) - 0.5, True)
 							cairo_move_to(cr, ScaleX(LeftMargin - 13 + CodePaneX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + 8 + CodePaneY) - 0.5)
@@ -5275,61 +4655,15 @@ Namespace My.Sys.Forms
 								Next ii
 							End If
 							cairo_stroke (cr)
-						#else
-							If pRenderTarget = 0 Then
-								This.Canvas.Pen.Color = FoldLines.Foreground
-								This.Canvas.Brush.Color = NormalText.Background
-								'						SelectObject(bufDC, This.Canvas.Brush.Handle)
-								'						SelectObject(bufDC, This.Canvas.Pen.Handle)
-								Rectangle bufDC, ScaleX(LeftMargin - 15 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + 3 + CodePaneY), ScaleX(LeftMargin - 6 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + 12 + CodePaneY)
-								MoveToEx bufDC, ScaleX(LeftMargin - 13 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + 7 + CodePaneY), 0
-								LineTo bufDC, ScaleX(LeftMargin - 8 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + 7 + CodePaneY)
-							Else
-								pRenderTarget->lpVtbl->DrawRectangle(pRenderTarget, @Type<D2D1_RECT_F>(CInt(ScaleX(LeftMargin - 15 + CodePaneX)) + 1, CInt(ScaleY((i - VScrollPos) * dwCharY + 3 + CodePaneY)) + 1, CInt(ScaleX(LeftMargin - 6 + CodePaneX)), CInt(ScaleY((i - VScrollPos) * dwCharY + 12 + CodePaneY))), Cast(ID2D1Brush Ptr, pBrushForeground), 1, NULL)
-								pRenderTarget->lpVtbl->DrawLine(pRenderTarget, Type<D2D1_POINT_2F>(CInt(ScaleX(LeftMargin - 13 + CodePaneX)), CInt(ScaleY((i - VScrollPos) * dwCharY + 7 + CodePaneY)) + 1), Type<D2D1_POINT_2F>(CInt(ScaleX(LeftMargin - 8 + CodePaneX)), CInt(ScaleY((i - VScrollPos) * dwCharY + 7 + CodePaneY)) + 1), pBrushForeground, 1, NULL)
-							End If
-							If ShowHorizontalSeparatorLines Then
-								For ii As Integer = 0 To FECLine->Statements.Count - 1
-									FECStatement = FECLine->Statements.Items[ii]
-									If (FECStatement->ConstructionIndex >= C_P_Region) AndAlso (FECStatement->ConstructionPart = 0) Then
-										If pRenderTarget = 0 Then
-											MoveToEx bufDC, ScaleX(LeftMargin + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + CodePaneY), 0
-											LineTo bufDC, ScaleX(IIf(bDividedX AndAlso zz = 0, iDividedX, dwClientX)), ScaleY((i - VScrollPos) * dwCharY + CodePaneY)
-										Else
-											pRenderTarget->lpVtbl->DrawLine(pRenderTarget, Type<D2D1_POINT_2F>(CInt(ScaleX(LeftMargin + CodePaneX)), CInt(ScaleY((i - VScrollPos) * dwCharY + CodePaneY)) + 1), Type<D2D1_POINT_2F>(CInt(ScaleX(IIf(bDividedX AndAlso zz = 0, iDividedX, dwClientX))), CInt(ScaleY((i - VScrollPos) * dwCharY + CodePaneY)) + 1), pBrushForeground, 1)
-										End If
-										Exit For
-									End If
-								Next ii
-							End If
-						#endif
 						If OldCollapseIndex > 0 Then
-							#ifdef __USE_GTK__
 								cairo_move_to(cr, ScaleX(LeftMargin - 11 + CodePaneX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + 0 + CodePaneY) - 0.5)
 								cairo_line_to(cr, ScaleX(LeftMargin - 11 + CodePaneX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + 4 + CodePaneY) - 0.5)
 								cairo_stroke (cr)
-							#else
-								If pRenderTarget = 0 Then
-									MoveToEx bufDC, ScaleX(LeftMargin - 11 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + 0 + CodePaneY), 0
-									LineTo bufDC, ScaleX(LeftMargin - 11 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + 3 + CodePaneY)
-								Else
-									pRenderTarget->lpVtbl->DrawLine(pRenderTarget, Type<D2D1_POINT_2F>(ScaleX(LeftMargin - 11 + CodePaneX) + 1, ScaleY((i - VScrollPos) * dwCharY + 0 + CodePaneY)), Type<D2D1_POINT_2F>(ScaleX(LeftMargin - 11 + CodePaneX) + 1, ScaleY((i - VScrollPos) * dwCharY + 3 + CodePaneY) + 1), pBrushForeground, 1)
-								End If
-							#endif
 						End If
 						If FECLine->Collapsed Then
-							#ifdef __USE_GTK__
 								cairo_move_to(cr, ScaleX(LeftMargin - 11 + CodePaneX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + 6 + CodePaneY) - 0.5)
 								cairo_line_to(cr, ScaleX(LeftMargin - 11 + CodePaneX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + 10 + CodePaneY) - 0.5)
 								cairo_stroke (cr)
-							#else
-								If pRenderTarget = 0 Then
-									MoveToEx bufDC, ScaleX(LeftMargin - 11 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + 5 + CodePaneY), 0
-									LineTo bufDC, ScaleX(LeftMargin - 11 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + 10 + CodePaneY)
-								Else
-									pRenderTarget->lpVtbl->DrawLine(pRenderTarget, Type<D2D1_POINT_2F>(ScaleX(LeftMargin - 11 + CodePaneX) + 1, ScaleY((i - VScrollPos) * dwCharY + 5 + CodePaneY)), Type<D2D1_POINT_2F>(ScaleX(LeftMargin - 11 + CodePaneX) + 1, ScaleY((i - VScrollPos) * dwCharY + 10 + CodePaneY)), pBrushForeground, 1)
-								End If
-							#endif
 						End If
 						For ii As Integer = 0 To FECLine->Statements.IndexOf(FECLine->MainStatement) - 1
 							FECStatement = FECLine->Statements.Items[ii]
@@ -5344,75 +4678,30 @@ Namespace My.Sys.Forms
 							End If
 						Next ii
 						If ((Not FECLine->Collapsed) AndAlso CBool(CollapseIndex > 0)) OrElse (FECLine->Collapsed AndAlso (CBool(OldCollapseIndex > 0) OrElse Not FECLine->CollapsedFully)) Then 'CBool(OldCollapseIndex = 0) AndAlso
-							#ifdef __USE_GTK__
 								cairo_move_to(cr, ScaleX(LeftMargin - 11 + CodePaneX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + 12 + CodePaneY) - 0.5)
 								cairo_line_to(cr, ScaleX(LeftMargin - 11 + CodePaneX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + dwCharY + CodePaneY) - 0.5)
 								cairo_stroke (cr)
-							#else
-								If pRenderTarget = 0 Then
-									MoveToEx bufDC, ScaleX(LeftMargin - 11 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + 12 + CodePaneY), 0
-									LineTo bufDC, ScaleX(LeftMargin - 11 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + dwCharY + CodePaneY)
-								Else
-									pRenderTarget->lpVtbl->DrawLine(pRenderTarget, Type<D2D1_POINT_2F>(ScaleX(LeftMargin - 11 + CodePaneX) + 1, ScaleY((i - VScrollPos) * dwCharY + 12 + CodePaneY)), Type<D2D1_POINT_2F>(ScaleX(LeftMargin - 11 + CodePaneX) + 1, ScaleY((i - VScrollPos) * dwCharY + dwCharY + CodePaneY) + 1), pBrushForeground, 1)
-								End If
-							#endif
 						End If
 					ElseIf OldCollapseIndex > 0 Then
-						#ifdef __USE_GTK__
 							cairo_set_source_rgb(cr, FoldLines.ForegroundRed, FoldLines.ForegroundGreen, FoldLines.ForegroundBlue)
 							cairo_move_to(cr, ScaleX(LeftMargin - 11 + CodePaneX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + 0 + CodePaneY) - 0.5)
-						#else
-							If pRenderTarget = 0 Then
-								This.Canvas.Pen.Color = FoldLines.Foreground
-								This.Canvas.Brush.Color = NormalText.Background
-								'						SelectObject(bufDC, This.Canvas.Brush.Handle)
-								'						SelectObject(bufDC, This.Canvas.Pen.Handle)
-								MoveToEx bufDC, ScaleX(LeftMargin - 11 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + 0 + CodePaneY), 0
-							End If
-						#endif
 						If CollapseIndex = 0 Then
-							#ifdef __USE_GTK__
 								cairo_line_to(cr, ScaleX(LeftMargin - 11 + CodePaneX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + dwCharY / 2 + CodePaneY) - 0.5)
 								cairo_stroke (cr)
-							#else
-								If pRenderTarget = 0 Then
-									LineTo bufDC, ScaleX(LeftMargin - 11 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + dwCharY / 2 + CodePaneY)
-								Else
-									pRenderTarget->lpVtbl->DrawLine(pRenderTarget, Type<D2D1_POINT_2F>(ScaleX(LeftMargin - 11 + CodePaneX) + 1, ScaleY((i - VScrollPos) * dwCharY + 0 + CodePaneY)), Type<D2D1_POINT_2F>(ScaleX(LeftMargin - 11 + CodePaneX) + 1, ScaleY((i - VScrollPos) * dwCharY + dwCharY / 2 + CodePaneY) + 1), pBrushForeground, 1)
-								End If
-							#endif
 						Else
-							#ifdef __USE_GTK__
 								cairo_line_to(cr, ScaleX(LeftMargin - 11 + CodePaneX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + dwCharY + CodePaneY) - 0.5)
 								cairo_stroke (cr)
-							#else
-								If pRenderTarget = 0 Then
-									LineTo bufDC, ScaleX(LeftMargin - 11 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + dwCharY + CodePaneY)
-								Else
-									pRenderTarget->lpVtbl->DrawLine(pRenderTarget, Type<D2D1_POINT_2F>(ScaleX(LeftMargin - 11 + CodePaneX) + 1, ScaleY((i - VScrollPos) * dwCharY + 0 + CodePaneY)), Type<D2D1_POINT_2F>(ScaleX(LeftMargin - 11 + CodePaneX) + 1, ScaleY((i - VScrollPos) * dwCharY + dwCharY + CodePaneY) + 1), pBrushForeground, 1)
-								End If
-							#endif
 						End If
 						If FECLine->ConstructionIndex >= 0 AndAlso CInt(Constructions(FECLine->ConstructionIndex).Collapsible) And CInt(FECLine->ConstructionPart = 2) Then
-							#ifdef __USE_GTK__
 								cairo_move_to(cr, ScaleX(LeftMargin - 11 + CodePaneX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + dwCharY / 2 + CodePaneY) - 0.5)
 								cairo_line_to(cr, ScaleX(LeftMargin - 6 + CodePaneX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + dwCharY / 2 + CodePaneY) - 0.5)
 								cairo_stroke (cr)
-							#else
-								If pRenderTarget = 0 Then
-									MoveToEx bufDC, ScaleX(LeftMargin - 11 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + dwCharY / 2 + CodePaneY), 0
-									LineTo bufDC, ScaleX(LeftMargin - 6 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + dwCharY / 2 + CodePaneY)
-								Else
-									pRenderTarget->lpVtbl->DrawLine(pRenderTarget, Type<D2D1_POINT_2F>(ScaleX(LeftMargin - 11 + CodePaneX) + 1, ScaleY((i - VScrollPos) * dwCharY + dwCharY / 2 + CodePaneY) + 1), Type<D2D1_POINT_2F>(ScaleX(LeftMargin - 6 + CodePaneX), ScaleY((i - VScrollPos) * dwCharY + dwCharY / 2 + CodePaneY) + 1), pBrushForeground, 1)
-								End If
-							#endif
 						End If
 					End If
 				End If
 				'If i - VScrollPos > vlc1 Then Exit For 'AndAlso Not ChangeCase
 				OldCollapseIndex = CollapseIndex
 			Next z
-			#ifdef __USE_GTK__
 				cairo_rectangle (cr, ScaleX(CodePaneX), ScaleY(Min(IIf(bDividedY AndAlso zz = 0, iDividedY, dwClientY), (OldI - VScrollPos + 1) * dwCharY + CodePaneY)), ScaleX(LeftMargin - 25 + CodePaneX), ScaleY(IIf(bDividedY AndAlso zz = 0, iDividedY, dwClientY)), True)
 				cairo_set_source_rgb(cr, LineNumbers.BackgroundRed, LineNumbers.BackgroundGreen, LineNumbers.BackgroundBlue)
 				cairo_fill (cr)
@@ -5430,48 +4719,10 @@ Namespace My.Sys.Forms
 					'#endif
 				End If
 				'cairo_paint(cr)
-			#else
-				SetRect(@rc, ScaleX(CodePaneX), ScaleY(Min(IIf(bDividedY AndAlso zz = 0, iDividedY, dwClientY), (Max(0, OldI - VScrollPos + 1)) * dwCharY + CodePaneY)), ScaleX(LeftMargin - 25 + CodePaneX), ScaleY(IIf(bDividedY AndAlso zz = 0, iDividedY, dwClientY)))
-				If pRenderTarget = 0 Then
-					This.Canvas.Brush.Color = LineNumbers.Background
-					FillRect bufDC, @rc, This.Canvas.Brush.Handle
-				Else
-					Dim clr As D2D1_COLOR_F = Type<D2D1_COLOR_F>(LineNumbers.BackgroundRed, LineNumbers.BackgroundGreen, LineNumbers.BackgroundBlue, 1.0)
-					If pBrushBackground= 0 Then
-						pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @clr, 0, @pBrushBackground)
-					Else
-						pBrushBackground->lpVtbl->SetColor(pBrushBackground, @clr)
-					End If
-					pRenderTarget->lpVtbl->FillRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rc.Left, rc.Top, rc.Right, rc.Bottom), Cast(ID2D1Brush Ptr, pBrushBackground))
-				End If
-				SetRect(@rc, ScaleX(LeftMargin - 25 + CodePaneX), ScaleY(Min(IIf(bDividedY AndAlso zz = 0, iDividedY, dwClientY), (Max(0, OldI - VScrollPos + 1)) * dwCharY + CodePaneY)), ScaleX(LeftMargin + CodePaneX), ScaleY(IIf(bDividedY AndAlso zz = 0, iDividedY, dwClientY)))
-				If pRenderTarget = 0 Then
-					This.Canvas.Brush.Color = NormalText.Background
-					FillRect bufDC, @rc, This.Canvas.Brush.Handle
-				Else
-					Dim ClrFG As D2D1_COLOR_F = Type<D2D1_COLOR_F>(NormalText.ForegroundRed, NormalText.ForegroundGreen, NormalText.ForegroundBlue, 1.0)
-					If pBrushForeground = 0 Then
-						pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @ClrFG, 0, @pBrushForeground)
-					Else
-						pBrushForeground->lpVtbl->SetColor(pBrushForeground, @ClrFG)
-					End If
-					Dim clr As D2D1_COLOR_F = Type<D2D1_COLOR_F>(NormalText.BackgroundRed, NormalText.BackgroundGreen, NormalText.BackgroundBlue, 1.0)
-					If pBrushBackground= 0 Then
-						pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @clr, 0, @pBrushBackground)
-					Else
-						pBrushBackground->lpVtbl->SetColor(pBrushBackground, @clr)
-					End If
-					pRenderTarget->lpVtbl->FillRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rc.Left, rc.Top, rc.Right, rc.Bottom), Cast(ID2D1Brush Ptr, pBrushBackground))
-					If CaretOn Then
-						pRenderTarget->lpVtbl->DrawRectangle(pRenderTarget, @Type<D2D1_RECT_F>(ScaleX(HCaretPos) + 1, ScaleY(VCaretPos) + 1, ScaleX(HCaretPos) + 1, ScaleY(VCaretPos + dwCharY)), Cast(ID2D1Brush Ptr, pBrushForeground), 1, NULL)
-					End If
-				End If
-			#endif
 			OldPaintedVScrollPos(zz) = VScrollPos
 			OldPaintedHScrollPos(zz) = HScrollPos
 		Next zz
 		If Not bDividedX Then
-			#ifdef __USE_GTK__
 				cairo_rectangle(cr, 0, ScaleY(dwClientY - horizontalScrollBarHeight), ScaleX(7), ScaleY(dwClientY), True)
 				If g_darkModeEnabled Then
 					cairo_set_source_rgb(cr, Abs(GetRed(darkBkColor) / 255.0), Abs(GetGreen(darkBkColor) / 255.0), Abs(GetBlue(darkBkColor) / 255.0))
@@ -5486,25 +4737,8 @@ Namespace My.Sys.Forms
 					cairo_set_source_rgb(cr, 217 / 255.0, 217 / 255.0, 217 / 255.0)
 				End If
 				cairo_stroke (cr)
-			#else
-				SetRect(@rc, 0, ScaleY(dwClientY - 17), ScaleX(7), ScaleY(dwClientY))
-				If pRenderTarget = 0 Then
-					If g_darkModeEnabled Then
-						This.Canvas.Pen.Color = BGR(23, 23, 23)
-						This.Canvas.Brush.Color = darkBkColor
-					Else
-						This.Canvas.Pen.Color = BGR(217, 217, 217)
-						This.Canvas.Brush.Color = clBtnFace
-					End If
-					Rectangle bufDC, rc.Left, rc.Top, rc.Right, rc.Bottom
-				Else
-					pRenderTarget->lpVtbl->FillRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rc.Left, rc.Top, rc.Right, rc.Bottom), Cast(ID2D1Brush Ptr, pBrushBackground))
-					pRenderTarget->lpVtbl->DrawRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rc.Left, rc.Top, rc.Right, rc.Bottom), Cast(ID2D1Brush Ptr, pBrushForeground), 1, NULL)
-				End If
-			#endif
 		End If
 		If Not bDividedY Then
-			#ifdef __USE_GTK__
 				cairo_rectangle(cr, ScaleX(dwClientX - verticalScrollBarWidth), 0, ScaleX(dwClientX), ScaleY(7), True)
 				If g_darkModeEnabled Then
 					cairo_set_source_rgb(cr, Abs(GetRed(darkBkColor) / 255.0), Abs(GetGreen(darkBkColor) / 255.0), Abs(GetBlue(darkBkColor) / 255.0))
@@ -5519,24 +4753,7 @@ Namespace My.Sys.Forms
 					cairo_set_source_rgb(cr, 217 / 255.0, 217 / 255.0, 217 / 255.0)
 				End If
 				cairo_stroke (cr)
-			#else
-				SetRect(@rc, ScaleX(dwClientX - 17), 0, ScaleX(dwClientX), ScaleY(7))
-				If pRenderTarget = 0 Then
-					If g_darkModeEnabled Then
-						This.Canvas.Pen.Color = BGR(23, 23, 23)
-						This.Canvas.Brush.Color = darkBkColor
-					Else
-						This.Canvas.Pen.Color = BGR(217, 217, 217)
-						This.Canvas.Brush.Color = clBtnFace
-					End If
-					Rectangle bufDC, rc.Left, rc.Top, rc.Right, rc.Bottom
-				Else
-					pRenderTarget->lpVtbl->FillRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rc.Left, rc.Top, rc.Right, rc.Bottom), Cast(ID2D1Brush Ptr, pBrushBackground))
-					pRenderTarget->lpVtbl->DrawRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rc.Left, rc.Top, rc.Right, rc.Bottom), Cast(ID2D1Brush Ptr, pBrushForeground), 1, NULL)
-				End If
-			#endif
 		End If
-		#ifdef __USE_GTK__
 			cairo_rectangle(cr, ScaleX(dwClientX - verticalScrollBarWidth), ScaleY(dwClientY - horizontalScrollBarHeight), ScaleX(dwClientX), ScaleY(dwClientY), True)
 			If g_darkModeEnabled Then
 				cairo_set_source_rgb(cr, 23 / 255.0, 23 / 255.0, 23 / 255.0)
@@ -5544,17 +4761,7 @@ Namespace My.Sys.Forms
 				cairo_set_source_rgb(cr, 217 / 255.0, 217 / 255.0, 217 / 255.0)
 			End If
 			cairo_fill (cr)
-		#else
-			'FillRect bufDC, @rc, This.Canvas.Brush.Handle
-			SetRect(@rc, ScaleX(dwClientX - 17), ScaleY(dwClientY - 17), ScaleX(dwClientX), ScaleY(dwClientY))
-			If pRenderTarget = 0 Then
-				FillRect bufDC, @rc, This.Canvas.Brush.Handle
-			Else
-				pRenderTarget->lpVtbl->FillRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rc.Left, rc.Top, rc.Right, rc.Bottom), Cast(ID2D1Brush Ptr, pBrushBackground))
-			End If
-		#endif
 		If bDividedX Then
-			#ifdef __USE_GTK__
 				cairo_rectangle(cr, ScaleX(iDividedX - verticalScrollBarWidth), ScaleY(dwClientY - horizontalScrollBarHeight), ScaleX(iDividedX), ScaleY(dwClientY), True)
 				If g_darkModeEnabled Then
 					cairo_set_source_rgb(cr, 23 / 255.0, 23 / 255.0, 23 / 255.0)
@@ -5562,17 +4769,8 @@ Namespace My.Sys.Forms
 					cairo_set_source_rgb(cr, 217 / 255.0, 217 / 255.0, 217 / 255.0)
 				End If
 				cairo_fill (cr)
-			#else
-				SetRect(@rc, ScaleX(iDividedX - 17), ScaleY(dwClientY - 17), ScaleX(iDividedX), ScaleY(dwClientY))
-				If pRenderTarget = 0 Then
-					FillRect bufDC, @rc, This.Canvas.Brush.Handle
-				Else
-					pRenderTarget->lpVtbl->FillRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rc.Left, rc.Top, rc.Right, rc.Bottom), Cast(ID2D1Brush Ptr, pBrushBackground))
-				End If
-			#endif
 		End If
 		If bDividedX Then
-			#ifdef __USE_GTK__
 				cairo_rectangle(cr, ScaleX(iDividedX), ScaleY(-1), ScaleX(iDividedX + 7), ScaleY(dwClientY + 1), True)
 				If g_darkModeEnabled Then
 					cairo_set_source_rgb(cr, Abs(GetRed(darkBkColor) / 255.0), Abs(GetGreen(darkBkColor) / 255.0), Abs(GetBlue(darkBkColor) / 255.0))
@@ -5587,24 +4785,7 @@ Namespace My.Sys.Forms
 					cairo_set_source_rgb(cr, 217 / 255.0, 217 / 255.0, 217 / 255.0)
 				End If
 				cairo_stroke (cr)
-			#else
-				SetRect(@rc, ScaleX(iDividedX), -1, ScaleX(iDividedX + 7), ScaleY(dwClientY) + 1)
-				If pRenderTarget = 0 Then
-					If g_darkModeEnabled Then
-						This.Canvas.Pen.Color = BGR(130, 135, 144)
-						This.Canvas.Brush.Color = darkBkColor
-					Else
-						This.Canvas.Pen.Color = BGR(217, 217, 217)
-						This.Canvas.Brush.Color = clBtnFace
-					End If
-					Rectangle bufDC, rc.Left, rc.Top, rc.Right, rc.Bottom
-				Else
-					pRenderTarget->lpVtbl->FillRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rc.Left, rc.Top, rc.Right, rc.Bottom), Cast(ID2D1Brush Ptr, pBrushBackground))
-					pRenderTarget->lpVtbl->DrawRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rc.Left, rc.Top, rc.Right, rc.Bottom), Cast(ID2D1Brush Ptr, pBrushForeground), 1, NULL)
-				End If
-			#endif
 		ElseIf bDividedY Then
-			#ifdef __USE_GTK__
 				cairo_rectangle(cr, ScaleX(-1), ScaleY(iDividedY), ScaleX(dwClientX + 1), ScaleY(iDividedY + 7), True)
 				If g_darkModeEnabled Then
 					cairo_set_source_rgb(cr, Abs(GetRed(darkBkColor) / 255.0), Abs(GetGreen(darkBkColor) / 255.0), Abs(GetBlue(darkBkColor) / 255.0))
@@ -5619,66 +4800,19 @@ Namespace My.Sys.Forms
 					cairo_set_source_rgb(cr, 217 / 255.0, 217 / 255.0, 217 / 255.0)
 				End If
 				cairo_stroke (cr)
-			#else
-				SetRect(@rc, -1, ScaleY(iDividedY), ScaleX(dwClientX) + 1, ScaleY(iDividedY + 7))
-				If pRenderTarget = 0 Then
-					If g_darkModeEnabled Then
-						This.Canvas.Pen.Color = BGR(130, 135, 144)
-						This.Canvas.Brush.Color = darkBkColor
-					Else
-						This.Canvas.Pen.Color = BGR(217, 217, 217)
-						This.Canvas.Brush.Color = clBtnFace
-					End If
-					Rectangle bufDC, rc.Left, rc.Top, rc.Right, rc.Bottom
-				Else
-					pRenderTarget->lpVtbl->FillRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rc.Left, rc.Top, rc.Right, rc.Bottom), Cast(ID2D1Brush Ptr, pBrushBackground))
-					pRenderTarget->lpVtbl->DrawRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rc.Left, rc.Top, rc.Right, rc.Bottom), Cast(ID2D1Brush Ptr, pBrushForeground), 1, NULL)
-				End If
-			#endif
 		End If
 		
 		If bInDivideX Then
-			#ifdef __USE_GTK__
 				cairo_rectangle(cr, ScaleX(iDivideX), 0, ScaleX(iDivideX + 5), ScaleY(dwClientY), True)
 				cairo_set_source_rgb (cr, 1.0, 1.0, 1.0)
 				cairo_set_operator (cr, CAIRO_OPERATOR_DIFFERENCE)
 				cairo_fill(cr)
-			#else
-				SetRect(@rc, ScaleX(iDivideX), 0, ScaleX(iDivideX + 5), ScaleY(dwClientY))
-				If pRenderTarget = 0 Then
-					InvertRect bufDC, @rc
-				Else
-					Dim clr As D2D1_COLOR_F = Type<D2D1_COLOR_F>(0.0, 0.0, 0.0, 1.0)
-					If pBrushBackground= 0 Then
-						pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @clr, 0, @pBrushBackground)
-					Else
-						pBrushBackground->lpVtbl->SetColor(pBrushBackground, @clr)
-					End If
-					pRenderTarget->lpVtbl->FillRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rc.Left, rc.Top, rc.Right, rc.Bottom), Cast(ID2D1Brush Ptr, pBrushBackground))
-				End If
-			#endif
 		ElseIf bInDivideY Then
-			#ifdef __USE_GTK__
 				cairo_rectangle(cr, 0, ScaleY(iDivideY), ScaleX(dwClientX), ScaleY(iDivideY + 5), True)
 				cairo_set_source_rgb (cr, 1.0, 1.0, 1.0)
 				cairo_set_operator (cr, CAIRO_OPERATOR_DIFFERENCE)
 				cairo_fill(cr)
-			#else
-				SetRect(@rc, 0, ScaleY(iDivideY), ScaleX(dwClientX), ScaleY(iDivideY + 5))
-				If pRenderTarget = 0 Then
-					InvertRect bufDC, @rc
-				Else
-					Dim clr As D2D1_COLOR_F = Type<D2D1_COLOR_F>(0.0, 0.0, 0.0, 1.0)
-					If pBrushBackground= 0 Then
-						pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @clr, 0, @pBrushBackground)
-					Else
-						pBrushBackground->lpVtbl->SetColor(pBrushBackground, @clr)
-					End If
-					pRenderTarget->lpVtbl->FillRectangle(pRenderTarget, @Type<D2D1_RECT_F>(rc.Left, rc.Top, rc.Right, rc.Bottom), Cast(ID2D1Brush Ptr, pBrushBackground))
-				End If
-			#endif
 		End If
-		#ifdef __USE_GTK__
 			If FDropIndicatorActive AndAlso FDropIndicatorLine >= 0 AndAlso FDropIndicatorLine < Content.Lines.Count AndAlso FDropIndicatorPane = ActiveCodePane Then
 				Dim As Integer diCapY = GetCaretPosY(FDropIndicatorLine)
 				Dim As Integer diCapX = TextWidth(GetTabbedText(.Left(Lines(FDropIndicatorLine), FDropIndicatorChar)))
@@ -5694,55 +4828,6 @@ Namespace My.Sys.Forms
 					cairo_fill(cr)
 				End If
 			End If
-		#else
-			If FDropIndicatorActive AndAlso FDropIndicatorLine >= 0 AndAlso FDropIndicatorLine < Content.Lines.Count AndAlso FDropIndicatorPane = ActiveCodePane Then
-				Dim As Integer diCapY = GetCaretPosY(FDropIndicatorLine)
-				Dim As Integer diCapX = TextWidth(GetTabbedText(.Left(Lines(FDropIndicatorLine), FDropIndicatorChar)))
-				
-				Dim As Integer Ptr pDIHScrollPos, pDIVScrollPos
-				If bDividedX AndAlso FDropIndicatorPane = 0 Then
-					pDIHScrollPos = @HScrollPosLeft
-				Else
-					pDIHScrollPos = @HScrollPosRight
-				End If
-				If FDropIndicatorPane = 0 Then
-					pDIVScrollPos = @VScrollPosTop
-				Else
-					pDIVScrollPos = @VScrollPosBottom
-				End If
-				
-				Dim As Integer diX = LeftMargin + diCapX - *pDIHScrollPos * dwCharX
-				Dim As Integer diY = (diCapY - *pDIVScrollPos) * dwCharY
-				If FDropIndicatorPane = 1 Then
-					If bDividedX AndAlso diX >= 0 Then diX += iDividedX + 7
-					If bDividedY AndAlso diY >= 0 Then diY += iDividedY + 7
-				End If
-				
-				If diY >= 0 AndAlso diY <= dwClientY - dwCharY AndAlso diX >= LeftMargin AndAlso diX <= dwClientX Then
-					If pRenderTarget = 0 Then
-						This.Canvas.Pen.Color = SpaceIdentifiers.Foreground
-						This.Canvas.Brush.Color = SpaceIdentifiers.Foreground
-						Dim As Rect rcDrop
-						rcDrop.Left = ScaleX(diX)
-						rcDrop.Right = ScaleX(diX) + 2
-						rcDrop.Top = ScaleY(diY)
-						rcDrop.Bottom = ScaleY(diY + dwCharY)
-						FillRect bufDC, @rcDrop, This.Canvas.Brush.Handle
-					Else
-						Dim ClrDrop As D2D1_COLOR_F = Type<D2D1_COLOR_F>(SpaceIdentifiers.ForegroundRed, SpaceIdentifiers.ForegroundGreen, SpaceIdentifiers.ForegroundBlue, 1.0)
-						If pBrushForeground = 0 Then
-							pRenderTarget->lpVtbl->CreateSolidColorBrush(pRenderTarget, @ClrDrop, 0, @pBrushForeground)
-						Else
-							pBrushForeground->lpVtbl->SetColor(pBrushForeground, @ClrDrop)
-						End If
-						pRenderTarget->lpVtbl->DrawLine(pRenderTarget, _
-						Type<D2D1_POINT_2F>(ScaleX(diX) + 1, ScaleY(diY)), _
-						Type<D2D1_POINT_2F>(ScaleX(diX) + 1, ScaleY(diY + dwCharY)), _
-						Cast(ID2D1SolidColorBrush Ptr, pBrushForeground), 2)
-					End If
-				End If
-			End If
-		#endif
 		This.Canvas.HandleSetted = False
 		OlddwClientX = dwClientX
 		OlddwClientY = dwClientY
@@ -5767,13 +4852,9 @@ Namespace My.Sys.Forms
 	End Sub
 	
 	Sub EditControl.PaintControl(bFull As Boolean = False, OnlyCursor As Boolean = False)
-		#ifdef __USE_GTK__
 			'PaintControlPriv
 			bChanged = True
 			If GTK_IS_WIDGET(widget) Then gtk_widget_queue_draw(widget)
-		#else
-			PaintControlPriv(bFull, OnlyCursor)
-		#endif
 	End Sub
 	
 	Sub EditControl.Undo
@@ -5899,7 +4980,6 @@ Namespace My.Sys.Forms
 		Return True
 	End Function
 	
-	#ifdef __USE_GTK__
 		Sub EditControl.EC_HandleGtkDragDataGet(seldata As GtkSelectionData Ptr)
 			Dim As WString Ptr pSelText
 			WLet(pSelText, SelText)
@@ -5945,7 +5025,7 @@ Namespace My.Sys.Forms
 				End If
 			End If
 			
-			Changing "Drag && Drop: matn qo`yildi"
+			Changing "Drag && Drop: text dropped"
 			
 			If bSelfDrag AndAlso bIsMove Then
 				' 1) Avval eski (manba) matnni o'chiramiz
@@ -5996,12 +5076,11 @@ Namespace My.Sys.Forms
 			Dim As Integer OldSelStartLine = FSelStartLine, OldSelEndLine = FSelEndLine, OldSelStartChar = FSelStartChar, OldSelEndChar = FSelEndChar
 			FSelStartLine = FGtkPendingDeleteStartLine : FSelStartChar = FGtkPendingDeleteStartChar
 			FSelEndLine   = FGtkPendingDeleteEndLine   : FSelEndChar   = FGtkPendingDeleteEndChar
-			ChangeText "", 0, "Drag && Drop: matn ko`chirildi", , , True
+			ChangeText "", 0, "Drag && Drop: text moved", , , True
 			'FSelStartLine = OldSelStartLine: FSelStartChar = OldSelStartChar
 			'FSelEndLine   = OldSelEndLine: FSelEndChar   = OldSelEndChar
 			DragSourceECPtr = 0
 		End Sub
-	#endif
 	
 	
 	Const DRAG_SCROLL_MARGIN = 24   ' pikselda - chetdan qancha yaqin bo`lsa autoscroll boshlanadi
@@ -6062,70 +5141,22 @@ Namespace My.Sys.Forms
 		If DropDownShowed Then CloseDropDown
 		DropDownChar = iSelEndChar
 		DropDownShowed = True
-		#ifdef __USE_GTK__
 			Dim As gint x, y
 			gdk_window_get_origin(gtk_widget_get_window(widget), @x, @y)
 			gtk_window_move(GTK_WINDOW(winIntellisense), ScaleX(HCaretPos) + x, ScaleY(VCaretPos) + y)
 			gtk_widget_show_all(winIntellisense)
 			ShowDropDownToolTipAt HCaretPos + 250 + UnScaleX(x), VCaretPos + UnScaleY(y)
-		#else
-			pnlIntellisense.SetBounds HCaretPos, VCaretPos, 250, 0
-			cboIntellisense.ShowDropDown True
-			If LastItemIndex = -1 Then cboIntellisense.ItemIndex = -1
-			ShowDropDownToolTipAt HCaretPos + 250, VCaretPos
-		#endif
 		If OnShowDropDown Then OnShowDropDown(*Designer, This)
 	End Sub
 	
 	
 	Sub EditControl.ShowDropDownToolTipAt(X As Integer, Y As Integer)
-		#ifdef __USE_GTK__
 			DropDownToolTipItemIndex = lvIntellisense.SelectedItemIndex
-		#else
-			DropDownToolTipItemIndex = cboIntellisense.ItemIndex
-		#endif
 		If *FHintDropDown = "" Then WLet(FHintDropDown, " ")
-		#ifdef __USE_GTK__
 			gtk_label_set_markup(GTK_LABEL(lblDropDownTooltip), ToUtf8(Replace(*FHintDropDown, "<=", "\u003c=")))
 			gtk_window_move(GTK_WINDOW(winDropDownTooltip), ScaleX(X), ScaleY(Y))
 			gtk_window_resize(GTK_WINDOW(winDropDownTooltip), ScaleX(100), ScaleY(25))
 			gtk_widget_show_all(winDropDownTooltip)
-		#else
-			Dim As TOOLINFO    ti
-			ZeroMemory(@ti, SizeOf(ti))
-			
-			ti.cbSize = SizeOf(ti)
-			ti.hwnd   = FHandle
-			'ti.uId    = Cast(UINT, FHandle)
-			
-			If hwndTTDropDown = 0 Then
-				TTDropDown.CreateWnd
-				hwndTTDropDown = TTDropDown.Handle 'CreateWindowW(TOOLTIPS_CLASS, "", WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, Cast(HMENU, NULL), GetModuleHandle(NULL), NULL)
-				If g_darkModeEnabled Then
-					SetWindowTheme(hwndTTDropDown, "DarkMode_Explorer", nullptr)
-				End If
-				ti.uFlags = TTF_IDISHWND Or TTF_TRACK Or TTF_ABSOLUTE Or TTF_PARSELINKS Or TTF_TRANSPARENT
-				ti.hinst  = GetModuleHandle(NULL)
-				ti.lpszText  = FHintDropDown
-				
-				SendMessage(hwndTTDropDown, TTM_ADDTOOL, 0, Cast(LPARAM, @ti))
-			Else
-				SendMessage(hwndTTDropDown, TTM_GETTOOLINFO, 0, CInt(@ti))
-				
-				ti.lpszText = FHintDropDown
-				
-				SendMessage(hwndTTDropDown, TTM_UPDATETIPTEXT, 0, CInt(@ti))
-			End If
-			
-			SendMessage(hwndTTDropDown, TTM_SETMAXTIPWIDTH, 0, 1000)
-			SendMessage(hwndTTDropDown, TTM_TRACKACTIVATE, True, Cast(LPARAM, @ti))
-			
-			Var Result = SendMessage(hwndTTDropDown, TTM_GETBUBBLESIZE, 0, Cast(LPARAM, @ti))
-			
-			Dim As ..Rect rc, rc2
-			GetWindowRect(FHandle, @rc)
-			SendMessage(hwndTTDropDown, TTM_TRACKPOSITION, 0, MAKELPARAM(rc.Left + ScaleX(X), rc.Top + ScaleY(Y)))
-		#endif
 		This.SetFocus
 		DropDownToolTipShowed = True
 	End Sub
@@ -6133,49 +5164,12 @@ Namespace My.Sys.Forms
 	Sub EditControl.ShowMouseHoverToolTipAt(X As Integer, Y As Integer)
 		Dim As Boolean IsFocused = Focused
 		If *FHintMouseHover = "" Then WLet(FHintMouseHover, " ")
-		#ifdef __USE_GTK__
 			Dim As gint xorigin, yorigin
 			gtk_label_set_markup(GTK_LABEL(lblMouseHoverTooltip), ToUtf8(Replace(*FHintMouseHover, "<=", "\u003c=")))
 			gdk_window_get_origin(gtk_layout_get_bin_window(GTK_LAYOUT(widget)), @xorigin, @yorigin)
 			gtk_window_move(GTK_WINDOW(winMouseHoverTooltip), X + xorigin, Y + yorigin)
 			gtk_window_resize(GTK_WINDOW(winMouseHoverTooltip), 100, 25)
 			gtk_widget_show_all(winMouseHoverTooltip)
-		#else
-			Dim As TOOLINFO    ti
-			ZeroMemory(@ti, SizeOf(ti))
-			
-			ti.cbSize = SizeOf(ti)
-			ti.hwnd   = FHandle
-			'ti.uId    = Cast(UINT, FHandle)
-			
-			If hwndTTMouseHover = 0 Then
-				TTMouseHover.CreateWnd
-				hwndTTMouseHover = TTMouseHover.Handle 'CreateWindowW(TOOLTIPS_CLASS, "", WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, Cast(HMENU, NULL), GetModuleHandle(NULL), NULL)
-				If g_darkModeEnabled Then
-					SetWindowTheme(hwndTTMouseHover, "DarkMode_Explorer", nullptr)
-				End If
-				ti.uFlags = TTF_IDISHWND Or TTF_TRACK Or TTF_ABSOLUTE Or TTF_PARSELINKS Or TTF_TRANSPARENT
-				ti.hinst  = GetModuleHandle(NULL)
-				ti.lpszText  = FHintMouseHover
-				
-				SendMessage(hwndTTMouseHover, TTM_ADDTOOL, 0, Cast(LPARAM, @ti))
-			Else
-				SendMessage(hwndTTMouseHover, TTM_GETTOOLINFO, 0, CInt(@ti))
-				
-				ti.lpszText = FHintMouseHover
-				
-				SendMessage(hwndTTMouseHover, TTM_UPDATETIPTEXT, 0, CInt(@ti))
-			End If
-			
-			SendMessage(hwndTTMouseHover, TTM_SETMAXTIPWIDTH, 0, 1000)
-			SendMessage(hwndTTMouseHover, TTM_TRACKACTIVATE, True, Cast(LPARAM, @ti))
-			
-			Var Result = SendMessage(hwndTTMouseHover, TTM_GETBUBBLESIZE, 0, Cast(LPARAM, @ti))
-			
-			Dim As ..Rect rc, rc2
-			GetWindowRect(FHandle, @rc)
-			SendMessage(hwndTTMouseHover, TTM_TRACKPOSITION, 0, MAKELPARAM(rc.Left + ScaleX(X), rc.Top + ScaleY(Y)))
-		#endif
 		If IsFocused Then This.SetFocus
 		MouseHoverToolTipShowed = True
 	End Sub
@@ -6186,173 +5180,47 @@ Namespace My.Sys.Forms
 		Var HCaretPos = LeftMargin + nCaretPosX - IIf(bDividedX AndAlso ActiveCodePane = 0, HScrollPosLeft, HScrollPosRight) * dwCharX + IIf(bDividedX AndAlso ActiveCodePane = 1, iDividedX + 7, 0)
 		Var VCaretPos = (nCaretPosY - IIf(ActiveCodePane = 0, VScrollPosTop, VScrollPosBottom) + 1) * dwCharY + IIf(bDividedY AndAlso ActiveCodePane = 1, iDividedY + 7, 0)
 		ToolTipChar = iSelEndChar
-		#ifdef __USE_GTK__
 			Dim As gint x, y
 			gtk_label_set_markup(GTK_LABEL(lblTooltip), ToUtf8(Replace(*FHint, "<=", "\u003c=")))
 			gdk_window_get_origin(gtk_widget_get_window(widget), @x, @y)
 			gtk_window_move(GTK_WINDOW(winTooltip), ScaleX(HCaretPos) + x, ScaleY(VCaretPos) + y)
 			gtk_window_resize(GTK_WINDOW(winTooltip), ScaleX(100), ScaleY(25))
 			gtk_widget_show_all(winTooltip)
-		#else
-			Dim As TOOLINFO    ti
-			ZeroMemory(@ti, SizeOf(ti))
-			
-			ti.cbSize = SizeOf(ti)
-			ti.hwnd   = FHandle
-			'ti.uId    = Cast(UINT, FHandle)
-			
-			If hwndTT = 0 Then
-				TT.CreateWnd
-				hwndTT = TT.Handle 'CreateWindowW(TOOLTIPS_CLASS, "", WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, Cast(HMENU, NULL), GetModuleHandle(NULL), NULL)
-				If g_darkModeEnabled Then
-					SetWindowTheme(hwndTT, "DarkMode_Explorer", nullptr)
-				End If
-				ti.uFlags = TTF_IDISHWND Or TTF_TRACK Or TTF_ABSOLUTE Or TTF_PARSELINKS Or TTF_TRANSPARENT
-				ti.hinst  = GetModuleHandle(NULL)
-				ti.lpszText  = FHint
-				
-				SendMessage(hwndTT, TTM_ADDTOOL, 0, Cast(LPARAM, @ti))
-			Else
-				SendMessage(hwndTT, TTM_GETTOOLINFO, 0, CInt(@ti))
-				
-				ti.lpszText = FHint
-				
-				SendMessage(hwndTT, TTM_UPDATETIPTEXT, 0, CInt(@ti))
-			End If
-			
-			SendMessage(hwndTT, TTM_SETMAXTIPWIDTH, 0, 1000)
-			SendMessage(hwndTT, TTM_TRACKACTIVATE, True, Cast(LPARAM, @ti))
-			
-			Var Result = SendMessage(hwndTT, TTM_GETBUBBLESIZE, 0, Cast(LPARAM, @ti))
-			
-			Dim As ..Rect rc, rc2
-			GetWindowRect(FHandle, @rc)
-			SendMessage(hwndTT, TTM_TRACKPOSITION, 0, MAKELPARAM(rc.Left + ScaleX(HCaretPos), rc.Top + IIf(ShowTooltipsAtTheTop, ScaleY(VCaretPos - dwCharY) - HiWord(Result), ScaleY(VCaretPos + 5))))
-		#endif
 		ToolTipShowed = True
 	End Sub
 	
 	Sub EditControl.UpdateDropDownToolTip()
-		#ifdef __USE_GTK__
 			gtk_label_set_markup(GTK_LABEL(lblDropDownTooltip), ToUtf8(Replace(*FHintDropDown, "<=", "\u003c=")))
-		#else
-			If hwndTTDropDown <> 0 Then
-				Dim As TOOLINFO    ti
-				ZeroMemory(@ti, SizeOf(ti))
-				
-				ti.cbSize = SizeOf(ti)
-				ti.hwnd   = FHandle
-				
-				SendMessage(hwndTTDropDown, TTM_GETTOOLINFO, 0, CInt(@ti))
-				
-				If *FHintDropDown = "" Then WLet(FHintDropDown, " ")
-				
-				ti.lpszText = FHintDropDown
-				
-				SendMessage(hwndTTDropDown, TTM_UPDATETIPTEXT, 0, CInt(@ti))
-			End If
-		#endif
 	End Sub
 	
 	Sub EditControl.UpdateMouseHoverToolTip()
-		#ifdef __USE_GTK__
 			gtk_label_set_markup(GTK_LABEL(lblMouseHoverTooltip), ToUtf8(Replace(*FHintMouseHover, "<=", "\u003c=")))
-		#else
-			If hwndTTMouseHover <> 0 Then
-				Dim As TOOLINFO    ti
-				ZeroMemory(@ti, SizeOf(ti))
-				
-				ti.cbSize = SizeOf(ti)
-				ti.hwnd   = FHandle
-				
-				SendMessage(hwndTTMouseHover, TTM_GETTOOLINFO, 0, CInt(@ti))
-				
-				If *FHintMouseHover = "" Then WLet(FHintMouseHover, " ")
-				
-				ti.lpszText = FHintMouseHover
-				
-				SendMessage(hwndTTMouseHover, TTM_UPDATETIPTEXT, 0, CInt(@ti))
-			End If
-		#endif
 	End Sub
 	
 	Sub EditControl.UpdateToolTip()
-		#ifdef __USE_GTK__
 			gtk_label_set_markup(GTK_LABEL(lblTooltip), ToUtf8(Replace(*FHint, "<=", "\u003c=")))
-		#else
-			If hwndTT <> 0 Then
-				Dim As TOOLINFO    ti
-				ZeroMemory(@ti, SizeOf(ti))
-				
-				ti.cbSize = SizeOf(ti)
-				ti.hwnd   = FHandle
-				
-				SendMessage(hwndTT, TTM_GETTOOLINFO, 0, CInt(@ti))
-				
-				ti.lpszText = FHint
-				
-				SendMessage(hwndTT, TTM_UPDATETIPTEXT, 0, CInt(@ti))
-			End If
-		#endif
 	End Sub
 	
 	Sub EditControl.CloseDropDown()
 		DropDownShowed = False
-		#ifdef __USE_GTK__
 			gtk_widget_hide(GTK_WIDGET(winIntellisense))
-		#else
-			cboIntellisense.ShowDropDown False
-		#endif
 		CloseDropDownToolTip
 		If OnDropDownCloseUp Then OnDropDownCloseUp(*Designer, This)
 	End Sub
 	
 	Sub EditControl.CloseDropDownToolTip()
 		DropDownToolTipShowed = False
-		#ifdef __USE_GTK__
 			gtk_widget_hide(GTK_WIDGET(winDropDownTooltip))
-		#else
-			Dim As TOOLINFO    ti
-			ZeroMemory(@ti, SizeOf(ti))
-			
-			ti.cbSize = SizeOf(ti)
-			ti.hwnd   = FHandle
-			'ti.uId    = Cast(UINT, FHandle)
-			
-			SendMessage(hwndTTDropDown, TTM_TRACKACTIVATE, False, Cast(LPARAM, @ti))
-		#endif
 	End Sub
 	
 	Sub EditControl.CloseMouseHoverToolTip()
 		MouseHoverToolTipShowed = False
-		#ifdef __USE_GTK__
 			gtk_widget_hide(GTK_WIDGET(winMouseHoverTooltip))
-		#else
-			Dim As TOOLINFO    ti
-			ZeroMemory(@ti, SizeOf(ti))
-			
-			ti.cbSize = SizeOf(ti)
-			ti.hwnd   = FHandle
-			'ti.uId    = Cast(UINT, FHandle)
-			
-			SendMessage(hwndTTMouseHover, TTM_TRACKACTIVATE, False, Cast(LPARAM, @ti))
-		#endif
 	End Sub
 	
 	Sub EditControl.CloseToolTip()
 		ToolTipShowed = False
-		#ifdef __USE_GTK__
 			gtk_widget_hide(GTK_WIDGET(winTooltip))
-		#else
-			Dim As TOOLINFO    ti
-			ZeroMemory(@ti, SizeOf(ti))
-			
-			ti.cbSize = SizeOf(ti)
-			ti.hwnd   = FHandle
-			'ti.uId    = Cast(UINT, FHandle)
-			
-			SendMessage(hwndTT, TTM_TRACKACTIVATE, False, Cast(LPARAM, @ti))
-		#endif
 	End Sub
 	
 	Function GetIdentifierCase(ByRef IdentifierWord As String, ByRef OriginalCaseWord As String) As String
@@ -6387,7 +5255,6 @@ Namespace My.Sys.Forms
 		Return KeyWord
 	End Function
 	
-	#ifdef __USE_GTK__
 		Function EditControl.ActivateLink(label As GtkLabel Ptr, uri As gchar Ptr, user_data As gpointer) As Boolean
 			Dim As EditControl Ptr ec = user_data
 			If ec <> 0 Then
@@ -6396,72 +5263,24 @@ Namespace My.Sys.Forms
 			Return True
 		End Function
 		
-	#endif
 	
 	Sub EditControl.ProcessMessage(ByRef msg As Message)
 		'?GetMessageName(msg.msg)
 		Static bShifted As Boolean
 		Static bCtrl As Boolean
 		Static scrStyle As Integer, scrDirection As Integer
-		#ifdef __USE_GTK__
 			bShifted = msg.Event->button.state And GDK_SHIFT_MASK
 			bCtrl = msg.Event->button.state And GDK_CONTROL_MASK
-		#else
-			bShifted = GetKeyState(VK_SHIFT) And 8000
-			bCtrl = GetKeyState(VK_CONTROL) And 8000
-		#endif
 		'Base.ProcessMessage(msg)
-		#ifdef __USE_GTK__
 			Dim As GdkEvent Ptr e = msg.Event
 			Select Case msg.Event->type
-		#else
-			Select Case msg.Msg
-			Case CM_CREATE
-				'FontSettings()
-				
-				PaintControl
-		#endif
-			#ifdef __USE_GTK__
 			Case GDK_CONFIGURE
 				dwClientX = ClientWidth
 				dwClientY = ClientHeight
 				'Msg.result = True
 			Case GDK_EXPOSE
-			#else
-			Case WM_SIZE
-				Var dDividedX = iDividedX / dwClientX
-				Var dDividedY = iDividedY / dwClientY
-				dwClientX = UnScaleX(LoWord(msg.lParam))
-				dwClientY = UnScaleY(HiWord(msg.lParam))
-				If Not bDividedX Then
-					MoveWindow sbScrollBarhRight, ScaleX(7), ScaleY(dwClientY - 17), ScaleX(dwClientX - 17 - 7), ScaleY(17), False
-				Else
-					iDividedX = dwClientX * dDividedX
-					iDivideX = iDividedX
-					MoveWindow sbScrollBarvTop, ScaleX(iDividedX - 17), 0, ScaleX(17), ScaleY(dwClientY - 17), False
-					MoveWindow sbScrollBarhLeft, 0, ScaleY(dwClientY - 17), ScaleX(iDivideX - 17), ScaleY(17), False
-					MoveWindow sbScrollBarhRight, ScaleX(iDivideX + 7), ScaleY(dwClientY - 17), ScaleX(dwClientX - iDivideX - 7 - 17), ScaleY(17), False
-					RedrawWindow sbScrollBarhLeft, 0, 0, RDW_INVALIDATE
-				End If
-				If Not bDividedY Then
-					MoveWindow sbScrollBarvBottom, ScaleX(dwClientX - 17), ScaleY(7), ScaleX(17), ScaleY(dwClientY - 17 - 7), False
-				Else
-					iDividedY = dwClientY * dDividedY
-					iDivideY = iDividedY
-					MoveWindow sbScrollBarvTop, ScaleX(dwClientX - 17), 0, ScaleX(17), ScaleY(iDivideY), False
-					MoveWindow sbScrollBarvBottom, ScaleX(dwClientX - 17), ScaleY(iDivideY + 7), ScaleX(17), ScaleY(dwClientY - iDivideY - 7 - 17), False
-					RedrawWindow sbScrollBarvTop, 0, 0, RDW_INVALIDATE
-				End If
-				RedrawWindow sbScrollBarhRight, 0, 0, RDW_INVALIDATE
-				RedrawWindow sbScrollBarvBottom, 0, 0, RDW_INVALIDATE
-				SetClientSize()
-			#endif
 			SetScrollsInfo
-			#ifdef __USE_GTK__
 			Case GDK_SCROLL
-			#else
-			Case WM_MOUSEWHEEL
-			#endif
 			If ToolTipShowed Then CloseToolTip
 				If DropDownToolTipShowed Then CloseDropDownToolTip
 			If MouseHoverToolTipShowed Then CloseMouseHoverToolTip
@@ -6478,31 +5297,9 @@ Namespace My.Sys.Forms
 					Else
 						pHScrollPos = @HScrollPosRight
 					End If
-					#ifdef __USE_GTK__
 						adjustmenth = IIf(ActiveCodePane = 0, adjustmenthLeft, adjustmenthRight)
 						OldPos = gtk_adjustment_get_value(adjustmenth)
-						#ifdef __USE_GTK3__
 							scrDirection = e->scroll.delta_y
-						#else
-							scrDirection = IIf(e->scroll.direction = GDK_SCROLL_UP, -1, 1)
-						#endif
-					#else
-						sbScrollBarH = IIf(ActiveCodePane = 0, sbScrollBarhLeft, sbScrollBarhRight)
-						#ifdef __FB_64BIT__
-							If msg.wParam < 4000000000 Then
-								scrDirection = 1
-							Else
-								scrDirection = -1
-							End If
-						#else
-							scrDirection = Sgn(msg.wParam)
-						#endif
-						si.cbSize = SizeOf (si)
-						si.fMask  = SIF_ALL
-						GetScrollInfo (sbScrollBarH, SB_CTL, @si)
-						'GetScrollInfo (FHandle, SB_VERT, @si)
-						OldPos = si.nPos
-					#endif
 				Else
 					VScrollMax = IIf(ActiveCodePane = 0, VScrollMaxTop, VScrollMaxBottom)
 					If ActiveCodePane = 0 Then
@@ -6510,38 +5307,15 @@ Namespace My.Sys.Forms
 					Else
 						pVScrollPos = @VScrollPosBottom
 					End If
-					#ifdef __USE_GTK__
 						adjustmentv = IIf(ActiveCodePane = 0, adjustmentvTop, adjustmentvBottom)
 						OldPos = gtk_adjustment_get_value(adjustmentv)
-						#ifdef __USE_GTK3__
 							scrDirection = e->scroll.delta_y
-						#else
-							scrDirection = IIf(e->scroll.direction = GDK_SCROLL_UP, -1, 1)
-						#endif
-					#else
-						sbScrollBarV = IIf(ActiveCodePane = 0, sbScrollBarvTop, sbScrollBarvBottom)
-						#ifdef __FB_64BIT__
-							If msg.wParam < 4000000000 Then
-								scrDirection = 1
-							Else
-								scrDirection = -1
-							End If
-						#else
-							scrDirection = Sgn(msg.wParam)
-						#endif
-						si.cbSize = SizeOf (si)
-						si.fMask  = SIF_ALL
-						GetScrollInfo (sbScrollBarV, SB_CTL, @si)
-						'GetScrollInfo (FHandle, SB_VERT, @si)
-						OldPos = si.nPos
-					#endif
 				End If
 				If bCtrl Then
 					EditorFontSize = Max(1, EditorFontSize + scrDirection)
 					PaintControl
 				ElseIf VScrollMax <> 0 Then
 					If bShifted Then
-						#ifdef __USE_GTK__
 							If scrDirection > 0 Then
 								gtk_adjustment_set_value(adjustmenth, Min(OldPos + 3, gtk_adjustment_get_upper(adjustmenth)))
 							ElseIf scrDirection < 0 Then
@@ -6553,42 +5327,7 @@ Namespace My.Sys.Forms
 							'PaintControl
 							If GTK_IS_WIDGET(widget) Then gtk_widget_queue_draw(widget)
 							'End If
-						#else
-							If scrDirection = -1 Then
-								si.nPos = Min(si.nPos + 3, si.nMax)
-							Else
-								si.nPos = Max(si.nPos - 3, si.nMin)
-							End If
-							si.fMask = SIF_POS
-							SetScrollInfo(sbScrollBarH, SB_CTL, @si, True)
-							'SetScrollInfo(FHandle, SB_HORZ, @si, True)
-							GetScrollInfo(sbScrollBarH, SB_CTL, @si)
-							'GetScrollInfo(FHandle, SB_HORZ, @si)
-							If (Not si.nPos = OldPos) Then
-								*pHScrollPos = si.nPos
-								ShowCaretPos False
-								If DownButton = 0 Then
-									#ifdef __USE_GTK__
-										FSelEndLine = LineIndexFromPoint(IIf(e->button.x > 60000, 0, e->button.x), IIf(e->button.y > 60000, 0, e->button.y))
-										FSelEndChar = CharIndexFromPoint(IIf(e->button.x > 60000, 0, e->button.x), IIf(e->button.y > 60000, 0, e->button.y))
-										If e->button.x < LeftMargin Then
-									#else
-										dwTemp = GetMessagePos
-										psPoints = MAKEPOINTS(dwTemp)
-										poPoint.X = psPoints.x
-										poPoint.Y = psPoints.y
-										..ScreenToClient(Handle, @poPoint)
-										FSelEndLine = LineIndexFromPoint(UnScaleX(poPoint.X), UnScaleY(poPoint.Y))
-										FSelEndChar = CharIndexFromPoint(UnScaleX(poPoint.X), UnScaleY(poPoint.Y))
-										If poPoint.X < LeftMargin Then
-									#endif
-									End If
-								End If
-								PaintControl
-							End If
-						#endif
 					Else
-						#ifdef __USE_GTK__
 							If scrDirection > 0 Then
 								gtk_adjustment_set_value(adjustmentv, Min(OldPos + 3, gtk_adjustment_get_upper(adjustmentv)))
 							ElseIf scrDirection < 0 Then
@@ -6600,51 +5339,9 @@ Namespace My.Sys.Forms
 							'PaintControl
 							If GTK_IS_WIDGET(widget) Then gtk_widget_queue_draw(widget)
 							'End If
-						#else
-							If scrDirection = -1 Then
-								si.nPos = Min(si.nPos + 3, si.nMax)
-							Else
-								si.nPos = Max(si.nPos - 3, si.nMin)
-							End If
-							si.fMask = SIF_POS
-							SetScrollInfo(sbScrollBarV, SB_CTL, @si, True)
-							'SetScrollInfo(FHandle, SB_VERT, @si, True)
-							GetScrollInfo(sbScrollBarV, SB_CTL, @si)
-							'GetScrollInfo(FHandle, SB_VERT, @si)
-							If (Not si.nPos = OldPos) Then
-								*pVScrollPos = si.nPos
-								ShowCaretPos False
-								If DownButton = 0 Then
-									#ifdef __USE_GTK__
-										FSelEndLine = LineIndexFromPoint(IIf(e->button.x > 60000, 0, e->button.x), IIf(e->button.y > 60000, 0, e->button.y))
-										FSelEndChar = CharIndexFromPoint(IIf(e->button.x > 60000, 0, e->button.x), IIf(e->button.y > 60000, 0, e->button.y))
-										If e->button.x < LeftMargin Then
-									#else
-										dwTemp = GetMessagePos
-										psPoints = MAKEPOINTS(dwTemp)
-										poPoint.X = psPoints.x
-										poPoint.Y = psPoints.y
-										..ScreenToClient(Handle, @poPoint)
-										FSelEndLine = LineIndexFromPoint(UnScaleX(poPoint.X), UnScaleY(poPoint.Y))
-										FSelEndChar = CharIndexFromPoint(UnScaleX(poPoint.X), UnScaleY(poPoint.Y))
-										If poPoint.X < LeftMargin Then
-									#endif
-										If FSelEndLine < FSelStartLine Then
-											'FSelStart = LineFromCharIndex(FSelStart)
-											'FSelStart = CharIndexFromLine(FSelStart) + LineLength(FSelStart)
-											FSelStartChar = Len(*Cast(EditControlLine Ptr, Content.Lines.Item(FSelStartLine))->Text)
-										Else
-											FSelEndChar = Len(*Cast(EditControlLine Ptr, Content.Lines.Item(FSelEndLine))->Text)
-										End If
-									End If
-								End If
-								PaintControl
-							End If
-						#endif
 					End If
 				End If
 			End If
-			#ifdef __USE_GTK__
 			Case GDK_FOCUS_CHANGE
 				InFocus = Cast(GdkEventFocus Ptr, e)->in
 				If InFocus Then
@@ -6653,40 +5350,6 @@ Namespace My.Sys.Forms
 					If DropDownShowed Then CloseDropDown
 					If ToolTipShowed Then CloseToolTip
 				End If
-			#else
-			Case WM_SETFOCUS
-				CreateCaret(FHandle, 0, 0, ScaleY(dwCharY))
-				'ScrollToCaret
-				ShowCaret(FHandle)
-				FocusEC = @This
-				If pRenderTarget <> 0 Then
-					SetTimer FHandle, 2, BlinkTime, @EC_TimerProcBlink
-				End If
-			Case WM_KILLFOCUS
-				HideCaret(FHandle)
-				DestroyCaret()
-				If LCase(GetClassNameOf(Cast(HWND, msg.wParam))) <> "tooltips" Then
-					If ToolTipShowed Then CloseToolTip
-					If DropDownToolTipShowed Then CloseDropDownToolTip
-					If MouseHoverToolTipShowed Then CloseMouseHoverToolTip
-				End If
-				KillTimer FHandle, 2
-				CaretOn = False
-				If pRenderTarget <> 0 Then
-					PaintControl
-				End If
-			Case WM_UNDO
-				Undo
-				'Case WM_REDO
-			Case WM_CUT
-				CutToClipboard
-			Case WM_COPY
-				CopyToClipboard
-			Case WM_PASTE
-				PasteFromClipboard
-			Case WM_GETDLGCODE: msg.Result = DLGC_HASSETSEL Or DLGC_WANTCHARS Or DLGC_WANTALLKEYS Or DLGC_WANTARROWS Or DLGC_WANTMESSAGE Or DLGC_WANTTAB
-			#endif
-			#ifdef __USE_GTK__
 			Case GDK_KEY_PRESS
 				'bInMButtonClicked = False
 				bCtrl = msg.Event->key.state And GDK_CONTROL_MASK
@@ -6697,12 +5360,6 @@ Namespace My.Sys.Forms
 					End If
 				End If
 				Select Case e->key.keyval
-			#else
-			Case WM_KEYDOWN
-				bInMiddleScroll = False
-				Select Case msg.wParam
-			#endif
-				#ifdef __USE_GTK__
 				Case GDK_KEY_Cut
 					CutToClipboard
 				Case GDK_KEY_Copy
@@ -6713,12 +5370,7 @@ Namespace My.Sys.Forms
 					Redo
 				Case GDK_KEY_Undo
 					Undo
-				#endif
-				#ifdef __USE_GTK__
 				Case GDK_KEY_Home
-				#else
-				Case VK_HOME
-				#endif
 				Dim As WString Ptr sTmpLine = Cast(EditControlLine Ptr, Content.Lines.Item(FSelEndLine))->Text '
 				Dim As Integer lChar = Len(*sTmpLine) - Len(LTrim(*sTmpLine, Any !"\t ")) ' Skip the space oe TABs.
 				If FSelEndChar = lChar Then FSelEndChar = 0 Else FSelEndChar = lChar
@@ -6730,11 +5382,7 @@ Namespace My.Sys.Forms
 				ScrollToCaret
 				OldnCaretPosX = nCaretPosX
 				OldCharIndex = GetOldCharIndex
-				#ifdef __USE_GTK__
 				Case GDK_KEY_End
-				#else
-				Case VK_END
-				#endif
 				If bCtrl Then FSelEndLine = Content.Lines.Count - 1
 				FSelEndChar = Len(*Cast(EditControlLine Ptr, Content.Lines.Item(FSelEndLine))->Text)
 				If Not bShifted Then
@@ -6744,43 +5392,32 @@ Namespace My.Sys.Forms
 				ScrollToCaret
 				OldnCaretPosX = nCaretPosX
 				OldCharIndex = GetOldCharIndex
-				#ifdef __USE_GTK__
 				Case GDK_KEY_Escape
 					If DropDownShowed Then CloseDropDown()
 					If ToolTipShowed Then CloseToolTip()
-				#else
-				Case VK_ESCAPE
-					If DropDownShowed Then CloseDropDown()
-					If ToolTipShowed Then CloseToolTip()
-				#endif
-				#ifdef __USE_GTK__
 				Case GDK_KEY_Delete
-				#else
-				Case VK_DELETE
-				#endif
 				If bShifted Then
 					CutToClipboard
 				Else
 					If FSelEndLine = Content.Lines.Count - 1 And FSelEndChar = Len(*Cast(EditControlLine Ptr, Content.Lines.Item(Content.Lines.Count - 1))->Text) And FSelStartLine = FSelEndLine And FSelStartChar = FSelEndChar Then
 						Return
 					ElseIf FSelStartLine <> FSelEndLine Or FSelStartChar <> FSelEndChar Then
-						ChangeText "", 0, "Belgilangan matnni o`chirish"
+		ChangeText "", 0, "Selected text deleting"
 					ElseIf bCtrl Then
 						WordRight
-						ChangeText "", 0, "Olddagi so`zni o`chirish"
+						ChangeText "", 0, "Deleting next word"
 					Else
-						ChangeText "", 1, "Olddagi belgini o`chirish"
+						ChangeText "", 1, "Deleting next char"
 					End If
 				End If
-				#ifdef __USE_GTK__
 				Case GDK_KEY_BACKSPACE
 					If FSelStartLine = 0 And FSelEndLine = 0 And FSelStartChar = 0 And FSelEndChar = 0 Then
 						Return
 					ElseIf FSelStartLine <> FSelEndLine Or FSelStartChar <> FSelEndChar Then
-						ChangeText "", 0, "Belgilangan matn o`chirildi"
+						ChangeText "", 0, "Selected text deleted"
 					ElseIf bCtrl Then
 						WordLeft
-						ChangeText "", 0, "Ortdagi so`z o`chirildi"
+						ChangeText "", 0, "Previous word deleted"
 					Else
 						WLet(FLine, Lines(FSelEndLine))
 						Var n = Len(*FLine) - Len(LTrim(*FLine))
@@ -6798,13 +5435,8 @@ Namespace My.Sys.Forms
 							ChangeText "", -1
 						End If
 					End If
-				#endif
-				#ifdef __USE_GTK__
 				Case GDK_KEY_Left
 					msg.Result = True
-				#else
-				Case VK_LEFT
-				#endif
 				If CInt(FSelEndLine <> FSelStartLine Or FSelEndChar <> FSelStartChar) AndAlso CInt(Not bShifted) Then
 					ChangeSelPos True
 					ScrollToCaret
@@ -6824,12 +5456,8 @@ Namespace My.Sys.Forms
 					OldnCaretPosX = nCaretPosX
 					OldCharIndex = GetOldCharIndex
 				End If
-				#ifdef __USE_GTK__
 				Case GDK_KEY_Right
 					msg.Result = True
-				#else
-				Case VK_RIGHT
-				#endif
 				If CInt(FSelEndLine <> FSelStartLine Or FSelEndChar <> FSelStartChar) And CInt(Not bShifted) Then
 					ChangeSelPos False
 					ScrollToCaret
@@ -6849,26 +5477,14 @@ Namespace My.Sys.Forms
 					OldnCaretPosX = nCaretPosX
 					OldCharIndex = GetOldCharIndex
 				End If
-				#ifdef __USE_GTK__
 				Case GDK_KEY_Up
 					msg.Result = True
-				#else
-				Case VK_UP
-				#endif
 				If DropDownShowed Then
-					#ifdef __USE_GTK__
 						If Max(FocusedItemIndex, lvIntellisense.SelectedItemIndex) > 0 Then
 							LastItemIndex = Max(FocusedItemIndex, lvIntellisense.SelectedItemIndex) - 1
 							FocusedItemIndex = LastItemIndex
 							lvIntellisense.SelectedItemIndex = LastItemIndex
 						End If
-					#else
-						If Max(FocusedItemIndex, cboIntellisense.ItemIndex) > 0 Then
-							LastItemIndex = Max(FocusedItemIndex, cboIntellisense.ItemIndex) - 1
-							FocusedItemIndex = LastItemIndex
-							cboIntellisense.ItemIndex = LastItemIndex
-						End If
-					#endif
 				ElseIf bCtrl Then
 					Dim bFind As Boolean
 					For i As Integer = FSelEndLine - 1 To 1 Step -1
@@ -6912,12 +5528,8 @@ Namespace My.Sys.Forms
 					End If
 					ScrollToCaret
 				End If
-				#ifdef __USE_GTK__
 				Case GDK_KEY_Down
 					msg.Result = True
-				#else
-				Case VK_DOWN
-				#endif
 				If DropDownShowed Then
 					'keybd_event(VK_DOWN, 0, KEYEVENTF_EXTENDEDKEY, 0)
 					'                    SendMessage(cboIntellisense.Handle, WM_KEYDOWN, Cast(WPAram, VK_DOWN), 0)
@@ -6927,19 +5539,11 @@ Namespace My.Sys.Forms
 					'    PostMessage(Info.hwndList, LB_SETCURSEL, cboIntellisense.ItemIndex + 1, 0)
 					'End If
 					'?Info.hwndList
-					#ifdef __USE_GTK__
 						If Max(FocusedItemIndex, lvIntellisense.SelectedItemIndex) < lvIntellisense.ListItems.Count - 1 Then
 							LastItemIndex = Max(FocusedItemIndex, lvIntellisense.SelectedItemIndex + 1)
 							FocusedItemIndex = LastItemIndex
 							lvIntellisense.SelectedItemIndex = LastItemIndex
 						End If
-					#else
-						If Max(FocusedItemIndex, cboIntellisense.ItemIndex) < cboIntellisense.Items.Count - 1 Then
-							LastItemIndex = Max(FocusedItemIndex, cboIntellisense.ItemIndex + 1)
-							FocusedItemIndex = LastItemIndex
-							cboIntellisense.ItemIndex = LastItemIndex
-						End If
-					#endif
 				ElseIf bCtrl Then
 					Dim bFind As Boolean
 					For i As Integer = FSelEndLine + 1 To GetLineIndex(Content.Lines.Count - 1) - 1
@@ -6984,17 +5588,9 @@ Namespace My.Sys.Forms
 					End If
 					ScrollToCaret
 				End If
-				#ifdef __USE_GTK__
 				Case GDK_KEY_Page_Up
-				#else
-				Case VK_PRIOR
-				#endif
 				If DropDownShowed Then
-					#ifdef __USE_GTK__
 						If lvIntellisense.SelectedItemIndex > 1 Then LastItemIndex = Max(0, lvIntellisense.SelectedItemIndex - 6): lvIntellisense.SelectedItemIndex = LastItemIndex
-					#else
-						If cboIntellisense.ItemIndex > 1 Then LastItemIndex = Max(0, cboIntellisense.ItemIndex - 6): cboIntellisense.ItemIndex = LastItemIndex
-					#endif
 				ElseIf bCtrl Then
 					Dim bFind As Boolean
 					For i As Integer = FSelEndLine - 1 To 0 Step -1
@@ -7029,17 +5625,9 @@ Namespace My.Sys.Forms
 					FSelStartChar = FSelEndChar
 				End If
 				ScrollToCaret
-				#ifdef __USE_GTK__
 				Case GDK_KEY_Page_Down
-				#else
-				Case VK_NEXT
-				#endif
 				If DropDownShowed Then
-					#ifdef __USE_GTK__
 						If lvIntellisense.SelectedItemIndex < lvIntellisense.ListItems.Count - 1 Then LastItemIndex = Min(lvIntellisense.SelectedItemIndex + 6, lvIntellisense.ListItems.Count - 1): lvIntellisense.SelectedItemIndex = LastItemIndex
-					#else
-						If cboIntellisense.ItemIndex < cboIntellisense.Items.Count - 1 Then LastItemIndex = Min(cboIntellisense.ItemIndex + 6, cboIntellisense.Items.Count - 1): cboIntellisense.ItemIndex = LastItemIndex
-					#endif
 				ElseIf bCtrl Then
 					Dim bFind As Boolean
 					For i As Integer = FSelEndLine + 1 To GetLineIndex(Content.Lines.Count - 1)
@@ -7074,29 +5662,16 @@ Namespace My.Sys.Forms
 					FSelStartChar = FSelEndChar
 				End If
 				ScrollToCaret
-				#ifdef __USE_GTK__
 				Case GDK_KEY_Insert
-				#else
-				Case VK_INSERT
-				#endif
 				If bCtrl Then
 					CopyToClipboard
 				ElseIf bShifted Then
 					PasteFromClipboard
 				End If
-				#ifdef __USE_GTK__
 				Case GDK_KEY_F9
-				#else
-				Case VK_F9
-				#endif
 				Breakpoint
-				#ifdef __USE_GTK__
 				Case GDK_KEY_F6
-				#else
-				Case VK_F6
-				#endif
 				Bookmark
-				#ifdef __USE_GTK__
 				Case GDK_KEY_Tab
 					If Carets.Count > 0 Then
 						If DropDownShowed Then CloseDropDown()
@@ -7108,11 +5683,7 @@ Namespace My.Sys.Forms
 					Else
 						If DropDownShowed Then
 							CloseDropDown()
-							#ifdef __USE_GTK__
 								If LastItemIndex <> -1 AndAlso lvIntellisense.OnItemActivate Then lvIntellisense.OnItemActivate(*lvIntellisense.Designer, lvIntellisense, LastItemIndex)
-							#else
-								If LastItemIndex <> -1 AndAlso cboIntellisense.OnSelected Then cboIntellisense.OnSelected(cboIntellisense, LastItemIndex)
-							#endif
 						End If
 						'If TabAsSpaces Then
 						'                                Var d = 4 - (FSelEndChar Mod 4)
@@ -7125,11 +5696,7 @@ Namespace My.Sys.Forms
 						If FSelStartLine <> FSelEndLine Then
 							Indent
 						Else
-							#ifdef __USE_GTK__
 								ChangeText !"\t" '*e->Key.string
-							#else
-								ChangeText WChr(msg.wParam)
-							#endif
 						End If
 					End If
 					'End If
@@ -7137,23 +5704,16 @@ Namespace My.Sys.Forms
 				Case GDK_KEY_ISO_Left_Tab ', 65056
 					Outdent
 					msg.Result = True
-				#endif
-				#ifdef __USE_GTK__
 				Case Else
 					Select Case (Asc(*e->key.string))
-				#else
-				End Select
-			Case WM_CHAR
-				Select Case (msg.wParam)
-				#endif
 			Case 8:  ' backspace
 				If FSelStartLine = 0 And FSelEndLine = 0 And FSelStartChar = 0 And FSelEndChar = 0 Then
 					Return
 				ElseIf FSelStartLine <> FSelEndLine Or FSelStartChar <> FSelEndChar Then
-					ChangeText "", 0, "Belgilangan matn o`chirildi"
+					ChangeText "", 0, "Selected text deleted"
 				ElseIf bCtrl Then
 					WordLeft
-					ChangeText "", 0, "Ortdagi so`z o`chirildi"
+					ChangeText "", 0, "Previous word deleted"
 				Else
 					WLet(FLine, Lines(FSelEndLine))
 					Var n = Len(*FLine) - Len(LTrim(*FLine))
@@ -7185,11 +5745,7 @@ Namespace My.Sys.Forms
 				Else
 					If DropDownShowed Then
 						CloseDropDown()
-						#ifdef __USE_GTK__
 							If LastItemIndex <> -1 AndAlso lvIntellisense.OnItemActivate Then lvIntellisense.OnItemActivate(*lvIntellisense.Designer, lvIntellisense, LastItemIndex)
-						#else
-							If LastItemIndex <> -1 AndAlso cboIntellisense.OnSelected Then cboIntellisense.OnSelected(*cboIntellisense.Designer, cboIntellisense, LastItemIndex)
-						#endif
 					End If
 					'If TabAsSpaces Then
 					'                                Var d = 4 - (FSelEndChar Mod 4)
@@ -7202,11 +5758,7 @@ Namespace My.Sys.Forms
 					If FSelStartLine <> FSelEndLine Then
 						Indent
 					Else
-						#ifdef __USE_GTK__
 							ChangeText *e->key.string
-						#else
-							ChangeText WChr(msg.wParam)
-						#endif
 					End If
 				End If
 				'End If
@@ -7215,11 +5767,7 @@ Namespace My.Sys.Forms
 				If ToolTipShowed Then CloseToolTip
 				If DropDownShowed Then
 					CloseDropDown()
-					#ifdef __USE_GTK__
 						If LastItemIndex <> -1 AndAlso lvIntellisense.OnItemActivate Then lvIntellisense.OnItemActivate(*lvIntellisense.Designer, lvIntellisense, LastItemIndex)
-					#else
-						If LastItemIndex <> -1 AndAlso cboIntellisense.OnSelected Then cboIntellisense.OnSelected(*cboIntellisense.Designer, cboIntellisense, LastItemIndex)
-					#endif
 					Exit Sub
 				End If
 				If CInt(FSelEndLine = FSelStartLine) AndAlso CInt(FSelEndChar = FSelStartChar) AndAlso CInt(FSelEndChar = Len(*Cast(EditControlLine Ptr, Content.Lines.Items[FSelEndLine])->Text)) Then
@@ -7307,7 +5855,7 @@ Namespace My.Sys.Forms
 					WAdd(FLineSpace, !"\t")
 				End If
 				ModifiedLine = True
-				ChangeText *FLineLeft & WChr(13) & *FLineSpace & *FLineRight, p, "Enter bosildi", Min(FSelStartLine, FSelEndLine) + 1, d + k
+				ChangeText *FLineLeft & WChr(13) & *FLineSpace & *FLineRight, p, "Enter pressed", Min(FSelStartLine, FSelEndLine) + 1, d + k
 				'Var n = Min(FSelStart, FSelEnd)
 				'Var x = Max(FSelStart, FSelEnd)
 				'Var l = LineFromCharIndex(n)
@@ -7347,11 +5895,7 @@ Namespace My.Sys.Forms
 				'ChangeText Chr(13), 0, "Enter bosildi", FSelStartLine + 1, 0
 				'End If
 			Case Else:    ' отображаемые символы
-				#ifdef __USE_GTK__
 					If CInt(Not bCtrl) AndAlso CInt(WChr(gdk_keyval_to_unicode(e->key.keyval)) <> "") Then
-				#else
-					If GetKeyState(VK_CONTROL) >= 0 OrElse GetKeyState(VK_RMENU) < 0 Then
-				#endif
 					'#ifdef __USE_GTK__
 					'	If *e->key.string = " " Then
 					'#else
@@ -7367,51 +5911,22 @@ Namespace My.Sys.Forms
 					'	End If
 					'End If
 					bAddText = True
-					#ifdef __USE_GTK__
 						ChangeText WChr(gdk_keyval_to_unicode(e->key.keyval))
-					#else
-						ChangeText WChr(msg.wParam)
-					#endif
-					#ifdef __USE_GTK__
 					ElseIf Asc(*e->key.string) = 26 Then
-					#else
-					ElseIf msg.wParam = 26 Then
-					#endif
 					Undo
-					#ifdef __USE_GTK__
 					ElseIf Asc(*e->key.string) = 25 Then
-					#else
-					ElseIf msg.wParam = 25 Then
-					#endif
 					Redo
-					#ifdef __USE_GTK__
 					ElseIf Asc(*e->key.string) = 24 Then
-					#else
-					ElseIf msg.wParam = 24 Then
-					#endif
 					CutToClipboard
-					#ifdef __USE_GTK__
 					ElseIf Asc(*e->key.string) = 3 Then
-					#else
-					ElseIf msg.wParam = 3 Then
-					#endif
 					CopyToClipboard
-					#ifdef __USE_GTK__
 					ElseIf Asc(*e->key.string) = 22 Then
-					#else
-					ElseIf msg.wParam = 22 Then
-					#endif
 					PasteFromClipboard
-					#ifdef __USE_GTK__
 					ElseIf Asc(*e->key.string) = 127 Then
-					#else
-					ElseIf msg.wParam = 127 Then
-					#endif
 					WordLeft
-					ChangeText "", 0, "Ortdagi so`z o`chirildi"
+					ChangeText "", 0, "Previous word deleted"
 				End If
 			End Select
-			#ifdef __USE_GTK__
 			End Select
 		Case GDK_KEY_RELEASE
 			bCtrl = msg.Event->key.state And GDK_CONTROL_MASK
@@ -7427,21 +5942,10 @@ Namespace My.Sys.Forms
 					Return
 				End If
 			End If
-			#else
-			Case WM_KEYUP
-			#endif
 			bInMiddleScroll = False
-			#ifdef __USE_GTK__
 			Case GDK_2BUTTON_PRESS ', GDK_DOUBLE_BUTTON_PRESS
-			#else
-			Case WM_LBUTTONDBLCLK
-			#endif
 			bInMiddleScroll = False
-			#ifdef __USE_GTK__
 				Var X = UnScaleX(e->button.x), y = UnScaleY(e->button.y)
-			#else
-				Var X = UnScaleX(msg.lParamLo), y = UnScaleY(msg.lParamHi)
-			#endif
 			FSelEndLine = LineIndexFromPoint(X, y)
 			If bDividedX AndAlso X >= iDividedX AndAlso X <= iDividedX + 7 Then
 				SplittedVertically = False
@@ -7469,19 +5973,11 @@ Namespace My.Sys.Forms
 				End If
 				ScrollToCaret
 			End If
-			#ifdef __USE_GTK__
 			Case GDK_BUTTON_PRESS
 				gtk_widget_grab_focus(widget)
 				If e->button.button - 1 <> 0 Then Exit Select
-			#else
-			Case WM_LBUTTONDOWN
-			#endif
 			bInMiddleScroll = False
-			#ifdef __USE_GTK__
 				Var X = UnScaleX(e->button.x), Y = UnScaleY(e->button.y)
-			#else
-				Var X = UnScaleX(msg.lParamLo), Y = UnScaleY(msg.lParamHi)
-			#endif
 			If (X > dwClientX - 17 AndAlso Y < 7) OrElse (bDividedY AndAlso Y >= iDividedY AndAlso Y <= iDividedY + 7) Then
 				bInDivideY = True
 			ElseIf (Y > dwClientY - 17 AndAlso X < 7) OrElse (bDividedX AndAlso X >= iDividedX AndAlso X <= iDividedX + 7) Then
@@ -7495,7 +5991,6 @@ Namespace My.Sys.Forms
 					ActiveCodePane = 1
 				End If
 				DownButton = 0
-				#ifdef __USE_GTK__
 					If Not bShifted AndAlso HasRealSelection() Then
 						If PointIsInsideSelection(X, Y) Then
 							FDragPending = True
@@ -7504,23 +5999,6 @@ Namespace My.Sys.Forms
 							Exit Select
 						End If
 					End If
-				#else
-					If Not bShifted AndAlso HasRealSelection() Then
-						If PointIsInsideSelection(X, Y) Then
-							FDragPending = True
-							Dim As Point pt
-							pt.X = msg.lParamLo : pt.Y = msg.lParamHi
-							.ClientToScreen(FHandle, @pt)
-							If DragDetect(FHandle, pt) Then
-								EC_BeginTextDrag()
-								EC_ClearDropIndicator
-								ReleaseCapture
-								FDragPending = False
-								Exit Sub
-							End If
-						End If
-					End If
-				#endif
 				FSelEndLine = LineIndexFromPoint(X, Y)
 				If InCollapseRect(FSelEndLine, X, Y) Then
 					FSelStartLine = FSelEndLine
@@ -7554,18 +6032,8 @@ Namespace My.Sys.Forms
 					OldCharIndex = GetOldCharIndex
 				End If
 			End If
-			#ifdef __USE_GTK__
 			Case GDK_BUTTON_RELEASE
-			#else
-			Case WM_LBUTTONUP
-				ReleaseCapture
-			#endif
-			#ifdef __USE_GTK__
 				Var X = UnScaleX(e->button.x), y = UnScaleY(e->button.y)
-			#else
-				Var X = UnScaleX(msg.lParamLo), y = UnScaleY(msg.lParamHi)
-			#endif
-			#ifdef __USE_GTK__
 				If FDragPending Then
 					FDragPending = False
 					FSelEndLine   = LineIndexFromPoint(X, y)
@@ -7576,7 +6044,6 @@ Namespace My.Sys.Forms
 					OldnCaretPosX = nCaretPosX
 					OldCharIndex  = GetOldCharIndex
 				End If
-			#endif
 			If bInDivideY Then
 				bInDivideY = False
 				iDividedY = iDivideY
@@ -7610,38 +6077,12 @@ Namespace My.Sys.Forms
 					Breakpoint
 				End If
 			End If
-			#ifdef __USE_GTK__
 				FDragPending = False
-			#endif
 			DownButton = -1
-			#ifdef __USE_GTK__
 			Case GDK_BUTTON_PRESS
 				'				gtk_widget_grab_focus(widget)
 				'				If e->button.button - 1 <> 0 Then Exit Select
-			#else
-			Case WM_MBUTTONDOWN
-				bInMiddleScroll = Not bInMiddleScroll
-				bScrollStarted = True
-				ScrEC = @This
-				MButtonX = UnScaleX(msg.lParamLo)
-				MButtonY = UnScaleY(msg.lParamHi)
-				If bDividedY Then
-					MiddleScrollIndexY = IIf(MButtonY < iDividedY, 0, 1)
-				ElseIf bDividedX Then
-					MiddleScrollIndexX = IIf(MButtonX < iDividedX, 0, 1)
-				Else
-					MiddleScrollIndexX = 1
-					MiddleScrollIndexY = 1
-				End If
-				GetCursorPos @m_tP
-				SetTimer Handle, 1, 25, @EC_TimerProc
-			#endif
-			#ifdef __USE_GTK__
 			Case GDK_MOTION_NOTIFY
-			#else
-			Case WM_MOUSEMOVE
-			#endif
-			#ifdef __USE_GTK__
 				If FDragPending Then
 					If gtk_drag_check_threshold(widget, CInt(FDragStartX), CInt(FDragStartY), CInt(e->button.x), CInt(e->button.y)) Then
 						FDragPending = False
@@ -7654,11 +6095,7 @@ Namespace My.Sys.Forms
 						DragOrigEndLine   = origEL : DragOrigEndChar   = origEC
 			
 						Dim As GtkTargetList Ptr tlist = gtk_target_list_new(@ECDragTargets(0), 1)
-						#ifdef __USE_GTK3__
 							gtk_drag_begin_with_coordinates(widget, tlist, GDK_ACTION_COPY Or GDK_ACTION_MOVE, 1, e, -1, -1)
-						#else
-							gtk_drag_begin(widget, tlist, GDK_ACTION_COPY Or GDK_ACTION_MOVE, 1, e)
-						#endif
 						gtk_target_list_unref(tlist)
 					End If
 					Exit Select
@@ -7693,7 +6130,6 @@ Namespace My.Sys.Forms
 						gdk_window_set_cursor(win, gdkCursorIBeam)
 					End If
 				End If
-			#endif
 			'			#ifdef __USE_GTK__
 			'				bInIncludeFileRect = bCtrl AndAlso InIncludeFileRect(iCursorLine, e->button.x, e->button.y)
 			'			#else
@@ -7702,13 +6138,8 @@ Namespace My.Sys.Forms
 			'			If bInIncludeFileRectOld <> bInIncludeFileRect Then PaintControl
 			'			bInIncludeFileRectOld = bInIncludeFileRect
 			If DownButton = 0 Then
-				#ifdef __USE_GTK__
 					lParamLo = IIf(e->button.x > 60000, e->button.x - 65535, e->button.x)
 					lParamHi = IIf(e->button.y > 60000, e->button.y - 65535, e->button.y)
-				#else
-					lParamLo = IIf(msg.lParamLo > 60000, msg.lParamLo - 65535, msg.lParamLo)
-					lParamHi = IIf(msg.lParamHi > 60000, msg.lParamHi - 65535, msg.lParamHi)
-				#endif
 				If bInDivideX Then
 					iDivideX = UnScaleX(lParamLo)
 					PaintControl
@@ -7728,39 +6159,7 @@ Namespace My.Sys.Forms
 					ScrollToCaret
 				End If
 			End If
-			#ifdef __USE_GTK__
 			Case GDK_EXPOSE
-			#else
-			Case WM_PAINT
-				If Not bPainted Then
-					bPainted = True
-				End If
-				If g_darkModeSupported AndAlso g_darkModeEnabled Then
-					If Not FDarkMode Then
-						SetDark True
-						'						FDarkMode = True
-						'						SetWindowTheme(FHandle, "DarkMode_Explorer", nullptr)
-						'						This.Brush.Handle = hbrBkgnd
-						'						SendMessageW(FHandle, WM_THEMECHANGED, 0, 0)
-						'						_AllowDarkModeForWindow(FHandle, g_darkModeEnabled)
-						Repaint
-					End If
-				Else
-					If FDarkMode Then
-						SetDark False
-						'						FDarkMode = False
-						'						SetWindowTheme(FHandle, NULL, NULL)
-						'						If FBackColor = -1 Then
-						'							This.Brush.Handle = 0
-						'						Else
-						'							This.Brush.Color = FBackColor
-						'						End If
-						'						SendMessageW(FHandle, WM_THEMECHANGED, 0, 0)
-						'						_AllowDarkModeForWindow(FHandle, g_darkModeEnabled)
-						Repaint
-					End If
-				End If
-			#endif
 			PaintControl
 			ShowCaretPos False
 		Case Else
@@ -7779,7 +6178,6 @@ Namespace My.Sys.Forms
 		End If
 	End Sub
 	
-	#ifdef __USE_GTK__
 		Function EditControl.EditControl_OnDraw(widget As GtkWidget Ptr, cr As cairo_t Ptr, data1 As gpointer) As Boolean
 			Dim As EditControl Ptr ec = Cast(Any Ptr, data1)
 			If ec->cr = 0 Then
@@ -7810,9 +6208,7 @@ Namespace My.Sys.Forms
 				ec->gdkCursorSIZENS = gdk_cursor_new_from_name(ec->pdisplay, crSizeNS)
 				ec->gdkCursorSIZEWE = gdk_cursor_new_from_name(ec->pdisplay, crSizeWE)
 				ec->gdkCursorARROW = gdk_cursor_new_from_name(ec->pdisplay, crArrow)
-				#ifdef __USE_GTK3__
 					ec->win = gtk_layout_get_bin_window(GTK_LAYOUT(widget))
-				#endif
 				gdk_window_set_cursor(ec->win, ec->gdkCursorIBeam)
 				
 				ec->ShowCaretPos False
@@ -7828,17 +6224,9 @@ Namespace My.Sys.Forms
 				gtk_window_set_transient_for(GTK_WINDOW(ec->winMouseHoverTooltip), GTK_WINDOW(pfrmMain->Handle))
 				
 			End If
-			#ifdef __USE_GTK3__
-			#else
-				ec->cr = cr
-			#endif
 			'If ec->bChanged Then
 			'ec->bChanged = False
-			#ifdef __USE_GTK3__
 				Dim As Integer AllocatedWidth = gtk_widget_get_allocated_width(widget), AllocatedHeight = gtk_widget_get_allocated_height(widget)
-			#else
-				Dim As Integer AllocatedWidth = widget->allocation.width, AllocatedHeight = widget->allocation.height
-			#endif
 			If AllocatedWidth <> ec->dwClientX Or AllocatedHeight <> ec->dwClientY Then
 				Var dDividedX = ec->iDividedX / ec->dwClientX
 				Var dDividedY = ec->iDividedY / ec->dwClientY
@@ -7911,10 +6299,8 @@ Namespace My.Sys.Forms
 			Case ec->adjustmenthRight: ec->HScrollPosRight = gtk_adjustment_get_value(ec->adjustmenthRight)
 			Case ec->adjustmentvBottom: ec->VScrollPosBottom = gtk_adjustment_get_value(ec->adjustmentvBottom)
 			End Select
-			#ifdef __USE_GTK3__
 				ec->ShowCaretPos False
 				ec->PaintControl
-			#endif
 		End Sub
 		
 		Sub EditControl_Commit(imcontext As GtkIMContext Ptr, sStr As ZString Ptr, ec As EditControl Ptr)
@@ -7950,11 +6336,7 @@ Namespace My.Sys.Forms
 				ec->FDragScrollTimerId = 0
 			End If
 			Dim As GdkDragAction da = IIf(DragSourceECPtr = ec, GDK_ACTION_MOVE, GDK_ACTION_COPY)
-			#ifdef __USE_GTK3__
 				GDK_DRAG_STATUS(context, da, time_)
-			#else
-				GDK_DRAG_STATUS_(context, da, time_)
-			#endif
 			Return True
 		End Function
 		
@@ -8000,17 +6382,13 @@ Namespace My.Sys.Forms
 			ec->EC_ClearDropIndicator()
 			DragSourceECPtr = 0
 		End Sub
-	#endif
 	
 	Constructor EditControl
 		Child       = @This
-		#ifdef __USE_GTK__
 			widget = gtk_layout_new(NULL, NULL)
 			layoutwidget = widget
 			'tooltip = gtk_tooltip_new()
-			#ifdef __USE_GTK3__
 				scontext = gtk_widget_get_style_context (widget)
-			#endif
 			'gtk_layout_set_size(gtk_layout(widget), 1000, 1000)
 			'g_object_set (gtk_widget_get_settings(widget), "gtk-keynav-use-caret", true, NULL)
 			'gtk_scrolled_window_set_policy(gtk_scrolled_window(widget), GTK_POLICY_EXTERNAL, GTK_POLICY_EXTERNAL)
@@ -8054,11 +6432,7 @@ Namespace My.Sys.Forms
 			'g_signal_connect(widget, "event", G_CALLBACK(@EventProc), @This)
 			'g_signal_connect(widget, "event-after", G_CALLBACK(@EventAfterProc), @This)
 			'g_signal_connect(wText, "draw", G_CALLBACK(@EditControl_OnDraw), @This)
-			#ifdef __USE_GTK3__
 				g_signal_connect(widget, "draw", G_CALLBACK(@EditControl_OnDraw), @This)
-			#else
-				g_signal_connect(widget, "expose-event", G_CALLBACK(@EditControl_OnExposeEvent), @This)
-			#endif
 			ECDragTargets(0).target = Cast(gchar Ptr, @Str("UTF8_STRING"))
 			ECDragTargets(0).flags  = 0
 			ECDragTargets(0).info   = 0
@@ -8083,11 +6457,7 @@ Namespace My.Sys.Forms
 			'BlinkTime = BlinkTime / 1.75
 			'gdk_threads_add_timeout(BlinkTime, @Blink_cb, @This)
 			adjustmentvTop = GTK_ADJUSTMENT(gtk_adjustment_new(0.0, 0.0, 201.0, 1.0, 20.0, 20.0))
-			#ifdef __USE_GTK3__
 				scrollbarvTop = gtk_scrollbar_new(GTK_ORIENTATION_VERTICAL, GTK_ADJUSTMENT(adjustmentvTop))
-			#else
-				scrollbarvTop = gtk_vscrollbar_new(GTK_ADJUSTMENT(adjustmentvTop))
-			#endif
 			gtk_widget_set_can_focus(scrollbarvTop, False)
 			g_signal_connect(adjustmentvTop, "value_changed", G_CALLBACK(@EditControl_ScrollValueChanged), @This)
 			'gtk_widget_set_parent(scrollbarv, widget)
@@ -8095,22 +6465,14 @@ Namespace My.Sys.Forms
 			'gtk_widget_show(scrollbarvTop)
 			gtk_widget_set_no_show_all(scrollbarvTop, True)
 			adjustmentvBottom = GTK_ADJUSTMENT(gtk_adjustment_new(0.0, 0.0, 201.0, 1.0, 20.0, 20.0))
-			#ifdef __USE_GTK3__
 				scrollbarvBottom = gtk_scrollbar_new(GTK_ORIENTATION_VERTICAL, GTK_ADJUSTMENT(adjustmentvBottom))
-			#else
-				scrollbarvBottom = gtk_vscrollbar_new(GTK_ADJUSTMENT(adjustmentvBottom))
-			#endif
 			gtk_widget_set_can_focus(scrollbarvBottom, False)
 			g_signal_connect(adjustmentvBottom, "value_changed", G_CALLBACK(@EditControl_ScrollValueChanged), @This)
 			'gtk_widget_set_parent(scrollbarv, widget)
 			If GTK_IS_WIDGET(scrollbarvBottom) Then gtk_layout_put(GTK_LAYOUT(widget), scrollbarvBottom, 0, 0)
 			gtk_widget_show(scrollbarvBottom)
 			adjustmenthLeft = GTK_ADJUSTMENT(gtk_adjustment_new(0.0, 0.0, 101.0, 1.0, 20.0, 20.0))
-			#ifdef __USE_GTK3__
 				scrollbarhLeft = gtk_scrollbar_new(GTK_ORIENTATION_HORIZONTAL, GTK_ADJUSTMENT(adjustmenthLeft))
-			#else
-				scrollbarhLeft = gtk_hscrollbar_new(GTK_ADJUSTMENT(adjustmenthLeft))
-			#endif
 			gtk_widget_set_can_focus(scrollbarhLeft, False)
 			g_signal_connect(adjustmenthLeft, "value_changed", G_CALLBACK(@EditControl_ScrollValueChanged), @This)
 			'gtk_widget_set_parent(scrollbarh, widget)
@@ -8118,24 +6480,15 @@ Namespace My.Sys.Forms
 			'gtk_widget_show(scrollbarhLeft)
 			gtk_widget_set_no_show_all(scrollbarhLeft, True)
 			adjustmenthRight = GTK_ADJUSTMENT(gtk_adjustment_new(0.0, 0.0, 101.0, 1.0, 20.0, 20.0))
-			#ifdef __USE_GTK3__
 				scrollbarhRight = gtk_scrollbar_new(GTK_ORIENTATION_HORIZONTAL, GTK_ADJUSTMENT(adjustmenthRight))
-			#else
-				scrollbarhRight = gtk_hscrollbar_new(GTK_ADJUSTMENT(adjustmenthRight))
-			#endif
 			gtk_widget_set_can_focus(scrollbarhRight, False)
 			g_signal_connect(adjustmenthRight, "value_changed", G_CALLBACK(@EditControl_ScrollValueChanged), @This)
 			'gtk_widget_set_parent(scrollbarh, widget)
 			If GTK_IS_WIDGET(scrollbarhRight) Then gtk_layout_put(GTK_LAYOUT(widget), scrollbarhRight, 0, 0)
 			gtk_widget_show(scrollbarhRight)
 			Dim As GtkRequisition vminimum, hminimum, vrequisition, hrequisition
-			#ifdef __USE_GTK3__
 				gtk_widget_get_preferred_size(scrollbarvBottom, @vminimum, @vrequisition)
 				gtk_widget_get_preferred_size(scrollbarhRight, @hminimum, @hrequisition)
-			#else
-				gtk_widget_size_request(scrollbarvBottom, @vrequisition)
-				gtk_widget_size_request(scrollbarhRight, @hrequisition)
-			#endif
 			Var minVScrollBarHeight = hminimum.height
 			Var minHScrollBarWidth = vminimum.width
 			verticalScrollBarWidth = vrequisition.width
@@ -8145,17 +6498,6 @@ Namespace My.Sys.Forms
 			
 			im_context = gtk_im_multicontext_new()
 			g_signal_connect(G_OBJECT(im_context), "commit", G_CALLBACK(@EditControl_Commit), @This)
-		#else
-			OnHandleIsAllocated = @HandleIsAllocated
-			BlinkTime = GetCaretBlinkTime
-			'sbScrollBarvTop.Style = ScrollBarControlStyle.sbVertical
-			'sbScrollBarv.Style = ScrollBarControlStyle.sbVertical
-			'sbScrollBarh.Style = ScrollBarControlStyle.sbHorizontal
-			'sbScrollBarvTop.Visible = False
-			'This.Add @sbScrollbarvTop
-			'This.Add @sbScrollbarv
-			'This.Add @sbScrollbarh
-		#endif
 		dwCharY = 5
 		'MultiLine = True
 		'ChildProc   = @WndProc
@@ -8176,7 +6518,6 @@ Namespace My.Sys.Forms
 		crScrollLeftRight.LoadFromResourceName("ScrollLeftRight")
 		crScrollUpDown.LoadFromResourceName("ScrollUpDown")
 		'Text = ""
-		#ifdef __USE_GTK__
 			winIntellisense = gtk_window_new(GTK_WINDOW_POPUP)
 			gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(lvIntellisense.scrolledwidget), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC)
 			gtk_container_add(GTK_CONTAINER(winIntellisense), lvIntellisense.scrolledwidget)
@@ -8188,47 +6529,30 @@ Namespace My.Sys.Forms
 			
 			winTooltip = gtk_window_new(GTK_WINDOW_POPUP)
 			lblTooltip = gtk_label_new(NULL)
-			#ifdef __USE_GTK3__
 				gtk_widget_set_margin_left(lblTooltip, 1)
 				gtk_widget_set_margin_top(lblTooltip, 1)
 				gtk_widget_set_margin_right(lblTooltip, 1)
 				gtk_widget_set_margin_bottom(lblTooltip, 1)
-			#endif
 			gtk_container_add(GTK_CONTAINER(winTooltip), lblTooltip)
 			'gtk_window_set_transient_for(gtk_window(winTooltip), gtk_window(pfrmMain->widget))
 			g_signal_connect(lblTooltip, "activate-link", G_CALLBACK(@ActivateLink), @This)
 			'gtk_window_resize(gtk_window(winTooltip), 1000, 21)
 			winDropDownTooltip = gtk_window_new(GTK_WINDOW_POPUP)
 			lblDropDownTooltip = gtk_label_new(NULL)
-			#ifdef __USE_GTK3__
 				gtk_widget_set_margin_left(lblDropDownTooltip, 1)
 				gtk_widget_set_margin_top(lblDropDownTooltip, 1)
 				gtk_widget_set_margin_right(lblDropDownTooltip, 1)
 				gtk_widget_set_margin_bottom(lblDropDownTooltip, 1)
-			#endif
 			gtk_container_add(GTK_CONTAINER(winDropDownTooltip), lblDropDownTooltip)
 			g_signal_connect(lblDropDownTooltip, "activate-link", G_CALLBACK(@ActivateLink), @This)
 			winMouseHoverTooltip = gtk_window_new(GTK_WINDOW_POPUP)
 			lblMouseHoverTooltip = gtk_label_new(NULL)
-			#ifdef __USE_GTK3__
 				gtk_widget_set_margin_left(lblMouseHoverTooltip, 1)
 				gtk_widget_set_margin_top(lblMouseHoverTooltip, 1)
 				gtk_widget_set_margin_right(lblMouseHoverTooltip, 1)
 				gtk_widget_set_margin_bottom(lblMouseHoverTooltip, 1)
-			#endif
 			gtk_container_add(GTK_CONTAINER(winMouseHoverTooltip), lblMouseHoverTooltip)
 			g_signal_connect(lblMouseHoverTooltip, "activate-link", G_CALLBACK(@ActivateLink), @This)
-		#else
-			pnlIntellisense.SetBounds 0, -50, 250, 0
-			'cboIntellisense.Visible = False
-			'cboIntellisense.SetBounds 0, -50, 250, 0
-			cboIntellisense.Left = 0
-			cboIntellisense.Top = -22
-			cboIntellisense.Width = 250
-			cboIntellisense.Height = 7 * 22
-			pnlIntellisense.Add @cboIntellisense
-			This.Add @pnlIntellisense
-		#endif
 		Var item = _New( EditControlLine)
 		If item = 0 Then Return
 		WLet(item->Text, "")
@@ -8254,14 +6578,7 @@ Namespace My.Sys.Forms
 		For i As Integer = Content.Lines.Count - 1 To 0 Step -1
 			_Delete( Cast(EditControlLine Ptr, Content.Lines.Items[i]))
 		Next i
-		#ifdef __USE_GTK__
 			lvIntellisense.ListItems.Clear
-		#else
-			cboIntellisense.Items.Clear
-			If bufDC Then DeleteDC bufDC
-			If bufBMP Then DeleteObject bufBMP
-			ReleaseDirect2D
-		#endif
 		WDeAllocate(FLine)
 		WDeAllocate(FLineLeft)
 		WDeAllocate(FLineRight)

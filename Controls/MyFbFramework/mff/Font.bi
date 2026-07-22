@@ -60,19 +60,8 @@ Namespace My.Sys.Drawing
 		FOrientation As Integer = 0 '是字体的倾斜角。 David Change
 		Declare Sub Create
 	Public:
-		#ifdef __USE_GTK__
 			'Native HFONT handle reference
 			Handle As PangoFontDescription Ptr
-		#elseif 0
-			'Native HFONT handle reference
-			Handle As jobject
-		#elseif 0
-			'Native HFONT handle reference
-			Handle As HFONT
-		#else
-			'Native HFONT handle reference
-			Handle As Any Ptr
-		#endif
 		#ifndef ReadProperty_Off
 			'Loads font settings from persistence stream
 			Declare Virtual Function ReadProperty(PropertyName As String) As Any Ptr

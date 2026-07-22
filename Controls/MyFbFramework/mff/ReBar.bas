@@ -21,11 +21,7 @@ Namespace My.Sys.Forms
 	
 	Private Property ReBarBand.Break(Value As Boolean)
 		FBreak = Value
-		#ifdef __USE_GTK__
 			If Parent Then Parent->UpdateReBar
-		#else
-			ChangeStyle RBBS_BREAK, Value
-		#endif
 	End Property
 	
 	Private Property ReBarBand.ChildEdge As Boolean
@@ -157,16 +153,7 @@ Namespace My.Sys.Forms
 	
 	Private Property ReBarBand.RequestedWidth(Value As Integer)
 		FRequestedWidth = Value
-		#ifdef __USE_GTK__
 			If Parent Then Parent->UpdateReBar
-		#else
-			If Parent AndAlso Parent->Handle AndAlso Index <> - 1 Then
-				Dim As REBARBANDINFO rbBand
-				rbBand.fMask = RBBIM_SIZE
-				rbBand.cx = FRequestedWidth
-				SendMessage(Parent->Handle, RB_SETBANDINFO, Index, Cast(LPARAM, @rbBand))
-			End If
-		#endif
 	End Property
 	
 	Private Property ReBarBand.TopAlign As Boolean
@@ -199,13 +186,9 @@ Namespace My.Sys.Forms
 	
 	Private Property ReBarBand.Visible(Value As Boolean)
 		FVisible = Value
-		#ifdef __USE_GTK__
 			gtk_widget_set_no_show_all(Child->Handle, Not Value)
 			gtk_widget_set_visible(Child->Handle, Value)
 			If Parent Then Parent->UpdateReBar
-		#else
-			If Parent AndAlso Parent->Handle AndAlso Index <> - 1 Then SendMessage(Parent->Handle, RB_SHOWBAND, Index, Value)
-		#endif
 	End Property
 	
 	Private Property ReBarBand.Index As Integer
@@ -225,11 +208,7 @@ Namespace My.Sys.Forms
 		Dim As Any Ptr Band = FItems.Item(OldIndex)
 		FItems.Remove OldIndex
 		FItems.Insert Value, Band
-		#ifdef __USE_GTK__
 			Parent->UpdateReBar
-		#else
-			SendMessage Parent->Handle, RB_MOVEBAND, OldIndex, Value
-		#endif
 	End Sub
 	
 	Private Sub ReBarBand.Maximize()
@@ -243,14 +222,10 @@ Namespace My.Sys.Forms
 	
 	Private Function ReBarBand.GetRect() As My.Sys.Drawing.Rect
 		Dim rc As My.Sys.Drawing.Rect
-		#ifdef __USE_GTK__
 			rc.Left = FLeft
 			rc.Top = FTop
 			rc.Right = FWidth
 			rc.Bottom = FHeight
-		#else
-			If Parent AndAlso Parent->Handle AndAlso Index <> - 1 Then SendMessage(Parent->Handle, RB_GETRECT, Index, Cast(LPARAM, @rc))
-		#endif
 		Return rc
 	End Function
 	
@@ -293,54 +268,9 @@ Namespace My.Sys.Forms
 		pBand->GripperStyle = GripperStyles.GripperAlways
 		pBand->UseChevron = True
 		pBand->Parent = Parent
-		#ifdef __USE_GTK__
 			If *pBand->Child Is ToolBar Then
 				gtk_toolbar_set_show_arrow(GTK_TOOLBAR(pBand->Child->Handle), False)
 			End If
-		#else
-			If Parent AndAlso Parent->Handle Then
-				Dim As REBARBANDINFO rbBand
-				Dim As ..Rect rct
-				
-				rbBand.cbSize = SizeOf(REBARBANDINFO)
-				rbBand.fMask = RBBIM_STYLE Or RBBIM_CHILD Or RBBIM_CHILDSIZE Or RBBIM_SIZE Or RBBIM_IDEALSIZE
-				If (ImageIndex > -1) AndAlso Parent->ImageList AndAlso (Parent->ImageList->Count > 0) Then
-					rbBand.fMask Or= RBBIM_IMAGE
-					rbBand.iImage = ImageIndex
-				End If
-				If Caption <> "" Then
-					rbBand.fMask Or= RBBIM_TEXT
-					rbBand.lpText = @Caption
-				End If
-				rbBand.fStyle = RBBS_CHILDEDGE Or RBBS_GRIPPERALWAYS 'Or RBBS_USECHEVRON          ' (RBBIM_STYLE flag)
-				
-				rbBand.hwndChild = Value->Handle                                       ' (RBBIM_CHILD flag)
-				If rbBand.hwndChild Then
-					GetWindowRect(Value->Handle, @rct)
-					rbBand.cxMinChild = rct.Right - rct.Left                        ' Minimum width of band (RBBIM_CHILDSIZE flag)
-					rbBand.cyMinChild = rct.Bottom - rct.Top                        ' Minimum height of band (RBBIM_CHILDSIZE flag)
-					rbBand.cx = rct.Right - rct.Left                                ' Length of the band (RBBIM_SIZE flag)
-					If *Value Is ToolBar Then
-						Dim As ..Size sz
-						SendMessage Value->Handle, TB_GETIDEALSIZE, False, Cast(LPARAM, @sz)
-						rbBand.cxIdeal = sz.cx
-						rbBand.cxMinChild = sz.cx
-						rbBand.cx = sz.cx
-						sz.cx = 10000
-						sz.cy = rbBand.cyChild
-						SendMessage Value->Handle, TB_GETIDEALSIZE, 1, Cast(LPARAM, @sz)
-						rbBand.cyMinChild = sz.cy
-						rbBand.cyChild = sz.cy
-					Else
-						rbBand.cxIdeal = rct.Right - rct.Left
-					End If
-					pBand->MinWidth = rbBand.cxMinChild
-					pBand->MinHeight = rbBand.cyMinChild
-					pBand->Width = rbBand.cx
-				End If
-				SendMessage(Parent->Handle, RB_INSERTBAND, Index, Cast(LPARAM, @rbBand))
-			End If
-		#endif
 		FItems.Add pBand
 		Return pBand
 	End Function
@@ -431,20 +361,10 @@ Namespace My.Sys.Forms
 	End Property
 	
 	Private Sub ReBar.UpdateReBar()
-		#ifdef __USE_GTK__
 			If Not bWithoutUpdate Then
 				AllocatedWidth = 0
 				gtk_widget_queue_draw(widget)
 			End If
-		#else
-			If ImageList AndAlso ImageList->Count Then
-				Dim As REBARINFO inf
-				inf.cbSize = SizeOf(REBARINFO)
-				inf.fMask = RBIM_IMAGELIST
-				inf.himl = ImageList->Handle
-				SendMessage(Handle, RB_SETBARINFO, 0, Cast(LPARAM, @inf))
-			End If
-		#endif
 	End Sub
 	
 	Private Function ReBar.RowCount() As Integer
@@ -458,7 +378,6 @@ Namespace My.Sys.Forms
 	
 	
 	Private Sub ReBar.ProcessMessage(ByRef Message As Message)
-		#ifdef __USE_GTK__
 			Dim As GdkEvent Ptr e = Message.Event
 			Select Case Message.Event->type
 			Case GDK_BUTTON_PRESS
@@ -560,169 +479,6 @@ Namespace My.Sys.Forms
 				Message.Result = True
 				Return
 			End Select
-		#else
-			Select Case Message.Msg
-			Case WM_WINDOWPOSCHANGING
-				If g_darkModeSupported AndAlso g_darkModeEnabled AndAlso FDefaultBackColor = FBackColor Then
-					Brush.Handle = hbrBkgnd
-					SendMessage(FHandle, RB_SETTEXTCOLOR, 0, Cast(LPARAM, darkTextColor))
-					SendMessage(FHandle, RB_SETBKCOLOR, 0, Cast(LPARAM, darkBkColor))
-					Dim As COLORSCHEME csch
-					csch.dwSize = SizeOf(COLORSCHEME)
-					csch.clrBtnShadow = darkBkColor
-					csch.clrBtnHighlight = darkHlBkColor
-					SendMessage(FHandle, RB_SETCOLORSCHEME, 0, Cast(LPARAM, @csch))
-					SendMessageW(FHandle, WM_THEMECHANGED, 0, 0)
-					Repaint
-				End If
-			Case WM_DPICHANGED
-				Base.ProcessMessage(Message)
-				For i As Integer = 0 To Bands.Count - 1
-					'Bands.Item(i)->Child = Bands.Item(i)->Child
-					Bands.Item(i)->Update
-					Bands.Item(i)->Visible = Bands.Item(i)->Visible
-				Next
-				SetBounds FLeft, FTop, FWidth, FHeight
-				Return
-			Case WM_ERASEBKGND
-				If g_darkModeSupported AndAlso g_darkModeEnabled Then
-					
-				End If
-			Case WM_PAINT
-				'If g_darkModeSupported AndAlso g_darkModeEnabled AndAlso FDefaultBackColor = FBackColor Then
-				'	If Not FDarkMode Then
-				'		If Not FDarkMode Then
-				'			FDarkMode = True
-				'			'SetWindowTheme(FHandle, "DarkModeNavbar", nullptr)
-				'			Brush.Handle = hbrBkgnd
-				'			SendMessage(FHandle, RB_SETTEXTCOLOR, 0, Cast(LPARAM, darkTextColor))
-				'			SendMessage(FHandle, RB_SETBKCOLOR, 0, Cast(LPARAM, darkBkColor))
-				'			Dim As COLORSCHEME csch
-				'			csch.dwSize = SizeOf(COLORSCHEME)
-				'			csch.clrBtnShadow = darkBkColor
-				'			csch.clrBtnHighlight = darkHlBkColor
-				'			SendMessage(FHandle, RB_SETCOLORSCHEME, 0, Cast(LPARAM, @csch))
-				'			SendMessageW(FHandle, WM_THEMECHANGED, 0, 0)
-				'			Repaint
-				'		End If
-				'	End If
-				'End If
-				'Dim As HDC Dc, memDC
-				'Dim As HBITMAP Bmp
-				'Dim As PAINTSTRUCT Ps
-				'Dim As ..Rect R
-				'Canvas.HandleSetted = True
-				'Dc = BeginPaint(Handle, @Ps)
-				'FillRect Dc, @Ps.rcPaint, Brush.Handle
-				'Canvas.Handle = Dc
-				'Dim As HPEN GripperPen = CreatePen(PS_SOLID, 1, darkBkColor)
-				'Dim As HPEN GripperPen1 = CreatePen(PS_SOLID, 1, darkHlBkColor)
-				'Dim As HPEN PrevPen = SelectObject(Dc, GripperPen)
-				'Dim rc As My.Sys.Drawing.Rect
-				'For i As Integer = 0 To Bands.Count - 1
-				'	SendMessage(FHandle, RB_GETRECT, i, Cast(LPARAM, @rc))
-				'	SelectObject(Dc, GripperPen1)
-				'	MoveToEx Dc, rc.Left + 2, rc.Top + 2, 0
-				'	LineTo Dc, rc.Left + 2, rc.Bottom - 3
-				'	SelectObject(Dc, GripperPen1)
-				'	MoveToEx Dc, rc.Left + 3, rc.Top + 2, 0
-				'	LineTo Dc, rc.Left + 3, rc.Bottom - 3
-				'Next i
-				'SelectObject(Dc, PrevPen)
-				'DeleteObject GripperPen
-				'DeleteObject GripperPen1
-				'If OnPaint Then OnPaint(This, Canvas)
-				'EndPaint Handle, @Ps
-				'Message.Result = -1
-				'Canvas.HandleSetted = False
-				'Return
-			Case WM_COMMAND
-				Message.Result = -1
-			Case WM_SIZE
-				If This.Parent Then This.Parent->RequestAlign , , , @This
-			Case CM_CTLCOLOR
-				Static As HDC Dc
-				Dc = Cast(HDC,Message.wParam)
-				' SetBKMode Dc, TRANSPARENT
-				' SetTextColor Dc,Font.Color
-				' SetBKColor Dc,base.Color
-				' SetBKMode Dc,OPAQUE
-				SendMessage(Handle, RB_SETTEXTCOLOR, 0, Cast(LPARAM, This.Font.Color))
-				SendMessage(Handle, RB_SETBKCOLOR, 0, Cast(LPARAM, FBackColor))
-			Case CM_NOTIFY
-				Dim ptnmRebar As NMREBAR Ptr            ' information about a notification message
-				ptnmRebar = Cast(NMREBAR Ptr,  Message.lParam)
-				Select Case ptnmRebar->hdr.code
-				Case RBN_HEIGHTCHANGE
-					If OnHeightChange Then OnHeightChange(*Designer, This)
-				Case NM_CUSTOMDRAW
-					If g_darkModeSupported AndAlso g_darkModeEnabled AndAlso FDefaultBackColor = FBackColor Then
-						If Not FReBarDarkMode Then
-							FDarkMode = True
-							FReBarDarkMode = True
-							'SetWindowTheme(FHandle, "DarkModeNavbar", nullptr)
-							Brush.Handle = hbrBkgnd
-							SendMessage(FHandle, RB_SETTEXTCOLOR, 0, Cast(LPARAM, darkTextColor))
-							SendMessage(FHandle, RB_SETBKCOLOR, 0, Cast(LPARAM, darkBkColor))
-							Dim As COLORSCHEME csch
-							csch.dwSize = SizeOf(COLORSCHEME)
-							csch.clrBtnShadow = darkBkColor
-							csch.clrBtnHighlight = darkHlBkColor
-							SendMessage(FHandle, RB_SETCOLORSCHEME, 0, Cast(LPARAM, @csch))
-							SendMessageW(FHandle, WM_THEMECHANGED, 0, 0)
-							If This.Parent Then This.Parent->RequestAlign , , , @This
-							Repaint
-						End If
-						Dim As LPNMCUSTOMDRAW nmcd = Cast(LPNMCUSTOMDRAW, Message.lParam)
-						Select Case nmcd->dwDrawStage
-						Case CDDS_PREPAINT
-							'FillRect nmcd->hdc, @nmcd->rc, hbrBkgnd
-							Message.Result = CDRF_NOTIFYPOSTPAINT Or CDRF_NOTIFYPOSTERASE
-							Return
-						Case CDDS_POSTPAINT
-							Dim As HPEN GripperPen = CreatePen(PS_SOLID, 1, darkBkColor)
-							Dim As HPEN GripperPen1 = CreatePen(PS_SOLID, 1, darkBkColor)
-							Dim As HPEN PrevPen = SelectObject(nmcd->hdc, GripperPen)
-							'FillRect nmcd->hdc, @nmcd->rc, hbrBkgnd
-							Dim rc As My.Sys.Drawing.Rect
-							For i As Integer = 0 To Bands.Count - 1
-								SendMessage(FHandle, RB_GETRECT, i, Cast(LPARAM, @rc))
-								SelectObject(nmcd->hdc, GripperPen1)
-								MoveToEx nmcd->hdc, rc.Left + 2, rc.Top + 2, 0
-								LineTo nmcd->hdc, rc.Left + 2, rc.Bottom - 3
-								SelectObject(nmcd->hdc, GripperPen1)
-								MoveToEx nmcd->hdc, rc.Left + 3, rc.Top + 2, 0
-								LineTo nmcd->hdc, rc.Left + 3, rc.Bottom - 3
-							Next i
-							SelectObject(nmcd->hdc, PrevPen)
-							DeleteObject GripperPen
-							DeleteObject GripperPen1
-							Message.Result = CDRF_DODEFAULT
-							Return
-						End Select
-					Else
-						If FReBarDarkMode Then
-							FDarkMode = False
-							FReBarDarkMode = False
-							If FBackColor = -1 Then
-								Brush.Handle = 0
-							Else
-								Brush.Color = FBackColor
-							End If
-							SendMessage(Handle, RB_SETTEXTCOLOR, 0, Cast(LPARAM, This.Font.Color))
-							SendMessage(Handle, RB_SETBKCOLOR, 0, Cast(LPARAM, FBackColor))
-							Dim As COLORSCHEME csch
-							csch.dwSize = SizeOf(COLORSCHEME)
-							csch.clrBtnShadow = FBackColor
-							csch.clrBtnHighlight = FBackColor
-							SendMessage(FHandle, RB_SETCOLORSCHEME, 0, Cast(LPARAM, @csch))
-							SetWindowTheme(FHandle, NULL, NULL)
-							If This.Parent Then This.Parent->RequestAlign , , , @This
-						End If
-					End If
-				End Select
-			End Select
-		#endif
 		Base.ProcessMessage(Message)
 	End Sub
 	
@@ -730,7 +486,6 @@ Namespace My.Sys.Forms
 		Return Cast(My.Sys.Forms.Control Ptr, @This)
 	End Operator
 	
-	#ifdef __USE_GTK__
 		Private Sub ReBar.Layout_SizeAllocate(widget As GtkWidget Ptr, allocation As GdkRectangle Ptr, user_data As Any Ptr)
 			Dim As ReBar Ptr rb = user_data
 			If allocation->width <> rb->AllocatedWidth OrElse allocation->height <> rb->AllocatedHeight Then
@@ -843,9 +598,7 @@ Namespace My.Sys.Forms
 				rb->gdkCursorDefault = gdk_cursor_new_from_name(rb->pdisplay, "default")
 				rb->gdkCursorWEResize = gdk_cursor_new_from_name(rb->pdisplay, crSizeWE)
 				rb->gdkCursorColResize = gdk_cursor_new_from_name(rb->pdisplay, "col-resize")
-				#ifdef __USE_GTK3__
 					rb->win = gtk_layout_get_bin_window(GTK_LAYOUT(widget))
-				#endif
 			End If
 			For i As Integer = 0 To rb->Bands.Count - 1
 				With *rb->Bands.Item(i)
@@ -898,33 +651,16 @@ Namespace My.Sys.Forms
 			cairo_destroy(cr)
 			Return False
 		End Function
-	#endif
 	
 	Private Constructor ReBar
 		Bands.Parent = @This
 		With This
 			WLet(FClassName, "ReBar")
 			WLet(FClassAncestor, "ReBarWindow32")
-			#ifdef __USE_GTK__
 				widget = gtk_layout_new(NULL, NULL)
 				layoutwidget = widget
-				#ifdef __USE_GTK3__
 					g_signal_connect(widget, "draw", G_CALLBACK(@Layout_Draw), @This)
-				#else
-					g_signal_connect(widget, "expose-event", G_CALLBACK(@Layout_ExposeEvent), @This)
-					g_signal_connect(widget, "size-allocate", G_CALLBACK(@Layout_SizeAllocate), @This)
-				#endif
 				.RegisterClass "ReBar", @This
-			#else
-				.RegisterClass "ReBar", "ReBarWindow32"
-				.Style        = WS_CHILD Or RBS_VARHEIGHT Or CCS_NODIVIDER Or RBS_BANDBORDERS
-				.ExStyle      = 0
-				.ChildProc    = @WndProc
-				.DoubleBuffered = True
-				.OnHandleIsAllocated = @HandleIsAllocated
-				.BackColor       = GetSysColor(COLOR_BTNFACE)
-				FDefaultBackColor = .BackColor
-			#endif
 			.Width        = 100
 			.Height       = 25
 			.Child        = @This

@@ -12,18 +12,8 @@
 '###############################################################################
 
 #include once "WStringList.bi"
-#include once "Dictionary.bi"
 #include once "Form.bi"
-Dim Shared As Dictionary mlKeys
-#ifdef __USE_GTK__
-	'#ifndef __FB_WIN32__
-	'	#include once "crt/linux/unistd.bi"
-	'#endif
 		#include once "gmodule.bi"
-#elseif 0
-	#include once "win/winver.bi"
-	
-#endif
 	#define generic_gtk_init() gtk_init(0, 0)
 #ifndef APP_TITLE
 	#define APP_TITLE ""
@@ -164,14 +154,6 @@ Namespace My
 		Declare Function ExeName ByRef As WString
 		Declare Property MainForm As My.Sys.Forms.Form Ptr
 		Declare Property MainForm(Value As My.Sys.Forms.Form Ptr)
-'		Declare Property HintColor As Integer
-'		Declare Property HintColor(value As Integer)
-'		Declare Property HintPause As Integer
-'		Declare Property HintPause (value As Integer)
-'		Declare Property HintShortPause As Integer
-'		Declare Property HintShortPause(value As Integer)
-'		Declare Property HintHidePause As Integer
-'		Declare Property HintHidePause(value As Integer)
 		Declare Property ControlCount As Integer
 		Declare Property ControlCount(Value  As Integer)
 		Declare Property Controls As My.Sys.Forms.Control Ptr Ptr

@@ -1,18 +1,5 @@
-﻿#ifdef __FB_WIN32__
-	#ifdef __FB_64BIT__
-		#ifdef __FB_ARM__
-			#cmdline "-exx ""WebBrowser Example (with WebView2).rc"" -x ""Release/win-arm64/WebBrowser Example (with WebView2).exe"""
-		#else
-			#cmdline "-exx ""WebBrowser Example (with WebView2).rc"" -x ""Release/win-x64/WebBrowser Example (with WebView2).exe"""
-		#endif
-	#else
-		#cmdline "-exx ""WebBrowser Example (with WebView2).rc"" -x ""Release/win-x86/WebBrowser Example (with WebView2).exe"""
-	#endif
-#else
-	#cmdline "-exx -x ""Release/linux/WebBrowser Example (with WebKitGTK)"""
-#endif
+﻿	#cmdline "-exx -x ""Release/linux/WebBrowser Example (with WebKitGTK)"""
 '#Region "Form"
-	#define __USE_WEBVIEW2__ ' for Windows
 	#define __USE_GTK3__ ' for Linux
 	#include once "mff/Form.bi"
 	#include once "mff/WebBrowser.bi"
@@ -133,11 +120,6 @@ Private Sub Form1.cmdGo_Click_(ByRef Designer As My.Sys.Object, ByRef Sender As 
 	(*Cast(Form1 Ptr, Sender.Designer)).cmdGo_Click(Sender)
 End Sub
 Private Sub Form1.cmdGo_Click(ByRef Sender As Control)
-	#ifdef __USE_WEBVIEW2__
-		If InStr(txtAddress.Text, ":") = 0 Then
-			txtAddress.Text = "https://" & txtAddress.Text
-		End If
-	#endif
 	WebBrowser1.Navigate txtAddress.Text
 End Sub
 

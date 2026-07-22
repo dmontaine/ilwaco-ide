@@ -21,26 +21,16 @@ Namespace My.Sys
 	'Supports all classes in the MyFbFramework class hierarchy and provides low-level services to derived classes (Windows, Linux, Android, Web).
 	Private Type Object Extends Object
 	Protected:
-		#ifdef __USE_GTK__
 			Accelerator     As GtkAccelGroup Ptr
 			widget          As GtkWidget Ptr
 			layoutwidget    As GtkWidget Ptr
-		#elseif 0
-			layoutview      As jobject
-		#elseif 0
-			Accelerator        As HACCEL
-		#endif
 		FTemp As WString Ptr
 		FClassName As WString Ptr
 		FDynamic As Boolean
 		oldxdpi As Single
 		oldydpi As Single
-		#ifdef __USE_GTK__
 			FActivated As Boolean
 			FDeactivated As Boolean
-		#elseif 0
-			FBody As WString Ptr
-		#endif
 	Public:
 		xdpi As Single
 		ydpi As Single
@@ -50,7 +40,6 @@ Namespace My.Sys
 		Declare Function ClassName ByRef As WString
 		'Returns/sets the object that enables you to access the design characteristics of a object (Windows, Linux, Android, Web).
 		Designer As Object Ptr
-		' Function to get any typename in the inheritance up hierarchy
 		' of the type of an instance (address: 'po') compatible with the built-in 'Object'
 		'
 		' ('baseIndex =  0' to get the typename of the instance)
@@ -69,31 +58,14 @@ Namespace My.Sys
 			'Writes value to the name of property (Windows, Linux, Android, Web).
 			Declare Virtual Function WriteProperty(ByRef PropertyName As String, Value As Any Ptr) As Boolean
 		#endif
-		#ifdef __USE_JNI__
-			Declare Function ScaleX(ByVal cx As Single) As Integer
-			Declare Function ScaleY(ByVal cy As Single) As Integer
-			Declare Function UnScaleX(ByVal cx As Single) As Integer
-			Declare Function UnScaleY(ByVal cy As Single) As Integer
-		#else
 			Declare Function ScaleX(ByVal cx As Single) As Single
 			Declare Function ScaleY(ByVal cy As Single) As Single
 			Declare Function UnScaleX(ByVal cx As Single) As Single
 			Declare Function UnScaleY(ByVal cy As Single) As Single
-		#endif
 		Declare Destructor
 	End Type
 	
 	Private Type NotifyEvent     As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Object)
-'	Private Type CloseEvent      As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Object, ByRef CloseAction As Integer)
-'	Private Type ScrollEvent     As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Object, Code As Integer, ByRef ScrollPos As Integer)
-'	Private Type MouseDownEvent  As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Object, MouseButton As Short, X As Integer, Y As Integer, Shift As Integer)
-'	Private Type MouseUpEvent    As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Object, MouseButton As Short, X As Integer, Y As Integer, Shift As Integer)
-'	Private Type MouseMoveEvent  As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Object, X As Integer, Y As Integer, Shift As Integer)
-'	Private Type MouseWheelEvent As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Object, Direction As Short, X As Integer, Y As Integer, Shift As Integer)
-'	Private Type KeyPressEvent   As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Object, Key As Integer)
-'	Private Type KeyDownEvent    As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Object, Key As Integer, Shift As Integer)
-'	Private Type KeyUpEvent      As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Object, Key As Integer, Shift As Integer)
-'	Private Type TimerEvent      As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Object, TimerId As Integer, TimerProc As Any Ptr = 0)
 	
 End Namespace
 

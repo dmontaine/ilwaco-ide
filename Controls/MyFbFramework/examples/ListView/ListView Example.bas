@@ -1,7 +1,4 @@
-﻿#ifdef __FB_WIN32__
-	'#Compile "Form1.rc"
-#endif
-'#Region "Form"
+﻿'#Region "Form"
 	#include once "mff/Form.bi"
 	#include once "mff/ListView.bi"
 	#include once "mff/ImageList.bi"

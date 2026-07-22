@@ -1,13 +1,10 @@
-
+﻿
 #include once "inc/mongoose.bi"
 #include once "crt/stdlib.bi"
 #include Once "utf_conv.bi"
 
-'#ifndef __FB_64BIT__
 '#libpath "win32"
-'#else
 '#libpath "win64"
-'#endif
 Declare Function MultiByteToWideChar Lib "Kernel32" Alias "MultiByteToWideChar"(ByVal CodePage As ULong, ByVal dwFlags As ULong, ByVal lpMultiByteStr As Byte Ptr, ByVal cbMultiByte As Long, ByVal lpWideCharStr As Wstring Ptr, ByVal cchWideChar As Long) As Long
 Declare Function WideCharToMultiByte  Lib "Kernel32" Alias "WideCharToMultiByte"(ByVal CodePage As ULong, ByVal dwFlags As ULong, ByVal lpWideCharStr As UByte Ptr, ByVal cchWideChar As Long, ByVal lpMultiByteStr As ZString Ptr, ByVal cbMultiByte As Long, ByVal lpDefaultChar As Byte Ptr, ByVal lpUsedDefaultChar As Long Ptr) As Long
 CONST CP_UTF8 = 65001
@@ -23,7 +20,6 @@ Function utf8tostr(Utf8str As String, CodePage As UINTeger = 0) As String
    If ZStrLen Then Function = Left(ZStr, ZStrLen)
 End Function
 
-'Dim Shared s_url As  ZString Ptr = @"http://info.cern.ch/"
 Dim Shared s_url As  ZString Ptr = @"https://www.baidu.com"
 Dim Shared s_post_data As  ZString Ptr = NULL
 Dim Shared s_timeout_ms As  ULongInt = 1500

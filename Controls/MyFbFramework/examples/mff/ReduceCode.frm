@@ -1,4 +1,4 @@
-'################################################################################
+﻿'################################################################################
 '#  ReduceCode.frm                                                                   #
 '#  This file is an examples of MyFBFramework.                                  #
 '#  Authors: Xusinboy Bekchanov, Liu XiaLin                                     #
@@ -8,27 +8,17 @@
 
 '#Region "Form"
 	'#Region Off_Defines
-		#if 0
-			#define __MAIN_FILE__
-			Const _MAIN_FILE_ = __FILE__
-		#endif
 		
 		#define ReadProperty_Off
 		#define WriteProperty_Off
 		#define Application_Controls_Get_Off
 		#define Application_ControlCount_Get_Off
 		#define Application_DoEvents_Off
-		'#define Application_GetVerInfo_Off
 		#define Application_GetControls_Off
-		'#define Application_Forms_Get_Off
-		'#define Application_Title_Get_Off
-		'#define BitmapType_Height_Get_Off
 		#define BitmapType_Let_HBITMAP_Off
 		#define BitmapType_Let_HICON_Off
 		#define BitmapType_Let_WString_Off
-		'#define BitmapType_LoadFromHICON_Off
 		#define BitmapType_SaveToFile_Off
-		'#define BitmapType_Width_Get_Off
 		#define Brush_Color_Get_Off
 		#define Canvas_DrawTransparent_Off
 		#define Canvas_Rectangle_Double_Double_Double_Double_Off
@@ -41,18 +31,13 @@
 		#define Chart_Wait_Off
 		#define CommandButton_EnumMenuItems_Off
 		#define CommandButton_Style_Get_Off
-		'#define Component_GetTopLevel_Off
-		'#define Component_Left_Set_Off
-		'#define Component_Top_Set_Off
 		#define Control_IndexOf_String_Off
-		'#define Control_RecreateWnd_Off
 		#define Control_ChangeControlIndex_Off
 		#define Control_ChangeStyle_Off
 		#define Control_ChangeTabStop_Off
 		#define Control_GetTextLength_Off
 		#define Control_StyleExists_Off
 		#define Control_TopLevelControl_Off
-		'#define Control_Parent_Set_Off
 		#define Cursor_LoadFromFile_Off
 		#define Cursor_LoadFromResourceID_Off
 		#define Cursor_LoadFromResourceName_Off
@@ -61,19 +46,16 @@
 		#define Dictionary_Add_Off
 		#define Dictionary_Count_Get_Off
 		#define Dictionary_IndexOf_Off
-		'#define Dictionary_IndexOfKey_Off
 		#define Dictionary_IndexOfObject_Off
 		#define Dictionary_Item_Get_Integer_Off
 		#define Dictionary_Sort_Off
 		#define Dictionary_SortKeys_Off
 		#define Dictionary_Text_Get_Off
 		#define Dictionary_Text_Set_Off
-		'#define DictionaryItem_Key_Get_Off
 		#define DictionaryItem_Text_Get_Off
 		#define DoubleList_Add_Off
 		#define DoubleList_Exchange_Off
 		#define DoubleList_IndexOf_Off
-		'#define Font_Color_Set_Off
 		#define Form_ShowModal_Off
 		#define GraphicType_LoadFromFile_Off
 		#define GraphicType_LoadFromResourceID_Off
@@ -81,14 +63,9 @@
 		#define Grid_ChangeLVExStyle_Off
 		#define Grid_SelectedColumn_Off
 		#define Grid_SelectedRow_Off
-		'#define GridColumn_Format_Set_Off
-		'#define GridColumn_ImageIndex_Set_Off
-		'#define GridColumn_Width_Set_Off
 		#define GridRow_ImageKey_Set_Off
 		#define GridRow_ImageIndex_Set_Off
 		#define GridRow_Indent_Set_Off
-		'#define GridRow_Item_Off
-		'#define GridRow_State_Set_Off
 		#define GridRows_Add_Integer_Off
 		#define GridRows_CompareFunc_Off
 		#define Icon_Height_Get_Off
@@ -102,12 +79,8 @@
 		#define ImageList_Clear_Off
 		#define ImageList_GetBitmap_Integer_Off
 		#define ImageList_GetCursor_Integer_Off
-		'#define ImageList_GetIcon_Integer_Off
 		#define ImageList_GetMask_Integer_Off
-		'#define ImageList_IndexOf_Off
 		#define ImageList_Remove_Integer_Off
-		'#define IntegerList_IndexOf_Off
-		'#define List_Item_Set_Off
 		#define LoadFromFile_Off
 		#define MainHandle_Off
 		#define Match_Off
@@ -120,17 +93,13 @@
 		#define MenuItem_Image_Set_BitmapType_Off
 		#define MenuItem_ImageIndex_Set_Off
 		#define MenuItem_Name_Set_Off
-		'#define Pen_Color_Get_Off
 		#define Pen_Color_Set_Off
-		'#define Pen_Create_Off
 		#define Pen_Size_Set_Off
-		'#define Replace_Off
 		#define SaveToFile_Off
 		#define StringParseCount_Off
 		#define TextBox_InsertLine_Off
 		#define TextBox_LinesCount_Off
 		#define WAdd_Off
-		'#define WStringList_Add_Off
 		#define WStringList_IndexOf_Off
 		#define WStringList_IndexOfObject_Off
 		#define WStringList_MatchCase_Get_Off

@@ -1,4 +1,4 @@
-'Code by UEZ build 2023-03-22
+﻿'Code by UEZ build 2023-03-22
 'https://www.freebasic.net/forum/viewtopic.php?p=297501&sid=9a4e5e2593ed84d46f36244aea17226b#p297501
 'https://en.wikipedia.org/wiki/Color_difference
 'http://www.brucelindbloom.com/index.html?Eqn_Lab_to_LCH.html

@@ -73,10 +73,8 @@ Namespace My.Sys.Forms
 	Protected:
 		FName         As WString Ptr
 	Public:
-		#ifdef __USE_GTK__
 			'Native UI toolkit handle
 			Widget    As GtkWidget Ptr
-		#endif
 		'Associated control for advanced interactions
 		Ctrl          As Control Ptr
 		'Context menu for dropdown-style buttons
@@ -164,9 +162,7 @@ Namespace My.Sys.Forms
 	Private Type ToolButtons Extends My.Sys.Object
 	Private:
 		FButtons As List
-		#ifdef __USE_GTK__
 			Declare Static Sub ToolButtonClicked(gtoolbutton As GtkToolButton Ptr, user_data As Any Ptr)
-		#endif
 	Public:
 		'Containing toolbar reference
 		Parent   As Control Ptr
@@ -238,7 +234,6 @@ Namespace My.Sys.Forms
 		'ImageList containing disabled state button images
 		DisabledImagesList As ImageList Ptr
 		'Collection of ToolButton objects in the toolbar
-		'Declare Function Buttons(Index As Integer) As ToolButton
 		Declare Sub ChangeButtonIndex(Btn As ToolButton Ptr, Index As Integer)
 		Declare Property Caption ByRef As WString
 		'Gets/sets the toolbar's display text (when applicable)
@@ -280,9 +275,7 @@ Namespace My.Sys.Forms
 		OnButtonClick As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As ToolBar, ByRef Button As ToolButton)
 	End Type
 	
-	#ifdef __USE_GTK__
 		Declare Sub ToolButtonClicked(gtoolbutton As GtkToolButton Ptr, user_data As Any Ptr)
-	#endif
 End Namespace
 
 #ifdef __EXPORT_PROCS__

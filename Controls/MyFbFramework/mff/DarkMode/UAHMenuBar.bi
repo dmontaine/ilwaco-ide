@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 ' MIT license, see LICENSE
 ' Copyright(c) 2021 adzm / Adam D. Walling

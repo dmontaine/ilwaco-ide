@@ -76,13 +76,7 @@ Namespace My.Sys.Forms
 	
 	Private Property CommandButton.Text(ByRef Value As WString)
 		Base.Text = Value
-		#ifdef __USE_GTK__
 			gtk_label_set_text_with_mnemonic(GTK_LABEL(gtk_bin_get_child(GTK_BIN(widget))), ToUtf8(Replace(Value, "&", "_")))
-		#elseif 0
-			If FHandle Then
-				(*env)->CallVoidMethod(env, FHandle, GetMethodID(*FClassAncestor, "setText", "(Ljava/lang/CharSequence;)V"), (*env)->NewStringUTF(env, ToUtf8(FText)))
-			End If
-		#endif
 	End Property
 	
 	Private Property CommandButton.Cancel As Boolean
@@ -110,12 +104,7 @@ Namespace My.Sys.Forms
 	Private Property CommandButton.Default(Value As Boolean)
 		If Value <> FDefault Then
 			FDefault = Value
-			#ifdef __USE_GTK__
 				gtk_widget_set_can_default(widget, Value)
-			#elseif 0
-				ChangeStyle BS_PUSHLIKE, False
-				ChangeStyle BS_DEFPUSHBUTTON, Value
-			#endif
 			Dim As Control Ptr frm = This.GetForm
 			If frm Then
 				If Value Then
@@ -165,25 +154,14 @@ Namespace My.Sys.Forms
 		Return Cast(Control Ptr, @This)
 	End Operator
 	
-	#ifdef __USE_GTK__
 		Private Sub CommandButton.Clicked(widget As GtkButton Ptr, user_data As Any Ptr)
 			Dim As CommandButton Ptr but = user_data
 			If but->OnClick Then but->OnClick(*but->Designer, *but)
 		End Sub
-	#endif
 	
 	Private Constructor CommandButton
-		#ifdef __USE_GTK__
 			widget = gtk_button_new_with_label("")
 			g_signal_connect(widget, "clicked", G_CALLBACK(@Clicked), @This)
-		#elseif 0
-			AStyle(0)        = BS_TEXT
-			AStyle(1)        = BS_BITMAP
-			AStyle(2)        = BS_ICON
-			AStyle(3)        = BS_ICON
-			ADefault(0)      = 0 'BS_PUSHLIKE
-			ADefault(1)      = BS_DEFPUSHBUTTON
-		#endif
 		Graphic.Ctrl  = @This
 		Graphic.OnChange = @GraphicChange
 		FTabIndex            = -1

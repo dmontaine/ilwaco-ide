@@ -1,16 +1,4 @@
-﻿#ifdef __FB_WIN32__
-	#ifdef __FB_64BIT__
-		'#Compile -dll -x "../../AddIns/My Add-In (x64).dll" "My Add-In.rc"
-	#else
-		'#Compile -dll -x "../../AddIns/My Add-In (x32).dll" "My Add-In.rc"
-	#endif
-#else
-	#ifdef __FB_64BIT__
-		'#Compile -dll -x "../../AddIns/MyAddInx64.so"
-	#else
-		'#Compile -dll -x "../../AddIns/MyAddInx32.so"
-	#endif
-#endif
+﻿		'#Compile -dll -x "../../AddIns/MyAddInx64.so"
 
 Enum MessageType '...'
 	mtInfo
@@ -78,6 +66,7 @@ Dim Shared As Any Ptr mnuService, mnuMyAddin, mnuMyAddinSeparator
 
 Dim Shared s As WString Ptr
 Function GetFolderPath(ByRef FileName As WString) ByRef As WString
+	Static EmptyWString As WString * 1
 	Dim Pos1 As Long = InStrRev(FileName, "\")
 	Dim Pos2 As Long = InStrRev(FileName, "/")
 	If Pos1 = 0 OrElse Pos2 > Pos1 Then Pos1 = Pos2
@@ -86,7 +75,7 @@ Function GetFolderPath(ByRef FileName As WString) ByRef As WString
 		*s = Left(FileName, Pos1)
 		Return *s
 	End If
-	Return ""
+	Return EmptyWString
 End Function
 
 Sub OnMyAddinButtonClick(ByRef Sender As Object)

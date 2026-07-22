@@ -38,7 +38,6 @@ Private Property List.Item(Index As Integer) As Any Ptr
 	If Index >= 0 AndAlso Index < m_Count Then
 		Return Items[Index]
 	Else
-		'Print __FUNCTION__ & ", Out of Index boundary. Index = " & Index & " of " & m_Count 
 		Return 0
 	End If
 	
@@ -48,7 +47,6 @@ Private Property List.Item(Index As Integer, FItem As Any Ptr)
 	If Index >= 0 AndAlso Index < m_Count Then
 		Items[Index] = FItem
 	Else
-		'Print __FUNCTION__ & ", Out of Index boundary. Index = " & Index & " of " & m_Count 
 	End If
 End Property
 

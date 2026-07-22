@@ -1,4 +1,4 @@
-#ifndef __FBSOUND_OOP_BI__
+﻿#ifndef __FBSOUND_OOP_BI__
 #define __FBSOUND_OOP_BI__
 
 #if Not defined( __FBSOUND_DYNAMIC_BI__ ) And Not defined ( __FBSOUND_BI__ ) 

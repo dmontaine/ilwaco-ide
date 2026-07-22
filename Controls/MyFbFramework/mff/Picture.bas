@@ -127,7 +127,6 @@ Namespace My.Sys.Forms
 	Private Sub Picture.GraphicChange(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Drawing.GraphicType, Image As Any Ptr, ImageType As Integer)
 		With Sender
 			If .Ctrl->Child Then
-				#ifdef __USE_GTK__
 					If GTK_IS_IMAGE(QPicture(.Ctrl->Child).ImageWidget) Then
 						Select Case ImageType
 						Case 0
@@ -136,32 +135,11 @@ Namespace My.Sys.Forms
 							gtk_image_set_from_pixbuf(GTK_IMAGE(QPicture(.Ctrl->Child).ImageWidget), .Icon.Handle)
 						End Select
 					End If
-				#elseif 0
-					Select Case ImageType
-					Case 0
-						QPicture(.Ctrl->Child).Style = PictureStyle.ssBitmap
-						QPicture(.Ctrl->Child).Perform(BM_SETIMAGE,ImageType,CInt(Sender.Bitmap.Handle))
-					Case 1
-						QPicture(.Ctrl->Child).Style = PictureStyle.ssIcon
-						QPicture(.Ctrl->Child).Perform(BM_SETIMAGE,ImageType,CInt(Sender.Icon.Handle))
-					Case 2
-						QPicture(.Ctrl->Child).Style = PictureStyle.ssCursor
-						QPicture(.Ctrl->Child).Perform(BM_SETIMAGE,ImageType,CInt(Sender.Icon.Handle))
-					Case 3
-						QPicture(.Ctrl->Child).Style = PictureStyle.ssEmf
-						QPicture(.Ctrl->Child).Perform(BM_SETIMAGE,ImageType,CInt(0))
-					End Select
-				#endif
 			End If
 		End With
 	End Sub
 	
 	
-	#ifdef __USE_WASM__
-		Private Function Picture.GetContent() As UString
-			Return ""
-		End Function
-	#endif
 	
 	Private Sub Picture.ProcessMessage(ByRef Message As Message)
 		Base.ProcessMessage(Message)
@@ -180,47 +158,10 @@ Namespace My.Sys.Forms
 	End Operator
 	
 	Private Constructor Picture
-		#ifdef __USE_GTK__
 			ImageWidget = gtk_image_new()
 			widget = gtk_layout_new(NULL, NULL)
 			If GTK_IS_WIDGET(ImageWidget) Then gtk_layout_put(GTK_LAYOUT(widget), ImageWidget, 0, 0)
 			This.RegisterClass "Picture", @This
-		#elseif 0
-			'https://blog.csdn.net/mmmvp/article/details/365155
-			'常数     说明
-			AStyle(0)=0
-			AStyle(1)=SS_BITMAP'在静态控件中显示一幅位图(.BMP)，由控件的文本(TEXT)指定一幅包含在资源中的位图文件(非文件名)，该风格忽略控件的宽度和高度，控件将自动调整大小以适应位图。
-			AStyle(2)=SS_ICON'在静态控件中显示一幅图标(.ICO)，由控件的文本(TEXT)指定一幅包含在资源中的图标文件(非文件名)，该风格忽略控件的宽度和高度，控件将自动调整大小以适应图标。
-			AStyle(3)=SS_ENHMETAFILE'在静态控件中显示一增强幅图元文件(.EMF)。由控件的文本(TEXT)指定图元文件名。控件大小固定不变，图元文件按比例缩放显示在控件客户区中。
-			AStyle(4)=SS_BLACKFRAME'用系统颜色组的窗口边界色(缺省为黑色)绘制一个边框，框内使用与底部窗体相同的颜色（透明）。
-			AStyle(5)=SS_BLACKRECT'用系统颜色组的窗口边界色(缺省为黑色)绘制一个矩形实心控件。
-			AStyle(6)=SS_GRAYFRAME'用系统颜色组的屏幕背景色绘制一个边框，框内使用与底部窗体相同的颜色（透明）。
-			AStyle(7)=SS_GRAYRECT'用系统颜色组的屏幕背景色绘制一个矩形实心控件。
-			AStyle(8)=SS_WHITEFRAME'用系统颜色组的窗口背景色(缺省为白色)绘制一个边框，框内使用与底部窗体相同的颜色（透明）。
-			AStyle(9)=SS_WHITERECT'用系统颜色组的窗口背景色(缺省为白色)色绘制一个矩形实心控件。
-			AStyle(10)=SS_ETCHEDFRAME'用下凹的3D线条绘制一个边框，框内使用与底部窗体相同的颜色（透明）。
-			AStyle(11)=SS_ETCHEDHORZ'用下凹的3D线条绘制控件的上下两边，框内使用与底部窗体相同的颜色（透明）。
-			AStyle(12)=SS_ETCHEDVERT'用下凹的3D线条绘制控件的左右两边，框内使用与底部窗体相同的颜色（透明）。
-			AStyle(13)=SS_RIGHTJUST'与SS_BITMAP 或 SS_ICON 配合当需要对控件的大小进行自动调整时以控件的右下角为基准，只有控件的上边和左边的位置改变。
-			AStyle(14)=SS_NOPREFIX'禁止对字符“&amp;”进行解释，通常字符“&amp;”会被解释成在下一个字符加一个下画线，“&amp;&amp;”会被解释成一个字符“&amp;”，用户可以使用SS_NOPREFIX风格来禁止这项解释。
-			AStyle(15)=SS_NOTIFY'当控件被用户单击或双击控件时向父窗口传送STN_CLICKED, STN_DBLCLK, STN_DISABLE, 或 STN_ENABLE 通知消息。
-			AStyle(16)=SS_OWNERDRAW'自绘静态控件，每当控件需要重画时，父窗口将收到WM_DRAWITEM消息。
-			AStyle(17)=SS_REALSIZEIMAGE'禁止根据位图或图标大小自动进行控件尺寸的调整，如果本常数被设定，大于控件的图片其超出部份将被截去。
-			AStyle(18)=SS_SUNKEN'绘制一个下沉的控件。
-			AStyle(19)=SS_CENTER'文本显示水平居中，显示之前先对文本进行格式化，超过控件宽度将自动换行。
-			AStyle(20)=SS_CENTERIMAGE'文本显示垂直居中。本常数还设定当位图或图标小于控件客户区时使用图片左上角点的颜色填充控件边缘。
-			AStyle(21)=SS_LEFT'文本显示居左，显示之前先对文本进行格式化，超过控件宽度将自动换行。
-			AStyle(22)=SS_LEFTNOWORDWRAP'文本显示居左，超过控件宽度部份将被截去，不进行自动换行处理。
-			AStyle(23)=SS_RIGHT'文本显示居右，显示之前先对文本进行格式化，超过控件宽度将自动换行。
-			AStyle(24)=SS_SIMPLE'文本在控件的左上角单行显示，不进行自动换行处理。父窗口进程不能对WM_CTLCOLORSTATIC消息进行处理。
-			
-			ACenterImage(0)  = SS_RIGHTJUST
-			ACenterImage(1)  = SS_CENTERIMAGE
-			ARealSizeImage(0)= 0
-			ARealSizeImage(1) = SS_REALSIZEIMAGE
-			ARealSizeControl(0) = SS_REALSIZECONTROL
-			ARealSizeControl(1) = 0
-		#endif
 		This.Canvas.Ctrl    = @This
 		Graphic.Ctrl = @This
 		Graphic.OnChange = @GraphicChange
@@ -237,10 +178,8 @@ Namespace My.Sys.Forms
 		End With
 	End Constructor
 	Private Destructor Picture
-		#ifdef __USE_GTK__
 			If GTK_IS_WIDGET(ImageWidget) Then
 					gtk_widget_destroy(ImageWidget)
 			End If
-		#endif
 	End Destructor
 End Namespace

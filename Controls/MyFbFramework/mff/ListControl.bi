@@ -53,12 +53,8 @@ Namespace My.Sys.Forms
 		FCtl3D            As Boolean
 		FSelectionMode    As SelectionModes
 		AItems(Any)       As Integer 
-		#ifdef __USE_GTK__
 			ListStore As GtkListStore Ptr
 			TreeSelection As GtkTreeSelection Ptr
-		#elseif 0
-			Declare Virtual Function GetContent() As UString
-		#endif
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
 	Public:
 		'Collection of list items

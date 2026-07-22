@@ -1,4 +1,4 @@
-#ifndef __FBS_CONFIG_BI__
+﻿#ifndef __FBS_CONFIG_BI__
 	#define __FBS_CONFIG_BI__
 	
 	'' NOTE: If these options are changed, then
@@ -35,16 +35,10 @@
 	'#define DEBUG
 	
 	' linux
-	#ifdef __FB_LINUX__
-		#ifndef __FB_64BIT__
-			#define NO_PLUG_DSP
-			#define NO_PLUG_ARTS
-		#endif
 		'#define NO_PLUG_ALSA
-	#endif
 	
 	#ifndef DEBUG_SOUND
-		#if __FB_DEBUG__ ' -g has priority
+		#if __FB_DEBUG__' -g has priority
 			#define DEBUG_SOUND
 		#endif
 	#endif

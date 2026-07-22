@@ -21,19 +21,7 @@
 #include once "mff/IniFile.bi"
 #include once "mff/HTTP.bi"
 
-	#ifdef __USE_GTK3__
-			#ifdef __FB_64BIT__
-				#define SettingsPath ExePath & "/Settings/VisualFBEditorX64_gtk3.ini"
-			#else
-				#define SettingsPath ExePath & "/Settings/VisualFBEditorX32_gtk3.ini"
-			#endif
-	#else
-			#ifdef __FB_64BIT__
-				#define SettingsPath ExePath & "/Settings/VisualFBEditorX64_gtk2.ini"
-			#else
-				#define SettingsPath ExePath & "/Settings/VisualFBEditorX32_gtk2.ini"
-			#endif
-	#endif
+		#define SettingsPath ExePath & "/Settings/VisualFBEditorX64_gtk3.ini"
 
 	#define Slash "/"
 	#define BackSlash "\"
@@ -42,13 +30,8 @@
 	#define BUNDLED_COMPILER_FOLDER "Compilers/FreeBASIC-1.10.1-linux-x86_64/bin"
 	#define BUNDLED_COMPILER_EXE "fbc"
 
-#if 0
-	Type WStringOrStringList As StringList
-	Type WStringOrStringListItem As StringListItem
-#else
-	Type WStringOrStringList As WStringList
-	Type WStringOrStringListItem As WStringListItem
-#endif
+Type WStringOrStringList As WStringList
+Type WStringOrStringListItem As WStringListItem
 
 Extern "rtlib"
 	Declare Function LineInputWstr Alias "fb_FileLineInputWstr"(ByVal filenumber As Long, ByVal dst As WString Ptr, ByVal maxchars As Integer) As Long
@@ -62,10 +45,6 @@ Namespace VisualFBEditor
 		Declare Virtual Function WriteProperty(ByRef PropertyName As String, Value As Any Ptr) As Boolean
 	End Type
 End Namespace
-
-'#if defined(__FB_WIN32__) AndAlso defined(__USE_GTK__)
-'	#define MAX_PATH 260
-'#endif
 
 Type HelpOptions
 	CurrentPath As WString * MAX_PATH
@@ -95,7 +74,6 @@ Declare Sub mClickTool(ByRef Designer As My.Sys.Object, Sender As My.Sys.Object)
 Declare Sub mClickWindow(ByRef Designer As My.Sys.Object, Sender As My.Sys.Object)
 Declare Sub mClickUseDefine(ByRef Designer As My.Sys.Object, Sender As My.Sys.Object)
 Declare Sub LoadSettings
-Declare Sub LoadLanguageTexts
 
 Common Shared As Form Ptr pfrmMain
 Common Shared As ComboBoxEdit Ptr pcboBuildConfiguration
@@ -121,7 +99,7 @@ Common Shared As Boolean AutoIncrement
 Common Shared As Boolean AutoComplete
 Common Shared As Boolean AutoSuggestions, ProjectAutoSuggestions
 Common Shared As Boolean AutoCreateRC
-Common Shared As Boolean AutoCreateBakFiles, gLocalProperties
+Common Shared As Boolean AutoCreateBakFiles
 Common Shared As Boolean AutoSaveSession, SessionOpened
 Common Shared As Boolean AddRelativePathsToRecent
 Common Shared As Boolean UseMakeOnStartWithCompile

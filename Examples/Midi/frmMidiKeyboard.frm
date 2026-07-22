@@ -3,10 +3,6 @@
 ' Freeware. Use at your own risk.
 
 '#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/ComboBoxEdit.bi"
 	#include once "mff/TrackBar.bi"
@@ -76,12 +72,6 @@
 	End Type
 	
 	Constructor frmMidiKeyboardType
-		#if _MAIN_FILE_ = __FILE__
-			With App
-				.CurLanguagePath = ExePath & "/Languages/"
-				.CurLanguage = "english"
-			End With
-		#endif
 		' frmMidiKeyboard
 		With This
 			.Name = "frmMidiKeyboard"

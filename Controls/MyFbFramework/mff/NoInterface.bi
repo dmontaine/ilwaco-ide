@@ -5,7 +5,6 @@
 '#   Version: 1.0.0                                                             #
 '################################################################################
 'Avoid using another Msgbox in SimpleVariantPlus.bi
-'Function MsgBox cdecl Overload (ByVal Msg As LPCWSTR, ByVal Flags As Long = MB_ICONINFORMATION) As Long'
 
 #define APP_TITLE "Visual FB Editor"
 #include once "UString.bi"
@@ -228,11 +227,7 @@ Private Function CheckUTF8NoBOM(ByRef SourceStr As String, ByVal SampleSize As L
 		Offset = byte_class_table(SourceStr[i])
 		current = state_table(Offset * 9 + current)
 		If current = 8 Then Exit For
-		'If current <> 0 AndAlso i < iEnd - 1 AndAlso (SourceStr[i] And &h80) = &h80 Then ' 非ASCII字符 Then
 		'	UnicodeCP = ((SourceStr[i] And &h0F) Shl 12) Or ((SourceStr[i + 1] And &H3F) Shl 6) Or ((SourceStr[i + 2] And &H3F))
-		'	Print "UnicodeCP=" & UnicodeCP & " Hex=" & Hex(UnicodeCP)
-		'	If (UnicodeCP < CUInt(&HE0)) OrElse (UnicodeCP > CUInt(&HEF)) Then current = 0 : i += 3
-		'End If
 	Next
 	Return IIf(current = 0, IIf(bHasUnicode, True, False), False)
 	
@@ -308,28 +303,12 @@ End Function
 		If Result = 0 Then
 			If FileEncoding = FileEncodings.Utf8 OrElse FileEncoding = FileEncodings.PlainText Then
 				If FileLoaded Then
-					#ifdef __USE_GTK__
 						Return FromUtf8(StrPtr(Buff))
-					#else
-						Dim CodePage As Integer = IIf(nCodePage= -1, GetACP(), nCodePage)
-						Dim As Integer m_BufferLen = MultiByteToWideChar(CodePage, 0, StrPtr(Buff), -1, NULL, 0) - 1
-						Dim As WString Ptr pBuff = CAllocate(m_BufferLen * 2 + 2)
-						MultiByteToWideChar(CodePage, 0, StrPtr(Buff), -1, pBuff, m_BufferLen)
-						Return pBuff
-					#endif
 				Else
 					Buff = String(FileSize, 0)
 					Get #Fn, , Buff
 					CloseFile_(Fn)
-					#ifdef __USE_GTK__
 						Return FromUtf8(StrPtr(Buff))
-					#else
-						Dim CodePage As Integer = IIf(nCodePage= -1, GetACP(), nCodePage)
-						Dim As Integer m_BufferLen = MultiByteToWideChar(CodePage, 0, StrPtr(Buff), -1, NULL, 0) - 1
-						Dim As WString Ptr pBuff = CAllocate(m_BufferLen * 2 + 2)
-						MultiByteToWideChar(CodePage, 0, StrPtr(Buff), -1, pBuff, m_BufferLen)
-						Return pBuff
-					#endif
 				End If
 			Else
 				Dim As WString Ptr pBuff
@@ -392,32 +371,15 @@ End Function
 		End If
 		If  Result = 0 Then
 			If FileEncoding = FileEncodings.Utf8 OrElse FileEncoding = FileEncodings.PlainText Then
-				#ifdef __USE_GTK__
 					If NewLineStr <> OldLineStr Then
 						Put #Fn, , ToUtf8(Replace(wData, OldLineStr, NewLineStr))
 					Else
 						Put #Fn, , ToUtf8(wData)
 					End If
-				#else
-					Dim CodePage As Integer = IIf(nCodePage= -1, GetACP(), nCodePage)
-					If NewLineStr <> OldLineStr AndAlso NewLineStr <> Chr(13, 10) Then
-						wData = Replace(wData, OldLineStr, NewLineStr)
-					End If
-					Dim As Integer m_BufferLen = WideCharToMultiByte(CodePage, 0, StrPtr(wData), -1, NULL, 0, NULL, NULL) - 1
-					Dim As ZString Ptr pBuff = CAllocate(m_BufferLen * 2 + 2)
-					WideCharToMultiByte(CodePage, 0, StrPtr(wData), m_BufferLen, pBuff, m_BufferLen, NULL, NULL)
-					Put #Fn, , *pBuff
-					Deallocate(pBuff)
-				#endif
 			'ElseIf FileEncoding = FileEncodings.PlainText Then
 			'	'To prevent right truncation due to the differing lengths of String and WString. THis is ANSI only
-			'	Dim As String bufferOut
-			'	If NewLineStr <> OldLineStr Then
 			'		bufferOut = Replace(wData, OldLineStr, NewLineStr);  'Automaticaly add a Cr LF to the ends of file for each time without ";"
-			'	Else
 			'		bufferOut = wData
-			'	End If
-			'	Print #Fn, bufferOut;
 			Else
 				If NewLineStr <> OldLineStr Then
 					Print #Fn, Replace(wData, OldLineStr, NewLineStr);  'Automaticaly add a Cr LF to the ends of file for each time without ";"

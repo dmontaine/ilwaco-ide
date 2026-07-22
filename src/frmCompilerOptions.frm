@@ -1,11 +1,4 @@
-﻿'#Region "Form"
-	#if 0
-		'#define __MAIN_FILE__
-		'#ifdef __FB_WIN32__
-		'#cmdline "Form1.rc"
-		'#endif
-		'Const _MAIN_FILE_ = __FILE__
-	#endif
+'#Region "Form"
 	#include once "mff/Form.bi"
 	#include once "mff/ListView.bi"
 	#include once "mff/CommandButton.bi"
@@ -102,8 +95,7 @@
 
 Private Sub frmCompilerOptionsType.Form_Create(ByRef Sender As Control)
 	Dim As Integer Fn = FreeFile_
-	Dim As WString * 1024 CompilerOptionsFile = ExePath & "\Settings\Others\Compiler options." & App.CurLanguage & ".txt"
-	If Dir(CompilerOptionsFile ) = "" Then CompilerOptionsFile = ExePath & "\Settings\Others\Compiler options.txt"
+	Dim As WString * 1024 CompilerOptionsFile = ExePath & "\Settings\Others\Compiler options.txt"
 	If Open(CompilerOptionsFile For Input Encoding "utf8" As #Fn) = 0 Then
 		Dim As WString * 1024 Buff
 		Dim As Integer Pos1

@@ -1,7 +1,4 @@
-﻿#ifdef __FB_WIN32__
-	'#Compile "Form1.rc"
-#endif
-#define __USE_GTK3__
+﻿#define __USE_GTK3__
 '#Region "Form"
 	#include once "mff/Form.bi"
 	#include once "mff/ReBar.bi"

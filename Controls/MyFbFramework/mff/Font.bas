@@ -63,34 +63,16 @@ Namespace My.Sys.Drawing
 		If FSize = 0 Then
 			FSize = DefaultFont.Size
 		End If
-		#ifdef __USE_WASM__
-			If QComponent(FParent).Handle Then
-				SetFont(QComponent(FParent).Handle, *FName & IIf(FBold, " Bold", "") & IIf(FItalic, " Italic", "") & " " & Str(FSize) & "px")
-			End If
-		#else
-			#ifdef __USE_GTK__
 				If Handle Then pango_font_description_free (Handle)
 				Handle = pango_font_description_from_string (*FName & IIf(FBold, " Bold", "") & IIf(FItalic, " Italic", "") & " " & Str(FSize))
-			#elseif 0
-				If Handle Then DeleteObject(Handle)
-				Handle = CreateFontW(-MulDiv(FSize, ydpi * 96, 72), 0, FOrientation * 10, FOrientation * 10, FBolds(Min(1, _Abs(FBold))), FItalic, FUnderline, FStrikeOut, FCharSet, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE, *FName)
-			#endif
 			If Handle Then
 				If FParent AndAlso *FParent Is My.Sys.ComponentModel.Component Then
-					#ifdef __USE_GTK__
 						If QComponent(FParent).Handle Then
 									gtk_widget_override_font(QComponent(FParent).Handle, Handle)
 						End If
-					#elseif 0
-						If QComponent(FParent).Handle Then
-							SendMessage(QComponent(FParent).Handle, WM_SETFONT, CUInt(Handle), True)
-							InvalidateRect Cast(Component Ptr, FParent)->Handle, 0, True
-						End If
-					#endif
 				End If
 				If OnCreate Then OnCreate(*Designer, This)
 			End If
-		#endif
 	End Sub
 	
 	Private Property Font.Parent As My.Sys.Object Ptr
@@ -101,16 +83,12 @@ Namespace My.Sys.Drawing
 		FParent = Value
 		If FDefaultName AndAlso *FName <> DefaultFont.Name Then WLet(FName, DefaultFont.Name)
 		If FDefaultSize AndAlso FSize <> DefaultFont.Size Then FSize = DefaultFont.Size
-		#ifdef __USE_GTK__
 			If *FParent Is My.Sys.ComponentModel.Component Then
 					Dim As GtkStyleContext Ptr WidgetStyle = gtk_widget_get_style_context(QComponent(FParent).Handle)
 						Var pfd = gtk_style_context_get_font(WidgetStyle, GTK_STATE_FLAG_NORMAL)
 				WLet(FName, WStr(*pango_font_description_get_family(pfd)))
 				FSize = pango_font_description_get_size(pfd) / PANGO_SCALE
 			End If
-		#else
-			Create
-		#endif
 	End Property
 	
 	Private Property Font.Name ByRef As WString
@@ -240,11 +218,7 @@ Namespace My.Sys.Drawing
 	
 	Destructor Font
 		WDeAllocate(FName)
-		#ifdef __USE_GTK__
 			If Handle Then pango_font_description_free (Handle)
-		#elseif 0
-			If Handle Then DeleteObject(Handle)
-		#endif
 	End Destructor
 	
 		DefaultFont.Name = "Ubuntu"

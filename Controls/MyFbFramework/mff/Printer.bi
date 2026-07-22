@@ -133,7 +133,6 @@ Namespace My.Sys.ComponentModel
 		Declare Function GetPrinterMaxPaperWidth (ByRef PrinterName As WString) As Long
 		Declare Function EnumPrinterPorts () As String
 		Declare Function EnumPrinters_ () As String
-		' Declare FUNCTION  DefaultPrinter () AS String
 		Declare Function GetDefaultPrinterDevice () As String
 		Declare Function GetDefaultPrinterDriver () As String
 		Declare Function GetDefaultPrinterPort () As String
@@ -207,8 +206,6 @@ Namespace My.Sys.ComponentModel
 		Declare Property FontSize() As Integer
 		Declare Property FontSize(As Integer)
 		Declare Constructor()
-		'Declare Operator Cast() As TCONTROL Ptr
-		'Declare Constructor
 	End Type
 	Dim Shared As WStringList PrinterSizesList
 End Namespace

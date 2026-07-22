@@ -3,10 +3,6 @@
 ' Freeware. Use at your own risk.
 
 '#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/ImageBox.bi"
 	#include once "mff/TextBox.bi"
@@ -38,11 +34,7 @@
 			.Text = "Radar32"
 			.Designer = @This
 			.StartPosition = FormStartPosition.CenterScreen
-			#ifdef __FB_64BIT__
 				.Caption = "Radar64"
-			#else
-				.Caption = "Radar32"
-			#endif
 			.Size = Type<My.Sys.Drawing.Size>(340, 170)
 			.BorderStyle = FormBorderStyle.FixedDialog
 			.MaximizeBox = False
@@ -194,11 +186,8 @@ Private Sub frmRadarType.HighlighthWnd(hWnd As HWND)
 		ObjectHighlight(hWnd, RGB(&h80, &h80, &h80))
 	End If
 	
-	'If phWnd = hWnd Then
 	'	phWnd = 0
-	'Else
 		phWnd = hWnd
-	'End If
 End Sub
 
 Private Sub frmRadarType.ImageBox1_MouseDown(ByRef Sender As Control, MouseButton As Integer, x As Integer, y As Integer, Shift As Integer)

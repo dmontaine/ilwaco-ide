@@ -50,7 +50,6 @@ Common Shared As Boolean ChangeKeyWordsCase
 Common Shared As Boolean ChangeEndingType
 Common Shared As Boolean AddSpacesToOperators
 Common Shared As Boolean WithFrame
-Common Shared As Boolean UseDirect2D
 Common Shared As WStringOrStringList Ptr pkeywordsAsm, pkeywords0, pkeywords1, pkeywords2 ', pkeywords3
 
 Type ECColorScheme
@@ -396,13 +395,11 @@ Namespace My.Sys.Forms
 		Dim FDropIndicatorPane As Integer = 0
 		Dim FDragScrollDX As Integer = 0
 		Dim FDragScrollDY As Integer = 0
-		#ifdef __USE_GTK__
 			Dim As gdouble FDragStartX, FDragStartY
 			Dim As guint FDragScrollTimerId = 0
 			Dim As Boolean FGtkPendingDelete = False
 			Dim As Integer FGtkPendingDeleteStartLine, FGtkPendingDeleteStartChar
 			Dim As Integer FGtkPendingDeleteEndLine, FGtkPendingDeleteEndChar
-		#endif
 		Dim FSelStartLine As Integer = 0
 		Dim FSelEndLine As Integer = 0
 		Dim FSelStartChar As Integer = 0
@@ -425,18 +422,9 @@ Namespace My.Sys.Forms
 		Dim OldChar As Integer
 		Dim As Integer dwLineHeight   ' высота строки
 		Dim As Integer HCaretPos, VCaretPos
-		#ifdef __USE_GTK__
 			Dim As GtkTooltip Ptr tooltip
 			Dim As Integer dead_key
 			Dim As GtkIMContext Ptr im_context
-		#else
-			Dim As HDC hd
-			Dim As HDC bufDC
-			Dim As HBITMAP bufBMP
-			Dim As TEXTMETRIC tm
-			Dim As HWND hwndTT, hwndTTDropDown, hwndTTMouseHover
-			Dim As ToolTips TT, TTDropDown, TTMouseHover
-		#endif
 		Dim As ..Rect rc
 		Dim As String Symbols = "!@#$~`'%^&*+-=()/\?<>.,;:[]{}""" & Chr(13) & Chr(10) & Chr(9)
 		Dim As Integer iMin
@@ -514,7 +502,6 @@ Namespace My.Sys.Forms
 		Declare Sub EC_ClearDropIndicator()
 		Declare Sub ProcessMessage(ByRef MSG As Message)
 		Dim CaretPosShowed As Long
-		#ifdef __USE_GTK__
 			Declare Static Function Blink_cb(user_data As gpointer) As gboolean
 			Declare Static Function EditControl_OnDraw(widget As GtkWidget Ptr, cr As cairo_t Ptr, data1 As gpointer) As Boolean
 			Declare Static Function EditControl_OnExposeEvent(widget As GtkWidget Ptr, Event As GdkEventExpose Ptr, data1 As gpointer) As Boolean
@@ -528,20 +515,6 @@ Namespace My.Sys.Forms
 			Declare Static Sub EditControl_OnDragDataReceived(widget As GtkWidget Ptr, CONTEXT As GdkDragContext Ptr, X As gint, Y As gint, seldata As GtkSelectionData Ptr, Info As guint, Time_ As guint, user_data As Any Ptr)
 			Declare Static Sub EditControl_OnDragDataGet(widget As GtkWidget Ptr, CONTEXT As GdkDragContext Ptr, seldata As GtkSelectionData Ptr, Info As guint, Time_ As guint, user_data As Any Ptr)
 			Declare Static Sub EditControl_OnDragDataDelete(widget As GtkWidget Ptr, CONTEXT As GdkDragContext Ptr, user_data As Any Ptr)
-		#else
-			Dim lXOffset As Long
-			Dim lYOffset As Long
-			Dim tP As ..Point
-			Dim lVertOffset As Long
-			Dim lHorzOffset As Long
-			Dim As ..Point m_tP
-			Declare Static Sub EC_TimerProc(HWND As HWND, uMsg As UINT, idEvent As UINT_PTR, dwTime As DWORD)
-			Declare Static Sub EC_TimerProcBlink(HWND As HWND, uMsg As UINT, idEvent As UINT_PTR, dwTime As DWORD)
-			Declare Static Sub EC_TimerProcDragScroll(HWND As HWND, uMsg As UINT, idEvent As UINT_PTR, dwTime As DWORD)
-			Declare Sub SetDark(Value As Boolean)
-			Declare Sub ReleaseDirect2D
-			Declare Sub SetClientSize()
-		#endif
 		Declare Function deltaToScrollAmount(lDelta As Integer) As Integer
 		Declare Sub MiddleScroll
 	Public:
@@ -569,7 +542,6 @@ Namespace My.Sys.Forms
 		Declare Function CharType(ByRef ch As WString) As Integer
 		Dim As Boolean CaretOn
 		Dim As Integer BlinkTime
-		#ifdef __USE_GTK__
 			Declare Static Function ActivateLink(Label As GtkLabel Ptr, uri As gchar Ptr, user_data As gpointer) As Boolean
 			Dim As cairo_t Ptr cr
 			Dim As GtkWidget Ptr wText
@@ -581,9 +553,7 @@ Namespace My.Sys.Forms
 			Dim As GdkCursor Ptr gdkCursorSIZEWE
 			Dim As GdkCursor Ptr gdkCursorSIZENS
 			Dim As GdkCursor Ptr gdkCursorARROW
-			#ifdef __USE_GTK3__
 				Dim As GtkStyleContext Ptr scontext
-			#endif
 			Dim As GtkWidget Ptr scrollbarvTop
 			Dim As GtkWidget Ptr scrollbarvBottom
 			Dim As GtkWidget Ptr scrollbarhLeft
@@ -602,12 +572,6 @@ Namespace My.Sys.Forms
 			Dim As Integer horizontalScrollBarHeight
 			Dim As Boolean InFocus
 			Dim As Boolean bChanged
-		#else
-			Dim As HWND sbScrollBarvTop
-			Dim As HWND sbScrollBarvBottom
-			Dim As HWND sbScrollBarhLeft
-			Dim As HWND sbScrollBarhRight
-		#endif
 		Dim As TypeElement Ptr DropDownTypeElement
 		Dim As Integer ActiveCodePane
 		Dim As Integer dwClientX, OlddwClientX    ' ширина клиентской области
@@ -630,15 +594,10 @@ Namespace My.Sys.Forms
 		Dim HScrollPosRight As Integer
 		Dim VScrollPosTop As Integer
 		Dim VScrollPosBottom As Integer
-		#ifdef __USE_GTK__
 			lvIntellisense As ListView
 			lblTooltip As GtkWidget Ptr
 			lblDropDownTooltip As GtkWidget Ptr
 			lblMouseHoverTooltip As GtkWidget Ptr
-		#else
-			cboIntellisense As ComboBoxEx
-			pnlIntellisense As Panel
-		#endif
 		ChangingStarted As Boolean
 		DropDownPath As WString Ptr
 		DropDownShowed As Boolean
@@ -766,9 +725,7 @@ Namespace My.Sys.Forms
 	Common As Integer MiddleScrollIndexX, MiddleScrollIndexY
 	Dim Shared As Any Ptr DragSourceECPtr
 	Dim Shared As Integer DragOrigStartLine, DragOrigStartChar, DragOrigEndLine, DragOrigEndChar
-	#ifdef __USE_GTK__
 		Dim Shared ECDragTargets(0) As GtkTargetEntry
-	#endif
 End Namespace
 
 Declare Sub LoadKeyWords
@@ -784,10 +741,8 @@ Namespace My.Sys.Forms
 	
 	Declare Sub GetColor(iColor As Long, ByRef iRed As Double, ByRef iGreen As Double, ByRef iBlue As Double)
 	
-	#ifdef __USE_GTK__
 		Declare Sub cairo_rectangle(cr As cairo_t Ptr, x As Double, y As Double, x1 As Double, y1 As Double, z As Boolean)
 		Declare Sub cairo_rectangle_(cr As cairo_t Ptr, x As Double, y As Double, x1 As Double, y1 As Double, z As Boolean)
-	#endif
 	
 	Declare Function GetIdentifierCase(ByRef IdentifierWord As String, ByRef OriginalCaseWord As String) As String
 	
@@ -795,7 +750,6 @@ Namespace My.Sys.Forms
 	
 	Declare Function TextWithoutQuotesAndComments(subject As String, OldCommentIndex As Integer = 0, WithoutComments As Boolean = True, WithoutBracket As Boolean = False, WithoutDoubleSpaces As Boolean = False) As String
 	
-	#ifdef __USE_GTK__
 		Declare Function EditControl_OnDraw(widget As GtkWidget Ptr, cr As cairo_t Ptr, data1 As gpointer) As Boolean
 		
 		Declare Function EditControl_OnExposeEvent(widget As GtkWidget Ptr, Event As GdkEventExpose Ptr, data1 As gpointer) As Boolean
@@ -805,7 +759,6 @@ Namespace My.Sys.Forms
 		Declare Sub EditControl_ScrollValueChanged(widget As GtkAdjustment Ptr, user_data As Any Ptr)
 		
 		Declare Sub EditControl_Commit(imcontext As GtkIMContext Ptr, sStr As ZString Ptr, ec As EditControl Ptr)
-	#endif
 End Namespace
 
 #ifndef __USE_MAKE__

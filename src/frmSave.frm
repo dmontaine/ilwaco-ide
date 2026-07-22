@@ -8,11 +8,7 @@
 			.Text = "Visual FB Editor"
 			'.Caption = "Visual FB Editor"
 			.BorderStyle = FormBorderStyle.FixedDialog
-			#ifdef __USE_GTK__
 				This.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico")
-			#else
-				This.Icon.LoadFromResourceID(1)
-			#endif
 			.FormStyle = FormStyles.fsStayOnTop
 			.MaximizeBox = False
 			.MinimizeBox = False

@@ -43,9 +43,7 @@ Namespace My.Sys.Forms
 			'Serializes properties to persistence stream
 			Declare Function WriteProperty(PropertyName As String, Value As Any Ptr) As Boolean
 		#endif
-		#ifdef __USE_GTK__
 			Dim As Boolean bCursor
-		#endif
 		'Sets minimum space required on both sides of the splitter
 		MinExtra As Integer
 		Declare Operator Cast As Control Ptr

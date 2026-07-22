@@ -130,7 +130,6 @@ End Function
 '返回WFD的字节数
 Private Function WFD2Bytes(wfd As WIN32_FIND_DATA Ptr) As ULongInt
 	Return (Cast(ULONGLONG, wfd->nFileSizeHigh) Shl 32) Or wfd->nFileSizeLow
-	'Return wfd->nFileSizeHigh * (MAXDWORD + 1) + wfd->nFileSizeLow
 End Function
 
 '返回FILETIME时间ft的时间
@@ -217,28 +216,24 @@ Private Function WFDCompare(ByVal sWFD As WIN32_FIND_DATA Ptr, ByVal tWFD As WIN
 		Select Case chkMode
 		Case 0 '>
 			If memcmp(st, tt, SizeOf(FILETIME)) > 0 Then
-			'If CompareFileTime(st, tt) > 0 Then
 				Return True
 			Else
 				Return False
 			End If
 		Case 1 '<
 			If memcmp(st, tt, SizeOf(FILETIME)) < 0 Then
-			'If CompareFileTime(st, tt) < 0 Then
 				Return True
 			Else
 				Return False
 			End If
 		Case 2 '<>
 			If memcmp(st, tt, SizeOf(FILETIME)) <> 0 Then
-			'If CompareFileTime(st, tt) <> 0 Then
 				Return True
 			Else
 				Return False
 			End If
 		Case 3 '=
 			If memcmp(st, tt, SizeOf(FILETIME)) = 0 Then
-			'If CompareFileTime(st, tt) = 0 Then
 				Return True
 			Else
 				Return False

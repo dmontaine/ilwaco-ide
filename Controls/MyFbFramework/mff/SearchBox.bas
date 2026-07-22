@@ -1,4 +1,4 @@
-'################################################################################
+﻿'################################################################################
 '#  SearchBox.bas                                                               #
 '#  This file is part of MyFBFramework                                          #
 '#  Authors: Xusinboy Bekchanov (2024)                                          #
@@ -61,7 +61,6 @@ Namespace My.Sys.Forms
 	
 	Private Constructor SearchBox
 		With This
-			#ifdef __USE_GTK__
 					WidgetEntry = gtk_search_entry_new()
 				WidgetTextView = gtk_text_view_new()
 				gtk_entry_set_activates_default(GTK_ENTRY(WidgetEntry), True)
@@ -76,12 +75,8 @@ Namespace My.Sys.Forms
 				g_signal_connect(GTK_WIDGET(WidgetTextView), "copy-clipboard", G_CALLBACK(@Entry_CopyClipboard), @This)
 				g_signal_connect(GTK_WIDGET(WidgetTextView), "cut-clipboard", G_CALLBACK(@Entry_CutClipboard), @This)
 				g_signal_connect(GTK_WIDGET(WidgetTextView), "paste-clipboard", G_CALLBACK(@Entry_PasteClipboard), @This)
-				#ifdef __USE_GTK3__
 					g_signal_connect(gtk_scrollable_get_hadjustment(GTK_SCROLLABLE(WidgetTextView)), "value-changed", G_CALLBACK(@Adjustment_ValueChanged), @This)
 					g_signal_connect(gtk_scrollable_get_vadjustment(GTK_SCROLLABLE(WidgetTextView)), "value-changed", G_CALLBACK(@Adjustment_ValueChanged), @This)
-				#else
-					g_signal_connect(GTK_WIDGET(WidgetTextView), "set-scroll-adjustments", G_CALLBACK(@TextView_SetScrollAdjustments), @This)
-				#endif
 				g_signal_connect(GTK_TEXT_VIEW(WidgetTextView), "preedit-changed", G_CALLBACK(@Preedit_Changed), @This)
 				g_signal_connect(GTK_ENTRY(WidgetEntry), "preedit-changed", G_CALLBACK(@Preedit_Changed), @This)
 				g_signal_connect(gtk_text_view_get_buffer(GTK_TEXT_VIEW(WidgetTextView)), "changed", G_CALLBACK(@TextBuffer_Changed), @This)
@@ -95,24 +90,6 @@ Namespace My.Sys.Forms
 				scrolledwidget = 0
 				widget = WidgetEntry
 				This.RegisterClass "SearchBox", @This
-			#else
-				RegisterClass "SearchBox", "Edit"
-				OnHandleIsAllocated = @HandleIsAllocated
-				ChildProc = @WndProc
-				WLet(FClassAncestor, "Edit")
-				FLeftMargin = 20
-				FRightMargin = 20
-				imgSearch.DoubleBuffered = True
-				imgSearch.Designer = @This
-				imgSearch.OnPaint = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control, ByRef Canvas As My.Sys.Drawing.Canvas), @imgSearch_Paint)
-				imgSearch.Parent = @This
-				imgClear.DoubleBuffered = True
-				imgClear.Designer = @This
-				imgClear.OnPaint = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control, ByRef Canvas As My.Sys.Drawing.Canvas), @imgClear_Paint)
-				imgClear.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @imgClear_Click)
-				imgClear.Visible = False
-				imgClear.Parent = @This
-			#endif
 			FHideSelection    = False
 			FTabIndex          = -1
 			FTabStop           = True

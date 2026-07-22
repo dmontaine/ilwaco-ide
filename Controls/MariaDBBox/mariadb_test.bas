@@ -1,4 +1,4 @@
-#include once "inc/mariadb.bi"
+﻿#include once "inc/mariadb.bi"
 
 Dim db As MYSQL Ptr
 Dim dbname As String

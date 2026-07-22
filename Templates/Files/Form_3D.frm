@@ -1,8 +1,4 @@
 ﻿'#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	
 	#include once "mff/Form.bi"
 	#include once "mff/Panel.bi"
@@ -14,7 +10,6 @@
 	Declare Sub RenderProj(Param As Any Ptr)
 	
 	'' include fbgfx.bi for some useful definitions
-	'#include once "fbgfx.bi"
 	'Using FB
 	
 	'if drawing with RayLib
@@ -35,12 +30,6 @@
 	End Type
 	
 	Constructor Form1Type
-	#if _MAIN_FILE_ = __FILE__
-        With App
-			.CurLanguagePath = ExePath & "/Languages/"
-			.CurLanguage = My.Sys.Language
-		End With
-	#endif
 		' Form1
 		With This
 			.Name = "Form1"
@@ -150,11 +139,6 @@ Private Sub Form1Type.Form_Create(ByRef Sender As Control)
 End Sub
 
 Private Sub Form1Type.Form_Resize(ByRef Sender As Control, NewWidth As Integer, NewHeight As Integer)
-	#if 0
-		
-	#elseif 0
-		MoveWindow(HandleRender, 0, 0, ScaleX(PanelRender.Width), ScaleY(PanelRender.Height), True)
-	#endif
 End Sub
 
 Private Sub Form1Type.Form_Close(ByRef Sender As Form, ByRef Action As Integer)

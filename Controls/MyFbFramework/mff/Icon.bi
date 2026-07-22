@@ -13,12 +13,8 @@
 
 #include once "Object.bi"
 #include once "Bitmap.bi"
-#ifdef __USE_GTK__
 		#include once "gtk/gtk.bi"
-		#ifdef __USE_GTK3__
 			#include once "glib-object.bi"
-		#endif
-#endif
 
 Namespace My.Sys.Drawing
 	'Represents a icon, which is a small bitmap image that is used to represent an object (Windows, Linux).
@@ -29,15 +25,7 @@ Namespace My.Sys.Drawing
 		FResName As WString Ptr
 	Public:
 		Graphic As Any Ptr
-		#ifdef __USE_GTK__
 			Handle As GdkPixbuf Ptr
-		#elseif 0
-			Handle  As jobject
-		#elseif 0
-			Handle  As HICON
-		#else
-			Handle  As Any Ptr
-		#endif
 		Declare Function ReadProperty(ByRef PropertyName As String) As Any Ptr
 		Declare Function WriteProperty(ByRef PropertyName As String, Value As Any Ptr) As Boolean
 		Declare Property ResName ByRef As WString
@@ -56,13 +44,7 @@ Namespace My.Sys.Drawing
 		Declare Operator Let(ByRef Value As WString)
 		Declare Operator Let(Value As Integer)
 		Declare Operator Let(Value As Icon)
-		#ifdef __USE_GTK__
 			Declare Operator Let(Value As GdkPixbuf Ptr)
-		#elseif 0
-			Declare Operator Let(Value As HICON)
-		#else
-			Declare Operator Let(Value As Any Ptr)
-		#endif
 		Declare Constructor
 		Declare Destructor
 		Changed As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Icon)

@@ -1,10 +1,7 @@
-
+﻿
 #include once "inc/mongoose.bi"
-'#ifndef __FB_64BIT__
 '	#libpath "win32"
-'#else
 '	#libpath "win64"
-'#endif
 'demo for udp(sntp-time-sync)
 Dim Shared s_boot_timestamp As time_t = 0
 Dim Shared s_sntp_conn As mg_connection Ptr = NULL

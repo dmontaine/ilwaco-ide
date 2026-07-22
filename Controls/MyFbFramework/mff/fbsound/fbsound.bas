@@ -37,14 +37,10 @@
 '' built in to static lib then we want the exports
 '' if it is later built in to a shared library 
 
-#if 0
-	#define API_EXPORT Export
-#else
- #define API_EXPORT  
-#endif
+#define API_EXPORT  
 'Type enum_mad_flow As mad_flow
 
-#if defined(NO_MP3) And defined(NO_SID)
+#if (defined(NO_MP3) And defined(NO_SID))
   ' no streams
 #else
  Type FBS_STREAM
@@ -105,7 +101,7 @@ Dim Shared _movesliceright      As movesliceright32_t
 Dim Shared _copysliceleft       As copysliceleft32_t
 Dim Shared _movesliceleft       As movesliceleft32_t
 
-#if defined(NO_MP3) And defined(NOSID)
+#if (defined(NO_MP3) And defined(NOSID))
   ' no streams
 #else
 
@@ -292,7 +288,7 @@ Sub _FillBuffer(ByVal pArg As Any Ptr)
   
   _nPlayedBytes += plug->BufferSize
 
-#if defined(NO_MP3) And defined(NO_SID)
+#if (defined(NO_MP3) And defined(NO_SID))
   ' no streams
 #else
 
@@ -796,7 +792,7 @@ Private Function _Get_PlugPath() As String
   Return tmp
 End Function
 
-#if __FB_OUT_DLL__ <> 0
+#if (__FB_OUT_DLL__ <> 0)
 
 Private _
 Function _InitPlugout(ByVal filename As String, _
@@ -848,22 +844,10 @@ End Function
 
 pluglist:
 
- #ifndef __FB_64BIT__
-  #ifndef NO_PLUG_ALSA
-Data "libfbsound-alsa-32.so"
-  #endif
-  #ifndef NO_PLUG_DSP
-Data "libfbsound-dsp-32.so"
-  #endif
-  #ifndef NO_PLUG_ARTS
-Data "libfbsound-arts-32.so"
-  #endif
- #else
   ' linux 64-bit 
   #ifndef NO_PLUG_ALSA
 Data "libfbsound-alsa-64.so"
   #endif
- #endif
 
 Data "" ' end of list
   
@@ -876,7 +860,7 @@ Sub _Enumerate_Plugs()
   dprint("_Enumerate_Plugs()") 
   If _nPlugs>0 Then Exit Sub
 
-#if __FB_OUT_DLL__ = 0
+#if (__FB_OUT_DLL__ = 0)
   Dim cdtor As Const fbsound.cdtor.cdtor_struct Ptr = Any
   cdtor = fbsound.cdtor.getfirst_plugin()
   Do While cdtor
@@ -935,7 +919,7 @@ Sub _fbs_exit cdecl () FBS_MODULE_DTOR
 #endif
 End Sub
 
-#if __FB_OUT_DLL__ = 0
+#if (__FB_OUT_DLL__ = 0)
 Public _
 Sub ctor_fbs_init cdecl () FBS_MODULE_REGISTER_CDTOR
 	Static cdtor As fbsound.cdtor.cdtor_struct = _
@@ -1016,7 +1000,7 @@ Function FBS_Get_PlayingSounds() As Integer  API_EXPORT
   If (_IsRunning=True) Then Return _nPlayingSounds
 End Function
 
-#if defined(NO_MP3) And defined(NO_SID)
+#if (defined(NO_MP3) And defined(NO_SID))
   ' no streams
 #else
 Function FBS_Get_PlayingStreams() As Integer  API_EXPORT
@@ -1048,10 +1032,10 @@ Function FBS_Init(ByVal nRate        As Integer, _
   Dim As Boolean  ret
   Dim As FBS_PLUG    _newVar
 
-#if __FB_OUT_DLL__ = 0
+#if (__FB_OUT_DLL__ = 0)
   dprint("fbsound.cdtor.callctors()")
   fbsound.cdtor.callctors()
-  #if defined( Debug ) Or ( __FB_DEBUG__ <> 0 )
+  #if (defined(Debug) Or (__FB_DEBUG__ <> 0))
     fbsound.cdtor.dump()
   #endif
 #endif
@@ -1194,7 +1178,7 @@ Function FBS_Exit() As Boolean  API_EXPORT
     Sleep(100,1)
   End If
 
-#if defined(NO_MP3) And defined(NO_SID)
+#if (defined(NO_MP3) And defined(NO_SID))
   ' no streams
 #else
 
@@ -1270,7 +1254,7 @@ Function FBS_Exit() As Boolean  API_EXPORT
   Sleep(100,1)
   If _Plugs(_Plug).plug_hLib <> NULL Then
 
-#if __FB_OUT_DLL__ <> 0
+#if (__FB_OUT_DLL__ <> 0)
     dprint("FBS_Exit() call dylibfree _Plugs(_Plug).plug_hLib")
     DyLibFree _Plugs(_Plug).plug_hLib
 #endif
@@ -1283,10 +1267,10 @@ Function FBS_Exit() As Boolean  API_EXPORT
   _IsInit = False
   dprint("FBS_Exit()~")
 
-#if __FB_OUT_DLL__ = 0
+#if (__FB_OUT_DLL__ = 0)
   dprint("fbsound.cdtor.calldtors()")
   fbsound.cdtor.calldtors()
-  #if defined( Debug ) Or ( __FB_DEBUG__ <> 0 )
+  #if (defined(Debug) Or (__FB_DEBUG__ <> 0))
     fbsound.cdtor.dump()
   #endif
 #endif

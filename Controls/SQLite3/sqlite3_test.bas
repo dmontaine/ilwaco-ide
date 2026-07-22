@@ -1,4 +1,4 @@
-''
+﻿''
 '' SQLite test, translated by Nex/marzec
 ''
 

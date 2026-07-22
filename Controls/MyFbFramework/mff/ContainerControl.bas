@@ -29,7 +29,6 @@ Namespace My.Sys.Forms
 		End Function
 	#endif
 	
-	#ifdef __USE_GTK__
 		Private Function ContainerControl.RegisterClass(ByRef wClassName As WString, Obj As Any Ptr, WndProcAddr As Any Ptr = 0) As Boolean
 			If CInt(widget) AndAlso CInt(GTK_IS_NOTEBOOK(widget) <> 1) Then
 				Dim PROC As Function(widget As GtkWidget Ptr, Event As GdkEvent Ptr, user_data As Any Ptr) As Boolean = WndProcAddr
@@ -49,9 +48,7 @@ Namespace My.Sys.Forms
 					fixedwidget = widget
 				ElseIf GTK_IS_BOX(widget) = 1 Then
 					box = widget
-				#ifdef __USE_GTK3__
 				ElseIf GTK_IS_STACK(widget) = 1 Then
-				#endif
 				ElseIf GTK_IS_SCROLLED_WINDOW(widget) Then
 						fixedwidget = gtk_fixed_new()
 							gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(widget), fixedwidget)
@@ -73,7 +70,6 @@ Namespace My.Sys.Forms
 			End If
 			Return Base.RegisterClass(wClassName, Obj, WndProcAddr)
 		End Function
-	#endif
 	
 	Private Sub ContainerControl.ProcessMessage(ByRef Message As Message)
 		Base.ProcessMessage(Message)
@@ -109,7 +105,6 @@ Namespace My.Sys.Forms
 	End Constructor
 	
 	Private Destructor ContainerControl
-		#ifdef __USE_GTK__
 			If CInt(widget) AndAlso CInt(GTK_IS_NOTEBOOK(widget) <> 1) Then
 				If GTK_IS_WIDGET(widget) AndAlso gtk_widget_is_toplevel(widget) Then
 					box = 0
@@ -120,16 +115,13 @@ Namespace My.Sys.Forms
 					fixedwidget = 0
 				ElseIf GTK_IS_BOX(widget) = 1 Then
 					box = 0
-				#ifdef __USE_GTK3__
 				ElseIf GTK_IS_STACK(widget) = 1 Then
-				#endif
 				ElseIf GTK_IS_SCROLLED_WINDOW(widget) Then
 					fixedwidget = 0
 				Else
 					layoutwidget = 0
 				End If
 			End If
-		#endif
 	End Destructor
 End Namespace
 

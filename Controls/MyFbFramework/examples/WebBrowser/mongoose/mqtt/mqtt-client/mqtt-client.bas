@@ -1,9 +1,6 @@
-#include once "inc/mongoose.bi"
-'#ifndef __FB_64BIT__
+﻿#include once "inc/mongoose.bi"
 '#libpath "../../win32"
-'#else
 '#libpath "../../win64"
-'#endif
 dim shared s_url as  zstring ptr = @"mqtt://broker.hivemq.com:1883"
 dim shared s_sub_topic as  zstring ptr = @"mg/+/test"
 dim shared s_pub_topic as zstring ptr = @"mg/clnt/test"

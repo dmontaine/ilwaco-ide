@@ -9,10 +9,6 @@
 
 
 '#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/TextBox.bi"
 	#include once "mff/ComboBoxEdit.bi"
@@ -121,7 +117,6 @@ Private Sub Form1Type.cmdRun_Click(ByRef Sender As Control)
 	'' create object
 		Dim As CHttpStream stream
 		'' get the page
-		'If( stream.receive( "www.freebasic.net" ) ) Then
 		RtfReceive.Text = "Start..."
 		If( stream.receive( Trim(cboURL.Text)) ) Then
 			RtfReceive.Text = FromUtf8(stream.read())

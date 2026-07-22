@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 Dim Shared As Boolean g_darkModeSupported
 Dim Shared As Boolean g_darkModeEnabled

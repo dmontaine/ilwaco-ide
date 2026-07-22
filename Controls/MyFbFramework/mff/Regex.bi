@@ -1,4 +1,4 @@
-''
+﻿''
 '' Regex.bi
 '' Regular expressions support for MyFbFramework
 ''

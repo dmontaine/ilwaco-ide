@@ -118,7 +118,6 @@ Private Function SampleBuffer.Load(ByRef FileName As WString) As Boolean
 		bLoaded = FBS_Load_WAVFile(FileName, @hWave)
 	Case "MP3", "MP2", "MP"
 		bLoaded = FBS_Load_MP3File(FileName, @hWave)
-		'Case "OGG"
 		'bLoaded = FBS_Load_OGGFile(FileName, @hWave)
 	Case "MOD", "SM3", "IT", "XM"
 		bLoaded = FBS_Load_MODFile(FileName, @hWave)
@@ -183,11 +182,9 @@ Private Function SoundPlayer.Create(ByVal BufferPtr As SampleBuffer Ptr) As Bool
 End Function
 
 Private Function SoundPlayer.Load(ByRef FileName As WString) As Boolean
-	'If Not _IsInit Then
 	'	'Print "Error: Sound device initialization failed."
 	'	'This.Destroy() : Return False
 	'	Var Device = SoundDevice()
-	'End If
 	If hSound <> -1 OrElse This.pBuffer <> 0 Then This.Destroy()
 	Dim As SampleBuffer Buffer
 	Dim As Boolean bLoadok = Buffer.Load(FileName)

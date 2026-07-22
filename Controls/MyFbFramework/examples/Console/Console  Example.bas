@@ -13,7 +13,6 @@ Console.ForeColor = clRed
 Console.Title = "VisualFBEditor - Console Example"
 'MsgBox Console.Title
 
-' Print Heart shape   打印心形图案
 Dim As Single a, x, y
 Dim As String LineStr
 For y = 1.5 To -1.5 Step -0.1
@@ -51,7 +50,6 @@ Console.WriteLine " view widthMax=" &  Console.ViewWidthMax & "  view heightMax=
 
 Console.InputModeLine= True
 'Console.FillTextEx(10, 5, 212, 58, clYellow, clPink, clCyan)
-'Dim As String YourName = Console.ReadLine("输入你的名字: ")
 Dim As String YourName = Console.ReadLine("Please input your name: ")
 
 Console.WriteLine "Hello, " & YourName

@@ -68,7 +68,6 @@ Namespace My.Sys.Forms
 		LP_BOTTOM
 	End Enum
 	
-	#ifdef __USE_GTK__
 		Private Type RectL
 			Left As Long
 			Top As Long
@@ -93,7 +92,6 @@ Namespace My.Sys.Forms
 			Width As Single
 			Height As Single
 		End Type
-	#endif
 	
 	Private Const GDIP_OK As Long = &H0
 	

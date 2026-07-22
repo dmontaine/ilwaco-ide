@@ -28,7 +28,6 @@ Namespace My.Sys.Forms
 		SelEnd              As Integer
 		PrevPart            As Integer
 		PrevDateTimePart    As String
-		#ifdef __USE_GTK__
 			Dim As GtkWidget Ptr CheckWidget, TextWidget, ButtonWidget, UpDownWidget, PopupWindow, CalendarWidget
 			Declare Static Sub SizeAllocate(widget As GtkWidget Ptr, allocation As GdkRectangle Ptr, user_data As Any Ptr)
 			Declare Static Function DateTimePicker_Draw(widget As GtkWidget Ptr, cr As cairo_t Ptr, data1 As Any Ptr) As Boolean
@@ -48,10 +47,6 @@ Namespace My.Sys.Forms
 			Declare Sub SetDateTime(PressedNumberValue As Long, DateTimePart As String, NewDateTimePart As String)
 			Declare Sub DatePartUp
 			Declare Sub DatePartDown
-		#else
-			Declare Static Sub WndProc(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As My.Sys.Forms.Control)
-		#endif
 	Protected:
 		FDateTimePart       As String
 		FFocusChanged       As Boolean

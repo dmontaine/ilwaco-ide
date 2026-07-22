@@ -1,8 +1,4 @@
-﻿#ifdef __FB_WIN32__
-	'#Compile -exx "Form1.rc"
-#else
-	'#Compile -exx
-#endif
+﻿'#Compile -exx
 '#Region "Form"
 	#include once "frmImageManager.bi"
 	#include once "frmPath.bi"
@@ -429,16 +425,6 @@ Private Sub frmImageManager.cmdOK_Click(ByRef Sender As Control)
 			End With
 		End If
 		CloseFile_(Fn)
-		'	If tb = 0 AndAlso MainFile <> ML("Untitled") Then tb = AddTab(MainFile)
-		'	If tb <> 0 AndAlso ptabCode->IndexOfTab(tb) > -1 Then
-		'		tb->txtCode.Changing "Adding #Compile"
-		'		tb->txtCode.InsertLine 0, "#ifdef __FB_WIN32__"
-		'		tb->txtCode.InsertLine 1, !"\t'#Compile -exx """ & ResourceFileName & """"
-		'		tb->txtCode.InsertLine 2, "#else"
-		'		tb->txtCode.InsertLine 3, !"\t'#Compile -exx"
-		'		tb->txtCode.InsertLine 4, "#endif"
-		'		tb->txtCode.Changed "Adding #Compile"
-		'	End If
 	End If
 	ModalResult = ModalResults.OK
 	SelectedItem = lvImages.SelectedItem

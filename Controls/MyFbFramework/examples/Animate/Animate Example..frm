@@ -7,9 +7,6 @@
 '#Region "Form"
 	#define GIFPlayOn
 	#define MoviePlayOn
-	#if 0
-		#define __MAIN_FILE__ __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/sys.bi"
 	#include once "mff/CommandButton.bi"
@@ -91,11 +88,7 @@
 		With This
 			.Name = "frmAnimate"
 			.Text = ML("VisualFBEditor Animate Player")
-			#ifdef __FB_64BIT__
 				.Caption = ML("VisualFBEditor Animate Player(X64)")
-			#else
-				.Caption = ML("VisualFBEditor Animate Player(X32)")
-			#endif
 			.Designer = @This
 			.OnCreate = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @Form_Create)
 			.OnClose = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Form, ByRef Action As Integer), @Form_Close)

@@ -1,4 +1,4 @@
-#include once "SystemInformation.bi"
+﻿#include once "SystemInformation.bi"
 
 Namespace My.Sys.Forms
 	Private Function SystemInformation.GetSize(iWidth As Integer, iHeight As Integer) As My.Sys.Drawing.Size

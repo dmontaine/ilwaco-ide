@@ -1,4 +1,4 @@
-'       FreeBasic header file, manual-generated file
+﻿'       FreeBasic header file, manual-generated file
 ' containing additional code-generating macros for Gdk-2.0 (Gdk-3.0)
 ' LGPLv2.1 (C) 2014-2022 by Thomas[ dot }Freiherr[ at ]gmx[ dot }net
 

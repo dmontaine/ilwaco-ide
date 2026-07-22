@@ -51,7 +51,8 @@ Namespace My.Sys.Forms
 	#endif
 	
 	Private Property StatusPanel.Caption ByRef As WString
-		If FCaption > 0 Then Return *FCaption Else Return ""
+	Static EmptyWString As WString * 1
+		If FCaption > 0 Then Return *FCaption Else Return EmptyWString
 	End Property
 	
 	Private Property StatusPanel.Caption(ByRef Value As WString)
@@ -61,7 +62,8 @@ Namespace My.Sys.Forms
 	End Property
 	
 	Private Property StatusPanel.Name ByRef As WString
-		If FName > 0 Then Return *FName Else Return ""
+	Static EmptyWString As WString * 1
+		If FName > 0 Then Return *FName Else Return EmptyWString
 	End Property
 	
 	Private Property StatusPanel.Name(ByRef Value As WString)
@@ -153,12 +155,6 @@ Namespace My.Sys.Forms
 	
 	Private Sub StatusPanel.IconChanged(ByRef Designer As My.Sys.Object,  ByRef Sender As My.Sys.Drawing.Icon)
 		With *Cast(StatusPanel Ptr, Sender.Graphic)
-			#ifdef __USE_GTK__
-			#else
-				If .Parent AndAlso .Parent->Handle Then
-					SendMessage(.Parent->Handle, SB_SETICON, Cast(StatusBar Ptr, .Parent)->IndexOf(Sender.Graphic), CInt(.Icon.Handle))
-				End If
-			#endif
 		End With
 	End Sub
 
@@ -229,9 +225,7 @@ Namespace My.Sys.Forms
 		Dim As StatusPanel Ptr Ptr Temp
 		Dim As Integer i, x = 0
 		If Index >= 0 And Index <= Count - 1 Then
-			#ifdef __USE_GTK__
 				gtk_statusbar_remove(GTK_STATUSBAR(widget), context_id, Panels[i]->message_id)
-			#endif
 			Temp = _CAllocate((Count - 1) * SizeOf(StatusPanel Ptr))
 			x = 0
 			For i = 0 To Count -1
@@ -255,11 +249,7 @@ Namespace My.Sys.Forms
 			Remove i
 		Next i
 		Count = 0
-		#ifdef __USE_GTK__
 			gtk_statusbar_remove_all(GTK_STATUSBAR(widget), context_id)
-		#else
-			SetWindowText Handle, ""
-		#endif
 	End Sub
 	
 	Private Function StatusBar.IndexOf(ByRef stPanel As StatusPanel Ptr) As Integer
@@ -296,13 +286,11 @@ Namespace My.Sys.Forms
 				WAdd(ss, IIf(i = 0, "", !"\t") & Panels[i]->Caption)
 			Next i
 		End If
-		#ifdef __USE_GTK__
 			If *ss = "" Then
 				gtk_statusbar_push(GTK_STATUSBAR(widget), context_id, !"\0")
 			Else
 				gtk_statusbar_push(GTK_STATUSBAR(widget), context_id, ToUtf8(*ss))
 			End If
-		#endif
 		Invalidate
 		WDeAllocate(s)
 		WDeAllocate(ss)
@@ -350,7 +338,8 @@ Namespace My.Sys.Forms
 	End Property
 	
 	Private Property StatusBar.SimpleText ByRef As WString
-		If FSimpleText > 0 Then Return *FSimpleText Else Return ""
+	Static EmptyWString As WString * 1
+		If FSimpleText > 0 Then Return *FSimpleText Else Return EmptyWString
 	End Property
 	
 	Private Property StatusBar.SimpleText(ByRef Value As WString)
@@ -368,7 +357,6 @@ Namespace My.Sys.Forms
 	
 	Private Constructor StatusBar
 		With This
-			#ifdef __USE_GTK__
 				widget = gtk_statusbar_new
 				'gtk_statusbar_set_has_resize_grip(gtk_statusbar(widget), true)
 				.RegisterClass "StatusBar", @This
@@ -378,18 +366,11 @@ Namespace My.Sys.Forms
 				'Var cont2 = gtk_statusbar_get_context_id(gtk_statusbar(widget), "statusbar 2")
 				'gtk_statusbar_push(gtk_statusbar(widget), cont2, *FSimpleText)
 				
-			#else
-				AStyle(0) = 0
-				AStyle(1) = SBARS_SIZEGRIP
-			#endif
 			FSizeGrip = True
 			WLet(FClassName, "StatusBar")
 			WLet(FClassAncestor, "msctls_StatusBar32")
-			'#ifdef __USE_GTK3__
 			'	.Height       = 35
-			'#else
 			'	.Height       = 21
-			'#endif
 			.Height = ScaleY(Font.Size / 72 * 96 + 6)
 			.Width        = 175
 			.Child        = @This

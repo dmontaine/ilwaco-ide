@@ -31,7 +31,6 @@ Namespace My.Sys.Forms
 		End Function
 	#endif
 	
-	#ifdef __USE_GTK__
 		Private Function TimerComponent.TimerProc(ByVal user_data As gpointer) As gboolean
 			With TimersList
 				Dim As TimerComponent Ptr tmr = user_data
@@ -41,16 +40,6 @@ Namespace My.Sys.Forms
 				Return tmr->Enabled
 			End With
 		End Function
-	#else
-		Private Sub TimerComponent.TimerProc(hwnd As HWND, uMsg As UINT, idEvent As Integer, dwTime As DWORD)
-			With TimersList
-				If .Contains(idEvent) Then
-					Var tmr = Cast(TimerComponent Ptr, .Object(.IndexOf(idEvent)))
-					If tmr->OnTimer Then tmr->OnTimer(*tmr->Designer, *tmr)
-				End If
-			End With
-		End Sub
-	#endif
 	
 	Private Property TimerComponent.Enabled As Boolean
 		Return FEnabled
@@ -59,22 +48,12 @@ Namespace My.Sys.Forms
 	Private Property TimerComponent.Enabled(Value As Boolean)
 		FEnabled = Value
 		If FInterval <> 0 AndAlso Not FDesignMode Then
-			#ifdef __USE_GTK__
 				If FEnabled Then
 					ID = g_timeout_add(Interval, Cast(GSourceFunc, @TimerProc), Cast(gpointer, @This))
 					TimersList.Add ID, @This
 				Else
 					TimersList.Remove TimersList.IndexOf(ID)
 				End If
-			#else
-				If FEnabled Then
-					ID = SetTimer(NULL, 0, Interval, @TimerProc)
-					TimersList.Add ID, @This
-				Else
-					If ID Then KillTimer NULL, ID
-					TimersList.Remove TimersList.IndexOf(ID)
-				End If
-			#endif
 		End If
 	End Property
 	
@@ -88,11 +67,7 @@ Namespace My.Sys.Forms
 			TimersList.Remove TimersList.IndexOf(ID)
 			ID = 0
 			If FInterval > 0 Then
-				#ifdef __USE_GTK__
 					ID = g_timeout_add(Interval, Cast(GSourceFunc, @TimerProc), Cast(gpointer, @This))
-				#else
-					ID = SetTimer(NULL, 0, Interval, @TimerProc)
-				#endif
 				TimersList.Add ID, @This
 			End If
 		End If

@@ -100,7 +100,6 @@ Private Destructor FilesSync
 	If mSyncTarget Then Deallocate(mSyncTarget)
 	If mPercentPath Then Deallocate(mPercentPath)
 	If mLogFile Then Deallocate(mLogFile)
-	'If WStrTmpPtr Then Deallocate(WStrTmpPtr)
 End Destructor
 
 Private Sub FilesSync.SyncInit()

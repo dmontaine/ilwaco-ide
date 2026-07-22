@@ -134,26 +134,21 @@ Namespace My.Sys.Forms
 	End Operator
 	
 	Private Constructor PrintPreviewControl
-		#ifdef __USE_GTK__
 			widget = gtk_scrolled_window_new(NULL, NULL)
 			gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(widget), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC)
 			'g_signal_connect(widget, "value-changed", G_CALLBACK(@Range_ValueChanged), @This)
 			This.RegisterClass "PrintPreviewControl", @This
-		#endif
 		FTabIndex       = -1
 		Canvas.Ctrl = @This
 		DefaultDocument.Name = "DefaultDocument"
 		Document = @DefaultDocument
 		FOrientation = PrinterOrientation.poPortait
-		'Dim As UString DefaultPrinter = Document.PrinterSettings.GetDefaultPrinterDriver
-		'If DefaultPrinter > "" Then
 		'	This.PrinterName = DefaultPrinter
 		'	' Set the default values for the printer
 		'	This.Copies = 1
 		'	This.Orientation = DMORIENT_PORTRAIT
 		'	This.PaperWidth = 8.5
 		'	This.PaperHeight = 11
-		'End If
 		FTabIndex = -1
 		FTabStop = True
 		With This

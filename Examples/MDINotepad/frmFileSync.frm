@@ -3,10 +3,6 @@
 ' Freeware. Use at your own risk.
 
 '#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/TextBox.bi"
 	#include once "mff/CommandButton.bi"
@@ -79,13 +75,8 @@
 			.Designer = @This
 			.StartPosition = FormStartPosition.CenterScreen
 				This.Icon.LoadFromFile(ExePath & "\Hash.ico")
-			#ifdef __FB_64BIT__
 				'...instructions for 64bit OSes...
 				.Caption = "VFBE File Sync64"
-			#else
-				'...instructions for other OSes
-				.Caption = "VFBE File Sync32"
-			#endif
 			.OnCreate = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @Form_Create)
 			.OnClose = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Form, ByRef Action As Integer), @Form_Close)
 			.SetBounds 0, 0, 950, 630
@@ -836,13 +827,8 @@ Private Sub frmFileSyncType.Form_Create(ByRef Sender As Control)
 	zSettingLoad(ExePath & "\FileSync.Path")
 	cmbexCompareData_Selected(cmbexCompareData, 1)
 	
-	#ifdef __FB_64BIT__
 		rbtnLogNothing.Checked = False
 		rbtnLogMemory.Checked = True
-	#else
-		rbtnLogNothing.Checked = True
-		rbtnLogMemory.Checked = False
-	#endif
 	
 	cmbexSetProfile_Selected(cmbexSetProfile, 1)
 	zControlEnabled(True, cmbexSetProfile.ItemIndex)

@@ -47,15 +47,7 @@
 		MS("Thanks to $1 for codes of $2", "Leandro Ascierto", ML("Chart control")) & !"\r" & _
 		MS("Thanks to $1 for codes of $2", "Laurent GRAS", "FBDebugger") & !"\r" & _
 		MS("Thanks to $1 for codes of $2", "Paul Squires", "WinFormsX") & !"\r" & _
-		MS("Thanks to $1 for codes of $2", "José Roca", "Afx") & !"\r\r" & _
-		ML("Language files by") & !":\r" & _
-		!"Xusinboy Bekchanov (Russian, Uzbekcyril, Uzbeklatin)\r" & _
-		!"Liu XiaLin (Chinese)\r" & _
-		!"Thomas Frank Ludewig (Deutsch)\r" & _
-		!"Juan Sánchez (Spanish)\r" & _
-		!"Dariusz Prochotta (Polish)\r" & _
-		!"Xonic (French)\r" & _
-		!"Massimiliano Argenti (Italian)"
+		MS("Thanks to $1 for codes of $2", "José Roca", "Afx") & !"\r"
 		Label2.BorderStyle = BorderStyles.bsNone
 		Label2.SetBounds 10, 58, 472, 413
 		Label2.Parent = @This
@@ -63,11 +55,7 @@
 		lblIcon.Name = "lblIcon"
 		lblIcon.Text = "lblIcon"
 		'lblIcon.RealSizeImage = false
-		#ifdef __USE_GTK__
 			If Dir(ExePath & "/Resources/VisualFBEditor.ico")<>"" Then lblIcon.Graphic.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico", 48, 48)
-		#else
-			lblIcon.Graphic.Icon.LoadFromResourceID(1, , 48, 48)
-		#endif
 		lblIcon.SetBounds 28, 0, 48, 48
 		lblIcon.Parent = @This
 		' lblImage
@@ -75,11 +63,7 @@
 			.Name = "lblImage"
 			.Text = "lblImage"
 			.SetBounds 298, 66, 170, 170
-			#ifdef __USE_GTK__
 				If Dir(ExePath & "/Resources/weChat.png")<>"" Then .Graphic.Bitmap.LoadFromFile(ExePath & "/Resources/weChat.png")
-			#else
-				.Graphic = "weChat"
-			#endif
 			.Parent = @This
 		End With
 		' Label11

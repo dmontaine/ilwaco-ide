@@ -4,12 +4,7 @@
 '#  Authors: Xusinboy Bekchanov (bxusinboy@mail.ru)      #
 '#           Liu XiaLin (LiuZiQi.HK@hotmail.com)         #
 '#########################################################
-'#ifndef __FB_WIN32__
-'	#cmdline "-gen gas64"
-'#endif
-'#define __USE_GTK__
 #ifndef __USE_MAKE__
-	'#define __USE_GTK3__
 	#define _NOT_AUTORUN_FORMS_
 #endif
 
@@ -77,25 +72,8 @@ Sub RunCmd(Param As Any Ptr)
 	Else
 		WLet(Workdir, *CommandPromptFolder)
 	End If
-	#ifdef __USE_GTK__
-		cmd = WGet(TerminalPath) & " --working-directory=""" & *Workdir & """"
-		Shell(cmd)
-	#else
-		cmd = Environ("COMSPEC") & " /K cd /D """ & *Workdir & """"
-		Dim As Integer pClass
-		Dim SInfo As STARTUPINFO
-		Dim PInfo As PROCESS_INFORMATION
-		WLet(CmdL, cmd)
-		SInfo.cb = Len(SInfo)
-		SInfo.dwFlags = STARTF_USESHOWWINDOW
-		SInfo.wShowWindow = SW_NORMAL
-		pClass = CREATE_UNICODE_ENVIRONMENT Or CREATE_NEW_CONSOLE
-		If CreateProcessW(NULL, CmdL, ByVal NULL, ByVal NULL, False, pClass, NULL, Workdir, @SInfo, @PInfo) Then
-			CloseHandle(PInfo.hProcess)
-			CloseHandle(PInfo.hThread)
-		End If
-		If CmdL Then _Deallocate( CmdL)
-	#endif
+	cmd = WGet(TerminalPath) & " --working-directory=""" & *Workdir & """"
+	Shell(cmd)
 	If Workdir Then _Deallocate( Workdir)
 End Sub
 
@@ -311,7 +289,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 		Next
 		Clipboard.SetAsText *tmpStrPtr
 		_Deallocate(tmpStrPtr)
-	Case "UseDirect2D":                         frmMain.UpdateLock: UseDirect2D = tbtUseDirect2D->Checked: frmMain.Repaint: frmMain.UpdateUnLock
 	Case "ProjectExplorer":                     tpProject->SelectTab: txtExplorer.SetFocus
 	Case "PropertiesWindow":                    tpProperties->SelectTab: txtProperties.SetFocus
 	Case "EventsWindow":                        tpEvents->SelectTab: txtEvents.SetFocus
@@ -436,19 +413,7 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 			End If
 		End If
 	Case "Break":
-		#ifdef __USE_GTK__
 			ChangeEnabledDebug True, False, True
-		#else
-			If runtype=RTFREE Or runtype=RTFRUN Then
-				runtype=RTFRUN 'to treat free as fast
-				For i As Integer = 1 To linenb 'restore every breakpoint
-					WriteProcessMemory(dbghand,Cast(LPVOID,rline(i).ad),@breakcpu,1,0)
-				Next
-			Else
-				runtype=RTSTEP:procad=0:procin=0:proctop=False:procbot=0
-			End If
-			stopcode=CSHALTBU
-		#endif
 	Case "End":
 		Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
 		If CurrentDebugger = IntegratedGDBDebugger Then
@@ -603,20 +568,12 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 					tp->Controls[i]->Width = (tp->Width - ptabPanelNew->splGroup.Width * SplitterCount) / (SplitterCount + 1)
 				End If
 			Next
-			#ifdef __USE_GTK__
 				g_object_ref(tb->Handle)
 				g_object_ref(tb->btnClose.Handle)
 				gtk_container_remove(GTK_CONTAINER(tb->_Box), tb->btnClose.Handle)
-			#endif
 			tb->Parent = @ptabPanelNew->tabCode
-			#ifdef __USE_GTK__
 				tb->txtCode.cr = 0
 				gtk_box_pack_end(GTK_BOX(tb->_Box), tb->btnClose.Handle, False, False, 0)
-			#else
-				tb->ImageKey = tb->ImageKey
-				ptabPanelNew->tabCode.Add @tb->btnClose
-				tp->RequestAlign
-			#endif
 			ptabCode = @ptabPanelNew->tabCode
 			TabPanels.Add ptabPanelNew
 		Case "AITracepointError"
@@ -659,7 +616,7 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 			ptxtAIRequest->Text = ML("Optimize selected code") & ": " & !"\r\n" & "```freeBasic" & !"\r\n" & tb->txtCode.SelText & !"\r\n" & "```"
 			ptxtAIRequest->SetFocus
 		Case "AITranslate"
-			ptxtAIRequest->Text = ML("Output with MARKDOWN source code, translate the selected message to") & " " & ML(App.CurLanguage) & !"\r\n" & "```MARKDOWN" & !"\r\n" & tb->txtCode.SelText & !"\r\n" & "```"
+			ptxtAIRequest->Text = ML("Output with MARKDOWN source code, translate the selected message to") & " " & ML("English") & !"\r\n" & "```MARKDOWN" & !"\r\n" & tb->txtCode.SelText & !"\r\n" & "```"
 			ptxtAIRequest->Update
 			ptxtAIRequest->SetFocus
 		Case "AITranslateE"

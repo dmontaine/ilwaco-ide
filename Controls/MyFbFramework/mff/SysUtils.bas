@@ -10,17 +10,9 @@
 '################################################################################
 
 #include once "SysUtils.bi"
-#ifdef __USE_GTK__
-	#define FHandle Widget
-	#if defined(__USE_GTK3__) Or defined(__USE_GTK4__)
-	#elseif 1
-		#define __USE_GTK2__
-	#endif
-		#include once "gtk/gtk.bi"
-		#ifdef __USE_GTK3__
-			#include once "glib-object.bi"
-		#endif
-#endif
+#define FHandle Widget
+#include once "gtk/gtk.bi"
+#include once "glib-object.bi"
 
 
 Private Function GetErrorString(ByVal Code As UInteger, ByVal MaxLen  As UShort = 1024, WithCode As Boolean = False) As UString
@@ -38,7 +30,8 @@ End Function
 
 Namespace ClassContainer
 	Private Property ClassType.ClassName ByRef As WString
-		If FClassName > 0 Then Return *FClassName Else Return ""
+		Static EmptyWString As WString * 1
+		If FClassName > 0 Then Return *FClassName Else Return EmptyWString
 	End Property
 	
 	Private Property ClassType.ClassName(ByRef Value As WString)
@@ -46,7 +39,8 @@ Namespace ClassContainer
 	End Property
 	
 	Private Property ClassType.ClassAncestor ByRef As WString
-		If FClassAncestor > 0 Then Return *FClassAncestor Else Return ""
+		Static EmptyWString As WString * 1
+		If FClassAncestor > 0 Then Return *FClassAncestor Else Return EmptyWString
 	End Property
 	
 	Private Property ClassType.ClassAncestor(ByRef Value As WString)
@@ -87,37 +81,7 @@ Namespace ClassContainer
 	
 End Namespace
 
-#ifdef __USE_JNI__
-	Handles.Add 0
-	
-	#define AddToPackage(Package, EventName) __FB_QUOTE__(Java_##Package##_##EventName)
-	
-	Function FindJNIClass(className As String) As jclass
-		Return (*env)->FindClass(env, className)
-	End Function
-	
-	Function GetMethodID(className As String, methodName As String, typeName As String) As jmethodID
-		Return (*env)->GetMethodID(env, FindJNIClass(className), methodName, typeName)
-	End Function
-	
-	Function GetFieldID(className As String, fieldName As String, typeName As String) As jfieldID
-		Return (*env)->GetFieldID(env, FindJNIClass(className), fieldName, typeName)
-	End Function
-	
-	Function CallObjectMethod(obj As jobject, className As String, methodName As String, typeName As String) As jobject
-		Return (*env)->CallObjectMethod(env, obj, GetMethodID(className, methodName, typeName))
-	End Function
-	
-	Function GetIntField(obj As jobject, className As String, fieldName As String, typeName As String) As Integer
-		Return (*env)->GetIntField(env, obj, GetFieldID(className, fieldName, typeName))
-	End Function
-	
-	Function CallIntMethod(obj As jobject, className As String, methodName As String, typeName As String) As Integer
-		Return (*env)->CallIntMethod(env, obj, GetMethodID(className, methodName, typeName))
-	End Function
-#endif
 
-'#ifdef GetMN
 Private Function GetMessageName(Message As Integer) As String
 	Select Case Message
 	Case 0: Return "WM_NULL"
@@ -1160,28 +1124,29 @@ Private Function GetMessageName(Message As Integer) As String
 	Case Else: Return "Unknown message (Code: " & Message & ")"
 	End Select
 End Function
-'#endif
 
 Private Function ErrDescription(Code As Integer) ByRef As WString
+	Static Result As WString * 64
 	Select Case Code
-	Case 0: Return "No error"
-	Case 1: Return "Illegal function call"
-	Case 2: Return "File not found signal"
-	Case 3: Return "File I/O error"
-	Case 4: Return "Out of memory"
-	Case 5: Return "Illegal resume"
-	Case 6: Return "Out of bounds array access"
-	Case 7: Return "Null Pointer Access"
-	Case 8: Return "No privileges"
-	Case 9: Return "Interrupted signal"
-	Case 10: Return "Illegal instruction signal"
-	Case 11: Return "Floating point error signal"
-	Case 12: Return "Segmentation violation signal"
-	Case 13: Return "Termination request signal"
-	Case 14: Return "Abnormal termination signal"
-	Case 15: Return "Quit request signal"
-	Case 16: Return "Return without gosub"
-	Case 17: Return "End of file"
-	Case Else: Return ""
+	Case 0: Result = WStr("No error")
+	Case 1: Result = WStr("Illegal function call")
+	Case 2: Result = WStr("File not found signal")
+	Case 3: Result = WStr("File I/O error")
+	Case 4: Result = WStr("Out of memory")
+	Case 5: Result = WStr("Illegal resume")
+	Case 6: Result = WStr("Out of bounds array access")
+	Case 7: Result = WStr("Null Pointer Access")
+	Case 8: Result = WStr("No privileges")
+	Case 9: Result = WStr("Interrupted signal")
+	Case 10: Result = WStr("Illegal instruction signal")
+	Case 11: Result = WStr("Floating point error signal")
+	Case 12: Result = WStr("Segmentation violation signal")
+	Case 13: Result = WStr("Termination request signal")
+	Case 14: Result = WStr("Abnormal termination signal")
+	Case 15: Result = WStr("Quit request signal")
+	Case 16: Result = WStr("Return without gosub")
+	Case 17: Result = WStr("End of file")
+	Case Else: Result = WStr("")
 	End Select
+	Return Result
 End Function

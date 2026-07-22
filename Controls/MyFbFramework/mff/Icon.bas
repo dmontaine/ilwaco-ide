@@ -16,11 +16,7 @@ Namespace My.Sys.Drawing
 	#ifndef ReadProperty_Off
 		Private Function Icon.ReadProperty(ByRef PropertyName As String) As Any Ptr
 			Select Case LCase(PropertyName)
-			#ifdef __USE_GTK__
 			Case "handle": Return Handle
-			#elseif 0
-			Case "handle": Return @Handle
-			#endif
 			Case "height": Return @FHeight
 			Case "width": Return @FWidth
 			Case "resname": Return FResName
@@ -45,7 +41,8 @@ Namespace My.Sys.Drawing
 	#endif
 	
 	Private Property Icon.ResName ByRef As WString
-		If FResName > 0 Then Return *FResName Else Return ""
+	Static EmptyWString As WString * 1
+		If FResName > 0 Then Return *FResName Else Return EmptyWString
 	End Property
 	
 	#ifndef Icon_ResName_Set_Off
@@ -55,7 +52,8 @@ Namespace My.Sys.Drawing
 	#endif
 	
 	Private Function Icon.ToString() ByRef As WString
-		If FResName > 0 Then Return *FResName Else Return ""
+	Static EmptyWString As WString * 1
+		If FResName > 0 Then Return *FResName Else Return EmptyWString
 	End Function
 	
 	#ifndef Icon_Width_Get_Off
@@ -78,7 +76,6 @@ Namespace My.Sys.Drawing
 	
 	
 	Private Function Icon.LoadFromFile(ByRef File As WString, cx As Integer = 0, cy As Integer = 0) As Boolean
-		#ifdef __USE_GTK__
 			Dim As GError Ptr gerr
 			If File = "" Then Return False
 			If cx = 0 AndAlso cy = 0 Then
@@ -87,19 +84,6 @@ Namespace My.Sys.Drawing
 				Handle = gdk_pixbuf_new_from_file_at_size(ToUtf8(File), cx, cy, @gerr)
 			End If
 			If Handle = 0 Then Return False
-		#elseif 0
-			Dim As ICONINFO ICIF
-			Dim As BITMAP BMP
-			If Handle Then DestroyIcon(Handle)
-			Handle = LoadImage(0, File, IMAGE_ICON, cx, cy, LR_LOADFROMFILE Or LR_LOADTRANSPARENT)
-			If Handle = 0 Then Return False
-			GetIconInfo(Handle, @ICIF)
-			GetObject(ICIF.hbmColor, SizeOf(BMP), @BMP)
-			FWidth  = BMP.bmWidth
-			FHeight = BMP.bmHeight
-			DeleteObject(ICIF.hbmColor)
-			DeleteObject(ICIF.hbmMask)
-		#endif
 		If Changed Then Changed(*Designer, This)
 		Return True
 	End Function
@@ -112,7 +96,6 @@ Namespace My.Sys.Drawing
 	
 	#ifndef Icon_LoadFromResourceName_Off
 		Private Function Icon.LoadFromResourceName(ByRef ResourceName As WString, ModuleHandle As Any Ptr = 0, cx As Integer = 0, cy As Integer = 0) As Boolean
-			#ifdef __USE_GTK__
 				Dim As GError Ptr gerr
 				If FileExists(ExePath & "/./Resources/" & ResName & ".ico") Then
 					Handle = gdk_pixbuf_new_from_file(ToUtf8(ExePath & "/./Resources/" & ResName & ".ico"), @gerr)
@@ -122,21 +105,6 @@ Namespace My.Sys.Drawing
 					Handle = gdk_pixbuf_new_from_resource(ToUtf8(ResName), @gerr)
 				End If
 				If gerr Then Print gerr->code, *gerr->message
-			#elseif 0
-				Dim As ICONINFO ICIF
-				Dim As BITMAP BMP
-				This.ResName = ResourceName
-				Dim As Any Ptr ModuleHandle_ = ModuleHandle: If ModuleHandle = 0 Then ModuleHandle_ = GetModuleHandle(NULL)
-				If Handle Then DestroyIcon(Handle)
-				Handle = LoadImage(ModuleHandle_, ResName, IMAGE_ICON, cx, cy, LR_COPYFROMRESOURCE)
-				If Handle = 0 Then Return False
-				GetIconInfo(Handle, @ICIF)
-				GetObject(ICIF.hbmColor, SizeOf(BMP), @BMP)
-				FWidth  = BMP.bmWidth
-				FHeight = BMP.bmHeight
-				DeleteObject(ICIF.hbmColor)
-				DeleteObject(ICIF.hbmMask)
-			#endif
 			If Changed Then Changed(*Designer, This)
 			Return True
 		End Function
@@ -172,20 +140,11 @@ Namespace My.Sys.Drawing
 		If Changed Then Changed(*Designer, This)
 	End Operator
 	
-	#ifndef __USE_JNI__
-		#ifdef __USE_GTK__
 			Private Operator Icon.Let(Value As GdkPixbuf Ptr)
 				If Handle Then g_object_unref(Handle)
-		#elseif 0
-			Private Operator Icon.Let(Value As HICON)
-				If Handle Then DestroyIcon(Handle)
-		#else
-			Private Operator Icon.Let(Value As Any Ptr)
-		#endif
 			Handle = Value
 			If Changed Then Changed(*Designer, This)
 		End Operator
-	#endif
 	
 	Private Constructor Icon
 		WLet(FClassName, "Icon")
@@ -193,11 +152,7 @@ Namespace My.Sys.Drawing
 	
 	Private Destructor Icon
 		If FResName Then _Deallocate(FResName)
-		#ifdef __USE_GTK__
 			If Handle Then g_object_unref(Handle)
-		#elseif 0
-			If Handle Then DestroyIcon Handle
-		#endif
 	End Destructor
 End Namespace
 

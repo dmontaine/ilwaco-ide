@@ -1,4 +1,4 @@
-#include once "Component.bi"
+﻿#include once "Component.bi"
 #include once "Canvas.bi"
 #include once "Printer.bi"
 #include once "List.bi"

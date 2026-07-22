@@ -1,4 +1,4 @@
-'' FreeBASIC binding for libdumb-0.9.3
+﻿'' FreeBASIC binding for libdumb-0.9.3
 ''
 '' based on the C header files:
 ''   /*  _______         ____    __         ___    ___

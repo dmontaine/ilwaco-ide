@@ -384,7 +384,6 @@ Function DynamicArrayList.ReturnArrayFromPosition(array() As Any Ptr) As Integer
 End Function
 
 Function DynamicArrayList.LoadArrayIntoPosition(array() As Any Ptr) As Integer
-    ' Return 0 if the list is not empty, otherwise returns the number of loaded elements
     
     If This.nbrUserNode > 0 Then Return 0
     Dim As DoublyLinkedNode Ptr nodePtr = @This.dummyNode
@@ -417,9 +416,6 @@ Function DynamicArrayList.LoadArrayIntoPosition(array() As Any Ptr) As Integer
 End Function
 
 Function DynamicArrayList.SearchForNthPosition(ByVal compare As Function(ByVal p As Any Ptr) As Boolean, ByVal startPosition As Integer = 1) As Integer
-    ' Return 0 if the search failed, otherwise returns the position index of the first occurence found
-    ' If startPosition > 0 (set of positive index used), the search begins at the startPosition index then continues in the increasing index order
-    ' If startPosition < 0 (set of negative index used), the search begins at the startPosition index then continues in the decreasing index order (reverse order)
     ' The returned index uses the same set (positive or negative) of index than the one used for startPosition
     
     If compare = 0 Then Return 0

@@ -41,11 +41,7 @@ Namespace My.Sys.Forms
 	
 	Private Property HorizontalBox.Spacing(Value As Integer)
 		FHorizontalSpacing = Value
-		#ifdef __USE_GTK__
 			gtk_box_set_spacing(GTK_BOX(widget), FHorizontalSpacing)
-		#else
-			RequestAlign
-		#endif
 	End Property
 	
 	Private Property HorizontalBox.TabIndex As Integer
@@ -90,10 +86,8 @@ Namespace My.Sys.Forms
 	
 	Private Constructor HorizontalBox
 		With This
-			#ifdef __USE_GTK__
 					widget = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0)
 				.RegisterClass "HorizontalBox", @This
-			#endif
 			FAutoSize = True
 			Canvas.Ctrl    = @This
 			.Child       = @This

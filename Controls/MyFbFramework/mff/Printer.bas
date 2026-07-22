@@ -280,14 +280,12 @@ Namespace My.Sys.ComponentModel
 	Private Property  Printer.PrintableWidth() As Long
 		Dim As Long nResult, pixHorzRes, mmHorzSize
 		Return nResult
-		'Return GetPrinterHorizontalResolution(printerName)
 	End Property
 	
 	
 	Private Property  Printer.PrintableHeight() As Long
 		Dim As Long nResult, pixVertRes, mmVertSize
 		Return nResult
-		'Return GetPrinterVerticalResolution(printerName)
 	End Property
 	
 	Private Property  Printer.MaxCopies () As Long
@@ -402,8 +400,6 @@ Namespace My.Sys.ComponentModel
 	End Property
 	
 	Private Sub Printer.orientPrint(n As Long) 'n = 1 Portrait 'n = 2 Landscape
-		' If SetPrinterOrientation(printername,n)=FALSE Then Print "Error on Orientation"
-		' Return
 	End Sub
 	
 	Private Property Printer.Orientation(value As PrinterOrientation)
@@ -599,7 +595,6 @@ Namespace My.Sys.ComponentModel
 	
 	' ========================================================================================
 	' Returns the maximum number of copies the device can print.
-	' If the function returns -1, this may mean either that the capability is not supported or
 	' there was a general function failure.
 	' ========================================================================================
 	

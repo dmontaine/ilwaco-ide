@@ -1,12 +1,9 @@
-
+﻿
 #include once "inc/mongoose.bi"
 #include once "crt/stdlib.bi"
 
-'#ifndef __FB_64BIT__
 '#libpath "../../win32"
-'#else
 '#libpath "../../win64"
-'#endif
 
 dim shared s_listen_on as const zstring ptr = @"mqtt://0.0.0.0:1883"
 

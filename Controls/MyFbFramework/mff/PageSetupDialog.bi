@@ -36,12 +36,8 @@ Public:
 	RightMargin As Single                               '| Converted to mm
 	BottomMargin As Single                              '|
 	
-	'Declare Property Left() As Integer
-	'Declare Property Left(value As Integer)
 	Declare Property PrinterName() As String
 	Declare Property PrinterName(value As String)
-	'Declare Property Top() As Integer
-	'Declare Property Top(value As Integer)
 	
 	Declare Function Execute() As Boolean
 	Declare Constructor

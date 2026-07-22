@@ -466,9 +466,7 @@ Sub SolveSudo(Sudo(Any, Any, Any) As Integer, SudoExt(Any, Any) As Integer)
 	End If
 	''记录已访问
 	Dim havetry(0 To 9) As Integer
-	'For i As Integer = 0 To 9
 	'	havetry(i) = 0
-	'Next i
 	
 	Do
 		dt = 0
@@ -597,7 +595,6 @@ Function main() As Boolean
 	
 	SolveSudo(SudoAns(), SudoIn())
 	'' 如果需要解对角线数独
-	'While (dialog_sudoku(sudoans[0])==0) {
 	'    solvesudo(sudoans, sudoin);
 	'    print_a_sudoku(sudoans);
 	'}
@@ -606,7 +603,6 @@ Function main() As Boolean
 	
 	Return True
 End Function
-'Print main
 'Sleep
 /' 可以用以下这些超困难数独测试,可以肯定凭借人脑基本上都不可能做出来的
 @"500000300020100070008000009040007000000821000000600010300000800060004020009000005",

@@ -1,11 +1,10 @@
-''
+﻿''
 '' IDropTarget example for text objects, translated from a C++ code written by J Brown 2004 (www.catch22.net)
 ''
 
 #include once "CDropTarget.bi"
 #include once "../CDataObject/CDataObject.bi"
 #include once "../Control.bi"
-'#include once "crt/string.bi"
 
 Namespace My.Sys.Forms
 	Function DataObject.GetDataPresent(DataType As DataFormats) As Boolean

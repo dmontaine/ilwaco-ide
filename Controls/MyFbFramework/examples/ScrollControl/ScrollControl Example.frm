@@ -5,10 +5,6 @@
 '################################################################################
 
 '#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	
 	#include once "mff/Form.bi"
 	#include once "mff/Picture.bi"
@@ -225,14 +221,12 @@
 		End With
 	'
 	'	' lblPosition
-	'	With lblPosition
 	'		.Name = "lblPosition"
 	'		.Text = "VisualFBEditor"
 	'		.TabIndex = 13
 	'		.SetBounds 360, 380, 260, 120
 	'		.Designer = @This
 	'		.Parent = @ScrollMaze
-	'	End With
 	End Constructor
 	
 	Dim Shared Form1 As Form1Type
@@ -292,7 +286,6 @@ Private Sub Form1Type.cmdRefresh_Click(ByRef Sender As Control)
 	'Playing = False
 	'cmdPlay.Enabled = Not Playing
 	'cmdRefresh.Enabled = Playing
-	'If Playing Then RenderProj(0)
 	cmdRefresh.Enabled = False
 	PanelRender.Width = (Val(NumUpDnMazeSize.Text) + 1) * Val(NumUpDnWallSize.Text): PanelRender.Height = PanelRender.Width
 	'lblPosition.Left = PanelRender.Width + 20 : lblPosition.Top = PanelRender.Height + 20
@@ -351,17 +344,9 @@ Private Sub Form1Type.PanelRender_Paint(ByRef Sender As Control, ByRef Canvas As
 	Canvas.Line (xx + ws, yy - ws, xx + ws, yy + ws, PanelRender.BackColor)
 	Canvas.TextOut(xx - ws * 0.2, yy - ws *.8, "->")
 	'
-	'Exit Sub
-	'For x = 0 To aMaze.MazeSize -1
-	'	For y = 0 To aMaze.MazeSize -1
 	'		xx = x * aMaze.WallSize + aMaze.WallSize
 	'		yy = y * aMaze.WallSize + aMaze.WallSize
-	'		If aMaze.rooms(x,y).getStatus() And (Gen Or Visited) Then
-	'		Else
 	'			Canvas.Line(xx - ws, yy - ws, xx + ws, yy + ws, RGB(0, 64, 0), "bf")
-	'		End If
-	'	Next
-	'Next
 End Sub
 
 Private Sub Form1Type.TimerFPS_Timer(ByRef Sender As TimerComponent)

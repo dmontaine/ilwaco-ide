@@ -63,19 +63,13 @@ Namespace My.Sys.Forms
 	End Property
 	
 	Private Property GroupBox.Text ByRef As WString
-		#ifdef __USE_GTK__
 			FText = WStr(gtk_frame_get_label(GTK_FRAME(widget)))
 			Return *FText.vptr
-		#else
-			Return Base.Text
-		#endif
 	End Property
 	
 	Private Property GroupBox.Text(ByRef Value As WString)
 		Base.Text = Value
-		#ifdef __USE_GTK__
 			If widget Then gtk_frame_set_label(GTK_FRAME(widget), ToUtf8(Value))
-		#endif
 	End Property
 	
 	Private Property GroupBox.ParentColor As Boolean
@@ -91,11 +85,6 @@ Namespace My.Sys.Forms
 	End Property
 	
 	
-	#ifdef __USE_WASM__
-		Private Function GroupBox.GetContent() As UString
-			Return "<legend id=""" & Trim(Str(@This)) & "legend"">" & FText & "</legend>"
-		End Function
-	#endif
 	
 	
 	Private Sub GroupBox.ProcessMessage(ByRef Message As Message)
@@ -109,26 +98,12 @@ Namespace My.Sys.Forms
 	Private Constructor GroupBox
 		With This
 			.Child       = @This
-			#ifdef __USE_GTK__
 				widget = gtk_frame_new("")
 				.RegisterClass "GroupBox", @This
-			#elseif 0
-				.RegisterClass "GroupBox", "Button"
-				.ChildProc   = @WndProc
-				WLet(FClassAncestor, "Button")
-			#elseif 0
-				WLet(FClassAncestor, "fieldset")
-			#endif
 			WLet(FClassName, "GroupBox")
 			FTabIndex          = -1
 			FTabStop           = True
-			#ifdef __USE_GTK__
 				.BackColor       = -1
-			#elseif 0
-				.BackColor       = GetSysColor(COLOR_BTNFACE)
-				FDefaultBackColor = .BackColor
-				.OnHandleIsAllocated    = @HandleIsAllocated
-			#endif
 			.Width       = 121
 			.Height      = 51
 		End With

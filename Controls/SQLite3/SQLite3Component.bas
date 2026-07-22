@@ -251,11 +251,8 @@ Function SQLite3Component.SQLFind(Sql_Utf8 As String, rs() As String) As Long
 				Dim r As Long
 				For i = 0 To iFields
 					If iCol = 0 Then
-						'If m_FindRsProc<>0 And EventsEn = 0 Then
 						'   r = pp(iRow, iCol, lpTable[i], Len( *lpTable[i]), nRows, u, ppStmt)
-						'Else
 						r = 0
-						'End If
 					End If
 					If r = 2 Then Exit For
 					If r <> 1 Then
@@ -312,9 +309,7 @@ Function SQLite3Component.SQLFindOne(Sql_Utf8 As String, rs() As String) As Long
 				For i = nColumns To iFields
 					'if m_FindRsProc<>0 and EventsEn = 0  Then
 					'   r = pp(1, iCol, lpTable[i], Len( *lpTable[i]), 1, nColumns, ppStmt)
-					'Else
 					r = 0
-					'End If
 					If r = 2 Then Exit For
 					If r <> 1 Then
 						rs(iCol) = *lpTable[i]
@@ -352,7 +347,6 @@ Function SQLite3Component.Find(Table As UString, Cond As UString, rs() As String
 		Dim n As Long = (Page -1) * Pagesize
 		Sql_Utf8 &= " LIMIT " & n & "," & Pagesize
 	End If
-	'   Print "Find=" & Sql_Utf8
 	
 	Function = SQLFind(Sql_Utf8,rs())
 End Function
@@ -425,48 +419,32 @@ Function SQLite3Component.FindByteUtf(Table_Utf8 As String, Cond_Utf8 As String,
 			If yi > yu Then Exit While
 			For i = 0 To u -1
 				Select Case sqlite3_column_type(ppStmt, i)
-					'Case 1 ' SQLITE_INTEGER
 					'rs(yi, i) = Str(sqlite3_column_int(ppStmt, i))
 					'if m_FindRsProc<>0 and EventsEn = 0 Then
 					'r = pp(yi, i, yu, StrPtr(rs(yi, i)),Len(rs(yi, i)),yu,u,ppStmt)
-					'Else
 					'r = 0
-					'End if
 					'if r = 2 Then Exit While
-					'Case 2 ' SQLITE_FLOAT
 				Case 1, 2, 3 ' SQLITE_TEXT
 					value = Cast(Any Ptr, sqlite3_column_text(ppStmt, i))
 					siz   = sqlite3_column_bytes(ppStmt, i)
 					'if m_FindRsProc <> 0 and EventsEn = 0 Then
 					'   r = pp(yi,i,value,siz,yu,u,ppStmt)
-					'Else
 					r = 0
-					'End if
 					If r = 2 Then Exit While
 					If siz And r <> 1 Then
 						rs_Utf8(yi, i) = String(siz, 0)
-						#ifdef __USE_WASM__
-							Fb_MemCopy rs_Utf8(yi, i), value, siz
-						#else
 							memcpy StrPtr(rs_Utf8(yi, i)), value, siz
-						#endif
 					End If
 				Case 4 ' SQLITE_BLOB
 					value = Cast(Any Ptr, sqlite3_column_blob(ppStmt, i))
 					siz   = sqlite3_column_bytes(ppStmt, i)
 					'if m_FindRsProc <> 0 and EventsEn = 0 Then
 					'   r = pp(yi,i,value,siz,yu,u,ppStmt)
-					'Else
 					r = 0
-					'End if
 					If r = 2 Then Exit While
 					If siz And r <> 1 Then
 						rs_Utf8(yi, i) = String(siz, 0)
-						#ifdef __USE_WASM__
-							Fb_MemCopy rs_Utf8(yi, i), value, siz
-						#else
 							memcpy StrPtr(rs_Utf8(yi, i)), value, siz
-						#endif
 					End If
 					
 				Case 5 ' SQLITE_NULL
@@ -521,15 +499,11 @@ Function SQLite3Component.FindOneByteUtf(Table_Utf8 As String, Cond_Utf8 As Stri
 			For i = 0 To u - 1
 				rs_Types(i) = sqlite3_column_type(ppStmt, i)
 				Select Case sqlite3_column_type(ppStmt, i) '»сИЎЖдЙщГчК±µДАаРНЎЈ
-					'Case 1 ' SQLITE_INTEGER
 					'rs_Utf8(i) = Str(sqlite3_column_int(ppStmt, i))
 					'if m_FindRsProc <> 0 and EventsEn = 0 Then
 					'r = pp(1, i,StrPtr(rs_Utf8(i)), Len(rs_Utf8(i)), 1, u, ppStmt)
-					'Else
 					'r = 0
-					'End if
 					'if r = 2 Then Exit While
-					'Case 2 ' SQLITE_FLOAT
 					'rs_Utf8(i) = Str(sqlite3_column_double(ppStmt, i))
 					
 				Case 1, 2, 3 ' SQLITE_TEXT
@@ -537,34 +511,22 @@ Function SQLite3Component.FindOneByteUtf(Table_Utf8 As String, Cond_Utf8 As Stri
 					siz   = sqlite3_column_bytes(ppStmt, i)
 					'if m_FindRsProc <> 0 and EventsEn = 0 Then
 					'   r = pp(1,i,value,siz,1,u,ppStmt)
-					'Else
 					r = 0
-					'End if
 					If r = 2 Then Exit For
 					If siz And r <> 1 Then
 						rs_Utf8(i) = String(siz, 0)
-						#ifdef __USE_WASM__
-							Fb_MemCopy rs_Utf8(i), value, siz
-						#else
 							memcpy StrPtr(rs_Utf8(i)), value, siz
-						#endif
 					End If
 				Case 4 ' SQLITE_BLOB
 					value = Cast(Any Ptr, sqlite3_column_blob(ppStmt, i))
 					siz   = sqlite3_column_bytes(ppStmt, i)
 					'if m_FindRsProc <> 0 and EventsEn = 0 Then
 					'   r = pp(1,i,value,siz,1,u,ppStmt)
-					'Else
 					r = 0
-					'End if
 					If r = 2 Then Exit For
 					If siz And r <> 1 Then
 						rs_Utf8(i) = String(siz, 0)
-						#ifdef __USE_WASM__
-							Fb_MemCopy rs_Utf8(i), value, siz
-						#else
 							memcpy StrPtr(rs_Utf8(i)), value, siz
-						#endif
 					End If
 					
 				Case 5 ' SQLITE_NULL

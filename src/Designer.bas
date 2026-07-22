@@ -9,23 +9,13 @@
 #include once "Designer.bi"
 #include once "EditControl.bi"
 
-#ifdef __USE_GTK__
 	#define CtrlHandle GtkWindow Ptr
-#else
-	#define CtrlHandle HWND
-#endif
 
 Namespace My.Sys.Forms
-	#ifdef __USE_GTK__
 		Function Designer.GetControl(ControlHandle As GtkWidget Ptr) As Any Ptr
 			Return Cast(Any Ptr, g_object_get_data(G_OBJECT(ControlHandle), "@@@Control2"))
 			'Return SelectedControl
 		End Function
-	#else
-		Function Designer.GetControl(ControlHandle As HWND) As Any Ptr
-			Return Cast(Any Ptr, GetProp(ControlHandle, "MFFControl"))
-		End Function
-	#endif
 	
 	Function Designer.GetParentControl(iControl As Any Ptr, ByVal toRoot As Boolean = True) As Any Ptr
 		If iControl = 0 Then Return iControl
@@ -177,7 +167,6 @@ Namespace My.Sys.Forms
 		'#Else
 		'	function Designer.ControlAt(Parent as HWND,X as integer,Y as integer) as HWND
 		'#EndIf
-		#ifdef __USE_GTK__
 			If Parent = 0 Then Return Parent
 			If CtrlPressed Then Return CtrlPressed
 			Dim As Integer ALeft, ATop, AWidth, AHeight
@@ -196,40 +185,9 @@ Namespace My.Sys.Forms
 				End If
 			Next i
 			Return Parent
-		#else
-			Dim As SymbolsType Ptr st = Symbols(Parent)
-			If st AndAlso st->ReadPropertyFunc Then
-				Dim ParentHwndPtr As HWND Ptr = Cast(HWND Ptr, st->ReadPropertyFunc(Parent, "Handle"))
-				If ParentHwndPtr = 0 Then Return Parent
-				Dim ParentHwnd As HWND = *Cast(HWND Ptr, st->ReadPropertyFunc(Parent, "Handle"))
-				Dim Result As HWND = ChildWindowFromPointEx(ParentHwnd, Type<..Point>(ScaleX(X), ScaleY(Y)), CWP_SKIPINVISIBLE)
-				If IsWindowVisible(Result) = 0 Then Return Parent
-				If GetControl(Result) = Parent Then Return Parent
-				If Result = 0 OrElse Result = ParentHwnd OrElse GetControl(Result) = 0 Then
-					Return Parent
-				Else
-					Dim As ..Rect R
-					GetWindowRect Result, @R
-					MapWindowPoints 0, ParentHwnd, Cast(..Point Ptr, @R), 2
-					Return ControlAt(GetControl(Result), X - UnScaleX(R.Left), Y - UnScaleY(R.Top))
-				End If
-			End If
-			'		dim as RECT R
-			'		GetChilds(Parent)
-			'		for i as integer = 0 to FChilds.Count -1
-			'			if IsWindowVisible(FChilds.Child[i]) then
-			'			   GetWindowRect(FChilds.Child[i], @R)
-			'			   MapWindowPoints(0, Parent, cast(POINT ptr, @R) ,2)
-			'			   if (X > R.Left and X < R.Right) and (Y > R.Top and Y < R.Bottom) then
-			'				  return FChilds.Child[i]
-			'			   end If
-			'			end if
-			'		next i
-		#endif
 		'    return Parent
 	End Function
 	
-	#ifdef __USE_GTK__
 		Function Dot_Draw(widget As GtkWidget Ptr, cr As cairo_t Ptr, data1 As Any Ptr) As Boolean
 			Dim As Designer Ptr Des = data1
 			If Des->SelectedControl AndAlso Des->SelectedControl = g_object_get_data(G_OBJECT(widget), "@@@Control2") AndAlso CInt(Not Des->LockControls) Then
@@ -254,24 +212,16 @@ Namespace My.Sys.Forms
 			cairo_destroy(cr)
 			Return False
 		End Function
-	#endif
 	
 	Sub Designer.CreateDots(ParentCtrl As Control Ptr)
-		#ifdef __USE_GTK__
 			Dim As GdkDisplay Ptr pdisplay
 			Dim As GdkCursor Ptr gcurs
-		#endif
 		For i As Integer = 0 To 7
-			#ifdef __USE_GTK__
 				FDots(0, i) = gtk_layout_new(NULL, NULL)
 				'g_object_ref(FDots(i))
 				If GTK_IS_WIDGET(FDots(0, i)) Then gtk_layout_put(GTK_LAYOUT(ParentCtrl->layoutwidget), FDots(0, i), 0, 0)
 				gtk_widget_set_size_request(FDots(0, i), FDotSize, FDotSize)
-				#ifdef __USE_GTK3__
 					g_signal_connect(FDots(0, i), "draw", G_CALLBACK(@Dot_Draw), @This)
-				#else
-					g_signal_connect(FDots(0, i), "expose-event", G_CALLBACK(@Dot_ExposeEvent), @This)
-				#endif
 				gtk_widget_realize(FDots(0, i))
 				pdisplay = gtk_widget_get_display(FDots(0, i))
 				Select Case i
@@ -281,23 +231,13 @@ Namespace My.Sys.Forms
 				Case 3, 7 : gcurs = gdk_cursor_new_from_name(pdisplay, crSizeWE)
 				End Select
 				gdk_window_set_cursor(gtk_widget_get_window(FDots(0, i)), gcurs)
-			#else
-				If ParentCtrl > 0 AndAlso ParentCtrl->Handle > 0 Then FDots(0, i) = CreateWindowEx(0, "DOT", "", WS_CHILD Or WS_CLIPSIBLINGS Or WS_CLIPCHILDREN, 0, 0, ScaleX(FDotSize), ScaleY(FDotSize), ParentCtrl->Handle, 0, Instance, 0)
-				If IsWindow(FDots(0, i)) Then
-					SetWindowLongPtr(FDots(0, i), GWLP_USERDATA, CInt(@This))
-				End If
-			#endif
 		Next i
 	End Sub
 	
 	Sub Designer.DestroyDots
 		For j As Integer = UBound(FDots) To 0 Step -1
 			For i As Integer = 7 To 0 Step -1
-				#ifdef __USE_GTK__
 						If GTK_IS_WIDGET(FDots(j, i)) Then gtk_widget_destroy(FDots(j, i))
-				#else
-					DestroyWindow(FDots(j, i))
-				#endif
 			Next i
 		Next j
 	End Sub
@@ -305,25 +245,18 @@ Namespace My.Sys.Forms
 	Sub Designer.HideDots
 		For j As Integer = 0 To UBound(FDots)
 			For i As Integer = 0 To 7
-				#ifdef __USE_GTK__
 					If GTK_IS_WIDGET(FDots(j, i)) Then gtk_widget_set_visible(FDots(j, i), False)
-				#else
-					ShowWindow(FDots(j, i), SW_HIDE)
-				#endif
 			Next i
 		Next j
 	End Sub
 	
-	#ifdef __USE_GTK__
 		Sub ScreenToClient(widget As GtkWidget Ptr, P As Point Ptr)
 			Dim As gint x, y
 			gdk_window_get_origin(gtk_widget_get_window(widget), @x, @y)
 			P->X = P->X - x
 			P->Y = P->Y - y
 		End Sub
-	#endif
 	
-	#ifdef __USE_GTK__
 		Sub GetPosToClient(widget As GtkWidget Ptr, Client As GtkWidget Ptr, x As Integer Ptr, y As Integer Ptr, x1 As Integer = -1, y1 As Integer = -1, ParentWidget As GtkWidget Ptr = 0)
 			If widget = 0 Or widget = Client Then Return
 			Dim allocation As GtkAllocation
@@ -343,51 +276,26 @@ Namespace My.Sys.Forms
 		End Sub
 		
 		Sub Designer.MoveDots(Control As Any Ptr, bSetFocus As Boolean = True, Left1 As Integer = -1, Top1 As Integer = -1, Width1 As Integer = -1, Height1 As Integer = -1)
-	#else
-		Sub Designer.MoveDots(Control As Any Ptr, bSetFocus As Boolean = True)
-			Dim As ..Rect R
-	#endif
 		Dim As My.Sys.Drawing.Point P
 		Dim As Integer iWidth, iHeight
-		#ifdef __USE_GTK__
 			Dim As GtkWidget Ptr ControlHandle, ControlHandle2
-		#else
-			Dim As HWND ControlHandle
-		#endif
 		ControlHandle = GetControlHandle(Control)
 		Dim As Integer CountOfControls
-		#ifdef __USE_GTK__
 			If GTK_IS_WIDGET(ControlHandle) Then
-		#else
-			If IsWindow(ControlHandle) Then
-		#endif
 			SelectedControl = Control
 			FSelControl = ControlHandle
 			If SelectedControls.Count = 0 Then SelectedControls.Add SelectedControl
-			#ifdef __USE_GTK__
 				CountOfControls = 0
-			#else
-				CountOfControls = SelectedControls.Count
-			#endif
 			'if Control <> FDialog then
 			Dim As Integer DotsCount = UBound(FDots)
 			For j As Integer = DotsCount To CountOfControls Step -1
 				For i As Integer = 7 To 0 Step -1
-					#ifdef __USE_GTK__
 						If FDots(j, i) > 0 AndAlso GTK_IS_WIDGET(FDots(j, i)) Then
-							#ifdef __USE_GTK3__
 								gtk_widget_destroy(FDots(j, i))
-							#else
-								gtk_container_remove(GTK_CONTAINER(FDialogParent), FDots(j, i))
-							#endif
 						End If
-					#else
-						If FDots(j, i) > 0 Then DestroyWindow(FDots(j, i))
-					#endif
 				Next
 			Next
 			ReDim Preserve FDots(SelectedControls.Count - 1, 7) As CtrlHandle
-			#ifdef __USE_GTK__
 				Dim As Integer x, y ', x1, y1
 				'			gtk_widget_set_has_window(Control, True)
 				'			gtk_widget_set_has_window(FDialogParent, True)
@@ -398,13 +306,8 @@ Namespace My.Sys.Forms
 				For j As Integer = 0 To SelectedControls.Count - 1
 					ControlHandle2 = GetControlHandle(SelectedControls.Items[j])
 					gtk_widget_realize(ControlHandle2)
-					#ifdef __USE_GTK3__
 						iWidth = gtk_widget_get_allocated_width(ControlHandle2)
 						iHeight = gtk_widget_get_allocated_height(ControlHandle2)
-					#else
-						iWidth = ControlHandle2->allocation.width
-						iHeight = ControlHandle2->allocation.height
-					#endif
 					x = 0
 					y = 0
 					Dim As gint NewX, NewY
@@ -452,11 +355,7 @@ Namespace My.Sys.Forms
 						GDK_POINTER_MOTION_MASK Or _
 						GDK_POINTER_MOTION_HINT_MASK)
 						g_signal_connect(FDots(j, i), "event", G_CALLBACK(@DotWndProc), @This)
-						#ifdef __USE_GTK3__
 							g_signal_connect(FDots(j, i), "draw", G_CALLBACK(@Dot_Draw), @This)
-						#else
-							g_signal_connect(FDots(j, i), "expose-event", G_CALLBACK(@Dot_ExposeEvent), @This)
-						#endif
 						Dim As Integer iLeft, iTop
 						Select Case i
 						Case 0: iLeft = P.X - FDotSize: iTop = P.Y - FDotSize
@@ -468,7 +367,6 @@ Namespace My.Sys.Forms
 						Case 6: iLeft = P.X - FDotSize: iTop = P.Y + iHeight
 						Case 7: iLeft = P.X - FDotSize: iTop = P.Y + iHeight / 2 - 3
 						End Select
-						#ifdef __USE_GTK3__
 							If GTK_IS_WIDGET(FDots(j, i)) Then 'gtk_layout_put(gtk_layout(layout), FDots(j, i), iLeft, iTop) Then
 								g_object_set_data(G_OBJECT(FDots(j, i)), "@@@Left", Cast(gpointer, iLeft))
 								g_object_set_data(G_OBJECT(FDots(j, i)), "@@@Top", Cast(gpointer, iTop))
@@ -481,9 +379,6 @@ Namespace My.Sys.Forms
 								'									gtk_widget_set_margin_bottom(FDots(j, i), Parent->Height - iTop - FDotSize)
 								'								End If
 							End If
-						#else
-							If GTK_IS_WIDGET(FDots(j, i)) Then gtk_layout_put(GTK_LAYOUT(FDialogParent), FDots(j, i), iLeft, iTop)
-						#endif
 						gtk_widget_realize(FDots(j, i))
 						pdisplay = gtk_widget_get_display(FDots(j, i))
 						Select Case i
@@ -499,59 +394,15 @@ Namespace My.Sys.Forms
 						'SetProp(FDots(i),"@@@Control", Control)
 						'BringWindowToTop FDots(i)
 						'gdk_window_raise(gtk_widget_get_window(FDots(i)))
-						#ifdef __USE_GTK3__
 							If iLeft < 0 OrElse iTop < 0 OrElse iLeft > Parent->Width OrElse iTop > Parent->Height Then
 								gtk_widget_hide(FDots(j, i))
 							Else
 								gtk_widget_show(FDots(j, i))
 							End If
-						#else
-							gtk_widget_show(FDots(j, i))
-						#endif
 					Next i
 				Next j
-			#else
-				For j As Integer = SelectedControls.Count - 1 To DotsCount + 1 Step - 1 'For Compile with FBC 1.10
-					For i As Integer = 0 To 7
-						FDots(j, i) = CreateWindowEx(0, "DOT", "", WS_CHILD Or WS_CLIPSIBLINGS Or WS_CLIPCHILDREN, 0, 0, ScaleX(FDotSize), ScaleY(FDotSize), GetParent(FDialog), 0, Instance, 0)
-						SetWindowLongPtr(FDots(j, i), GWLP_USERDATA, CInt(@This))
-					Next
-				Next
-				For j As Integer = 0 To SelectedControls.Count - 1
-					GetWindowRect(GetControlHandle(SelectedControls.Items[j]), @R)
-					iWidth  = R.Right  - R.Left
-					iHeight = R.Bottom - R.Top
-					P.X     = R.Left
-					P.Y     = R.Top
-					ScreenToClient(GetParent(FDialog), Cast(..Point Ptr, @P))
-					MoveWindow FDots(j, 0), P.X - ScaleX(FDotSize), P.Y - ScaleY(FDotSize), ScaleX(FDotSize), ScaleY(FDotSize), True
-					MoveWindow FDots(j, 1), P.X + iWidth / 2 - 3, P.Y - ScaleY(FDotSize), ScaleX(FDotSize), ScaleY(FDotSize), True
-					MoveWindow FDots(j, 2), P.X + iWidth, P.Y - ScaleY(FDotSize), ScaleX(FDotSize), ScaleY(FDotSize), True
-					MoveWindow FDots(j, 3), P.X + iWidth, P.Y + iHeight / 2 - 3, ScaleX(FDotSize), ScaleY(FDotSize), True
-					MoveWindow FDots(j, 4), P.X + iWidth, P.Y + iHeight, ScaleX(FDotSize), ScaleY(FDotSize), True
-					MoveWindow FDots(j, 5), P.X + iWidth / 2 - 3, P.Y + iHeight, ScaleX(FDotSize), ScaleY(FDotSize), True
-					MoveWindow FDots(j, 6), P.X - ScaleX(FDotSize), P.Y + iHeight, ScaleX(FDotSize), ScaleY(FDotSize), True
-					MoveWindow FDots(j, 7), P.X - ScaleX(FDotSize), P.Y + iHeight / 2 - 3, ScaleX(FDotSize), ScaleY(FDotSize), True
-					For i As Integer = 0 To 7
-						'SetParent(FDots(i), GetParent(Control))
-						SetProp(FDots(j, i),"@@@Control", GetControlHandle(SelectedControls.Items[j]))
-						SetProp(FDots(j, i),"@@@Control2", SelectedControls.Items[j])
-						BringWindowToTop FDots(j, i)
-						ShowWindow(FDots(j, i), SW_SHOW)
-					Next i
-				Next j
-				FHDC = GetDC(GetParent(ControlHandle))
-				'SetROP2(hdc, R2_NOTXORPEN)
-				RedrawWindow(FDialog, NULL, NULL, RDW_INVALIDATE)
-				'DrawFocusRect(Fhdc, @type<RECT>(R.Left, R.Top, R.Right, R.Bottom + 10))
-				ReleaseDC(ControlHandle, FHDC)
-			#endif
 			If bSetFocus Then
-				#ifdef __USE_GTK__
 					gtk_widget_grab_focus(layoutwidget)
-				#else
-					'SetFocus(Dialog)
-				#endif
 				'else
 				'   HideDots
 				'end If
@@ -583,7 +434,6 @@ Namespace My.Sys.Forms
 		End If
 	End Sub
 	
-	#ifdef __USE_GTK__
 		Function Designer.IsDot(hDlg As GtkWidget Ptr) As Integer
 			Dim As String s
 			'if UCase(s) = "DOT" then
@@ -594,20 +444,6 @@ Namespace My.Sys.Forms
 			Next j
 			Return -1
 		End Function
-	#else
-		Function Designer.IsDot(hDlg As HWND) As Integer
-			Dim As String s
-			If GetWindowLongPtr(hDlg, GWLP_USERDATA) = CInt(@This) Then
-				'if UCase(s) = "DOT" then
-				For j As Integer = 0 To SelectedControls.Count - 1
-					For i As Integer = 0 To 7
-						If FDots(j, i) = hDlg Then Return i
-					Next i
-				Next j
-			End If
-			Return -1
-		End Function
-	#endif
 	
 	Sub Designer.DblClick(X As Integer, Y As Integer, Shift As Integer, Ctrl As Any Ptr = 0)
 		'#IfDef __USE_GTK__
@@ -619,30 +455,15 @@ Namespace My.Sys.Forms
 		'#EndIf
 	End Sub
 	
-	#ifdef __USE_GTK__
 		Function Designer.GetControlHandle(Control As Any Ptr) As GtkWidget Ptr
 			Dim As SymbolsType Ptr st = Symbols(Control)
 			If st = 0 OrElse st->ReadPropertyFunc = 0 Then Return 0
 			Return st->ReadPropertyFunc(Control, "Widget")
-	#else
-		Function Designer.GetControlHandle(Control As Any Ptr) As HWND
-			If Control = 0 Then Return 0
-			Dim As SymbolsType Ptr st = Symbols(Control)
-			If st = 0 OrElse st->ReadPropertyFunc = 0 Then Return 0
-			Var tHandle = st->ReadPropertyFunc(Control, "Handle")
-			If tHandle = 0 Then Return 0
-			Return *Cast(HWND Ptr, tHandle)
-	#endif
 	End Function
 	
 	Sub Designer.MouseDown(X As Integer, Y As Integer, Shift As Integer, Ctrl As Any Ptr = 0)
-		#ifdef __USE_GTK__
 			Dim As Boolean bCtrl = Shift And GDK_CONTROL_MASK
 			Dim As Boolean bShift = Shift And GDK_SHIFT_MASK
-		#else
-			Dim As Boolean bCtrl = GetKeyState(VK_CONTROL) And 8000
-			Dim As Boolean bShift = GetKeyState(VK_SHIFT) And 8000
-		#endif
 		pfrmMain->ActiveControl = GetControl(FDialogParent)
 		FDown   = True
 		FStepX = GridSize
@@ -678,34 +499,16 @@ Namespace My.Sys.Forms
 			FCanInsert  = False
 			FCanMove    = False
 			FCanSize    = Not FLockControls
-			#ifdef __USE_GTK__
 					If G_IS_OBJECT(FDots(0, FDotIndex)) Then
 						FSelControl = g_object_get_data(G_OBJECT(FDots(0, FDotIndex)), "@@@Control")
 						SelectedControl = g_object_get_data(G_OBJECT(FDots(0, FDotIndex)), "@@@Control2")
 					End If
-			#else
-				'If Not IsWindow(FSelControl) Then
-				FSelControl = GetProp(FDots(0, FDotIndex),"@@@Control")
-				SelectedControl = GetControl(FSelControl)
-				'End If
-			#endif
 			'BringWindowToTop(FSelControl)
 			Dim As Integer iCount = SelectedControls.Count - 1
 			ReDim As Integer FLeft(iCount), FTop(iCount), FWidth(iCount), FHeight(iCount)
 			ReDim As Integer FLeftNew(iCount), FTopNew(iCount), FWidthNew(iCount), FHeightNew(iCount)
 			For j As Integer = 0 To iCount
-				#ifdef __USE_GTK__
 					GetControlBounds(SelectedControls.Items[j], FLeft(j), FTop(j), FWidth(j), FHeight(j))
-				#else
-					GetWindowRect(GetControlHandle(SelectedControls.Items[j]), @R)
-					P.X         = R.Left
-					P.Y         = R.Top
-					FWidth(j)   = UnScaleX(R.Right - R.Left)
-					FHeight(j)  = UnScaleY(R.Bottom - R.Top)
-					ScreenToClient(GetParent(FSelControl), @P)
-					FLeft(j)    = UnScaleX(P.X)
-					FTop(j)     = UnScaleY(P.Y)
-				#endif
 			Next
 		Else
 			If FSelControl <> FDialog Then
@@ -714,11 +517,7 @@ Namespace My.Sys.Forms
 					FCanInsert = True
 					FCanMove   = False
 					FCanSize   = False
-					#ifdef __USE_GTK__
 						gdk_window_set_cursor(gtk_widget_get_window(layoutwidget), gdk_cursor_new_from_name(gtk_widget_get_display(layoutwidget), crCross))
-					#else
-						SetCursor(crCross)
-					#endif
 				Else
 					FCanInsert = False
 					FCanMove   = Not FLockControls
@@ -731,28 +530,13 @@ Namespace My.Sys.Forms
 						PasteControl
 						FSelControl = GetControlHandle(SelectedControl)
 					End If
-					#ifdef __USE_GTK__
 						gdk_window_set_cursor(gtk_widget_get_window(layoutwidget), gdk_cursor_new_from_name(gtk_widget_get_display(layoutwidget), crSize))
-					#else
-						SetCursor(crSize) :SetCapture(FDialog)
-					#endif
 					If OnChangeSelection Then OnChangeSelection(This, SelectedControl)
 					Dim As Integer iCount = SelectedControls.Count - 1
 					ReDim As Integer FLeft(iCount), FTop(iCount), FWidth(iCount), FHeight(iCount)
 					ReDim As Integer FLeftNew(iCount), FTopNew(iCount), FWidthNew(iCount), FHeightNew(iCount)
 					For j As Integer = 0 To iCount
-						#ifdef __USE_GTK__
 							GetControlBounds(SelectedControls.Items[j], FLeft(j), FTop(j), FWidth(j), FHeight(j))
-						#else
-							GetWindowRect(GetControlHandle(SelectedControls.Items[j]), @R)
-							P.X         = R.Left
-							P.Y         = R.Top
-							FWidth(j)   = UnScaleX(R.Right - R.Left)
-							FHeight(j)  = UnScaleY(R.Bottom - R.Top)
-							ScreenToClient(GetParent(FSelControl), @P)
-							FLeft(j)    = UnScaleX(P.X)
-							FTop(j)     = UnScaleY(P.Y)
-						#endif
 					Next
 				End If
 			Else
@@ -761,11 +545,7 @@ Namespace My.Sys.Forms
 				FCanMove   = 0
 				FCanSize   = False
 				If FCanInsert Then
-					#ifdef __USE_GTK__
 						gdk_window_set_cursor(gtk_widget_get_window(layoutwidget), gdk_cursor_new_from_name(gtk_widget_get_display(layoutwidget), crCross))
-					#else
-						SetCursor(crCross)
-					#endif
 				Else
 					If OnChangeSelection Then OnChangeSelection(This, SelectedControl)
 				End If
@@ -783,11 +563,7 @@ Namespace My.Sys.Forms
 		'dim hdc As HDC = GetDC(FHandle)
 		If FDown Then
 			If FCanInsert Then
-				#ifdef __USE_GTK__
 					If GTK_IS_WIDGET(layoutwidget) Then gtk_widget_queue_draw(layoutwidget)
-				#else
-					SetCursor(crCross)
-				#endif
 				DrawBox(Type<My.Sys.Drawing.Rect>(FBeginX, FBeginY, FNewX, FNewY))
 				DrawBox(Type<My.Sys.Drawing.Rect>(FBeginX, FBeginY, FEndX, FEndY))
 			End If
@@ -797,7 +573,6 @@ Namespace My.Sys.Forms
 					FTopNew(j) = FTop(j)
 					FWidthNew(j) = FWidth(j)
 					FHeightNew(j) = FHeight(j)
-					#ifdef __USE_GTK__
 						Select Case FDotIndex
 						Case 0: FLeftNew(j) = FLeft(j) + (FNewX - FBeginX): FTopNew(j) = FTop(j) + (FNewY - FBeginY): FWidthNew(j) = FWidth(j) - (FNewX - FBeginX): FHeightNew(j) = FHeight(j) - (FNewY - FBeginY)
 						Case 1: FTopNew(j) = FTop(j) + (FNewY - FBeginY): FHeightNew(j) = FHeight(j) - (FNewY - FBeginY)
@@ -809,78 +584,22 @@ Namespace My.Sys.Forms
 						Case 7: FLeftNew(j) = FLeft(j) - (FBeginX - FNewX): FWidthNew(j) = FWidth(j) + (FBeginX - FNewX)
 						End Select
 						SetControlBounds(SelectedControls.Items[j], FLeftNew(j), FTopNew(j), FWidthNew(j), FHeightNew(j))
-					#else
-						Select Case FDotIndex
-						Case 0: FLeftNew(j) = FLeft(j) + (FNewX - FBeginX): FTopNew(j) = FTop(j) + (FNewY - FBeginY): FWidthNew(j) = FWidth(j) - (FNewX - FBeginX): FHeightNew(j) = FHeight(j) - (FNewY - FBeginY)
-						Case 1: FTopNew(j) = FTop(j) + (FNewY - FBeginY): FHeightNew(j) = FHeight(j) - (FNewY - FBeginY)
-						Case 2: FTopNew(j) = FTop(j) + (FNewY - FBeginY): FWidthNew(j) = FWidth(j) + (FNewX - FBeginX): FHeightNew(j) = FHeight(j) - (FNewY - FBeginY)
-						Case 3: FWidthNew(j) = FWidth(j) + (FNewX - FBeginX)
-						Case 4: FWidthNew(j) = FWidth(j) + (FNewX - FBeginX): FHeightNew(j) = FHeight(j) + (FNewY - FBeginY)
-						Case 5: FHeightNew(j) = FHeight(j) + (FNewY - FBeginY)
-						Case 6: FLeftNew(j) = FLeft(j) + (FNewX - FBeginX): FWidthNew(j) = FWidth(j) - (FNewX - FBeginX): FHeightNew(j) = FHeight(j) + (FNewY - FBeginY)
-						Case 7: FLeftNew(j) = FLeft(j) - (FBeginX - FNewX): FWidthNew(j) = FWidth(j) + (FBeginX - FNewX)
-						End Select
-						'ComponentSetBoundsSub(Q_ComponentFunc(SelectedControl), FLeftNew, FTopNew, FWidthNew, FHeightNew)
-						MoveWindow(GetControlHandle(SelectedControls.Items[j]), ScaleX(FLeftNew(j)), ScaleY(FTopNew(j)), ScaleX(FWidthNew(j)), ScaleY(FHeightNew(j)), True)
-					#endif
 				Next
 			End If
 			If FCanMove Then
 				If FBeginX <> FEndX Or FBeginY <> FEndY Then
 					For j As Integer = 0 To SelectedControls.Count - 1
-						#ifdef __USE_GTK__
 							SetControlBounds(SelectedControls.Items[j], FLeft(j) + (FNewX - FBeginX), FTop(j) + (FNewY - FBeginY), FWidth(j), FHeight(j))
-						#else
-							MoveWindow(GetControlHandle(SelectedControls.Items[j]), ScaleX(FLeft(j) + (FNewX - FBeginX)), ScaleY(FTop(j) + (FNewY - FBeginY)), ScaleX(FWidth(j)), ScaleY(FHeight(j)), True)
-						#endif
 					Next j
 				End If
 			End If
 			If Not FCanInsert AndAlso Not FCanMove AndAlso Not FCanSize AndAlso (CBool(FSelControl = FDialog) OrElse Not FLockControls) Then
-				#ifdef __USE_GTK__
 					If GTK_IS_WIDGET(layoutwidget) Then gtk_widget_queue_draw(layoutwidget)
-				#else
-					FHDC = GetDC(FDialog)
-					'SetROP2(hdc, R2_NOTXORPEN)
-					DrawFocusRect(FHDC, @Type<..Rect>(ScaleX(Min(FBeginX, FOldX)), ScaleY(Min(FBeginY, FOldY)), ScaleX(Max(FBeginX, FOldX)), ScaleY(Max(FBeginY, FOldY))))
-					DrawFocusRect(FHDC, @Type<..Rect>(ScaleX(Min(FBeginX, FNewX)), ScaleX(Min(FBeginY, FNewY)), ScaleX(Max(FBeginX, FNewX)), ScaleY(Max(FBeginY, FNewY))))
-				#endif
 				FOldX = FNewX
 				FOldY = FNewY
 			End If
 		Else
-			#ifdef __USE_GTK__
 				
-			#else
-				P = Type(ScaleX(X), ScaleY(Y))
-				ClientToScreen(FDialog, @P)
-				ScreenToClient(GetParent(FDialog), @P)
-				FOverControl = ChildWindowFromPoint(GetParent(FDialog), P)
-				If OnMouseMove Then OnMouseMove(This, X, Y, GetControl(FOverControl))
-				Dim As Integer Id = IsDot(FOverControl)
-				If Id <> -1 Then
-					If FLockControls Then
-						SetCursor(crArrow)
-					Else
-						Select Case Id
-						Case 0 : SetCursor(crSizeNWSE)
-						Case 1 : SetCursor(crSizeNS)
-						Case 2 : SetCursor(crSizeNESW)
-						Case 3 : SetCursor(crSizeWE)
-						Case 4 : SetCursor(crSizeNWSE)
-						Case 5 : SetCursor(crSizeNS)
-						Case 6 : SetCursor(crSizeNESW)
-						Case 7 : SetCursor(crSizeWE)
-						End Select
-					End If
-				Else
-					If GetAncestor(FOverControl,GA_ROOTOWNER) <> FDialog Then
-						ReleaseCapture
-					End If
-					SetCursor(crArrow)
-					ClipCursor(0)
-				End If
-			#endif
 		End If
 		FEndX = FNewX
 		FEndY = FNewY
@@ -919,7 +638,6 @@ Namespace My.Sys.Forms
 				If FBeginX > FNewX Then Swap FBeginX, FNewX
 				If FBeginY > FNewY Then Swap FBeginY, FNewY
 				SelectedControls.Clear
-				#ifdef __USE_GTK__
 					If GTK_IS_WIDGET(layoutwidget) Then gtk_widget_queue_draw(layoutwidget)
 					Dim As Integer ALeft, ATop, AWidth, AHeight
 					Dim As Any Ptr Ctrl
@@ -937,31 +655,6 @@ Namespace My.Sys.Forms
 							End If
 						End If
 					Next i
-				#else
-					If CBool(FSelControl = FDialog) OrElse Not FLockControls Then
-						FHDC = GetDC(FDialog)
-						DrawFocusRect(FHDC, @Type<Rect>(ScaleX(FBeginX), ScaleY(FBeginY), ScaleX(FNewX), ScaleY(FNewY)))
-						ReleaseDC(FDialog, FHDC)
-					End If
-					SelectedControl = DesignControl
-					FSelControl = FDialog
-					Dim As Rect R, R1
-					Dim As Any Ptr Ctrl
-					For i As Integer = Objects.Count - 1 To 0 Step -1
-						Ctrl = Objects.Item(i)
-						Dim As SymbolsType Ptr st = Symbols(Ctrl)
-						If Ctrl AndAlso st AndAlso st->ReadPropertyFunc <> 0 AndAlso st->ReadPropertyFunc(Ctrl, "Handle") AndAlso IsWindowVisible(*Cast(HWND Ptr, st->ReadPropertyFunc(Ctrl, "Handle"))) Then
-							GetWindowRect(*Cast(HWND Ptr, st->ReadPropertyFunc(Ctrl, "Handle")), @R)
-							MapWindowPoints(0, FDialog, Cast(Point Ptr, @R) , 2)
-							R1 = Type<Rect>(UnScaleX(R.Left), UnScaleY(R.Top), UnScaleX(R.Right), UnScaleY(R.Bottom))
-							If Not (R1.Right < FBeginX OrElse R1.Left > FNewX OrElse R1.Top > FNewY OrElse R1.Bottom < FBeginY) Then
-								If SelectedControls.Count = 0 OrElse (Symbols(SelectedControls.Items[0]) AndAlso Symbols(SelectedControls.Items[0])->ReadPropertyFunc <> 0 AndAlso Symbols(SelectedControls.Items[0])->ReadPropertyFunc(SelectedControls.Items[0], "Parent") = st->ReadPropertyFunc(Ctrl, "Parent")) Then
-									SelectedControls.Add Ctrl
-								End If
-							End If
-						End If
-					Next i
-				#endif
 				If SelectedControls.Count > 0 Then
 					SelectedControl = SelectedControls.Items[0]
 					FSelControl = GetControlHandle(SelectedControl)
@@ -972,9 +665,7 @@ Namespace My.Sys.Forms
 				If FBeginX > FNewX Then Swap FBeginX, FNewX
 				If FBeginY > FNewY Then Swap FBeginY, FNewY
 				DrawBox(Type<My.Sys.Drawing.Rect>(FBeginX, FBeginY, FNewX, FNewY))
-				#ifdef __USE_GTK__
 					If GTK_IS_WIDGET(layoutwidget) Then gtk_widget_queue_draw(layoutwidget)
-				#endif
 				'if GetClassAcceptControls(GetClassName(FSelControl)) Then
 				'R.Left   = FBeginX
 				'R.Top    = FBeginY
@@ -994,12 +685,7 @@ Namespace My.Sys.Forms
 				SelectedControl = GetContainerControl(SelectedControl)
 				Dim As ..Rect R
 				If SelectedControl <> DesignControl Then
-					#ifdef __USE_GTK__
 						gtk_widget_translate_coordinates(FSelControl, layoutwidget, 0, 0, Cast(gint Ptr, @R.Left), Cast(gint Ptr, @R.Top))
-					#else
-						GetWindowRect FSelControl, @R
-						MapWindowPoints 0, FDialog, Cast(..Point Ptr, @R), 2
-					#endif
 				End If
 				Dim ctr As Any Ptr
 				'#IfDef __USE_GTK__
@@ -1013,30 +699,15 @@ Namespace My.Sys.Forms
 					If FSelControl Then
 						SelectedControls.Clear
 					End If
-					#ifdef __USE_GTK__
 						MoveDots(cpnt, , FBeginX - UnScaleX(R.Left), FBeginY - UnScaleY(R.Top), 16, 16)
-					#else
-						MoveDots(cpnt)
-						'LockWindowUpdate(0)
-					#endif
 				Else
 					CreateControl(SelectedClass, FName, FName, ctr, FBeginX - UnScaleX(R.Left), FBeginY - UnScaleY(R.Top), FNewX - FBeginX, FNewY - FBeginY)
 					If FSelControl Then
 						SelectedControls.Clear
-						#ifdef __USE_GTK__
 							Dim bTrue As Boolean = True
 							If Symbols(SelectedControl) Then Symbols(SelectedControl)->WritePropertyFunc(SelectedControl, "Visible", @bTrue)
-						#else
-							LockWindowUpdate(FSelControl)
-							BringWindowToTop(FSelControl)
-						#endif
 						If OnInsertControl Then OnInsertControl(This, FClass, SelectedControl, 0, 0, FBeginX - UnScaleX(R.Left), FBeginY - UnScaleY(R.Top), FNewX - FBeginX, FNewY - FBeginY)
-						#ifdef __USE_GTK__
 							MoveDots(SelectedControl, , FBeginX - UnScaleX(R.Left), FBeginY - UnScaleY(R.Top), FNewX - FBeginX, FNewY - FBeginY)
-						#else
-							MoveDots(SelectedControl)
-							LockWindowUpdate(0)
-						#endif
 					Else
 						Dim cpnt As Any Ptr = CreateComponent(FClass, FName, ctr, FBeginX - UnScaleX(R.Left), FBeginY - UnScaleY(R.Top))
 						If cpnt Then
@@ -1044,12 +715,7 @@ Namespace My.Sys.Forms
 							If FSelControl Then
 								SelectedControls.Clear
 							End If
-							#ifdef __USE_GTK__
 								MoveDots(cpnt, , FBeginX - UnScaleX(R.Left), FBeginY - UnScaleY(R.Top), 16, 16)
-							#else
-								MoveDots(cpnt)
-								'LockWindowUpdate(0)
-							#endif
 						Else
 							SelectedControl = DesignControl
 							MoveDots(SelectedControl)
@@ -1080,18 +746,9 @@ Namespace My.Sys.Forms
 			FBeginY = FEndY
 			FNewX   = FBeginX
 			FNewY   = FBeginY
-			#ifdef __USE_GTK__
 				gdk_window_set_cursor(gtk_widget_get_window(layoutwidget), gdk_cursor_new_from_name(gtk_widget_get_display(layoutwidget), crArrow))
-			#else
-				ClipCursor(0)
-				ReleaseCapture
-			#endif
 		Else
-			#ifdef __USE_GTK__
 				gdk_window_set_cursor(gtk_widget_get_window(layoutwidget), gdk_cursor_new_from_name(gtk_widget_get_display(layoutwidget), crArrow))
-			#else
-				ClipCursor(0)
-			#endif
 		End If
 	End Sub
 	
@@ -1125,13 +782,8 @@ Namespace My.Sys.Forms
 			If st AndAlso CInt(st->IsControlFunc) AndAlso CInt(st->IsControlFunc(Ctrl)) Then
 				If st->ControlFreeWndSub Then st->ControlFreeWndSub(Ctrl)
 			ElseIf st AndAlso st->ReadPropertyFunc Then
-				#ifdef __USE_GTK__
 					Dim As GtkWidget Ptr widget = st->ReadPropertyFunc(Ctrl, "widget")
 					If widget <> 0 Then gtk_widget_destroy(widget)
-				#else
-					Dim As HWND Ptr phWnd = st->ReadPropertyFunc(Ctrl, "Handle")
-					If phWnd <> 0 AndAlso *phWnd <> 0 Then DestroyWindow *phWnd
-				#endif
 			End If
 		Else
 			If Controls.Contains(Ctrl) Then
@@ -1228,11 +880,7 @@ Namespace My.Sys.Forms
 	Dim Shared CopyList As PointerList
 	Sub Designer.CopyControl()
 		CopyList.Clear
-		#ifdef __USE_GTK__
 			If GTK_IS_WIDGET(FSelControl) Then
-		#else
-			If IsWindow(FSelControl) Then
-		#endif
 			If FSelControl <> FDialog Then
 				For j As Integer = 0 To SelectedControls.Count - 1
 					Dim As SymbolsType Ptr st = Symbols(SelectedControls.Items[j])
@@ -1243,11 +891,7 @@ Namespace My.Sys.Forms
 	End Sub
 	
 	Sub Designer.CutControl()
-		#ifdef __USE_GTK__
 			If GTK_IS_WIDGET(FSelControl) Then
-		#else
-			If IsWindow(FSelControl) Then
-		#endif
 			If FSelControl <> FDialog Then
 				CopyControl
 				For j As Integer = 0 To SelectedControls.Count - 1
@@ -1304,18 +948,7 @@ Namespace My.Sys.Forms
 			If st AndAlso st->ControlIsContainerFunc <> 0 AndAlso st->ReadPropertyFunc <> 0 Then
 				If Not st->ControlIsContainerFunc(ParentCtrl) Then ParentCtrl = st->ReadPropertyFunc(ParentCtrl, "Parent")
 			End If
-			#ifdef __USE_GTK__
 				Dim As PointerList Ptr Value = @CopyList
-			#else
-				If Clipboard.HasFormat(fformat) Then
-					If ( OpenClipboard(NULL) ) Then
-						'извлекаем данные из буфера 'Extract data from buffer
-						Dim As HANDLE hData = GetClipboardData(fformat)
-						Dim As UInteger Ptr buffer = Cast(UInteger Ptr, GlobalLock( hData ))
-						GlobalUnlock( hData )
-						CloseClipboard()
-						Dim As PointerList Ptr Value = Cast(Any Ptr, *buffer)
-			#endif
 					'If ReadPropertyFunc <> 0 AndAlso ComponentGetBoundsSub <> 0 Then
 					SelectedControls.Clear
 					For j As Integer = 0 To Value->Count - 1
@@ -1333,38 +966,14 @@ Namespace My.Sys.Forms
 	End Sub
 	
 	
-	#ifdef __USE_GTK__
 		Sub Designer.HookControl(Control As GtkWidget Ptr)
-	#else
-		Sub Designer.HookControl(Control As HWND)
-	#endif
-		#ifdef __USE_GTK__
 			If GTK_IS_WIDGET(Control) Then
 				g_signal_connect(Control, "event", G_CALLBACK(@HookChildProc), @This)
 				If GTK_IS_BIN(Control) AndAlso gtk_bin_get_child(GTK_BIN(Control)) <> 0 Then
 					g_signal_connect(gtk_bin_get_child(GTK_BIN(Control)), "event", G_CALLBACK(@HookChildProc), @This)
 				End If
-				#ifdef __USE_GTK3__
 					g_signal_connect_after(Control, "draw", G_CALLBACK(@HookChildDraw), @This)
-				#endif
 			End If
-		#else
-			If IsWindow(Control) Then
-				SetProp(Control, "@@@Designer", @This)
-				If GetWindowLongPtr(Control, GWLP_WNDPROC) <> @HookChildProc Then
-					SetProp(Control, "@@@Proc", Cast(WNDPROC, SetWindowLongPtr(Control, GWLP_WNDPROC, CInt(@HookChildProc))))
-				End If
-			End If
-			GetChilds(Control)
-			For i As Integer = 0 To FChilds.Count - 1
-				SetProp(FChilds.Child[i], "@@@Designer", @This)
-				'SetWindowLongPtr(FChilds.Child[i], GWLP_USERDATA, CInt(GetControl(Control)))
-				If GetProp(FChilds.Child[i], "MFFControl") = 0 Then SetProp(FChilds.Child[i], "MFFControl", GetControl(Control))
-				If GetWindowLongPtr(FChilds.Child[i], GWLP_WNDPROC) <> @HookChildProc Then
-					SetProp(FChilds.Child[i], "@@@Proc", Cast(WNDPROC, SetWindowLongPtr(FChilds.Child[i], GWLP_WNDPROC, CInt(@HookChildProc))))
-				End If
-			Next
-		#endif
 	End Sub
 	
 	Function Designer.CreateControl(AClassName As String, ByRef AName As WString, ByRef AText As WString, AParent As Any Ptr, x As Integer, y As Integer, cx As Integer, cy As Integer, bNotHook As Boolean = False) As Any Ptr
@@ -1372,11 +981,7 @@ Namespace My.Sys.Forms
 		Dim As SymbolsType Ptr st = Symbols(AClassName)
 		Ctrl = 0
 		FSelControl = 0
-		#ifdef __USE_GTK__
 			Dim As GtkWidget Ptr EventBox
-		#else
-			Dim As HWND ParentHandle
-		#endif
 		If st Then
 			If st->CreateControlFunc <> 0 Then
 				ChDir GetFolderName(st->Path)
@@ -1395,26 +1000,16 @@ Namespace My.Sys.Forms
 					Controls.Add Ctrl
 					SelectedControl = Ctrl
 					If st->ReadPropertyFunc Then
-						#ifdef __USE_GTK__
 							'g_signal_connect(layoutwidget, "event", G_CALLBACK(@HookChildProc), Ctrl)
 							Dim As GtkWidget Ptr hHandle = st->ReadPropertyFunc(Ctrl, "Widget")
 							EventBox = st->ReadPropertyFunc(Ctrl, "EventBoxWidget")
 							If hHandle <> 0 Then FSelControl = hHandle
-						#else
-							Dim As HWND Ptr hHandle = st->ReadPropertyFunc(Ctrl, "Handle")
-							If AParent <> 0 Then ParentHandle = *Cast(HWND Ptr, st->ReadPropertyFunc(AParent, "Handle"))
-							If hHandle <> 0 Then FSelControl = *hHandle
-						#endif
 					End If
 					If st->WritePropertyFunc Then
 						Dim As Boolean bTrue = True
 						st->WritePropertyFunc(Ctrl, "DesignMode", @bTrue)
 						st->WritePropertyFunc(Ctrl, "ControlDesigner", @This)
-						#ifdef __USE_GTK__
 							
-						#else
-							
-						#endif
 					End If
 				Else
 					
@@ -1422,7 +1017,6 @@ Namespace My.Sys.Forms
 			End If
 		End If
 		SelectedClass = ""
-		#ifdef __USE_GTK__
 			If GTK_IS_WIDGET(FSelControl) Then
 				If Not bNotHook Then
 					If EventBox Then
@@ -1435,25 +1029,6 @@ Namespace My.Sys.Forms
 					'possibly using in propertylist inspector
 				End If
 			End If
-		#else
-			If IsWindow(FSelControl) Then
-				If Not bNotHook Then
-					If GetParent(FSelControl) <> ParentHandle Then
-						HookControl(GetParent(FSelControl))
-					Else
-						HookControl(FSelControl)
-					End If
-					'AName = iif(AName="", AName = AClassName & ...)
-					'SetProp(Control, "Name", ...)
-					'possibly using in propertylist inspector
-					Select Case GetClassNameOf(FSelControl)
-					Case "ToolBar", "ToolPalette"
-						RedrawWindow FSelControl, 0, 0, RDW_INVALIDATE
-						UpdateWindow FSelControl
-					End Select
-				End If
-			End If
-		#endif
 		'DyLibFree(MFF)
 		Return Ctrl
 		Exit Function
@@ -1464,13 +1039,8 @@ Namespace My.Sys.Forms
 	"in module " & ZGet(Ermn()) & " (Handler file: " & __FILE__ & ") "
 	End Function
 	
-	#ifdef __USE_GTK__
 		Function DrawComponentBorder(widget As GtkWidget Ptr, cr As cairo_t Ptr, data1 As Any Ptr) As Boolean
-			#ifdef __USE_GTK3__
 				Dim As Integer AllocatedWidth = gtk_widget_get_allocated_width(widget), AllocatedHeight = gtk_widget_get_allocated_height(widget)
-			#else
-				Dim As Integer AllocatedWidth = widget->allocation.width, AllocatedHeight = widget->allocation.height
-			#endif
 			.cairo_rectangle(cr, 0.0, 0.0, AllocatedWidth, AllocatedHeight)
 			cairo_set_source_rgb(cr, 173 / 255.0, 173 / 255.0, 173 / 255.0)
 			cairo_stroke(cr)
@@ -1483,7 +1053,6 @@ Namespace My.Sys.Forms
 			cairo_destroy(cr)
 			Return False
 		End Function
-	#endif
 	
 	Function Designer.Symbols(Ctrl As Any Ptr) As SymbolsType Ptr
 		If Ctrl = 0 Then Return 0
@@ -1593,7 +1162,6 @@ Namespace My.Sys.Forms
 						Dim As Boolean bTrue = True
 						st->WritePropertyFunc(Cpnt, "DesignMode", @bTrue)
 						Dim As BitmapType pBitmap
-						#ifdef __USE_GTK__
 							pBitmap.LoadFromFile(*MFFPath & "/resources/" & AClassName &".png")
 							Dim As GtkWidget Ptr Result
 							Dim As Integer FWidth = 16, FHeight = 16
@@ -1603,11 +1171,7 @@ Namespace My.Sys.Forms
 							st->WritePropertyFunc(Cpnt, "widget", FSelControl)
 							gtk_image_set_from_pixbuf(GTK_IMAGE(FSelControl), pBitmap.Handle)
 							gtk_widget_set_size_request(FSelControl, 16, 16)
-							#ifdef __USE_GTK3__
 								g_signal_connect(FSelControl, "draw", G_CALLBACK(@DrawComponentBorder), @This)
-							#else
-								g_signal_connect(FSelControl, "expose-event", G_CALLBACK(@ComponentExposeEvent), @This)
-							#endif
 							'							ComponentSetBoundsSub()
 							'							WritePropertyFunc(Cpnt, "Left", @x)
 							'							WritePropertyFunc(Cpnt, "Top", @y)
@@ -1621,28 +1185,10 @@ Namespace My.Sys.Forms
 							'	End If
 							'End If
 							gtk_widget_show_all(FSelControl)
-						#else
-							If st->ReadPropertyFunc Then
-								pBitmap.LoadFromResourceName(AClassName, st->Handle)
-								Dim As HWND Ptr Result
-								If AParent <> 0 Then Result = Cast(HWND Ptr, st->ReadPropertyFunc(AParent, "Handle"))
-								If AParent = 0 OrElse Result = 0 OrElse *Result = 0 Then
-									FSelControl = CreateWindowExW(0, "Button", @"", WS_CHILD Or BS_BITMAP, ScaleX(x), ScaleY(y), ScaleX(16), ScaleY(16), *Cast(HWND Ptr, st->ReadPropertyFunc(DesignControl, "Handle")), Cast(HMENU, 1000), Instance, Cpnt)
-								Else
-									FSelControl = CreateWindowExW(0, "Button", @"", WS_CHILD Or BS_BITMAP, ScaleX(x), ScaleY(y), ScaleX(16), ScaleY(16), *Result, Cast(HMENU, 1000), Instance, Cpnt)
-								End If
-								st->WritePropertyFunc(Cpnt, "Handle", @FSelControl)
-								SetWindowLongPtr(FSelControl, GWLP_USERDATA, CInt(Cpnt))
-								SetProp(FSelControl, "MFFControl", Cpnt)
-								SendMessage(FSelControl, BM_SETIMAGE, 0, Cast(LPARAM, pBitmap.Handle))
-								ShowWindow(FSelControl, SW_SHOWNORMAL)
-							End If
-						#endif
 					End If
 				End If
 			End If
 		End If
-		#ifdef __USE_GTK__
 			If GTK_IS_WIDGET(FSelControl) Then
 				If Not bNotHook Then
 					HookControl(FSelControl)
@@ -1651,16 +1197,6 @@ Namespace My.Sys.Forms
 					'possibly using in propertylist inspector
 				End If
 			End If
-		#else
-			If IsWindow(FSelControl) Then
-				If Not bNotHook Then
-					HookControl(FSelControl)
-					'AName = iif(AName="", AName = AClassName & ...)
-					'SetProp(Control, "Name", ...)
-					'possibly using in propertylist inspector
-				End If
-			End If
-		#endif
 		SelectedClass = ""
 		Return Cpnt
 	End Function
@@ -1693,24 +1229,17 @@ Namespace My.Sys.Forms
 	Sub Designer.DrawThis()
 		FStepX = GridSize
 		FStepY = GridSize
-		#ifdef __USE_GTK__
 			Dim As GtkWidget Ptr CtrlParent = gtk_widget_get_parent(layoutwidget)
 			If GTK_IS_BOX(CtrlParent) = 0 Then CtrlParent = layoutwidget
 			Dim As Integer iWidth, iHeight
-			#ifdef __USE_GTK3__
 				Dim As Integer iWidthOverlay, iHeightOverlay
 				iWidth = gtk_widget_get_allocated_width(CtrlParent): iHeight = gtk_widget_get_allocated_height(CtrlParent)
 				iWidthOverlay = gtk_widget_get_allocated_width(overlay): iHeightOverlay = gtk_widget_get_allocated_height(overlay)
 				If iWidthOverlay <> iWidth + 2 * FDotSize OrElse iHeightOverlay <> iHeight + 2 * FDotSize Then
 					gtk_widget_set_size_request(overlay, iWidth + 2 * FDotSize, iHeight + 2 * FDotSize)
 				End If
-			#endif
 			If ShowAlignmentGrid Then
-				#ifdef __USE_GTK3__
 					iWidth = gtk_widget_get_allocated_width(layoutwidget): iHeight = gtk_widget_get_allocated_height(layoutwidget)
-				#else
-					iWidth = layoutwidget->allocation.width: iHeight = layoutwidget->allocation.height
-				#endif
 				cairo_set_source_rgb(cr, 0, 0, 0)
 				For i As Integer = 0 To iWidth Step FStepX
 					For j As Integer = 0 To iHeight Step FStepY
@@ -1733,69 +1262,9 @@ Namespace My.Sys.Forms
 					cairo_stroke(cr)
 				End If
 			Next j
-		#else
-			Dim As HDC mDc
-			Dim As HBITMAP mBMP, pBMP
-			Dim As ..Rect R, BrushRect = Type(0, 0, ScaleX(FStepX), ScaleY(FStepY))
-			Dim As PAINTSTRUCT Ps
-			Dim As Boolean WithGraphic
-			Dim As Integer BackColor
-			Dim As SymbolsType Ptr st = Symbols(DesignControl)
-			If st AndAlso st->ReadPropertyFunc Then BackColor = QInteger(st->ReadPropertyFunc(DesignControl, "BackColor"))
-			Dim As HBRUSH Brush = CreateSolidBrush(BackColor)
-			FHDC = BeginPaint(FDialog,@Ps)
-			GetClientRect(FDialog, @R)
-			If BitmapHandle <> 0 Then
-				FillRect(FHDC, @R, Brush) 'Cast(HBRUSH, 16))
-				With Parent->Canvas
-					.HandleSetted = True
-					.Handle = FHDC
-					.Draw 0, 0, BitmapHandle
-					.HandleSetted = False
-					WithGraphic = True
-				End With
-			End If
-			If ShowAlignmentGrid Then
-				If WithGraphic Then
-					For i As Integer = R.Left To R.Right Step ScaleX(FStepX)
-						For j As Integer = R.Top To R.Bottom Step ScaleY(FStepX)
-							SetPixel(FHDC, i, j, 0)
-						Next
-					Next
-				Else
-					If FGridBrush Then
-						DeleteObject(FGridBrush)
-					End If
-					mDc   = CreateCompatibleDC(FHDC)
-					mBMP  = CreateCompatibleBitmap(FHDC, ScaleX(FStepX), ScaleY(FStepY))
-					pBMP  = SelectObject(mDc, mBMP)
-					FillRect(mDc, @BrushRect, Brush) 'Cast(HBRUSH, 16))
-					SetPixel(mDc, 0, 0, 0)
-					'for lines use MoveTo and LineTo or Rectangle function or whatever...
-					FGridBrush = CreatePatternBrush(mBMP)
-					FillRect(FHDC, @R, FGridBrush)
-				End If
-			ElseIf Not WithGraphic Then
-				FillRect(FHDC, @R, Brush) 'Cast(HBRUSH, 16))
-			End If
-			DeleteObject(Brush)
-			For j As Integer = 0 To SelectedControls.Count - 1
-				GetWindowRect(GetControlHandle(SelectedControls.Items[j]), @R)
-				MapWindowPoints 0, FDialog, Cast(..Point Ptr, @R), 2
-				DrawFocusRect(FHDC, @Type<..Rect>(R.Left - 2, R.Top - 2, R.Right + 2, R.Bottom + 2))
-			Next j
-			If ShowAlignmentGrid Then
-				SelectObject(mDc, pBMP)
-				DeleteObject(mBMP)
-				DeleteDC(mDc)
-			End If
-			EndPaint FDialog,@Ps
-		#endif
 	End Sub
 	
-	#ifdef __USE_GTK__
 		Function Designer.HookChildDraw(widget As GtkWidget Ptr, cr As cairo_t Ptr, data1 As Any Ptr) As Boolean
-			#ifdef __USE_GTK__
 				Static As My.Sys.Forms.Designer Ptr Des
 				Des = data1
 				If Des Then
@@ -1810,23 +1279,14 @@ Namespace My.Sys.Forms
 					End With
 				End If
 				Return False
-			#endif
 		End Function
 		
 		Function Designer.HookChildProc(widget As GtkWidget Ptr, Event As GdkEvent Ptr, user_data As Any Ptr) As Boolean
-	#else
-		Function Designer.HookChildProc(hDlg As HWND, uMsg As UINT, wParam As WPARAM, lParam As LPARAM) As LRESULT
-	#endif
 		If FormClosing Then Return False
 		Static As My.Sys.Forms.Designer Ptr Des
-		#ifdef __USE_GTK__
 			Des = user_data
-		#else
-			Des = GetProp(hDlg, "@@@Designer")
-		#endif
 		If Des Then
 			With *Des
-				#ifdef __USE_GTK__
 					Static LeavesCount As Integer
 					Select Case Event->type
 					Case GDK_ENTER_NOTIFY
@@ -1839,16 +1299,6 @@ Namespace My.Sys.Forms
 						End If
 					Case GDK_LEAVE_NOTIFY
 						LeavesCount = 0
-				#else
-					Select Case uMsg
-					Case WM_NCHITTEST
-						Dim As SymbolsType Ptr st = .Symbols(.SelectedControl)
-						If st AndAlso st->IsControlFunc AndAlso CInt(Not st->IsControlFunc(.SelectedControl)) Then
-							Return HTTRANSPARENT
-						End If
-					Case WM_GETDLGCODE: 'Return DLGC_WANTCHARS Or DLGC_WANTALLKEYS Or DLGC_WANTARROWS Or DLGC_WANTTAB
-				#endif
-					#ifdef __USE_GTK__
 					Case GDK_EXPOSE
 						Return False
 						'					Case GDK_VISIBILITY_NOTIFY
@@ -1857,34 +1307,12 @@ Namespace My.Sys.Forms
 						'								.MoveDots .SelectedControl
 						'							End If
 						'						End If
-					#else
-					Case WM_PAINT, WM_ERASEBKGND
-						Select Case GetClassNameOf(hDlg)
-						Case "ToolBar", "ToolPalette"
-							.DrawToolBar hDlg
-							Return 1
-						End Select
-					#endif
-					#ifdef __USE_GTK__
 					Case GDK_2BUTTON_PRESS ', GDK_DOUBLE_BUTTON_PRESS
 						Dim As Integer x, y
 						GetPosToClient widget, .layoutwidget, @x, @y
 						.DblClick(.UnScaleX(Event->motion.x + x), .UnScaleY(Event->motion.y + y), Event->motion.state, g_object_get_data(G_OBJECT(widget), "@@@Control2"))
 						Return True
-					#else
-					Case WM_LBUTTONDBLCLK
-						P = Type<..Point>(LoWord(lParam), HiWord(lParam))
-						ClientToScreen(hDlg, @P)
-						ScreenToClient(.FDialog, @P)
-						.DblClick(.UnScaleX(P.X), .UnScaleY(P.Y), wParam And &HFFFF )
-						'Return 0
-					#endif
-					#ifdef __USE_GTK__
 					Case GDK_BUTTON_PRESS
-					#else
-					Case WM_LBUTTONDOWN
-					#endif
-					#ifdef __USE_GTK__
 						Dim As Integer x, y
 						GetPosToClient widget, .layoutwidget, @x, @y
 						.MouseDown(.UnScaleX(Event->button.x + x), .UnScaleY(Event->button.y + y), Event->button.state, g_object_get_data(G_OBJECT(widget), "@@@Control2"))
@@ -1893,19 +1321,7 @@ Namespace My.Sys.Forms
 						Else
 							Return True
 						End If
-					#else
-						P = Type<..Point>(LoWord(lParam), HiWord(lParam))
-						ClientToScreen(hDlg, @P)
-						ScreenToClient(.FDialog, @P)
-						.MouseDown(.UnScaleX(P.X), .UnScaleY(P.Y), wParam And &HFFFF, GetProp(hDlg, "MFFControl"))
-						'Return 0
-					#endif
-					#ifdef __USE_GTK__
 					Case GDK_BUTTON_RELEASE
-					#else
-					Case WM_LBUTTONUP
-					#endif
-					#ifdef __USE_GTK__
 						Dim As Integer x, y
 						GetPosToClient widget, .layoutwidget, @x, @y
 						.MouseUp(.UnScaleX(Event->button.x + x), .UnScaleY(Event->button.y + y), Event->button.state)
@@ -1918,49 +1334,18 @@ Namespace My.Sys.Forms
 						Else
 							Return True
 						End If
-					#else
-						P = Type<..Point>(LoWord(lParam), HiWord(lParam))
-						ClientToScreen(hDlg, @P)
-						ScreenToClient(.FDialog, @P)
-						.MouseUp(GetXY(.UnScaleX(P.X)), GetXY(.UnScaleY(P.Y)), wParam And &HFFFF )
-						'Return 0
-					#endif
-					#ifdef __USE_GTK__
 					Case GDK_MOTION_NOTIFY
-					#else
-					Case WM_MOUSEMOVE
-					#endif
-					#ifdef __USE_GTK__
 						Dim As Integer x, y
 						GetPosToClient widget, .layoutwidget, @x, @y
 						.FOverControl = widget
 						.MouseMove(.UnScaleX(Event->button.x + x), .UnScaleY(Event->button.y + y), Event->button.state)
 						Return True
-					#else
-						P = Type<..Point>(LoWord(lParam), HiWord(lParam))
-						ClientToScreen(hDlg, @P)
-						ScreenToClient(.FDialog, @P)
-						.MouseMove(GetXY(.UnScaleX(P.X)), GetXY(.UnScaleY(P.Y)), wParam And &HFFFF )
-						'Return 0
-					#endif
-					#ifdef __USE_GTK__
 					Case GDK_KEY_PRESS
-					#else
-					Case WM_KEYDOWN
-					#endif
-					#ifdef __USE_GTK__
 						.KeyDown(Event->key.keyval, Event->key.state, g_object_get_data(G_OBJECT(widget), "@@@Control2"))
-					#else
-						.KeyDown(wParam, 0)
-					#endif
 				End Select
 			End With
 		End If
-		#ifdef __USE_GTK__
 			Return True
-		#else
-			Return CallWindowProc(GetProp(hDlg, "@@@Proc"), hDlg, uMsg, wParam, lParam)
-		#endif
 		'#Else
 		'Dim As Any Ptr Ctrl = Cast(Any Ptr, GetWindowLongPtr(hDlg, GWLP_USERDATA))
 		'If Ctrl <> 0 AndAlso Des <> 0 AndAlso Des->ReadPropertyFunc <> 0 AndAlso QWString(Des->ReadPropertyFunc(Ctrl, "ClassAncestor")) = "" Then
@@ -2446,7 +1831,6 @@ Namespace My.Sys.Forms
 	
 	Sub Designer.BringToFront(Ctrl As Any Ptr = 0)
 		Dim As SymbolsType Ptr st = Symbols(SelectedControl)
-		#ifdef __USE_GTK__
 			If st <> 0 AndAlso CInt(st->ReadPropertyFunc <> 0) AndAlso CInt(st->ReadPropertyFunc(SelectedControl, "Parent")) AndAlso CInt(st->ReadPropertyFunc(st->ReadPropertyFunc(SelectedControl, "Parent"), "layoutwidget")) Then
 				Dim As Integer iLeft = QInteger(st->ReadPropertyFunc(SelectedControl, "Left")), iTop = QInteger(st->ReadPropertyFunc(SelectedControl, "Top"))
 				Dim As GtkWidget Ptr CtrlWidget = st->ReadPropertyFunc(SelectedControl, "widget")
@@ -2462,13 +1846,6 @@ Namespace My.Sys.Forms
 					gtk_layout_put(GTK_LAYOUT(LayoutWidget), CtrlWidget, iLeft, iTop)
 				End If
 			End If
-		#else
-			If Ctrl = 0 Then
-				SetWindowPos FSelControl, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE
-			ElseIf Symbols(Ctrl) AndAlso Symbols(Ctrl)->ReadPropertyFunc Then
-				SetWindowPos *Cast(HWND Ptr, Symbols(Ctrl)->ReadPropertyFunc(Ctrl, "Handle")), HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE
-			End If
-		#endif
 		If Ctrl = 0 AndAlso st AndAlso st->ReadPropertyFunc AndAlso st->WritePropertyFunc AndAlso st->ReadPropertyFunc(SelectedControl, "Parent") Then
 			Dim As Any Ptr ParentCtrl = st->ReadPropertyFunc(SelectedControl, "Parent"), CtrlAfter
 			Dim As SymbolsType Ptr stParent = Symbols(ParentCtrl)
@@ -2488,7 +1865,6 @@ Namespace My.Sys.Forms
 	
 	Sub Designer.SendToBack(Ctrl As Any Ptr = 0)
 		Dim As SymbolsType Ptr st = Symbols(SelectedControl)
-		#ifdef __USE_GTK__
 			If st AndAlso st->ReadPropertyFunc AndAlso st->ReadPropertyFunc(SelectedControl, "Parent") Then
 				Dim As Integer iLeft, iTop
 				Dim As Any Ptr ParentCtrl = st->ReadPropertyFunc(SelectedControl, "Parent"), Ctrl
@@ -2515,13 +1891,6 @@ Namespace My.Sys.Forms
 					Next
 				End If
 			End If
-		#else
-			If Ctrl = 0 Then
-				SetWindowPos FSelControl, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE
-			ElseIf Symbols(Ctrl) AndAlso Symbols(Ctrl)->ReadPropertyFunc Then
-				SetWindowPos *Cast(HWND Ptr, Symbols(Ctrl)->ReadPropertyFunc(Ctrl, "Handle")), HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE
-			End If
-		#endif
 		If st AndAlso st->ReadPropertyFunc AndAlso st->WritePropertyFunc AndAlso st->ReadPropertyFunc(SelectedControl, "Parent") Then
 			Dim As Any Ptr ParentCtrl = st->ReadPropertyFunc(SelectedControl, "Parent"), Ctrl
 			Dim As SymbolsType Ptr stParent = Symbols(ParentCtrl)
@@ -2553,50 +1922,23 @@ Namespace My.Sys.Forms
 		End If
 	End Sub
 	
-	#ifdef __USE_GTK__
 		Function Designer.HookDialogProc(widget As GtkWidget Ptr, Event As GdkEvent Ptr, user_data As Any Ptr) As Boolean
-	#else
-		Function Designer.HookDialogProc(hDlg As HWND, uMsg As UINT, wParam As WPARAM, lParam As LPARAM) As LRESULT
-	#endif
 		Static As Boolean bCtrl, bShift
 		Static As Any Ptr Ctrl
 		Static As My.Sys.Forms.Designer Ptr Des
-		#ifdef __USE_GTK__
 			bShift = Event->key.state And GDK_SHIFT_MASK
 			bCtrl = Event->key.state And GDK_CONTROL_MASK
 			Des = user_data
 			'If ReadPropertyFunc Then Des = ReadPropertyFunc(Ctrl, "ControlDesigner")
-		#else
-			bShift = GetKeyState(VK_SHIFT) And 8000
-			bCtrl = GetKeyState(VK_CONTROL) And 8000
-			Des = GetProp(hDlg, "@@@Designer")
-		#endif
 		If Des Then
 			With *Des
-				#ifdef __USE_GTK__
 					Select Case Event->type
-				#else
-					Select Case uMsg
-				#endif
-					#ifdef __USE_GTK__
 					Case GDK_2BUTTON_PRESS ', GDK_DOUBLE_BUTTON_PRESS
 						.DblClick(.UnScaleX(Event->motion.x), .UnScaleY(Event->motion.y), Event->motion.state)
 						Return True
-					#else
-					Case WM_LBUTTONDBLCLK
-						.DblClick(.UnScaleX(LoWord(lParam)), .UnScaleY(HiWord(lParam)), wParam And &HFFFF)
-						'Return 0
-					#endif
-					#ifdef __USE_GTK__
 					Case GDK_BUTTON_PRESS
 						.MouseDown(.UnScaleX(Event->button.x), .UnScaleY(Event->button.y), Event->button.state)
 						Return True
-					#else
-					Case WM_LBUTTONDOWN
-						.MouseDown(.UnScaleX(LoWord(lParam)), .UnScaleY(HiWord(lParam)), wParam And &HFFFF )
-						Return 0
-					#endif
-					#ifdef __USE_GTK__
 					Case GDK_BUTTON_RELEASE
 						.MouseUp(.UnScaleX(Event->button.x), .UnScaleY(Event->button.y), Event->button.state)
 						If Event->button.button = 3 Then
@@ -2604,31 +1946,14 @@ Namespace My.Sys.Forms
 							mnuDesigner.Popup(Event->button.x, Event->button.y, @Type<Message>(Des, widget, Event, False))
 						End If
 						Return True
-					#else
-					Case WM_LBUTTONUP
-						.MouseUp(.UnScaleX(LoWord(lParam)), .UnScaleY(HiWord(lParam)), wParam And &HFFFF )
-						Return 0
-					#endif
-					#ifdef __USE_GTK__
 					Case GDK_MOTION_NOTIFY
 						.FOverControl = widget
 						.MouseMove(.UnScaleX(Event->button.x), .UnScaleY(Event->button.y), Event->button.state)
 						Return True
-					#else
-					Case WM_MOUSEMOVE
-						.MouseMove(.UnScaleX(LoWord(lParam)), .UnScaleY(HiWord(lParam)), wParam And &HFFFF )
-						'Return 0
-					#endif
-					#ifdef __USE_GTK__
 					Case GDK_KEY_PRESS
 						.KeyDown(Event->key.keyval, Event->key.state)
 						Return True
 						'Select Case event->Key.keyval
-					#else
-					Case WM_KEYDOWN
-						.KeyDown(wParam, 0)
-						'Select Case wParam
-					#endif
 					'					Case Keys.Key_Delete
 					'						If Des->FSelControl <> Des->FDialog Then Des->DeleteControl(Des->SelectedControl)
 					'					Case Keys.Key_Left, Keys.Key_Right, Keys.Key_Up, Keys.Key_Down
@@ -2670,132 +1995,46 @@ Namespace My.Sys.Forms
 				End Select
 			End With
 		End If
-		#ifdef __USE_GTK__
 			Return False
-		#else
-			Return CallWindowProc(GetProp(hDlg, "@@@Proc"), hDlg, uMsg, wParam, lParam)
-		#endif
 	End Function
 	
 	
-	#ifdef __USE_GTK__
 		Function Designer.HookDialogParentProc(widget As GtkWidget Ptr, Event As GdkEvent Ptr, user_data As Any Ptr) As Boolean
-	#else
-		Function Designer.HookDialogParentProc(hDlg As HWND, uMsg As UINT, wParam As WPARAM, lParam As LPARAM) As LRESULT
-	#endif
 		Static As My.Sys.Forms.Designer Ptr Des
-		#ifdef __USE_GTK__
 			Des = user_data
-		#else
-			Des = GetProp(hDlg, "@@@Designer")
-		#endif
 		If Des Then
 			With *Des
-				#ifdef __USE_GTK__
 					Select Case Event->type
-				#else
-					Select Case uMsg
-					Case WM_NCHITTEST
-					Case WM_GETDLGCODE: 'Return DLGC_WANTCHARS Or DLGC_WANTALLKEYS Or DLGC_WANTARROWS Or DLGC_WANTTAB
-				#endif
-					#ifdef __USE_GTK__
 					Case GDK_2BUTTON_PRESS ', GDK_DOUBLE_BUTTON_PRESS
 						.DblClick(.UnScaleX(Event->motion.x), .UnScaleY(Event->motion.y), Event->motion.state)
 						Return True
-					#else
-					Case WM_LBUTTONDBLCLK
-						P = Type<..Point>(LoWord(lParam), HiWord(lParam))
-						ClientToScreen(hDlg, @P)
-						ScreenToClient(.FDialog, @P)
-						.DblClick(.UnScaleX(P.X), .UnScaleY(P.Y), wParam And &HFFFF)
-						'Return 0
-					#endif
-					#ifdef __USE_GTK__
 					Case GDK_BUTTON_PRESS
-					#else
-					Case WM_LBUTTONDOWN
-					#endif
-					#ifdef __USE_GTK__
 						Dim As Integer x, y
 						GetPosToClient(.layoutwidget, widget, @x, @y)
 						.MouseDown(.UnScaleX(Event->button.x - x), .UnScaleY(Event->button.y - y), Event->button.state)
 						Return True
-					#else
-						P = Type<..Point>(LoWord(lParam), HiWord(lParam))
-						ClientToScreen(hDlg, @P)
-						ScreenToClient(.FDialog, @P)
-						.MouseDown(.UnScaleX(P.X), .UnScaleY(P.Y), wParam And &HFFFF )
-						Return 0
-					#endif
-					#ifdef __USE_GTK__
 					Case GDK_BUTTON_RELEASE
-					#else
-					Case WM_LBUTTONUP
-					#endif
-					#ifdef __USE_GTK__
 						Dim As Integer x, y
 						GetPosToClient(.layoutwidget, widget, @x, @y)
 						.MouseUp(.UnScaleX(Event->button.x - x), .UnScaleY(Event->button.y - y), Event->button.state)
 						Return True
-					#else
-						P = Type<..Point>(LoWord(lParam), HiWord(lParam))
-						ClientToScreen(hDlg, @P)
-						ScreenToClient(.FDialog, @P)
-						.MouseUp(.UnScaleX(P.X), .UnScaleY(P.Y), wParam And &HFFFF )
-						Return 0
-					#endif
-					#ifdef __USE_GTK__
 					Case GDK_MOTION_NOTIFY
 						'.FOverControl = Widget
-					#else
-					Case WM_MOUSEMOVE
-					#endif
-					#ifdef __USE_GTK__
 						Dim As Integer x, y
 						GetPosToClient(.layoutwidget, widget, @x, @y)
 						.MouseMove(.UnScaleX(Event->motion.x - x), .UnScaleY(Event->motion.y - y), Event->motion.state)
 						Return True
-					#else
-						P = Type<..Point>(LoWord(lParam), HiWord(lParam))
-						ClientToScreen(hDlg, @P)
-						ScreenToClient(.FDialog, @P)
-						.MouseMove(.UnScaleX(P.X), .UnScaleY(P.Y), wParam And &HFFFF )
-						Return 0
-					#endif
-					#ifdef __USE_GTK__
 					Case GDK_KEY_PRESS
-					#else
-					Case WM_KEYDOWN
-					#endif
-					#ifdef __USE_GTK__
 						.KeyDown(Event->key.keyval, Event->key.state)
-					#else
-						.KeyDown(wParam, 0)
-					#endif
 				End Select
 			End With
 		End If
-		#ifdef __USE_GTK__
 			Return False
-		#else
-			Return CallWindowProc(GetProp(hDlg, "@@@Proc"), hDlg, uMsg, wParam, lParam)
-		#endif
 	End Function
 	
 	Sub Designer.Hook
-		#ifdef __USE_GTK__
 			If GTK_IS_WIDGET(FDialog) Then
-		#else
-			If IsWindow(FDialog) Then
-		#endif
-			#ifdef __USE_GTK__
 				g_signal_connect(layoutwidget, "event", G_CALLBACK(@HookDialogProc), @This)
-			#else
-				SetProp(FDialog, "@@@Designer", @This)
-				If GetWindowLongPtr(FDialog, GWLP_WNDPROC) <> @HookDialogProc Then
-					SetProp(FDialog, "@@@Proc", Cast(Any Ptr, SetWindowLongPtr(FDialog, GWLP_WNDPROC, CInt(@HookDialogProc))))
-				End If
-			#endif
 			HookParent
 			'GetChilds
 			'for i as integer = 0 to FChilds.Count-1
@@ -2808,7 +2047,6 @@ Namespace My.Sys.Forms
 	End Sub
 	
 	Sub Designer.HookParent
-		#ifdef __USE_GTK__
 			If GTK_IS_WIDGET(FDialogParent) Then
 				g_signal_connect(FDialogParent, "event", G_CALLBACK(@HookDialogParentProc), @This)
 				'				#ifdef __USE_GTK3__
@@ -2827,18 +2065,6 @@ Namespace My.Sys.Forms
 				'					g_signal_connect(layout, "event", G_CALLBACK(@HookDialogParentProc), @This)
 				'				#endif
 			End If
-		#else
-			If IsWindow(FDialog) Then
-				SetProp(GetParent(FDialog), "@@@Designer", @This)
-				If GetWindowLongPtr(GetParent(FDialog), GWLP_WNDPROC) <> @HookDialogParentProc Then
-					SetProp(GetParent(FDialog), "@@@Proc", Cast(Any Ptr, SetWindowLongPtr(GetParent(FDialog), GWLP_WNDPROC, CInt(@HookDialogParentProc))))
-				End If
-				SetProp(TopMenu->Handle, "@@@Designer", @This)
-				If GetWindowLongPtr(TopMenu->Handle, GWLP_WNDPROC) <> @HookTopMenuProc Then
-					SetProp(TopMenu->Handle, "@@@Proc", Cast(Any Ptr, SetWindowLongPtr(TopMenu->Handle, GWLP_WNDPROC, CInt(@HookTopMenuProc))))
-				End If
-			End If
-		#endif
 	End Sub
 	
 	Sub Designer.UnHookParent
@@ -2847,13 +2073,8 @@ Namespace My.Sys.Forms
 	Sub Designer.KeyDown(KeyCode As Integer, Shift As Integer, Ctrl As Any Ptr = 0)
 		Static bShift As Boolean
 		Static bCtrl As Boolean
-		#ifdef __USE_GTK__
 			bShift = Shift And GDK_SHIFT_MASK
 			bCtrl = Shift And GDK_CONTROL_MASK
-		#else
-			bShift = GetKeyState(VK_SHIFT) And 8000
-			bCtrl = GetKeyState(VK_CONTROL) And 8000
-		#endif
 		Select Case KeyCode
 		Case Keys.Key_Delete: DeleteControl()
 		Case Keys.Key_Enter: If OnDblClickControl Then OnDblClickControl(This, SelectedControl)
@@ -2864,7 +2085,6 @@ Namespace My.Sys.Forms
 			Dim As Integer FStepY1 = FStepY
 			Dim As Integer FLeft, FTop, FWidth, FHeight
 			If bCtrl Then FStepX1 = 1: FStepY1 = 1
-			#ifdef __USE_GTK__
 				If SelectedControl <> 0 Then
 					For j As Integer = 0 To SelectedControls.Count - 1
 						Dim As SymbolsType Ptr st = Symbols(SelectedControls.Items[j])
@@ -2895,154 +2115,29 @@ Namespace My.Sys.Forms
 						If OnModified Then OnModified(This, SelectedControls.Items[j], , , , FLeft, FTop, FWidth, FHeight)
 					Next
 				End If
-			#else
-				Dim As ..Point P
-				Dim As ..Rect R
-				Dim As HWND ControlHandle
-				For j As Integer = 0 To SelectedControls.Count - 1
-					ControlHandle = GetControlHandle(SelectedControls.Items[j])
-					GetWindowRect(ControlHandle, @R)
-					P.X     = R.Left
-					P.Y     = R.Top
-					FWidth  = UnScaleX(R.Right - R.Left)
-					FHeight = UnScaleY(R.Bottom - R.Top)
-					ScreenToClient(GetParent(ControlHandle), @P)
-					FLeft   = UnScaleX(P.X)
-					FTop    = UnScaleY(P.Y)
-					If bShift Then
-						Select Case KeyCode
-						Case Keys.Key_Left: FWidth = FWidth - FStepX1
-						Case Keys.Key_Right: FWidth = FWidth + FStepX1
-						Case Keys.Key_Up: FHeight = FHeight - FStepY1
-						Case Keys.Key_Down: FHeight = FHeight + FStepY1
-						End Select
-					ElseIf ControlHandle <> Dialog Then
-						Select Case KeyCode
-						Case Keys.Key_Left: FLeft = FLeft - FStepX1
-						Case Keys.Key_Right: FLeft = FLeft + FStepX1
-						Case Keys.Key_Up: FTop = FTop - FStepY1
-						Case Keys.Key_Down: FTop = FTop + FStepY1
-						End Select
-					End If
-					MoveWindow(ControlHandle, ScaleX(FLeft), ScaleY(FTop), ScaleX(FWidth), ScaleY(FHeight), True)
-					If OnModified Then OnModified(This, SelectedControls.Items[j], , , , FLeft, FTop, FWidth, FHeight)
-				Next
-				MoveDots(SelectedControl)
-			#endif
 		End Select
 	End Sub
 	
-	#ifdef __USE_GTK__
 		Function Designer.DotWndProc(widget As GtkWidget Ptr, Event As GdkEvent Ptr, user_data As Any Ptr) As Boolean
-	#else
-		Function Designer.DotWndProc(hDlg As HWND, uMsg As UINT, wParam As WPARAM, lParam As LPARAM) As LRESULT
-	#endif
 		Dim As My.Sys.Forms.Designer Ptr Des
-		#ifdef __USE_GTK__
 			Des = user_data
-		#else
-			Des = Cast(My.Sys.Forms.Designer Ptr, GetWindowLongPtr(hDlg, GWLP_USERDATA))
-		#endif
 		If Des Then
 			With *Des
-				#ifdef __USE_GTK__
 					Select Case Event->type
-				#else
-					Select Case uMsg
-					Case WM_PAINT
-						Dim As PAINTSTRUCT Ps
-						Dim As HDC FHDc = BeginPaint(hDlg, @Ps)
-						Dim As HPEN Pen = CreatePen(PS_SOLID, 0, IIf(GetProp(hDlg, "@@@Control2") = .SelectedControl AndAlso Not .FLockControls, GetSysColor(COLOR_HIGHLIGHTTEXT), GetSysColor(COLOR_HIGHLIGHT)))
-						Dim As HPEN PrevPen = SelectObject(FHDc, Pen)
-						Dim As HBRUSH Brush = CreateSolidBrush(IIf(GetProp(hDlg, "@@@Control2") = .SelectedControl AndAlso Not .FLockControls, GetSysColor(COLOR_HIGHLIGHT), GetSysColor(COLOR_HIGHLIGHTTEXT)))
-						Dim As HBRUSH PrevBrush = SelectObject(FHDc, Brush)
-						Rectangle(FHDc, Ps.rcPaint.Left, Ps.rcPaint.Top, Ps.rcPaint.Right, Ps.rcPaint.Bottom)
-						SelectObject(FHDc, PrevBrush)
-						SelectObject(FHDc, PrevPen)
-						EndPaint(hDlg, @Ps)
-						DeleteObject(Pen)
-						DeleteObject(Brush)
-						Return 0
-						'or use WM_ERASEBKGND message
-				#endif
-					#ifdef __USE_GTK__
 					Case GDK_MOTION_NOTIFY
 						.FOverControl = widget
-					#else
-					Case WM_MOUSEMOVE
-						'.MouseMove(loWord(lParam), hiWord(lParam),wParam and &HFFFF )
-						Select Case .IsDot(hDlg)
-						Case 0 : SetCursor(crSizeNWSE)
-						Case 1 : SetCursor(crSizeNS)
-						Case 2 : SetCursor(crSizeNESW)
-						Case 3 : SetCursor(crSizeWE)
-						Case 4 : SetCursor(crSizeNWSE)
-						Case 5 : SetCursor(crSizeNS)
-						Case 6 : SetCursor(crSizeNESW)
-						Case 7 : SetCursor(crSizeWE)
-						End Select
-						.FOverControl = hDlg
-					#endif
-					#ifdef __USE_GTK__
 					Case GDK_BUTTON_PRESS
-					#else
-					Case WM_LBUTTONDOWN
-					#endif
-					#ifdef __USE_GTK__
-						#ifdef __USE_GTK3__
 							Dim As gint x1, y1
 							gtk_widget_translate_coordinates(widget, .layoutwidget, Event->button.x, Event->button.y, @x1, @y1)
 							.MouseDown(x1, y1, Event->button.state, g_object_get_data(G_OBJECT(widget), "@@@Control2"))
-						#else
-							Dim As Integer x, y, x1, y1
-							GetPosToClient(widget, .FDialogParent, @x, @y)
-							GetPosToClient(.layoutwidget, .FDialogParent, @x1, @y1)
-							.MouseDown(Event->button.x + x - x1, Event->button.y + y - y1, Event->button.state, g_object_get_data(G_OBJECT(widget), "@@@Control2"))
-						#endif
 						Return True
-					#else
-						Dim P As ..Point
-						P.X = LoWord(lParam)
-						P.Y = HiWord(lParam)
-						ScreenToClient .FDialog, @P
-						.MouseDown(.UnScaleX(P.X), .UnScaleY(P.Y), wParam And &HFFFF )
-						Return 0
-					#endif
-					#ifdef __USE_GTK__
 					Case GDK_BUTTON_RELEASE
-					#else
-					Case WM_LBUTTONUP
-					#endif
-					#ifdef __USE_GTK__
-						#ifdef __USE_GTK3__
 							Dim As gint x1, y1
 							gtk_widget_translate_coordinates(widget, .layoutwidget, Event->button.x, Event->button.y, @x1, @y1)
 							.MouseUp(x1, y1, Event->button.state)
-						#else
-							Dim As Integer x, y, x1, y1
-							GetPosToClient(widget, .FDialogParent, @x, @y)
-							GetPosToClient(.layoutwidget, .FDialogParent, @x1, @y1)
-							.MouseUp(Event->button.x + x - x1, Event->button.y + y - y1, Event->button.state)
-						#endif
 						Return True
-					#else
-						.MouseUp(.UnScaleX(LoWord(lParam)), .UnScaleY(HiWord(lParam)), wParam And &HFFFF )
-						Return 0
-						
-					Case WM_NCHITTEST
-						Return HTTRANSPARENT
-					Case WM_KEYUP
-					#endif
-					#ifdef __USE_GTK__
 					Case GDK_KEY_PRESS
-					#else
-					Case WM_KEYDOWN
-					#endif
-					#ifdef __USE_GTK__
 						.KeyDown(Event->key.keyval, Event->key.state)
-					#else
-						.KeyDown(wParam, wParam And &HFFFF)
-					#endif
 				End Select
 			End With
 		End If
@@ -3051,28 +2146,19 @@ Namespace My.Sys.Forms
 	Sub Designer.RegisterDotClass(ByRef clsName As WString)
 	End Sub
 	
-	#ifdef __USE_GTK__
 		Property Designer.Dialog As GtkWidget Ptr
 			Return FDialog
 		End Property
-	#else
-		Property Designer.Dialog As HWND
-			Return FDialog
-		End Property
-	#endif
 	
 	Sub Designer.PaintControl()
 		If FDown AndAlso ((FCanInsert) OrElse (FCanMove = False AndAlso FCanSize = False)) Then
-			#ifdef __USE_GTK__
 				cairo_set_source_rgb(cr, 0.0, 0.0, 0.0)
 				.cairo_rectangle(cr, FBeginX, FBeginY, FNewX - FBeginX, FNewY - FBeginY)
 				cairo_stroke(cr)
-			#endif
 		End If
 		'cairo_fill(cr)
 	End Sub
 	
-	#ifdef __USE_GTK__
 		Function Dialog_Draw(widget As GtkWidget Ptr, cr As cairo_t Ptr, data1 As Any Ptr) As Boolean
 			Dim As Designer Ptr Des = data1
 			Des->cr = cr
@@ -3096,11 +2182,7 @@ Namespace My.Sys.Forms
 					gtk_widget_set_can_focus(layoutwidget, True)
 					'CreateDots(gtk_widget_get_parent(FDialog))
 					If layoutwidget Then
-						#ifdef __USE_GTK3__
 							g_signal_connect(layoutwidget, "draw", G_CALLBACK(@Dialog_Draw), @This)
-						#else
-							g_signal_connect(layoutwidget, "expose-event", G_CALLBACK(@Dialog_ExposeEvent), @This)
-						#endif
 						'				Dim As GdkDisplay Ptr display = gdk_display_get_default ()
 						'				Dim As GdkDeviceManager Ptr device_manager = gdk_display_get_device_manager (display)
 						'				Dim As GdkDevice Ptr device = gdk_device_manager_get_client_pointer (device_manager)
@@ -3111,27 +2193,6 @@ Namespace My.Sys.Forms
 				End If
 			End If
 		End Property
-	#else
-		Property Designer.Dialog(value As HWND)
-			If value <> FDialog Then
-				UnHook
-				FDialog = value
-				If value <> 0 Then
-					'CreateDots(GetParent(FDialog))
-					If FActive Then Hook
-					InvalidateRect(FDialog, 0, True)
-				End If
-			End If
-		End Property
-		
-		Property Designer.TopMenuHeight As Integer
-			Return FTopMenuHeight
-		End Property
-		
-		Property Designer.TopMenuHeight(Value As Integer)
-			FTopMenuHeight = Value
-		End Property
-	#endif
 	
 	Property Designer.Active As Boolean
 		Return FActive
@@ -3238,13 +2299,7 @@ Namespace My.Sys.Forms
 		Parent = ParentControl
 		xdpi = Parent->xdpi
 		ydpi = Parent->ydpi
-		#ifdef __USE_GTK__
 			FDialogParent = ParentControl->Handle
-		#else
-			FDialogParent = ParentControl->Handle
-			FDotBrush   = CreateSolidBrush(FDotColor)
-			FSelDotBrush   = CreateSolidBrush(FSelDotColor)
-		#endif
 		'FIsChild = True
 		RegisterDotClass "DOT"
 		WLet(FClassName, "Designer")

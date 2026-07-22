@@ -17,22 +17,17 @@
 'https://www.cnblogs.com/browser-yy/p/3295939.html   C# 格式化字符串（转载）
 #include once "Control.bi"
 #include once "WStringList.bi"
-#ifdef __USE_GTK__
 	#include once "glib-object.bi"
-#endif
 
 Const LVCFMT_FILL = &h200000
 
-	'Private Enum ViewStyle
 	'	vsIcon
 	'	vsDetails
 	'	vsSmallIcon
 	'	vsList
 	'	vsTile
 	'	vsMax
-	'End Enum
 	
-	'Private Enum ColumnFormat
 	'	cfLeft
 	'	cfRight
 	'	cfCenter
@@ -49,7 +44,6 @@ Const LVCFMT_FILL = &h200000
 	'	'cfNoTitle
 	'	'cfSplitButton
 	'	'cfTilePlacementMask
-	'End Enum
 
 Namespace My.Sys.Forms
 	#define QListViewEx(__Ptr__) (*Cast(ListViewEx Ptr, __Ptr__))
@@ -75,10 +69,8 @@ Namespace My.Sys.Forms
 		FChecked            As Boolean
 		FIndent             As Integer
 	Public:
-		#ifdef __USE_GTK__
 			'GTK+ tree model iterator reference
 			TreeIter As GtkTreeIter
-		#endif
 		'Parent ListViewEx control reference
 		Parent   As Control Ptr
 		'User-defined associated data
@@ -155,9 +147,7 @@ Namespace My.Sys.Forms
 		FForeColor     As Integer = -1
 		FBackColor     As Integer = -1
 	Public:
-		#ifdef __USE_GTK__
 			Dim As GtkTreeViewColumn Ptr Column
-		#endif
 		'Zero-based position in column collection
 		Index As Integer
 		'Reference to parent ListViewEx control
@@ -205,10 +195,8 @@ Namespace My.Sys.Forms
 	Private Type ListViewExColumns Extends My.Sys.Object
 	Private:
 		FColumns As List
-		#ifdef __USE_GTK__
 			Declare Static Sub Cell_Edited(renderer As GtkCellRendererText Ptr, path As gchar Ptr, new_text As gchar Ptr, user_data As Any Ptr)
 			Declare Static Sub Check(cell As GtkCellRendererToggle Ptr, path As gchar Ptr, user_data As Any Ptr)
-		#endif
 	Public:
 		'Reference to parent ListViewEx control
 		Parent   As Control Ptr
@@ -233,9 +221,7 @@ Namespace My.Sys.Forms
 		PItem         As ListViewExItem Ptr
 		FDelimiterChr As String
 	Public:
-		#ifdef __USE_GTK__
 			Declare Function FindByIterUser_Data(User_Data As Any Ptr) As ListViewExItem Ptr
-		#endif
 		'Reference to parent ListViewEx control
 		Parent        As Control Ptr
 		Declare Property Count As Integer
@@ -286,8 +272,6 @@ Namespace My.Sys.Forms
 		
 		Declare Sub ChangeLVExStyle(iStyle As Integer, Value As Boolean)
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
-		'Declare Virtual Sub ProcessMessageAfter(ByRef Message As Message)
-		#ifdef __USE_GTK__
 			Declare Static Sub ListView_RowActivated(tree_view As GtkTreeView Ptr, path As GtkTreePath Ptr, column As GtkTreeViewColumn Ptr, user_data As Any Ptr)
 			Declare Static Sub ListView_ItemActivated(icon_view As GtkIconView Ptr, path As GtkTreePath Ptr, user_data As Any Ptr)
 			Declare Static Sub ListView_SelectionChanged(selection As GtkTreeSelection Ptr, user_data As Any Ptr)
@@ -300,19 +284,6 @@ Namespace My.Sys.Forms
 			TreeViewWidget As GtkWidget Ptr
 			IconViewWidget As GtkWidget Ptr
 			PrevIndex As Integer
-		#elseif 0
-			Declare Virtual Sub SetDark(Value As Boolean)
-			'Font Property
-			FFontCyPixels             As Integer
-			FFontBolds(0 To 1)        As Integer = {400, 700}
-			FHandleHeader             As HWND
-			FTextColorHeader          As COLORREF
-			FFontHandleBody           As HFONT
-			FFontHandleHeader         As HFONT
-			FFontHeight               As Integer = 6
-			FFontWidth                As Integer = 6
-			
-		#endif
 	Public:
 		#ifndef ReadProperty_Off
 			'Loads persisted properties.

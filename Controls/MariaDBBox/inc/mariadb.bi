@@ -1,4 +1,4 @@
-'' FreeBASIC binding for mariadb-connector-c-3.3.1
+﻿'' FreeBASIC binding for mariadb-connector-c-3.3.1
 ''
 '' based on the C header files:
 ''   Copyright (C) 2000 MySQL AB & MySQL Finland AB & TCX DataKonsult AB
@@ -36,11 +36,7 @@
 ''     #define CHARSET_DIR => CHARSET_DIR_
 ''     variable mysql_port => mysql_port_
 
-#ifdef __FB_UNIX__
 	Extern "C"
-#else
-	Extern "Windows"
-#endif
 
 #define _mysql_h
 #define LIBMARIADB
@@ -49,13 +45,7 @@ Type my_bool As ZString
 Type my_ulonglong As ULongInt
 #define my_socket_defined
 
-#ifdef __FB_UNIX__
 	Type my_socket As Long
-#elseif defined(__FB_WIN32__) And (Not defined(__FB_64BIT__))
-	Type my_socket As ULong
-#else
-	Type my_socket As ULongInt
-#endif
 
 #define _mysql_com_h
 Const NAME_CHAR_LEN = 64
@@ -229,13 +219,7 @@ Type st_net
 	write_pos As UByte Ptr
 	read_pos As UByte Ptr
 
-	#ifdef __FB_UNIX__
 		fd As my_socket
-	#elseif defined(__FB_WIN32__) And (Not defined(__FB_64BIT__))
-		fd As ULong
-	#else
-		fd As ULongInt
-	#endif
 
 	remain_in_buf As culong
 	length As culong
@@ -1239,13 +1223,7 @@ Declare Function mysql_get_optionv cdecl(ByVal mysql As MYSQL Ptr, ByVal option 
 Declare Function mysql_get_option(ByVal mysql As MYSQL Ptr, ByVal option As mysql_option, ByVal arg As Any Ptr) As Long
 Declare Function mysql_hex_string(ByVal to As ZString Ptr, ByVal from As Const ZString Ptr, ByVal len As culong) As culong
 
-#ifdef __FB_UNIX__
 	Declare Function mysql_get_socket(ByVal mysql As MYSQL Ptr) As my_socket
-#elseif defined(__FB_WIN32__) And (Not defined(__FB_64BIT__))
-	Declare Function mysql_get_socket(ByVal mysql As MYSQL Ptr) As ULong
-#else
-	Declare Function mysql_get_socket(ByVal mysql As MYSQL Ptr) As ULongInt
-#endif
 
 Declare Function mysql_get_timeout_value(ByVal mysql As Const mysql Ptr) As ULong
 Declare Function mysql_get_timeout_value_ms(ByVal mysql As Const mysql Ptr) As ULong
@@ -1411,13 +1389,7 @@ Type st_mariadb_api
 	mysql_get_option As Function(ByVal MYSQL As MYSQL Ptr, ByVal Option As mysql_option, ByVal arg As Any Ptr) As Long
 	mysql_hex_string As Function(ByVal To As ZString Ptr, ByVal from As Const ZString Ptr, ByVal Len As culong) As culong
 
-	#ifdef __FB_UNIX__
 		mysql_get_socket As Function(ByVal MYSQL As MYSQL Ptr) As my_socket
-	#elseif defined(__FB_WIN32__) And (Not defined(__FB_64BIT__))
-		mysql_get_socket As Function(ByVal MYSQL As MYSQL Ptr) As ULong
-	#else
-		mysql_get_socket As Function(ByVal MYSQL As MYSQL Ptr) As ULongInt
-	#endif
 
 	mysql_get_timeout_value As Function(ByVal MYSQL As Const MYSQL Ptr) As ULong
 	mysql_get_timeout_value_ms As Function(ByVal MYSQL As Const MYSQL Ptr) As ULong

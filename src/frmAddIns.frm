@@ -179,30 +179,7 @@ Private Sub frmAddIns.Form_Create(ByRef Designer As My.Sys.Object, ByRef Sender 
 				Add_In->LoadedOriginal = pAddIns->Contains(AddIn)
 				Add_In->Loaded = Add_In->LoadedOriginal
 				WLet(Add_In->Path, ExePath & "/AddIns/" & f)
-				#ifdef __USE_GTK__
 					WLet(Add_In->Description, "")
-				#else
-					Dim As DWORD ret, discard
-					Dim As Any Ptr _vinfo
-					ret = GetFileVersionInfoSize(Add_In->Path, @discard)
-					If ret <> 0 Then
-						_vinfo = _Allocate(ret)
-						If GetFileVersionInfo(Add_In->Path, 0, ret, _vinfo) Then
-							Dim As Unsigned Short Ptr ulTranslation
-							Dim As ULong iret
-							Dim As String TranslationString
-							If VerQueryValue(_vinfo, $"\VarFileInfo\Translation", @ulTranslation, @iret) Then
-								TranslationString = Hex(ulTranslation[0], 4) & Hex(ulTranslation[1], 4)
-								Dim As String FullInfoName = $"\StringFileInfo\" & TranslationString & "\FileDescription"
-								Dim As WString Ptr pDescription
-								If VerQueryValue(_vinfo, FullInfoName, @pDescription, @iret) Then
-									WLet(Add_In->Description, *pDescription)
-									''~ value = cast( zstring ptr, vqinfo )
-								End If
-							End If
-						End If
-					End If
-				#endif
 				AvailableAddIns.Add Add_In
 				Item = .ListItems.Add(AddIn)
 				ChangeItem(Item->Index)

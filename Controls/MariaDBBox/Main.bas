@@ -1,8 +1,4 @@
-﻿#ifdef __FB_64BIT__
-	#cmdline "MariaDBBox.rc -dll -x MariaDBBox_x64.dll"
-#else
-	#cmdline "MariaDBBox.rc -dll -x MariaDBBox_x32.dll"
-#endif
+﻿	#cmdline "MariaDBBox.rc -dll -x MariaDBBox_x64.dll"
 #define __EXPORT_PROCS__
 
 #include once "MariaDBBox.bi"

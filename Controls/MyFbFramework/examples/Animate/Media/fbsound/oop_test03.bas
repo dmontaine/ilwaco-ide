@@ -1,4 +1,4 @@
-#include "tests-common.bi"
+﻿#include "tests-common.bi"
 
 #include once "fbsound/fbsound_oop.bi"
 

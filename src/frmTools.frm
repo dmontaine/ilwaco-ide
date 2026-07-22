@@ -16,12 +16,7 @@ pfTools = @fTools
 		' frmTools
 		This.Name = "frmTools"
 		This.Text = ML("Tools")
-		#ifdef __USE_GTK__
 			This.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico")
-		#else
-			This.BorderStyle = FormBorderStyle.FixedDialog
-			This.Icon.LoadFromResourceID(1)
-		#endif
 		This.ControlBox = True
 		This.MinimizeBox = False
 		This.MaximizeBox = False
@@ -249,11 +244,7 @@ Private Sub frmTools.cmdOK_Click(ByRef Designer As My.Sys.Object, ByRef Sender A
 	Dim As UserToolType Ptr Tool, tt
 	Dim As MenuItem Ptr mi
 	Dim As Integer ToolsIndex
-	#ifdef __USE_GTK__
 		Open ExePath & "/Tools/ToolsX.ini" For Output Encoding "utf8" As #Fn
-	#else
-		Open ExePath & "/Tools/Tools.ini" For Output Encoding "utf8" As #Fn
-	#endif
 	With fTools
 		For i As Integer = 0 To Tools.Count - 1
 			_Delete( Cast(UserToolType Ptr, pTools->Item(i)))
@@ -280,13 +271,6 @@ Private Sub frmTools.cmdOK_Click(ByRef Designer As My.Sys.Object, ByRef Sender A
 			pTools->Add Tool
 			Dim As My.Sys.Drawing.BitmapType Bitm
 			Dim As My.Sys.Drawing.Icon Ico
-			#ifdef __USE_GTK__
-			#else
-				Dim As HICON IcoHandle
-				ExtractIconEx(GetFullPath(tt->Path), NULL, NULL, @IcoHandle, 1)
-				Bitm = IcoHandle
-				DestroyIcon IcoHandle
-			#endif
 			mi = miXizmat->Add(tt->Name & !"\t" & tt->Accelerator, Bitm, "Tools", @mClickTool, , i + ToolsIndex + 2)
 			Bitm.Handle = 0
 			mi->Tag = tt

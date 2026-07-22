@@ -2,10 +2,6 @@
 ' Freeware. Use at your own risk.
 
 '#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/Menus.bi"
 	#include once "mff/ImageList.bi"
@@ -64,12 +60,6 @@
 	End Type
 	
 	Constructor MDIMainType
-		#if _MAIN_FILE_ = __FILE__
-			With App
-				.CurLanguagePath = ExePath & "/Languages/"
-				.CurLanguage = My.Sys.Language
-			End With
-		#endif
 		' MDIMain
 		With This
 			.Name = "MDIMain"
@@ -749,7 +739,6 @@ End Sub
 
 Private Sub MDIMainType.Form_Close(ByRef Sender As Form, ByRef Action As Integer)
 	? "Form_Close"
-	mlKeys.SaveToFile(ExePath & "\" &  App.Language & ".lng")
 	mnuWindow_Click(mnuWindowCloseAll)
 End Sub
 

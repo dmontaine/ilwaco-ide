@@ -3,10 +3,6 @@
 ' Freeware. Use at your own risk.
 
 '#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/Panel.bi"
 	#include once "mff/CommandButton.bi"
@@ -55,13 +51,8 @@
 			.Text = "Hash"
 			.Designer = @This
 				This.Icon.LoadFromFile(ExePath & "Hash.ico")
-			#ifdef __FB_64BIT__
 				'...instructions for 64bit OSes...
 				.Caption = "VFBE Hash64"
-			#else
-				'...instructions for other OSes
-				.Caption = "VFBE Hash32"
-			#endif
 			.StartPosition = FormStartPosition.CenterParent
 			.BorderStyle = FormBorderStyle.Sizable
 			.MaximizeBox = True

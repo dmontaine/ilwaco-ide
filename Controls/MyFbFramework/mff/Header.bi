@@ -35,14 +35,12 @@ Namespace My.Sys.Forms
 		FWidth        As Integer
 		AFmt(4)       As Integer
 	Public:
-		#ifdef __USE_GTK__
 			Dim As GtkTreeViewColumn Ptr Handle
 			Dim As GtkWidget Ptr BoxHandle
 			Dim As GtkWidget Ptr ButtonHandle
 			Dim As GtkWidget Ptr ImageHandle
 			Dim As GtkWidget Ptr LabelHandle
 			Dim As Integer AllocatedWidth
-		#endif
 		HeaderControl As PHeaderControl Ptr
 		Tag           As Any Ptr
 		Declare Property Caption ByRef As WString
@@ -83,7 +81,6 @@ Namespace My.Sys.Forms
 '		ADragReorder(2)   As Integer
 		AFmt(4)           As Integer
 		FSectionCount     As Integer
-		#ifdef __USE_GTK__
 			Declare Static Sub Column_Clicked(treeviewcolumn As GtkTreeViewColumn Ptr, user_data As Any Ptr)
 			Declare Static Sub Header_Map(widget As GtkWidget Ptr, user_data As Any Ptr)
 			Declare Static Function Header_Draw(widget As GtkWidget Ptr, cr As cairo_t Ptr, data1 As Any Ptr) As Boolean
@@ -93,15 +90,9 @@ Namespace My.Sys.Forms
 			Declare Static Function Column_ButtonPressEvent(widget As GtkWidget Ptr, Event As GdkEvent Ptr, user_data As Any Ptr) As Boolean
 			ListStore As GtkListStore Ptr
 			ColumnTypes As GType Ptr
-		#else
-			Declare Static Sub WndProc(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-		#endif
 	Protected:
-		#ifdef __USE_GTK__
 			AllocatedHeight As Integer
 			AllocatedWidth As Integer
-		#endif
 		FSections         As List
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
 		Declare Function EnumMenuItems(Item As MenuItem, ByRef List As List) As Boolean

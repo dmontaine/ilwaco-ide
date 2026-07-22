@@ -17,12 +17,7 @@ pfFind = @fFind
 			.Name = "frmFind"
 			.Opacity = 210
 			.Caption = ML("Find")
-			#ifdef __USE_GTK__
 				.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico")
-			#else
-				.BorderStyle = FormBorderStyle.FixedDialog
-				.Icon.LoadFromResourceID(1)
-			#endif
 			.MinimizeBox = False
 			.MaximizeBox = False
 			.OnClose = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Form, ByRef Action As Integer), @Form_Close)
@@ -522,11 +517,7 @@ Private Sub frmFind.ReplaceInProj(ByRef tSearch As WString="", ByRef tReplace As
 					If LCase(tML) <> LCase(tReplace) Then
 						FNameOpen = GetBakFileName(f)
 						'David Change https://www.freebasic.net/forum/viewtopic.php?f=2&t=27370&p=257529&hilit=FileCopy#p257529
-						#ifdef __USE_GTK__
 							FileCopy  f, FNameOpen  'Function FileCopy suport unicode file name in Linux, but And FileExist Do Not working properly.
-						#else
-							CopyFileW f, FNameOpen, False
-						#endif
 					Else
 						FNameOpen = f
 					End If
@@ -986,13 +977,9 @@ Private Sub frmFind.Form_Create(ByRef Sender As Control)
 	btnReplaceAll.Enabled = False
 	WDeAllocate(tmpStr)
 	SetBounds pfrmMain->Left + pfrmMain->Width - This.Width - 10, pfrmMain->Top + 20, This.Width, This.Height
-	#ifdef __USE_GTK__
 		btnReplaceShow.Visible = False
 		TrackBar1.Visible = False
 		lblTrack.Visible = False
-	#else
-		btnReplaceShow.Width = 18
-	#endif
 	Opacity = 230
 	TrackBar1.Position = 230
 	lblTrack.Text = WStr(CUInt(TrackBar1.Position / 2.55))

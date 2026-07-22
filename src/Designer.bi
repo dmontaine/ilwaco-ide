@@ -29,16 +29,10 @@ Namespace My.Sys.Forms
 	Type WindowList
 		Count As Integer
 		Ctrl As Any Ptr
-		#ifdef __USE_GTK__
 			Child As GtkWidget Ptr
-		#else
-			Child As HWND Ptr
-		#endif
 	End Type
 	
-	#ifdef __USE_GTK__
 		Dim Shared As GtkWidget Ptr designer_menu
-	#endif
 	
 	Dim Shared mnuDesigner As PopupMenu
 	
@@ -91,13 +85,8 @@ Namespace My.Sys.Forms
 		FDotSize       As Integer
 		FShowGrid      As Boolean
 		FChilds        As WindowList
-		#ifdef __USE_GTK__
 			FDialog        As GtkWidget Ptr
 			FDialogParent  As GtkWidget Ptr
-		#else
-			FDialog        As HWND
-			FDialogParent  As HWND
-		#endif
 		FTopMenuHeight     As Integer
 		FClass         As String
 		FClassName     As WString Ptr
@@ -125,41 +114,23 @@ Namespace My.Sys.Forms
 		ReDim FWidthNew(0) As Integer
 		ReDim FHeightNew(0) As Integer
 		FDotIndex      As Integer
-		#ifdef __USE_GTK__
 			ReDim FDots(0, 7)  As GtkWidget Ptr
-		#else
-			ReDim FDots(0, 7)  As HWND
-		#endif
 		FName          As String
 		FStyleEx       As Integer
 		FStyle         As Integer
 		FID            As Integer
-		#ifdef __USE_GTK__
 			
-		#else
-			FHDC        As HDC
-			FPoint As ..Point
-		#endif
 		FLockControls     As Boolean
 		Dim Ctrl As Any Ptr
 		As Any Ptr OldCtrl
 		As String OldClassName
 		As Library Ptr OldLibrary
 		As SymbolsType Ptr OldSymbols, OldCtrlSymbols
-		#ifdef __USE_GTK__
 			Declare Static Function HookChildDraw(widget As GtkWidget Ptr, cr As cairo_t Ptr, data1 As Any Ptr) As Boolean
 			Declare Static Function HookChildProc(widget As GtkWidget Ptr, Event As GdkEvent Ptr, user_data As Any Ptr) As Boolean
 			Declare Static Function HookDialogProc(widget As GtkWidget Ptr, Event As GdkEvent Ptr, user_data As Any Ptr) As Boolean
 			Declare Static Function HookDialogParentProc(widget As GtkWidget Ptr, Event As GdkEvent Ptr, user_data As Any Ptr) As Boolean
 			Declare Static Function DotWndProc(widget As GtkWidget Ptr, Event As GdkEvent Ptr, user_data As Any Ptr) As Boolean
-		#else
-			Declare Static Function HookChildProc(hDlg As HWND, uMsg As UINT, wParam As WPARAM, lParam As LPARAM) As LRESULT
-			Declare Static Function HookDialogProc(hDlg As HWND, uMsg As UINT, wParam As WPARAM, lParam As LPARAM) As LRESULT
-			Declare Static Function HookDialogParentProc(hDlg As HWND, uMsg As UINT, wParam As WPARAM, lParam As LPARAM) As LRESULT
-			Declare Static Function DotWndProc(hDlg As HWND, uMsg As UINT, wParam As WPARAM, lParam As LPARAM) As LRESULT
-			Declare Static Function HookTopMenuProc(hDlg As HWND, uMsg As UINT, wParam As WPARAM, lParam As LPARAM) As LRESULT
-			'FPopupMenu     As HMENU
-		#endif
 	Protected:
 		FLibs          As List
 		FSymbols       As List
@@ -167,13 +138,7 @@ Namespace My.Sys.Forms
 		Declare Sub ProcessMessage(ByRef Message As Message)
 		Declare Function EnumPopupMenuItems(ByRef Item As MenuItem) As Boolean
 		Declare Sub GetPopupMenuItems
-		#ifdef __USE_GTK__
 			Declare Function IsDot(hDlg As GtkWidget Ptr) As Integer
-		#else
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-			Declare Static Function EnumChildsProc(hDlg As HWND, lParam As LPARAM) As Boolean
-			Declare Function IsDot(hDlg As HWND) As Integer
-		#endif
 		Declare Function GetContainerControl(Ctrl As Any Ptr) As Any Ptr
 		Declare Sub HookParent
 		Declare Sub UnHookParent
@@ -204,16 +169,11 @@ Namespace My.Sys.Forms
 		Components As List
 		Controls As List
 		CtrlSymbols As PointerList
-		#ifdef __USE_GTK__
 			cr As cairo_t Ptr
 			'layoutwidget As GtkWidget Ptr
 			overlay As GtkWidget Ptr
 			layout As GtkWidget Ptr
 			FSelControl    As GtkWidget Ptr
-		#else
-			FSelControl    As HWND
-			BitmapHandle   As HBITMAP
-		#endif
 		Dim Rects(Any) As ..Rect
 		Dim Ctrls(Any) As Any Ptr
 		Dim RectsCount As Integer
@@ -224,11 +184,7 @@ Namespace My.Sys.Forms
 		Tag As Any Ptr
 		Parent As Control Ptr
 		TopMenu As Panel Ptr
-		#ifdef __USE_GTK__
 			FOverControl   As GtkWidget Ptr
-		#else
-			FOverControl   As HWND
-		#endif
 		OffsetX As Integer
 		OffsetY As Integer
 		Declare Sub AlignLefts
@@ -277,18 +233,9 @@ Namespace My.Sys.Forms
 		Declare Function Symbols(Ctrl As Any Ptr) As SymbolsType Ptr
 		Declare Function SymbolsReadProperty(Ctrl As Any Ptr) As SymbolsType Ptr
 		Declare Function SymbolsWriteProperty(Ctrl As Any Ptr) As SymbolsType Ptr
-		#ifdef __USE_GTK__
 			Declare Function GetControlHandle(Control As Any Ptr) As GtkWidget Ptr
-		#else
-			Declare Function GetControlHandle(Control As Any Ptr) As HWND
-		#endif
-		#ifdef __USE_GTK__
 			Declare Function GetControl(CtrlHandle As GtkWidget Ptr) As Any Ptr
 			Declare Sub MoveDots(Control As Any Ptr, bSetFocus As Boolean = True, Left1 As Integer = -1, Top As Integer = -1, Width1 As Integer = -1, Height As Integer = -1)
-		#else
-			Declare Function GetControl(CtrlHandle As HWND) As Any Ptr
-			Declare Sub MoveDots(Control As Any Ptr, bSetFocus As Boolean = True)
-		#endif
 		Declare Sub MoveControl(Control As Any Ptr, iLeft As Integer, iTop As Integer, iWidth As Integer, iHeight As Integer)
 		Declare Sub GetControlBounds(Control As Any Ptr, ByRef iLeft As Integer, ByRef iTop As Integer, ByRef iWidth As Integer, ByRef iHeight As Integer)
 		Declare Sub SetControlBounds(Control As Any Ptr, ByRef iLeft As Integer, ByRef iTop As Integer, ByRef iWidth As Integer, ByRef iHeight As Integer)
@@ -298,19 +245,10 @@ Namespace My.Sys.Forms
 		Declare Function ClassExists() As Boolean
 		Declare Sub SelectNextControl(Direction As Integer = 0)
 		'declare static     function GetClassName(hDlg as HWND) as string
-		#ifdef __USE_GTK__
 			Declare Property Dialog As GtkWidget Ptr
 			Declare Property Dialog(value As GtkWidget Ptr)
 			Declare Sub HookControl(Control As GtkWidget Ptr)
 			Declare Sub UnHookControl(Control As GtkWidget Ptr)
-		#else
-			Declare Sub HookControl(Control As HWND)
-			Declare Sub UnHookControl(Control As HWND)
-			Declare Property Dialog As HWND
-			Declare Property Dialog(value As HWND)
-			Declare Property TopMenuHeight As Integer
-			Declare Property TopMenuHeight(value As Integer)
-		#endif
 		Declare Property Active As Boolean
 		Declare Property Active(value As Boolean)
 		Declare Property ChildCount As Integer

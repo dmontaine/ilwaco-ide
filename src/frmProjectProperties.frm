@@ -28,11 +28,7 @@ pfProjectProperties = @fProjectProperties
 		This.CancelButton = @cmdCancel
 		This.SetBounds 0, 0, 510, 458
 		This.StartPosition = FormStartPosition.CenterParent
-		#ifdef __USE_GTK__
 			This.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico")
-		#else
-			This.Icon.LoadFromResourceID(1)
-		#endif
 		This.Designer = @This
 		This.OnCreate = @_Form_Create
 		' tpGeneral

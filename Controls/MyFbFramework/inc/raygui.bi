@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #ifndef RAYLIB_H
 	#include once "inc/raylib.bi"

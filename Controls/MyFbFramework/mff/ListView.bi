@@ -6,28 +6,21 @@
 
 #include once "Control.bi"
 #include once "WStringList.bi"
-#ifdef __USE_GTK__
 	#include once "glib-object.bi"
-#endif
 
 Const LVCFMT_FILL = &h200000
 
-'Private Enum SortStyle
 '	ssNone
 '	ssSortAscending
 '	ssSortDescending
-'End Enum
 
-	'Private Enum ViewStyle
 	'	vsIcon
 	'	vsDetails
 	'	vsSmallIcon
 	'	vsList
 	'	vsTile
 	'	vsMax
-	'End Enum
 	
-	'Private Enum ColumnFormat
 	'	cfLeft
 	'	cfRight
 	'	cfCenter
@@ -44,7 +37,6 @@ Const LVCFMT_FILL = &h200000
 	'	'cfNoTitle
 	'	'cfSplitButton
 	'	'cfTilePlacementMask
-	'End Enum
 
 Namespace My.Sys.Forms
 	#define QListView(__Ptr__) (*Cast(ListView Ptr,__Ptr__))
@@ -68,9 +60,7 @@ Namespace My.Sys.Forms
 		FChecked            As Boolean
 		FIndent             As Integer
 	Public:
-		#ifdef __USE_GTK__
 			TreeIter As GtkTreeIter
-		#endif
 		Parent   As Control Ptr
 		Tag As Any Ptr
 		Declare Sub SelectItem
@@ -119,9 +109,7 @@ Namespace My.Sys.Forms
 		FVisible      As Boolean
 		FEditable	 As Boolean
 	Public:
-		#ifdef __USE_GTK__
 			Dim As GtkTreeViewColumn Ptr Column
-		#endif
 		'Zero-based position in column collection
 		Index As Integer
 		'Reference to parent ListView control
@@ -163,10 +151,8 @@ Namespace My.Sys.Forms
 	Private Type ListViewColumns Extends My.Sys.Object
 	Private:
 		FColumns As List
-		#ifdef __USE_GTK__
 			Declare Static Sub Cell_Edited(renderer As GtkCellRendererText Ptr, path As gchar Ptr, new_text As gchar Ptr, user_data As Any Ptr)
 			Declare Static Sub Check(cell As GtkCellRendererToggle Ptr, path As gchar Ptr, user_data As Any Ptr)
-		#endif
 	Public:
 		'Reference to parent ListView control
 		Parent   As Control Ptr
@@ -190,9 +176,7 @@ Namespace My.Sys.Forms
 		FItems As List
 		PItem As ListViewItem Ptr
 	Public:
-		#ifdef __USE_GTK__
 			Declare Function FindByIterUser_Data(User_Data As Any Ptr) As ListViewItem Ptr
-		#endif
 		'Reference to parent ListView control
 		Parent   As Control Ptr
 		Declare Property Count As Integer
@@ -239,8 +223,6 @@ Namespace My.Sys.Forms
 		Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
 		Declare Static Sub HandleIsDestroyed(ByRef Sender As Control)
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
-		'Declare Virtual Sub ProcessMessageAfter(ByRef Message As Message)
-		#ifdef __USE_GTK__
 			Declare Static Sub ListView_RowActivated(tree_view As GtkTreeView Ptr, path As GtkTreePath Ptr, column As GtkTreeViewColumn Ptr, user_data As Any Ptr)
 			Declare Static Sub ListView_ItemActivated(icon_view As GtkIconView Ptr, path As GtkTreePath Ptr, user_data As Any Ptr)
 			Declare Static Sub ListView_SelectionChanged(selection As GtkTreeSelection Ptr, user_data As Any Ptr)
@@ -253,11 +235,6 @@ Namespace My.Sys.Forms
 			TreeViewWidget As GtkWidget Ptr
 			IconViewWidget As GtkWidget Ptr
 			PrevIndex As Integer
-		#elseif 0
-			Declare Virtual Sub SetDark(Value As Boolean)
-			hHeader As HWND
-			headerTextColor As COLORREF
-		#endif
 	Public:
 		#ifndef ReadProperty_Off
 			'Loads persisted properties.

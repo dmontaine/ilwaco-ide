@@ -157,50 +157,12 @@ Namespace My.Sys.Forms
 	#ifndef ImageList_Add_WString_Off
 		Private Sub ImageList.Add(ByRef ResName As WString, ByRef Key As WString = "", ModuleHandle As Any Ptr = 0, iMaskColor As Integer = 255)
 			FNotChange = True
-			#ifdef __USE_GTK__
 				FNotAdd = True
 				Dim As My.Sys.Drawing.BitmapType Bitm
 				Bitm.LoadFromResourceName(ResName)
 				Items.Add Key, ResName, @Bitm
 				This.Add Bitm, Bitm, Key
 				FNotAdd = False
-			#elseif 0
-				Dim As Any Ptr ModuleHandle_ = ModuleHandle: If ModuleHandle = 0 Then ModuleHandle_ = GetModuleHandle(NULL)
-				FNotAdd = True
-				If FindResource(ModuleHandle_, ResName, RT_BITMAP) Then
-					Dim As My.Sys.Drawing.BitmapType Bitm
-					Bitm.LoadFromResourceName(ResName, ModuleHandle_, , , iMaskColor)
-					Items.Add Key, ResName, @Bitm
-					This.Add Bitm, Bitm, Key
-				ElseIf FindResource(ModuleHandle_, ResName, "PNG") OrElse FindResource(ModuleHandle_, ResName, RT_RCDATA) Then
-					'AddPng ResName, Key, ModuleHandle_
-					Dim As My.Sys.Drawing.BitmapType Bitm
-					Bitm.LoadFromResourceName(ResName, ModuleHandle_, , , iMaskColor)
-					Items.Add Key, ResName, @Bitm
-					This.AddMasked Bitm, iMaskColor, Key
-				ElseIf FindResource(ModuleHandle_, ResName, RT_ICON) OrElse FindResource(ModuleHandle_, ResName, RT_GROUP_ICON) Then
-					Dim As My.Sys.Drawing.Icon Ico
-					Ico.LoadFromResourceName(ResName, ModuleHandle_)
-					Items.Add Key, ResName, @Ico
-					This.Add Ico, Key
-				ElseIf FindResource(ModuleHandle_, ResName, RT_CURSOR) OrElse FindResource(ModuleHandle_, ResName, RT_GROUP_CURSOR)  Then
-					Dim As My.Sys.Drawing.Cursor Cur
-					Cur.LoadFromResourceName(ResName, ModuleHandle_)
-					Items.Add Key, ResName, @Cur
-					This.Add Cur, Key
-				Else
-					Dim As My.Sys.Drawing.BitmapType Bitm
-					If Bitm.LoadFromResourceName(ResName, ModuleHandle, , , iMaskColor) Then
-						Items.Add Key, ResName, @Bitm
-						If FImageWidth <> ScaleX(FImageWidth) Then
-							This.AddMasked Bitm, iMaskColor, Key
-						Else
-							ImageList_Add(Handle, Bitm.Handle, NULL)
-						End If
-					End If
-				End If
-				FNotAdd = False
-			#endif
 			FNotChange = False
 		End Sub
 	#endif
@@ -245,96 +207,53 @@ Namespace My.Sys.Forms
 	Private Sub ImageList.AddMasked(ByRef ResName As WString, iMaskColor As Integer, ByRef Key As WString = "", ModuleHandle As Any Ptr = 0)
 	End Sub
 	
-	'	Sub ImageList.AddPng(ByRef ResName As WString, ByRef Key As WString = "", ModuleHandle As Any Ptr = 0)
-	'		#ifndef __USE_GTK__
-	'			Dim As Any Ptr ModuleHandle_ = ModuleHandle: If ModuleHandle = 0 Then ModuleHandle_ = GetModuleHandle(NULL)
-	'			Dim As HRSRC hPicture = FindResourceW(ModuleHandle_, ResName, "PNG")
-	'			Dim As HRSRC hPictureData
-	'			Dim As Unsigned Long dwSize = SizeOfResource(ModuleHandle_, hPicture)
-	'			Dim As HGLOBAL hGlobal = NULL
-	'			If hPicture = 0 Then Return
 	'			hPictureData = LockResource(LoadResource(ModuleHandle_, hPicture))
-	'			If hPictureData = 0 Then Return
 	'			hGlobal = GlobalAlloc(GMEM_MOVEABLE, dwSize)
-	'			If hGlobal = 0 Then Return
 	'			' Lock the memory
-	'			Dim As LPVOID pData = GlobalLock(hGlobal)
-	'			If pData = 0 Then
 	'				GlobalFree(hGlobal)
-	'				Return
-	'			End If
 	'			' Initialize Gdiplus
-	'			Dim token As ULONG_PTR, StartupInput As GdiplusStartupInput
 	'			StartupInput.GdiplusVersion = 1
 	'			GdiplusStartup(@token, @StartupInput, NULL)
 	'			' Copy the image from the binary string file to global memory
 	'			CopyMemory(pData, hPictureData, dwSize)
-	'			Dim As IStream Ptr pngstream = NULL
-	'			If SUCCEEDED(CreateStreamOnHGlobal(hGlobal, False, @pngstream)) Then
-	'				If pngstream Then
-	'					Dim pImage As GpImage Ptr, hImage As HBitmap
 	'					' Create a bitmap from the data contained in the stream
 	'					GdipCreateBitmapFromStream(pngstream, Cast(GpBitmap Ptr Ptr, @pImage))
 	'					' Create icon from image
 	'					GdipCreateHBitmapFromBitmap(Cast(GpBitmap Ptr, pImage), @hImage, clWhite)
 	'					' Free the image
-	'					If pImage Then GdipDisposeImage pImage
 	'					pngstream->lpVtbl->Release(pngstream)
 	'					FNotChange = True
 	'					Items.Add(Key, ResName)
 	'					'ImageList_AddIcon(Handle, hImage)
 	'					ImageList_AddMasked(Handle, hImage, clWhite)
 	'					NotifyWindow
-	'				End If
-	'			End If
 	'			' Unlock the memory
 	'			GlobalUnlock pData
 	'			' Free the memory
 	'			GlobalFree hGlobal
 	'			' Shutdown Gdiplus
 	'			GdiplusShutdown token
-	'		#endif
-	'	End Sub
 	
-	'	Sub ImageList.Set(Index As Integer, ByRef ResName As WString, ModuleHandle As Any Ptr = 0))
 	'		FNotChange = True
-	'		#ifdef __USE_GTK__
-	'			Dim As My.Sys.Drawing.BitmapType Bitm
 	'			Bitm.LoadFromResourceName(ResName)
 	'			SetImage Bitm, Bitm, Key
-	'		#else
-	'			Dim As Any Ptr ModuleHandle_ = ModuleHandle: If ModuleHandle = 0 Then ModuleHandle_ = GetModuleHandle(NULL)
-	'			If FindResource(ModuleHandle_, ResName, RT_BITMAP) Then
-	'				Dim As My.Sys.Drawing.BitmapType Bitm
 	'				Bitm.LoadFromResourceName(ResName)
 	'				SetImage Bitm, Bitm, Key
 	'			ElseIf FindResource(ModuleHandle_, ResName, "PNG") OrElse FindResource(ModuleHandle_, ResName, RT_RCDATA) Then
-	'				Dim As My.Sys.Drawing.BitmapType Bitm
 	'				Bitm.LoadFromResourceName(ResName)
 	'				SetImage Bitm, 0, Key
 	'			ElseIf FindResource(ModuleHandle_, ResName, RT_ICON) OrElse FindResource(ModuleHandle_, ResName, RT_GROUP_ICON) Then
-	'				Dim As My.Sys.Drawing.Icon Ico
 	'				Ico.LoadFromResourceName(ResName)
 	'				AddImage Ico, Key
 	'			ElseIf FindResource(ModuleHandle_, ResName, RT_CURSOR) OrElse FindResource(ModuleHandle_, ResName, RT_GROUP_CURSOR) Then
-	'				Dim As My.Sys.Drawing.Cursor Cur
 	'				Cur.LoadFromResourceName(ResName)
 	'				AddImage Cur, Key
-	'			Else
-	'				Dim As My.Sys.Drawing.BitmapType Bitm
 	'				Bitm.LoadFromResourceName(ResName)
 	'				AddMasked Bitm, 0, Key
-	'			End If
-	'		#endif
-	'	End Sub
 	'
-	'	Sub ImageList.Set(ByRef Key As WString, ByRef Image As WString, ModuleHandle As Any Ptr = 0))
 	'		This.SetImage(IndexOf(Key), Image, ModuleHandle)
-	'	End Sub
 	'
-	'	Sub ImageList.SetFromFile(ByRef Key As WString, ByRef Image As WString)
 	'		This.SetImage(IndexOf(Key), Image)
-	'	End Sub
 	
 	#ifndef ImageList_Remove_Integer_Off
 		Private Sub ImageList.Remove(Index As Integer)
@@ -347,41 +266,32 @@ Namespace My.Sys.Forms
 	
 	#ifndef ImageList_GetMask_Integer_Off
 		Private Function ImageList.GetBitmap(Index As Integer) As My.Sys.Drawing.BitmapType
-			'Dim As My.Sys.Drawing.BitmapType Ptr BMP
 				Return FBMP
-			'Return *BMP
 		End Function
 	#endif
 	
 	#ifndef ImageList_GetMask_Integer_Off
 		Private Function ImageList.GetMask(Index As Integer) As My.Sys.Drawing.BitmapType
-			'Dim As My.Sys.Drawing.BitmapType Ptr BMP
 				Return FBMP
-			'Return *BMP
 		End Function
 	#endif
 	
 	#ifndef ImageList_GetIcon_Integer_Off
 		Private Function ImageList.GetIcon(Index As Integer) As My.Sys.Drawing.Icon
-			'Dim As My.Sys.Drawing.Icon Ptr ICO
 			'ICO = CAllocate_(SizeOf(My.Sys.Drawing.Icon))
 				Return 0
-			'Return *ICO
 		End Function
 	#endif
 	
 	#ifndef ImageList_GetCursor_Integer_Off
 		Private Function ImageList.GetCursor(Index As Integer) As My.Sys.Drawing.Cursor
-			'Dim As My.Sys.Drawing.Cursor Ptr CUR
 			'CUR = CAllocate_(SizeOf(My.Sys.Drawing.Cursor))
 				Return 0
-			'Return *CUR
 		End Function
 	#endif
 	
 	Private Function ImageList.GetBitmap(ByRef Key As WString) As My.Sys.Drawing.BitmapType
 		Return GetBitmap(IndexOf(Key))
-		'Return *Cast(My.Sys.Drawing.BitmapType Ptr, Items.GetObject(Key))
 	End Function
 	
 	Private Function ImageList.GetMask(ByRef Key As WString) As My.Sys.Drawing.BitmapType
@@ -422,12 +332,7 @@ Namespace My.Sys.Forms
 		FImageHeight = iImageHeight
 		Items.Tag = @This
 		'Items.OnChange = @ImageList_Change
-		#ifdef __USE_GTK__
 			Handle = gtk_icon_theme_new()
-		#elseif 0
-			Handle = ImageList_Create(ScaleX(FImageWidth), ScaleY(FImageHeight), ILC_MASK Or ILC_COLOR32, InitialCount, GrowCount) 'ILC_MASK Or
-			'Create
-		#endif
 	End Constructor
 	
 	Private Destructor ImageList

@@ -1,4 +1,4 @@
-#ifndef __FBS_PLUGOUT_ALSA__
+﻿#ifndef __FBS_PLUGOUT_ALSA__
 #define __FBS_PLUGOUT_ALSA__
 
 '  ################

@@ -1,13 +1,5 @@
 ﻿'#Region "Form"
-	#if 0
-		#define __MAIN_FILE__
-		Const _MAIN_FILE_ = __FILE__
-	#endif
-	#ifdef __FB_64BIT__
 		#libpath "./lib/win64"
-	#else
-		#libpath "./lib/win32"
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/Picture.bi"
 	#include once "mff/CommandButton.bi"

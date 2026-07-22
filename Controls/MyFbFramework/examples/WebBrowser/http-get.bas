@@ -1,4 +1,4 @@
-''
+﻿''
 '' simple http-get example for both Windows and Linux
 ''
 

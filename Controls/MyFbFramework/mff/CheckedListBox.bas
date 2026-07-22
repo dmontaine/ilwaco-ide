@@ -42,13 +42,9 @@ Namespace My.Sys.Forms
 			Items.Add(FItem, Obj)
 			FNewIndex = Items.Count - 1
 		End If
-		#ifdef __USE_GTK__
 			Dim As GtkTreeIter iter
 			gtk_list_store_append (ListStore, @iter)
 			gtk_list_store_set(ListStore, @iter, 1, ToUtf8(FItem), -1)
-		#else
-			If Handle Then Perform(LB_ADDSTRING, 0, CInt(@FItem))
-		#endif
 	End Sub
 	
 	Private Sub CheckedListBox.InsertItem(FIndex As Integer, ByRef FItem As WString, Obj As Any Ptr = 0)
@@ -58,43 +54,23 @@ Namespace My.Sys.Forms
 		End If
 		Items.Insert(FIndex, FItem, Obj)
 		FNewIndex = FIndex
-		#ifdef __USE_GTK__
 			Dim As GtkTreeIter iter
 			gtk_list_store_insert(ListStore, @iter, FIndex)
 			gtk_list_store_set (ListStore, @iter, 1, ToUtf8(FItem), -1)
-		#else
-			If Handle Then Perform(LB_INSERTSTRING, FIndex, CInt(@FItem))
-		#endif
 	End Sub
 	
 	Private Property CheckedListBox.Checked(Index As Integer) As Boolean
-		#ifdef __USE_GTK__
 			Dim As GtkTreeIter iter
 			Dim As Boolean bChecked
 			gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(ListStore), @iter, Trim(Str(Index)))
 			gtk_tree_model_get(GTK_TREE_MODEL(ListStore), @iter, 0, @bChecked, -1)
 			Return bChecked
-		#else
-			If Handle Then Return Perform(LB_GETITEMDATA, Index, 0) Else Return False
-		#endif
 	End Property
 	
 	Private Property CheckedListBox.Checked(Index As Integer, Value As Boolean)
-		#ifdef __USE_GTK__
 			Dim As GtkTreeIter iter
 			gtk_tree_model_get_iter_from_string(GTK_TREE_MODEL(ListStore), @iter, Trim(Str(Index)))
 			gtk_list_store_set(ListStore, @iter, 0, Value, -1)
-		#else
-			If Handle Then 
-				Perform(LB_SETITEMDATA, Index, abs_(Value))
-				If Value AndAlso FRadioCheck Then
-					For i As Integer = 0 To Items.Count - 1
-						If i = Index Then Continue For
-						Perform(LB_SETITEMDATA, i, 0)
-					Next
-				End If
-			End If
-		#endif
 	End Property
 	
 	Private Property CheckedListBox.RadioCheck As Boolean
@@ -103,9 +79,7 @@ Namespace My.Sys.Forms
 	
 	Private Property CheckedListBox.RadioCheck(Value As Boolean)
 		FRadioCheck = Value
-		#ifdef __USE_GTK__
 			gtk_cell_renderer_toggle_set_radio(GTK_CELL_RENDERER_TOGGLE(rendertoggle), Value)
-		#endif
 	End Property
 	
 	
@@ -117,16 +91,7 @@ Namespace My.Sys.Forms
 		F = FreeFile_
 		Open FileName For Output Encoding "utf-8" As #F
 		For i = 0 To ItemCount - 1
-			#ifdef __USE_GTK__
 				Print #F, Items.Item(i)
-			#else
-				Dim TextLen As Integer = Perform(LB_GETTEXTLEN, i, 0)
-				s = _CAllocate((TextLen + 1) * SizeOf(WString))
-				*s = Space(TextLen)
-				Perform(LB_GETTEXT, i, CInt(s))
-				Print #F, *s
-				_Deallocate(s)
-			#endif
 		Next i
 		CloseFile_(F)
 	End Sub
@@ -139,16 +104,11 @@ Namespace My.Sys.Forms
 		Open FileName For Input Encoding "utf-8" As #F
 		While Not EOF(F)
 			Line Input #F, s
-			#ifdef __USE_GTK__
 				AddItem s
-			#else
-				Perform(LB_ADDSTRING, 0, CInt(@s))
-			#endif
 		Wend
 		CloseFile_(F)
 	End Sub
 	
-	#ifdef __USE_GTK__
 		Private Sub CheckedListBox.Check(cell As GtkCellRendererToggle Ptr, path As gchar Ptr, model As GtkListStore Ptr)
 			Dim As GtkTreeIter iter
 			Dim As gboolean active
@@ -165,10 +125,8 @@ Namespace My.Sys.Forms
 				gtk_list_store_set (GTK_LIST_STORE (model), @iter, 0, True, -1)
 			End If
 		End Sub
-	#endif
 	
 	Private Constructor CheckedListBox
-		#ifdef __USE_GTK__
 			Dim As GtkTreeViewColumn Ptr col = gtk_tree_view_column_new()
 			rendertoggle = gtk_cell_renderer_toggle_new()
 			Dim As GtkCellRenderer Ptr rendertext = gtk_cell_renderer_text_new()
@@ -194,7 +152,6 @@ Namespace My.Sys.Forms
 			'			g_signal_connect(widget, "row-activated", G_CALLBACK(@TreeView_RowActivated), @This)
 			'			g_signal_connect(widget, "query-tooltip", G_CALLBACK(@TreeView_QueryTooltip), @This)
 			'			g_signal_connect(G_OBJECT(TreeSelection), "changed", G_CALLBACK (@TreeView_SelectionChanged), @This)
-		#endif
 		FCtl3D             = False
 		Base.FBorderStyle       = 1
 		FTabIndex          = -1
@@ -210,6 +167,5 @@ Namespace My.Sys.Forms
 	End Constructor
 	
 	Private Destructor CheckedListBox
-		'If Items Then DeAllocate Items
 	End Destructor
 End Namespace
