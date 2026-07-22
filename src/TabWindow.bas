@@ -12390,6 +12390,10 @@ Sub RunPr(Debugger As String = "", ByRef ProjectFileName As WString, ByRef Proje
 		If CmdL Then _Deallocate(CmdL)
 	Else
 		WLet(ExeFileName, (GetExeFileName(MainFile, CompileLine & " " & FirstLine)))
+		If Not FileExists(*ExeFileName) Then
+			ShowMessages(Time & ": " & ML("Application do not run. Error code") & ": " & ML("File not found") & ": " & *ExeFileName)
+			Exit Sub
+		End If
 		#ifdef __USE_GTK__
 			Dim As GPid pid = 0
 			'		Dim As GtkWidget Ptr win, vte
