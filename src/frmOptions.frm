@@ -1638,6 +1638,17 @@ pfOptions = @fOptions
 			.SetBounds 10, 81, 145, 21
 			.Parent = @grbThemes
 		End With
+		' chkAllowAgentControl
+		With chkAllowAgentControl
+			.Name = "chkAllowAgentControl"
+			.Text = ML("Allow AI agent control (MCP)")
+			.Align = DockStyle.alTop
+			.TabIndex = 152
+			.Constraints.Height = 21
+			.AutoSize = True
+			.SetBounds 10, 102, 235, 21
+			.Parent = @grbThemes
+		End With
 		' chkFrame
 		With chkFrame
 			.Name = "chkFrame"
@@ -3228,6 +3239,7 @@ Sub frmOptions.LoadSettings()
 		.chkAutoIndentation.Checked = AutoIndentation
 		.chkAutoCreateRC.Checked = AutoCreateRC
 		.chkAutoCreateBakFiles.Checked = AutoCreateBakFiles
+		.chkAllowAgentControl.Checked = AllowAgentControl
 		.chkAutoSaveSession.Checked = AutoSaveSession
 		.chkAddRelativePathsToRecent.Checked = AddRelativePathsToRecent
 		.chkCreateNonStaticEventHandlers.Checked = CreateNonStaticEventHandlers
@@ -3927,6 +3939,7 @@ Private Sub frmOptions.cmdApply_Click(ByRef Designer As My.Sys.Object, ByRef Sen
 		AutoSuggestions = .chkEnableAutoSuggestions.Checked
 		AutoCreateRC = .chkAutoCreateRC.Checked
 		AutoCreateBakFiles = .chkAutoCreateBakFiles.Checked
+		AllowAgentControl = .chkAllowAgentControl.Checked
 		AutoSaveSession = .chkAutoSaveSession.Checked
 		AddRelativePathsToRecent = .chkAddRelativePathsToRecent.Checked
 		CreateNonStaticEventHandlers = .chkCreateNonStaticEventHandlers.Checked
@@ -4183,6 +4196,7 @@ Private Sub frmOptions.cmdApply_Click(ByRef Designer As My.Sys.Object, ByRef Sen
 		piniSettings->WriteBool "Options", "AutoSuggestions", AutoSuggestions
 		piniSettings->WriteBool "Options", "AutoCreateRC", AutoCreateRC
 		piniSettings->WriteBool "Options", "AutoCreateBakFiles", AutoCreateBakFiles
+		piniSettings->WriteBool "Options", "AllowAgentControl", AllowAgentControl
 		piniSettings->WriteBool "Options", "AutoSaveSession", AutoSaveSession
 		piniSettings->WriteBool "Options", "AddRelativePathsToRecent", AddRelativePathsToRecent
 		piniSettings->WriteString "Options", "DefaultProjectFile", WGet(DefaultProjectFile)
@@ -4479,6 +4493,7 @@ Private Sub frmOptions.cmdApply_Click(ByRef Designer As My.Sys.Object, ByRef Sen
 			Next
 		Next
 	End With
+	ReconcileAgentPipe()
 	Exit Sub
 	ErrorHandler:
 	MsgBox ErrDescription(Err) & " (" & Err & ") " & _

@@ -2708,6 +2708,14 @@ Sub ChangeUseDebugger(bUseDebugger As Boolean, ChangeObject As Integer = -1)
 	bInChange = False
 End Sub
 
+Sub ReconcileAgentPipe()
+	If AllowAgentControl Then
+		If Not AgentPipeActive() Then StartAgentPipe()
+	Else
+		If AgentPipeActive() Then StopAgentPipe()
+	End If
+End Sub
+
 Sub ChangeLockControls(bLockControls As Boolean, ChangeObject As Integer = -1)
 	LockControls = bLockControls
 	If ChangeObject <> 0 Then tbtLockControls->Checked = bLockControls
@@ -5444,6 +5452,7 @@ Sub LoadSettings
 	ChoosedKeyWordsCase = iniSettings.ReadInteger("Options", "ChoosedKeyWordsCase", 0)
 	ChoosedConstructions = iniSettings.ReadInteger("Options", "ChoosedConstructions", 0)
 	AddSpacesToOperators = iniSettings.ReadBool("Options", "AddSpacesToOperators", True)
+	AllowAgentControl = iniSettings.ReadBool("Options", "AllowAgentControl", False)
 	WLet(CurrentInterfaceTheme, iniSettings.ReadString("Options", "CurrentInterfaceTheme", "Dark"))
 	WLet(CurrentTheme, iniSettings.ReadString("Options", "CurrentTheme", "Default Theme"))
 	WLet(EditorFontName, iniSettings.ReadString("Options", "EditorFontName", "Courier New"))
@@ -9671,6 +9680,7 @@ Sub frmMain_Show(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		OpenFiles GetFullPath(File)
 	End If
 	
+	ReconcileAgentPipe()
 End Sub
 
 
