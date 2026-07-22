@@ -9727,6 +9727,7 @@ Private Sub SaveTabPagePlacement(ByRef KeyName As WString, ByRef tp As TabPage P
 End Sub
 
 Sub frmMain_Close(ByRef Designer As My.Sys.Object, ByRef Sender As Form, ByRef Action As Integer)
+	bQuitting = True
 	On Error Goto ErrorHandler
 	If AutoSaveSession AndAlso SessionOpened AndAlso Trim(*RecentSession) <> "" Then
 		SaveSession(True)

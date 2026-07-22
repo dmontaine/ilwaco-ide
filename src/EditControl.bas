@@ -595,6 +595,7 @@ Namespace My.Sys.Forms
 	End Function
 	
 	Function EditControlContent.GetConstruction(ByRef wLine As WString, ByRef iType As Integer = 0, OldCommentIndex As Integer = 0, InAsm As Boolean = False, TextIsWithoutQuotesAndComments As Boolean = False) As Integer
+		If bQuitting Then Return -1
 		On Error Goto ErrorHandler
 		If Trim(wLine, Any !"\t ") = "" Then Return -1
 		Dim As String sLine = wLine
@@ -644,10 +645,10 @@ Namespace My.Sys.Forms
 		Return -1
 		Exit Function
 		ErrorHandler:
-		MsgBox ErrDescription(Err) & " (" & Err & ") " & _
-		"in line " & Erl() & " (Handler line: " & __LINE__ & ") " & _
-		"in function " & ZGet(Erfn()) & " (Handler function: " & __FUNCTION__ & ") " & _
-		"in module " & ZGet(Ermn()) & " (Handler file: " & __FILE__ & ") "
+		If bQuitting Then Return -1
+		' Suppress error dialogs during paint — they trigger nested GTK loops
+		' that recurse into GetConstruction during shutdown.
+		Return -1
 	End Function
 	
 	Function IsArg(j As Integer) As Boolean
@@ -3596,6 +3597,8 @@ Namespace My.Sys.Forms
 	
 	
 	Sub EditControl.PaintControlPriv(Full As Boolean = False, OnlyCursor As Boolean = False)
+		If bQuitting Then Exit Sub
+		If Handle = 0 Then Exit Sub
 		'	On Error Goto ErrHandler
 		Dim As Boolean bFull = Full
 		If ShowHolidayFrame AndAlso WithFrame Then bFull = True
@@ -6179,6 +6182,8 @@ Namespace My.Sys.Forms
 	End Sub
 	
 		Function EditControl.EditControl_OnDraw(widget As GtkWidget Ptr, cr As cairo_t Ptr, data1 As gpointer) As Boolean
+			If bQuitting Then Return False
+			If data1 = 0 OrElse widget = 0 Then Return False
 			Dim As EditControl Ptr ec = Cast(Any Ptr, data1)
 			If ec->cr = 0 Then
 				ec->cr = cr
