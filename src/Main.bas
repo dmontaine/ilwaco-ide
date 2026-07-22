@@ -2935,15 +2935,39 @@ Sub ClearAllBookmarks
 	Next
 End Sub
 
+Private Sub AddBottomDebugTab(tp As TabPage Ptr)
+	If tp = 0 OrElse tp->Parent <> 0 Then Exit Sub
+	ptabBottom->AddTab tp
+End Sub
+
+Private Sub RemoveBottomDebugTab(tp As TabPage Ptr)
+	If tp = 0 OrElse tp->Parent = 0 Then Exit Sub
+	ptabBottom->DetachTab tp
+End Sub
+
 Sub SetDebugTabsVisible(bVisible As Boolean)
-	If tpImmediate <> 0 Then tpImmediate->Visible = bVisible
-	If tpLocals <> 0 Then tpLocals->Visible = bVisible
-	If tpGlobals <> 0 Then tpGlobals->Visible = bVisible
-	If tpProcedures <> 0 Then tpProcedures->Visible = bVisible
-	If tpThreads <> 0 Then tpThreads->Visible = bVisible
-	If tpWatches <> 0 Then tpWatches->Visible = bVisible
-	If tpMemory <> 0 Then tpMemory->Visible = bVisible
-	If tpProfiler <> 0 Then tpProfiler->Visible = bVisible
+	Static As Boolean bAlreadyVisible = True
+	If bVisible = bAlreadyVisible Then Exit Sub
+	bAlreadyVisible = bVisible
+	If bVisible Then
+		AddBottomDebugTab tpImmediate
+		AddBottomDebugTab tpLocals
+		AddBottomDebugTab tpGlobals
+		AddBottomDebugTab tpProcedures
+		AddBottomDebugTab tpThreads
+		AddBottomDebugTab tpWatches
+		AddBottomDebugTab tpMemory
+		AddBottomDebugTab tpProfiler
+	Else
+		RemoveBottomDebugTab tpImmediate
+		RemoveBottomDebugTab tpLocals
+		RemoveBottomDebugTab tpGlobals
+		RemoveBottomDebugTab tpProcedures
+		RemoveBottomDebugTab tpThreads
+		RemoveBottomDebugTab tpWatches
+		RemoveBottomDebugTab tpMemory
+		RemoveBottomDebugTab tpProfiler
+	End If
 End Sub
 
 Sub ChangeUseDebugger(bUseDebugger As Boolean, ChangeObject As Integer = -1)

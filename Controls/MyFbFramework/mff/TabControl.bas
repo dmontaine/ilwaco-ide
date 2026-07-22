@@ -685,6 +685,21 @@ Namespace My.Sys.Forms
 		DeleteTab IndexOfTab(Value)
 	End Sub
 	
+	Private Sub TabControl.DetachTab(Index As Integer)
+		If Index < 0 Or Index > FTabCount - 1 Then Exit Sub
+		Dim As TabPage Ptr tp = Tabs[Index]
+		If tp = 0 Then Exit Sub
+		Dim As Boolean bDynamic = tp->FDynamic
+		tp->FDynamic = False
+		DeleteTab Index
+		tp->FDynamic = bDynamic
+	End Sub
+	
+	Private Sub TabControl.DetachTab(Value As TabPage Ptr)
+		If Value = 0 Then Exit Sub
+		DetachTab IndexOfTab(Value)
+	End Sub
+	
 	Private Function TabControl.InsertTab(Index As Integer, ByRef Caption As WString, AObject As Any Ptr = 0) As TabPage Ptr
 		Dim As Integer i
 		Dim As TabPage Ptr It, tp
