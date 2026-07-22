@@ -584,7 +584,7 @@ pfProjectProperties = @fProjectProperties
 			'.Caption = ML("Subsystem") & " (" & ML("For Windows") & "):"
 			.Parent = @tpGeneral
 		End With
-		' tpAndroidSettings
+		' tpAndroidSettings (hidden: Android projects not supported on Linux)
 		With tpAndroidSettings
 			.Name = "tpAndroidSettings"
 			.Text = ML("Android Settings")
@@ -592,6 +592,7 @@ pfProjectProperties = @fProjectProperties
 			.UseVisualStyleBackColor = True
 			'.Caption = ML("Android Settings")
 			.SetBounds 2, 22, 487, 316
+			.Visible = False
 			.Parent = @tabProperties
 		End With
 		' txtAndroidSDKLocation
