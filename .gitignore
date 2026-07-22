@@ -1,0 +1,28 @@
+# Build outputs
+ilwaco
+IlwacoIDE
+*.o
+*.so
+*.c
+*.asm
+*.exe
+*.dll
+
+# Generated form sources
+src/frm*.bas
+
+# Bundled compiler tarball (keep extracted toolchain)
+Compilers/*.tar.xz
+Compilers/*.tar.gz
+
+# IDE runtime files
+Settings/astoria.ini
+Settings/VisualFBEditor*.ini
+Temp/*
+Projects/*
+!Projects/.gitkeep
+
+# Editor/IDE metadata
+.vscode/*.log
+*.code-workspace
+__pycache__/

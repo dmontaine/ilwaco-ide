@@ -1,0 +1,21 @@
+name: linux
+
+on:
+  [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install gtk3-dev
+      run: sudo apt-get update && sudo apt-get install libgtk-3-dev
+      
+    - name: Grant permission 
+      working-directory: .github/workflows
+      run: sudo chmod +x linux.sh
+      
+    - name: Build
+      working-directory: .github/workflows
+      run: sudo bash linux.sh
