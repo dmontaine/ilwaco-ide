@@ -409,39 +409,67 @@ Function GetFullPathInSystem(ByRef Path As WString) As UString
 	End If
 End Function
 
+Function CollapseDotDotSegments(ByRef path As WString) As UString
+	Dim As UString s = Replace(path, "\", "/")
+	Dim segs() As UString
+	If Split(s, "/", segs()) <= 0 Then Return path
+	Dim result(UBound(segs)) As UString
+	Dim As Long rCount = 0
+	For i As Integer = 0 To UBound(segs)
+		If segs(i) = ".." Then
+			If rCount > 0 AndAlso result(rCount - 1) <> ".." Then
+				rCount -= 1
+			Else
+				result(rCount) = ".."
+				rCount += 1
+			End If
+		ElseIf segs(i) <> "." AndAlso segs(i) <> "" Then
+			result(rCount) = segs(i)
+			rCount += 1
+		End If
+	Next
+	Dim As UString joined
+	If StartsWith(s, "/") Then joined = "/"
+	For i As Integer = 0 To rCount - 1
+		If i > 0 Then joined &= "/"
+		joined &= result(i)
+	Next
+	Return joined
+End Function
+
 Function GetFullPath(ByRef Path As WString, ByRef FromFile As WString = "") As UString
 	If CInt(InStr(Path, ":") > 0) OrElse CInt(StartsWith(Path, "/")) OrElse CInt(StartsWith(Path, "\")) Then
 		If EndsWith(Path, "\..") OrElse EndsWith(Path, "/..") Then
-			Return GetFolderName(GetFolderName(Path))
+			Return CollapseDotDotSegments(GetFolderName(GetFolderName(Path)))
 		Else
-			Return Path
+			Return CollapseDotDotSegments(Path)
 		End If
 	ElseIf StartsWith(Path, "./") OrElse StartsWith(Path, ".\") Then
 		If FromFile = "" Then
 			If EndsWith(ExePath, "\..") OrElse EndsWith(ExePath, "/..") Then
-				Return GetFolderName(GetFolderName(ExePath)) & Mid(Path, 3)
+				Return CollapseDotDotSegments(GetFolderName(GetFolderName(ExePath)) & Mid(Path, 3))
 			Else
-				Return ExePath & Slash & Mid(Path, 3)
+				Return CollapseDotDotSegments(ExePath & Slash & Mid(Path, 3))
 			End If
 		Else
-			Return GetFolderName(FromFile) & Mid(Path, 3)
+			Return CollapseDotDotSegments(GetFolderName(FromFile) & Mid(Path, 3))
 		End If
 	ElseIf StartsWith(Path, "../") OrElse StartsWith(Path, "..\") Then
 		If FromFile = "" Then
-			Return GetFolderName(ExePath) & Mid(Path, 4)
+			Return CollapseDotDotSegments(GetFolderName(ExePath) & Mid(Path, 4))
 		Else
-			Return GetFolderName(GetFolderName(FromFile)) & Mid(Path, 4)
+			Return CollapseDotDotSegments(GetFolderName(GetFolderName(FromFile)) & Mid(Path, 4))
 		End If
 	Else
 		If FromFile = "" Then
 			Dim As UString Path_ = GetFullPathInSystem(Path)
 			If Path_ <> "" Then
-				Return Path_
+				Return CollapseDotDotSegments(Path_)
 			Else
-				Return ExePath & Slash & Path
+				Return CollapseDotDotSegments(ExePath & Slash & Path)
 			End If
 		Else
-			Return GetFolderName(FromFile) & Path
+			Return CollapseDotDotSegments(GetFolderName(FromFile) & Path)
 		End If
 	End If
 End Function
