@@ -20,6 +20,7 @@
 #include once "mff/StatusBar.bi" 'David Change
 #include once "mff/IniFile.bi"
 #include once "mff/HTTP.bi"
+#include once "JsonLite.bi"
 
 		#define SettingsPath ExePath & "/Settings/VisualFBEditorX64_gtk3.ini"
 
@@ -74,6 +75,7 @@ Declare Sub mClickTool(ByRef Designer As My.Sys.Object, Sender As My.Sys.Object)
 Declare Sub mClickWindow(ByRef Designer As My.Sys.Object, Sender As My.Sys.Object)
 Declare Sub mClickUseDefine(ByRef Designer As My.Sys.Object, Sender As My.Sys.Object)
 Declare Sub LoadSettings
+Declare Sub ReconcileAgentPipe()   '' start/stop the MCP agent pipe to match AllowAgentControl
 
 Common Shared As Form Ptr pfrmMain
 Common Shared As ComboBoxEdit Ptr pcboBuildConfiguration
@@ -108,6 +110,7 @@ Common Shared As Boolean PlaceStaticEventHandlersAfterTheConstructor, CreateStat
 Common Shared As Boolean LimitDebug, DisplayWarningsInDebug, TurnOnEnvironmentVariables
 Common Shared As Boolean UseDebugger, ParameterInfoShow, LockControls
 Common Shared As Boolean CompileGUI, bAIAgentFirstRun
+Common Shared As Boolean AllowAgentControl        '' Tools > Options: MCP/agent pipe
 Common Shared As Boolean mFormFindInFile
 Common Shared As Boolean InDebug, FormClosing, Restarting, FastRunning, RunningToCursor
 Common Shared As Boolean HighlightCurrentLine, HighlightCurrentWord, HighlightBrackets

@@ -156,6 +156,7 @@ LoadSettings
 #include once "file.bi"
 #include once "Designer.bi"
 #include once "TabWindow.bi"
+#include once "AgentPipe.bi"
 #include once "Debug.bi"
 #include once "frmFind.bi"
 #include once "frmGoto.bi"
@@ -9792,6 +9793,7 @@ Sub frmMain_Close(ByRef Designer As My.Sys.Object, ByRef Sender As Form, ByRef A
 	iniSettings.WriteString("MainWindow", "RecentSession", *RecentSession)
 	If mChangeLogEdited Then txtChangeLog.SaveToFile(ExePath & Slash & StringExtract(MainNode->Text, ".") & "_Change.log") '
 	UnLoadAddins
+	StopAgentPipe()
 		_exit(0)
 	Exit Sub
 	ErrorHandler:

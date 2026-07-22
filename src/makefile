@@ -8,13 +8,16 @@ MFF_LIB := $(MFF)/libmff64_gtk3.so
 
 .PHONY: all clean
 
-all: ../ilwaco
+all: ../ilwaco ../ilwaco-mcp
 
 ../ilwaco: VisualFBEditor.bas $(wildcard *.bas) $(wildcard *.bi) $(wildcard *.frm) $(MFF_LIB)
 	$(FBC) VisualFBEditor.bas -x ../ilwaco $(IDE_CFLAGS) -p $(MFF) -l mff64_gtk3 -Wl "-rpath,\$$ORIGIN/Controls/MyFbFramework" -s console
+
+../ilwaco-mcp: AgentMcp.bas JsonLite.bas JsonLite.bi
+	$(FBC) AgentMcp.bas -x ../ilwaco-mcp -i . -d __USE_GTK__ -d __USE_GTK3__ -s console
 
 $(MFF_LIB): $(MFF)/mff/mff.bi
 	cd $(MFF)/mff && $(FBC) -b mff.bi -dll -x ../libmff64_gtk3.so -d __USE_GTK__ -d __USE_GTK3__
 
 clean:
-	rm -f ../ilwaco *.o $(MFF)/mff/*.o $(MFF)/libmff64_gtk3.so
+	rm -f ../ilwaco ../ilwaco-mcp *.o $(MFF)/mff/*.o $(MFF)/libmff64_gtk3.so
