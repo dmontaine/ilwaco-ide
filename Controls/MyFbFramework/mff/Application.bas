@@ -1,4 +1,4 @@
-﻿'###############################################################################
+'###############################################################################
 '#  Application.bas                                                             #
 '#  This file is part of MyFBFramework                                         #
 '#  Authors: Nastase Eodor, Xusinboy Bekchanov                                 #
@@ -684,7 +684,7 @@ Namespace Debug
 			_Deallocate(tMsgPtr)
 		End Sub
 		
-		Private Sub Print Overload(ByRef Msg As WString, ByRef Msg1 As Const WString = "", ByRef Msg2 As Const WString = "", ByRef Msg3 As Const WString = "", ByRef Msg4 As Const WString = "", bWriteLog As Boolean = False, bPrintMsg As Boolean = False, bShowMsg As Boolean = False, bPrintToDebugWindow As Boolean = True)
+		Private Sub Print Overload(ByRef Msg As WString, ByRef Msg1 As Const WString, ByRef Msg2 As Const WString, ByRef Msg3 As Const WString, ByRef Msg4 As Const WString, bWriteLog As Boolean = False, bPrintMsg As Boolean = False, bShowMsg As Boolean = False, bPrintToDebugWindow As Boolean = True)
 			Dim As WString Ptr tMsgPtr
 			WLet(tMsgPtr, Msg)
 			If Msg1 <> "" Then WAdd(tMsgPtr, Chr(9) & Msg1)
@@ -744,7 +744,7 @@ Public Function ML(ByRef V As WString) ByRef As WString
 	End If
 End Function
 
-Public Function MsgBox Alias "MsgBox" (ByRef MsgStr As WString, ByRef Caption As WString = "", MsgType As MessageType = MessageType.mtInfo, ButtonsType As ButtonsTypes = ButtonsTypes.btOK) As MessageResult __EXPORT__
+Public Function MsgBox Alias "MsgBox" (ByRef MsgStr As WString, ByRef Caption As WString, MsgType As MessageType = MessageType.mtInfo, ButtonsType As ButtonsTypes = ButtonsTypes.btOK) As MessageResult __EXPORT__
 	Dim As Integer Result = -1
 	Dim As WString Ptr FCaption
 	Dim As Integer MsgTypeIn, ButtonsTypeIn

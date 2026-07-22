@@ -1242,7 +1242,7 @@ End Sub
 Sub GenerateSignedBundleAPK(Parameter As String)
 End Sub
 
-Sub SelectSearchResult(ByRef FileName As WString, iLine As Integer, ByVal iSelStart As Integer =-1, ByVal iSelLength As Integer =-1, tabw As TabWindow Ptr = 0, ByRef SearchText As WString = "")
+Sub SelectSearchResult(ByRef FileName As WString, iLine As Integer, ByVal iSelStart As Integer =-1, ByVal iSelLength As Integer =-1, tabw As TabWindow Ptr = 0, ByRef SearchText As WString)
 	Dim tb As TabWindow Ptr
 	If tabw <> 0 AndAlso ptabCode->IndexOfTab(tabw) <> -1 Then
 		tb = tabw
