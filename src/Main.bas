@@ -2440,6 +2440,18 @@ End Sub
 Sub PageSetup()
 End Sub
 
+Function ProjectHasOpenTabs(ProjectNode As TreeNode Ptr) As Boolean
+	Dim As TabWindow Ptr tb
+	For jj As Integer = 0 To TabPanels.Count - 1
+		Var ptabCode = @Cast(TabPanel Ptr, TabPanels.Item(jj))->tabCode
+		For i As Integer = 0 To ptabCode->TabCount - 1
+			tb = Cast(TabWindow Ptr, ptabCode->Tab(i))
+			If tb->ptn = ProjectNode Then Return True
+		Next i
+	Next jj
+	Return False
+End Function
+
 Sub CloseAllTabs(WithoutCurrent As Boolean = False)
 	Dim tb As TabWindow Ptr
 	Dim j As Integer = ptabCode->SelectedTabIndex
@@ -2453,6 +2465,15 @@ Sub CloseAllTabs(WithoutCurrent As Boolean = False)
 			CloseTab(tb)
 		Next i
 	Next jj
+	' CloseTab only ever removes a *file's* tree node, never a project's.
+	' After closing every tab, sweep and close any project that has nothing left open under it.
+	Dim As TreeNode Ptr tn
+	For i As Integer = tvExplorer.Nodes.Count - 1 To 0 Step -1
+		tn = tvExplorer.Nodes.Item(i)
+		If CInt(tn->ImageKey = "Project") AndAlso Not ProjectHasOpenTabs(tn) Then
+			CloseProject(tn, True)
+		End If
+	Next i
 End Sub
 
 Function CloseSession() As Boolean
