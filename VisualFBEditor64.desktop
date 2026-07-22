@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Terminal=false
+Type=Application
+Name=Visual FB Editor
+Comment=Text Editor
+Exec=env GTK_THEME=Adwaita:dark /mnt/media/GitHub/VisualFBEditor/VisualFBEditor64_gtk3
+Path=/mnt/media/GitHub/VisualFBEditor/
+Icon=/mnt/media/GitHub/VisualFBEditor/Resources/VisualFBEditor.ico
+Categories=Text;Editor;
