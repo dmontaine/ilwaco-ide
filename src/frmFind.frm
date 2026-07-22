@@ -490,7 +490,6 @@ Sub frmFind.FindInProj(ByRef lvSearchResult As ListView Ptr, ByRef tSearch As WS
 							End If
 						Loop
 					Else
-						'MsgBox ML("Open file failure!") &  " " & ML("in function") & " frmFindInFiles.Find"  & Chr(13,10) & "  " & Path & f
 					End If
 					CloseFile_(Fn)
 				End If
