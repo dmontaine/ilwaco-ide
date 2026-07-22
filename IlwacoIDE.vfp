@@ -42,7 +42,6 @@ File=src/frmSave.frm
 File=src/frmSplash.frm
 File=src/frmTemplates.frm
 File=src/frmTheme.frm
-File=src/frmTipOfDay.frm
 File=src/frmTools.frm
 File=src/frmTrek.frm
 File=src/Debug.bas

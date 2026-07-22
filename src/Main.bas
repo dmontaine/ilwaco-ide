@@ -175,7 +175,6 @@ LoadSettings
 #include once "frmParameters.bi"
 #include once "frmProjectProperties.bi"
 #include once "frmSave.bi"
-#include once "frmTipOfDay.frm"
 #include once "frmComponents.frm"
 #include once "Debug.bi"
 
@@ -7505,8 +7504,6 @@ Sub CreateMenusAndToolBars
 	miGitHub->Add(ML("MyFbFramework WiKi") & HK("MyFbFrameworkWiKi"), "Book", "MyFbFrameworkWiKi", @mClick)
 	miGitHub->Add(ML("MyFbFramework Discussions") & HK("MyFbFrameworkDiscussions"), "Forum", "MyFbFrameworkDiscussions", @mClick)
 	miHelp->Add("-")
-	miHelp->Add(ML("Tip of the Day"), "Book", "TipoftheDay", @mClick)
-	miHelp->Add("-")
 	miHelp->Add(ML("&About") & HK("About"), "About", "About", @mClick)
 	
 	'mnuForm.ImagesList = @imgList '<m>
@@ -11372,8 +11369,6 @@ Sub frmMain_Create(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	ShowBuildToolBar = iniSettings.ReadBool("MainWindow", "ShowBuildToolbar", True)
 	ShowDebugToolBar = iniSettings.ReadBool("MainWindow", "ShowDebugToolbar", False)
 	ShowRunToolBar = iniSettings.ReadBool("MainWindow", "ShowRunToolbar", True)
-	ShowTipoftheDay = iniSettings.ReadBool("MainWindow", "ShowTipoftheDay", True)
-	ShowTipoftheDayIndex = iniSettings.ReadInteger("MainWindow", "ShowTipoftheDayIndex", 0)
 	MainReBar.Bands.Item(0)->Visible = ShowStandardToolBar
 	MainReBar.Bands.Item(1)->Visible = ShowEditToolBar
 	MainReBar.Bands.Item(2)->Visible = ShowProjectToolBar
@@ -11599,7 +11594,6 @@ Sub frmMain_Show(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	'			OpenFiles GetFullPath(*RecentFiles)
 	'		End Select
 	'	End If
-	If ShowTipoftheDay Then frmTipOfDay.ShowModal *pfrmMain
 	
 End Sub
 
@@ -11684,8 +11678,6 @@ Sub frmMain_Close(ByRef Designer As My.Sys.Object, ByRef Sender As Form, ByRef A
 	iniSettings.WriteBool("MainWindow", "ShowBuildToolBar", ShowBuildToolBar)
 	iniSettings.WriteBool("MainWindow", "ShowRunToolBar", ShowRunToolBar)
 	iniSettings.WriteInteger("MainWindow", "MainHeight", frmMain.Height)
-	iniSettings.WriteInteger("MainWindow", "ShowTipoftheDayIndex", ShowTipoftheDayIndex)
-	iniSettings.WriteBool("MainWindow", "ShowTipoftheDay", ShowTipoftheDay)
 	iniSettings.WriteString("MainWindow", "ProjectParent", tpProject->Parent->Name)
 	iniSettings.WriteInteger("MainWindow", "ProjectIndex", tpProject->Parent->IndexOfTab(tpProject))
 	iniSettings.WriteString("MainWindow", "ToolBoxParent", tpToolbox->Parent->Name)

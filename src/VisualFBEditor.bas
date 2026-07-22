@@ -1035,7 +1035,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 	Case "MyFbFrameworkWiKi":               OpenUrl "https://github.com/XusinboyBekchanov/MyFbFramework/wiki"
 	Case "MyFbFrameworkDiscussions":        OpenUrl "https://github.com/XusinboyBekchanov/MyFbFramework/discussions"
 	Case "About":                           pfAbout->Show *pfrmMain : pfAbout->CenterToParent
-	Case "TipoftheDay":                     pfTipOfDay->ShowModal *pfrmMain : pfTipOfDay->CenterToParent
 	End Select
 End Sub
 
