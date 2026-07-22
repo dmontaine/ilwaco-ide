@@ -6676,14 +6676,14 @@ Sub LoadSettings
 	#endif
 	DisplayMenuIcons = iniSettings.ReadBool("Options", "DisplayMenuIcons", True)
 	ShowMainToolBar = iniSettings.ReadBool("Options", "ShowMainToolbar", True)
-	DarkMode = iniSettings.ReadBool("Options", "DarkMode", True)
+	DarkMode = True ' Ilwaco is always dark
 	'gLocalToolBox = iniSettings.ReadBool("Options", "ShowToolBoxLocal", False)
 	gLocalProperties = iniSettings.ReadBool("Options", "PropertiesLocal", False)
 	'gLocalKeyWords = iniSettings.ReadBool("Options", "KeyWordsLocal", False)
 	ProjectAutoSuggestions = False
 	
-	If (*CurrentTheme = "Default Theme" AndAlso DarkMode) OrElse (*CurrentTheme = "Dark (Visual Studio)" AndAlso Not DarkMode) Then
-		WLet(CurrentTheme, IIf(DarkMode, "Dark (Visual Studio)", "Default Theme"))
+	If *CurrentTheme = "Default Theme" Then
+		WLet(CurrentTheme, "Dark (Visual Studio)")
 	End If
 	pDefaultFont->Name = WGet(InterfaceFontName)
 	pDefaultFont->Size  = InterfaceFontSize
@@ -7285,8 +7285,6 @@ Sub CreateMenusAndToolBars
 	miUnCollapseAllProcedures = miUnCollapse->Add(ML("All procedures") & HK("UnCollapseAllProcedures"), "", "UnCollapseAllProcedures", @mClick, , , False)
 	miUnCollapseAll = miUnCollapse->Add(ML("All") & HK("UnCollapseAll"), "", "UnCollapseAll", @mClick, , , False)
 	miView->Add("-")
-	miView->Add(ML("Dark Mode") & HK("DarkMode"), "DarkMode", "DarkMode", @mClick)
-	miView->Add("-")
 	miView->Add(ML("Project Explorer") & HK("ProjectExplorer", "Ctrl+R"), "Project", "ProjectExplorer", @mClick)
 	miView->Add(ML("Properties Window") & HK("PropertiesWindow", "F4"), "Property", "PropertiesWindow", @mClick)
 	miView->Add(ML("Events Window") & HK("EventsWindow", "Ctrl+E"), "Event", "EventsWindow", @mClick)
@@ -7603,7 +7601,6 @@ Sub CreateMenusAndToolBars
 	tbStandard.Buttons.Add tbsSeparator
 	tbtFind = tbStandard.Buttons.Add(, "Find", , @mClick, "Find", , ML("Find") & HK("Find", "Ctrl+F", True), True, ToolButtonState.tstNone)
 	tbStandard.Buttons.Add tbsSeparator
-	tbStandard.Buttons.Add(, "DarkMode", , @mClick, "DarkMode", , ML("Dark Mode") & HK("DarkMode"), True)
 	tbtUseDirect2D = tbStandard.Buttons.Add(tbsCheck, "UseDirect2D", , @mClick, "UseDirect2D", , ML("Use Direct2D (For Windows)") & HK("UseDirect2D"), True)
 	Var b = UseDirect2D
 	tbtUseDirect2D->Checked = UseDirect2D

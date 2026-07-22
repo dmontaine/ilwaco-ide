@@ -2484,7 +2484,7 @@ pfOptions = @fOptions
 			.SetBounds 218, 89, 184, 21
 			.Parent = @grbDefaultDebuggers
 		End With
-		' chkDarkMode
+		' chkDarkMode (hidden: Ilwaco is always dark)
 		With chkDarkMode
 			.Name = "chkDarkMode"
 			.Text = ML("Dark Mode (available for Linux, Windows 10 and above)")
@@ -2495,6 +2495,7 @@ pfOptions = @fOptions
 			.Constraints.Height = 21
 			.AutoSize = True
 			.SetBounds 10, 142, 323, 21
+			.Visible = False
 			.Parent = @grbThemes
 		End With
 		' chkPlaceStaticEventHandlersAfterTheConstructor

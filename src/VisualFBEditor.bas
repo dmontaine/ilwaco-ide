@@ -311,14 +311,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 		Next
 		Clipboard.SetAsText *tmpStrPtr
 		_Deallocate(tmpStrPtr)
-	Case "DarkMode":
-		DarkMode = Not DarkMode
-		App.DarkMode = DarkMode
-		If (*CurrentTheme = "Default Theme" AndAlso DarkMode) OrElse (*CurrentTheme = "Dark (Visual Studio)" AndAlso Not DarkMode) Then
-			WLet(CurrentTheme, IIf(DarkMode, "Dark (Visual Studio)", "Default Theme"))
-			LoadTheme
-			UpdateAllTabWindows
-		End If
 	Case "UseDirect2D":                         frmMain.UpdateLock: UseDirect2D = tbtUseDirect2D->Checked: frmMain.Repaint: frmMain.UpdateUnLock
 	Case "ProjectExplorer":                     tpProject->SelectTab: txtExplorer.SetFocus
 	Case "PropertiesWindow":                    tpProperties->SelectTab: txtProperties.SetFocus
