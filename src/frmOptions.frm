@@ -3883,7 +3883,6 @@ Private Sub frmOptions.Form_Create(ByRef Designer As My.Sys.Object, ByRef Sender
 		tnGeneral->Nodes.Add(ML("Shortcuts"), "Shortcuts")
 		tnGeneral->Nodes.Add(ML("Themes"), "Themes")
 		tnEditor->Nodes.Add(ML("Colors And Fonts"), "ColorsAndFonts")
-		tnEditor->Nodes.Add(ML("Other Editors"), "OtherEditors")
 		tnEditor->Nodes.Add(ML("Defaults"), "Defaults")
 		tnCompiler->Nodes.Add(ML("Build Configurations"), "BuildConfigurations")
 		tnCompiler->Nodes.Add(ML("Includes"), "Includes")
