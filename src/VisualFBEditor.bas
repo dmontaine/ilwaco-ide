@@ -325,7 +325,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 	Case "ImmediateWindow":                     tpImmediate->SelectTab
 	Case "LocalsWindow":                        tpLocals->SelectTab
 	Case "GlobalsWindow":                       tpGlobals->SelectTab
-		'Case "ProceduresWindow":                    tpProcedures->SelectTab
 	Case "ThreadsWindow":                       tpThreads->SelectTab
 	Case "WatchWindow":                         tpWatches->SelectTab
 	Case "ImageManager":                        pfImageManager->Show *pfrmMain : pfImageManager->CenterToParent
@@ -395,32 +394,8 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 					'#ifndef __USE_GTK__
 					ChangeEnabledDebug False, True, True
 						fastrun()
-					'runtype = RTRUN
-					'thread_resume()
-					'#endif
-					'runtype = RTAUTO
-					'#ifdef __FB_WIN32__
-					'	set_cc()
-					'#else
-					'	If ccstate = KCC_NONE Then
-					'		msgdata = 1 ''CC everywhere
-					'		exec_order(KPT_CCALL)
-					'	End If
-					'#endif
-					'thread_set()
 				ElseIf UseDebugger Then
 					runtype = RTFRUN
-					'runtype = RTRUN
-					'runtype = RTAUTO
-					'#ifdef __FB_WIN32__
-					'	set_cc()
-					'#else
-					'	If ccstate = KCC_NONE Then
-					'		msgdata = 1 ''CC everywhere
-					'		exec_order(KPT_CCALL)
-					'	End If
-					'#endif
-					'thread_set()
 					SetTimer(0, GTIMER001, 1, Cast(Any Ptr, @DEBUG_EVENT))
 					CurrentTimer = SetTimer(0, 0, 1, @TIMERPROC)
 					ThreadCounter(ThreadCreate_(@StartDebuggingWithCompile))
@@ -449,13 +424,9 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 			If InDebug Then
 				'#ifndef __USE_GTK__
 				ChangeEnabledDebug False, True, True
-				'runtype = RTRUN
-				'thread_resume()
-				'#endif
 			ElseIf UseDebugger Then
 				'#ifndef __USE_GTK__
 				runtype = RTFRUN
-				'runtype = RTRUN
 				SetTimer(0, GTIMER001, 1, Cast(Any Ptr, @DEBUG_EVENT))
 				CurrentTimer = SetTimer(0, 0, 1, @TIMERPROC)
 				'#endif
@@ -477,7 +448,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 				runtype=RTSTEP:procad=0:procin=0:proctop=False:procbot=0
 			End If
 			stopcode=CSHALTBU
-			'SetFocus(richeditcur)
 		#endif
 	Case "End":
 		Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
@@ -488,15 +458,10 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 					command_debug "q"
 				End If
 		Else
-			'#ifdef __USE_GTK__
-			'	ChangeEnabledDebug True, False, False
-			'#else
-			'kill_process("Terminate immediatly no saved data, other option Release")
 			For i As Integer = 1 To linenb 'restore old instructions
 				WriteProcessMemory(dbghand, Cast(LPVOID, rline(i).ad), @rline(i).sv, 1, 0)
 			Next
 			runtype = RTFREE
-			'but_enable()
 			thread_resume()
 			DeleteDebugCursor
 			ChangeEnabledDebug True, False, False
@@ -513,7 +478,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 				Exit Sub
 			End If
 			runtype = RTFRUN
-			'runtype = RTRUN
 			SetTimer(0, GTIMER001, 1, Cast(Any Ptr, @DEBUG_EVENT))
 			CurrentTimer = SetTimer(0, 0, 1, @TIMERPROC)
 			Restarting = True
@@ -535,11 +499,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 		Else
 			If InDebug Then
 				ChangeEnabledDebug False, True, True
-				'runtype = RTSTEP
-				'stopcode=0
-				''bcktrk_close
-				'SetFocus(windmain)
-				'thread_resume
 					If ccstate=KCC_NONE Then
 						msgdata=1 ''CC everywhere
 						exec_order(KPT_CCALL)
@@ -548,7 +507,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 				stopcode=0
 				runtype=RTSTEP
 				thread_set()
-				'thread_resume()
 			Else
 				runtype = RTSTEP
 				SetTimer(0, GTIMER001, 1, Cast(Any Ptr, @DEBUG_EVENT))
@@ -650,7 +608,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 				g_object_ref(tb->btnClose.Handle)
 				gtk_container_remove(GTK_CONTAINER(tb->_Box), tb->btnClose.Handle)
 			#endif
-			'ptabPanel->tabCode.DeleteTab tb
 			tb->Parent = @ptabPanelNew->tabCode
 			#ifdef __USE_GTK__
 				tb->txtCode.cr = 0
@@ -696,7 +653,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 			ptxtAIRequest->Text = ML("Generate code based on the requirements of the selected comment lines") & ": " & !"\r\n" & "```freeBasic" & !"\r\n" & tb->txtCode.SelText & !"\r\n" & "```"
 			ptxtAIRequest->SetFocus
 		Case "AIAddComment" '"AIOptimizeCode", "AIIntellicode" , "AITracepointError", "AIRelease"
-			'ML("You are FreeBasic programming expert. Follow MyFbFramework GUI form guidelines.") & " " &
 			ptxtAIRequest->Text = ML("Comment selected code") & ": " & !"\r\n" & "```freeBasic" & !"\r\n" & tb->txtCode.SelText & !"\r\n" & "```"
 			ptxtAIRequest->SetFocus
 		Case "AIOptimizeCode"
@@ -1011,7 +967,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 				Case "ProcedureNumberOff":          tb->ProcedureNumberOff
 				Case "PreprocessorNumberOn":        tb->PreprocessorNumberOn
 				Case "PreprocessorNumberOff":       tb->PreprocessorNumberOff
-					'Case "OnErrorResumeNext":       tb->SetErrorHandling "On Error Resume Next", ""
 				Case "OnErrorGoto":                 tb->SetErrorHandling "On Error Goto ErrorHandler", ""
 				Case "OnErrorGotoResumeNext":       tb->SetErrorHandling "On Error Goto ErrorHandler", "Resume Next"
 				Case "OnLocalErrorGoto":            tb->SetErrorHandling "On Local Error Goto ErrorHandler", ""

@@ -107,7 +107,6 @@
 			.ExtraMargins.Bottom = 10
 			.TabIndex = 16
 			.SetBounds 430, 0, 88, 20
-			'.Caption = ML("OK")
 			.Designer = @This
 			.OnClick = @cmdOK_Click_
 			.Parent = @pnlBottom
@@ -412,7 +411,6 @@ Private Sub frmTemplates.tvTemplates_SelChanged(ByRef Sender As TreeView, ByRef 
 		While f <> ""
 			TemplateName = ..Left(f, IfNegative(InStr(f, ".") - 1, Len(f)))
 			ImageName = "App" +..Left(TemplateName, IfNegative(InStr(TemplateName, " ") - 1, Len(TemplateName)))
-			'Debug.Print " ImageName= " & ImageName & " " & imgList32.IndexOf(ImageName) 
 			If imgList32.IndexOf(ImageName) < 0 Then ImageName = "AppGUI"
 			lvTemplates.ListItems.Add ML(TemplateName), ImageName
 			If FileExists(ExePath & "/Templates/Projects/" & TemplateName & "/" & f) Then
@@ -506,10 +504,6 @@ Private Sub frmTemplates.OpenFileControl1_FileActivate(ByRef Sender As OpenFileC
 End Sub
 
 Private Sub frmTemplates.TabControl1_SelChange(ByRef Sender As TabControl, NewIndex As Integer)
-	'If  NewIndex = 1 Then 
-		'OpenFileControl1.SetBounds TabControl1.Left, TabControl1.Top, TabControl1.Width, TabControl1.Height
-		'TabControl1.RequestAlign
-	'End If 
 	pnlSaveLocation.Visible = lvTemplates.SelectedItemIndex >= 0 AndAlso Templates.Object(lvTemplates.SelectedItemIndex) > 0 AndAlso TabControl1.SelectedTabIndex = 0
 	pnlRecent.Visible = TabControl1.SelectedTabIndex = 2
 End Sub
@@ -664,7 +658,6 @@ Private Sub frmTemplates.Form_Create(ByRef Sender As Control)
 	tvRecent_SelChanged tvRecent, *tvRecent.Nodes.Item(0)
 	RecentChanged = False
 	TabControl1.SelectedTabIndex = 0
-	'This.Width = This.Width + 1
 	Var n = 0
 	Dim As String ProjectName = "Project"
 	Dim NewName As String

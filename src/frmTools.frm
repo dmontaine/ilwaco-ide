@@ -264,7 +264,6 @@ Private Sub frmTools.cmdOK_Click(ByRef Designer As My.Sys.Object, ByRef Sender A
 			If mi->Name = "Tools" Then ToolsIndex = i
 			If mi->OnClick = @mClickTool Then
 				miXizmat->Remove mi
-				'Delete mi
 			End If
 		Next
 		For i As Integer = 0 To .lvTools.ListItems.Count - 1
@@ -396,27 +395,13 @@ End Sub
 Sub ExecuteTool(Param As Any Ptr)
 	Dim As UserToolType Ptr tt = Param
 	If tt = 0 Then Exit Sub
-	'Dim As TabWindow Ptr tb = Cast(TabWindow Ptr, ptabCode->SelectedTab)
-	'If tb = 0 Then 
 		PipeCmd "", tt->GetCommand(), False
-		'Shell tt->GetCommand()
-	'Else
-	'	?tt->GetCommand(tb->FileName)
-	'	Shell tt->GetCommand(tb->FileName)
-	'End If
 End Sub
 
 Sub ExecuteToolInMainThread(Param As Any Ptr)
 	Dim As UserToolType Ptr tt = Param
 	If tt = 0 Then Exit Sub
-	'Dim As TabWindow Ptr tb = Cast(TabWindow Ptr, ptabCode->SelectedTab)
-	'If tb = 0 Then 
 		PipeCmd "", tt->GetCommand()
-		'Shell tt->GetCommand()
-	'Else
-	'	?tt->GetCommand(tb->FileName)
-	'	Shell tt->GetCommand(tb->FileName)
-	'End If
 End Sub
 
 Sub UserToolType.Execute()

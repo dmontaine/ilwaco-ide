@@ -198,25 +198,10 @@ Type ModelInfo
 	Top_P As Single ' 《=1
 	Response_Format As String 'json_object
 End Type
-'Type FileType
-'	FileName As UString
-'	DateChanged As Double
-'	Includes As WStringList
-'	IncludeLines As IntegerList
-'	Namespaces As WStringOrStringList
-'	Types As WStringOrStringList
-'	Enums As WStringOrStringList
-'	Procedures As WStringOrStringList
-'	Args As WStringOrStringList
-'	LineLabels As WStringOrStringList
-'	Lines As List
-'	InProcess As Boolean
-'End Type
 
 Common Shared As List Ptr pTools, pControlLibraries
 Common Shared As WStringOrStringList Ptr pComps, pGlobalNamespaces, pGlobalTypes, pGlobalEnums, pGlobalDefines, pGlobalFunctions, pGlobalTypeProcedures, pGlobalArgs
 Common Shared As WStringList Ptr pAddIns, pIncludeFiles, pLoadPaths, pIncludePaths, pLibraryPaths
-'Common Shared As WStringList Ptr pLocalTypes, pLocalEnums, pLocalProcedures, pLocalFunctions, pLocalFunctionsOthers, pLocalArgs,
 Common Shared As Dictionary Ptr pHelps, pCompilers, pMakeTools, pDebuggers, pTerminals, pOtherEditors, pAIAgents
 
 Enum LoadParam
