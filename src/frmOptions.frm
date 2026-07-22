@@ -3618,7 +3618,6 @@ Private Sub frmOptions.Form_Create(ByRef Designer As My.Sys.Object, ByRef Sender
 		tnCompiler->Nodes.Add(ML("Make Tool"), "MakeTool")
 		tnDebugger->Nodes.Add(ML("Terminal"), "Terminal")
 		Var tnHelp = .tvOptions.Nodes.Add(ML("Help"), "Help")
-		tnHelp->Nodes.Add(ML("AI Agent"), "AIAgent")
 		.tvOptions.ExpandAll
 		.cboCase.Clear
 		.cboCase.AddItem ML("Original Case")
@@ -4530,7 +4529,6 @@ Private Sub frmOptions.TreeView1_SelChange(ByRef Designer As My.Sys.Object, ByRe
 		.pnlBuildConfigurations.Visible = Key = "BuildConfigurations"
 		.pnlIncludes.Visible = Key = "Includes"
 		.pnlHelp.Visible = Key = "Help"
-		.pnlAIAgent.Visible = Key = "AIAgent"
 	End With
 End Sub
 

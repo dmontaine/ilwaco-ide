@@ -105,7 +105,7 @@ Dim Shared As TabControl tabLeft, tabRight, tabBottom ', tabDebug
 Dim Shared As TreeView tvExplorer, tvVar, tvPrc, tvThd, tvWch
 Dim Shared As TextBox txtOutput, txtImmediate
 Dim Shared As TextBox txtChangeLog ' Add Change Log
-Dim Shared As TabPage Ptr tpProject, tpToolbox, tpProperties, tpEvents, tpOutput, tpProblems, tpSuggestions, tpFind, tpToDo, tpChangeLog, tpImmediate, tpLocals, tpGlobals, tpProcedures, tpThreads, tpWatches, tpMemory, tpProfiler, tpAIAgent
+Dim Shared As TabPage Ptr tpProject, tpToolbox, tpProperties, tpEvents, tpOutput, tpProblems, tpSuggestions, tpFind, tpToDo, tpChangeLog, tpImmediate, tpLocals, tpGlobals, tpProcedures, tpThreads, tpWatches, tpMemory, tpProfiler
 Dim Shared As Form frmMain
 Dim Shared As Integer tabItemHeight
 Dim Shared As Integer miRecentMax =20 'David Changed
@@ -6908,10 +6908,6 @@ tpProject = AddToTabControl(ML("Project"), "Project", "tabLeft", 0)
 
 tpToolbox = AddToTabControl(ML("Toolbox"), "Toolbox", "tabLeft", 1) ' ToolBox is better than "Form"
 tpToolbox->Name = "Toolbox"
-tpAIAgent = AddToTabControl(ML("AI Agent"), "AIAgent", "tabLeft", 2) ' ToolBox is better than "Form"
-tpAIAgent->Name = "AIAgent"
-tpAIAgent->Add @tbAIAgent
-tpAIAgent->Add @pnlAIAgent
 
 pnlAIAgent.Align = DockStyle.alClient
 pnlAIAgent.Width = tabLeftWidth
@@ -9776,7 +9772,6 @@ Sub frmMain_Close(ByRef Designer As My.Sys.Object, ByRef Sender As Form, ByRef A
 	iniSettings.WriteInteger("MainWindow", "MainHeight", frmMain.Height)
 	SaveTabPagePlacement("Project", tpProject)
 	SaveTabPagePlacement("ToolBox", tpToolbox)
-	SaveTabPagePlacement("AIAgent", tpAIAgent)
 	SaveTabPagePlacement("Properties", tpProperties)
 	SaveTabPagePlacement("Events", tpEvents)
 	SaveTabPagePlacement("Output", tpOutput)
