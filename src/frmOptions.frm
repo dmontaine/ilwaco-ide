@@ -356,7 +356,7 @@ pfOptions = @fOptions
 			.SetBounds 10, 0, 417, 400
 			.Parent = @pnlShortcuts
 		End With
-		' grbCompilerPaths
+		' grbCompilerPaths (hidden: Ilwaco uses the bundled compiler only)
 		With grbCompilerPaths
 			.Name = "grbCompilerPaths"
 			.Text = ML("Compiler Paths")
@@ -369,6 +369,7 @@ pfOptions = @fOptions
 			.Margins.Bottom = 15
 			.TabIndex = 86
 			.SetBounds 10, 128, 417, 272
+			.Visible = False
 			.Parent = @pnlCompiler
 		End With
 		' lblShortcut
@@ -1613,12 +1614,13 @@ pfOptions = @fOptions
 			.OnItemActivate = @lvCompilerPaths_ItemActivate_
 			.Parent = @grbCompilerPaths
 		End With
-		' lblCompiler32
+		' lblCompiler32 (hidden: no 32-bit compiler on Linux)
 		lblCompiler32.Name = "lblCompiler32"
 		lblCompiler32.Text = ML("Compiler") & " " & ML("32-bit")
 		lblCompiler32.Align = DockStyle.alTop
 		lblCompiler32.TabIndex = 142
 		lblCompiler32.SetBounds 15, 20, 387, 18
+		lblCompiler32.Visible = False
 		lblCompiler32.Parent = @grbDefaultCompilers
 		' cboCompiler32
 		With cboCompiler32
@@ -1627,6 +1629,7 @@ pfOptions = @fOptions
 			.Align = DockStyle.alTop
 			.TabIndex = 143
 			.SetBounds 15, 38, 387, 21
+			.Visible = False
 			.Parent = @grbDefaultCompilers
 		End With
 		' lblCompiler64
@@ -1644,6 +1647,7 @@ pfOptions = @fOptions
 			.Align = DockStyle.alTop
 			.TabIndex = 145
 			.SetBounds 15, 87, 387, 21
+			.Enabled = False
 			.Parent = @grbDefaultCompilers
 		End With
 		' lvDebuggerPaths
