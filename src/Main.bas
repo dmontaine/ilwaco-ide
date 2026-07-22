@@ -2935,10 +2935,22 @@ Sub ClearAllBookmarks
 	Next
 End Sub
 
+Sub SetDebugTabsVisible(bVisible As Boolean)
+	If tpImmediate <> 0 Then tpImmediate->Visible = bVisible
+	If tpLocals <> 0 Then tpLocals->Visible = bVisible
+	If tpGlobals <> 0 Then tpGlobals->Visible = bVisible
+	If tpProcedures <> 0 Then tpProcedures->Visible = bVisible
+	If tpThreads <> 0 Then tpThreads->Visible = bVisible
+	If tpWatches <> 0 Then tpWatches->Visible = bVisible
+	If tpMemory <> 0 Then tpMemory->Visible = bVisible
+	If tpProfiler <> 0 Then tpProfiler->Visible = bVisible
+End Sub
+
 Sub ChangeUseDebugger(bUseDebugger As Boolean, ChangeObject As Integer = -1)
 	UseDebugger = bUseDebugger
 	If ChangeObject <> 0 Then tbtUseDebugger->Checked = bUseDebugger
 	If ChangeObject <> 1 AndAlso mnuUseDebugger->Checked <> UseDebugger Then mnuUseDebugger->Checked = bUseDebugger
+	SetDebugTabsVisible bUseDebugger
 End Sub
 
 Sub ChangeLockControls(bLockControls As Boolean, ChangeObject As Integer = -1)
@@ -10291,6 +10303,7 @@ tpWatches->Add @lvWatches
 tpWatches->Add @tvWch
 tpMemory->Add @lvMemory
 tpProfiler->Add @lvProfiler
+SetDebugTabsVisible False
 ptabBottom->OnClick = @tabBottom_Click
 ptabBottom->OnDblClick = @tabBottom_DblClick
 ptabBottom->OnSelChange = @tabBottom_SelChange
