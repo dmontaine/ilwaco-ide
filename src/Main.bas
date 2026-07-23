@@ -1620,10 +1620,8 @@ Sub AddMRUAIChat(ByRef FileName As WString)
 	MRUAIChat.Add FileName_
 	miRecentAIChat->Clear
 	For i = 0 To MRUAIChat.Count - 1
-		miRecentAIChat->Add(MRUAIChat.Item(i), "", MRUAIChat.Item(i), @mClickAIChat, , i)
 	Next
 	miRecentAIChat->Add("-")
-	miRecentAIChat->Add(ML("Clear Recently Opened"), "", "ClearAIChat", @mClickAIChat)
 	If miRecentAIChat->Enabled = False Then miRecentAIChat->Enabled = True
 End Sub
 
@@ -5811,25 +5809,16 @@ Sub CreateMenusAndToolBars
 	miRecentFiles->Add("-")
 	miRecentFiles->Add(ML("Clear Recently Opened"), "", "ClearFiles", @mClickMRU)
 	
-	mnuAIChat.Add(ML("&Edit"), "Edit", "AIChatEdit", @mClickAIChat, , , True)
 	mnuAIChat.Add("-")
-	mnuAIChat.Add(ML("&Open") & "..." , "Open", "AIChatOpen", @mClickAIChat, , , True)
-	mnuAIChat.Add(ML("&Paste"), "Paste", "AIChatPaste", @mClickAIChat, , , True)
-	mnuAIChat.Add(ML("&Paste") & " Code", "Paste", "AIChatPasteCode", @mClickAIChat, , , True)
 	mnuAIChat.Add("-")
-	mnuAIChat.Add(ML("&Save") , "Save", "AIChatSave", @mClickAIChat, , , True)
-	mnuAIChat.Add(ML("Save &As") & "...", "", "AIChatSaveAs", @mClickAIChat, , , True)
 	mnuAIChat.Add("-")
-	miRecentAIChat = mnuAIChat.Add(ML("Recent Files"), "", "RecentFiles", @mClickAIChat)
 	For i As Integer = 0 To miRecentMax
 		sTmp = iniSettings.ReadString("MRUAIChat", "MRUAIChat_0" & WStr(i), "")
 		If Trim(sTmp) <> "" AndAlso Dir(ExePath & "/AIChat/" & sTmp) <> "" Then
 			MRUAIChat.Add sTmp
-			miRecentAIChat->Add(sTmp, "", sTmp, @mClickAIChat)
 		End If
 	Next
 	miRecentAIChat->Add("-")
-	miRecentAIChat->Add(ML("Clear Recently Opened"), "", "ClearAIChat", @mClickAIChat)
 	
 	miFile->Add("-")
 	miFile->Add(ML("&Command Prompt") & HK("CommandPrompt", "Alt+C"), "Console", "CommandPrompt", @mClick)
@@ -7794,7 +7783,6 @@ Public Sub AIResetContext()
 		AIMessages.SaveToFile(ExePath & "/AIChat/" & FileName)
 		If Not MRUAIChat.Contains(FileName) Then
 			MRUAIChat.Add FileName
-			miRecentAIChat->Add(FileName, "", FileName, @mClickAIChat)
 		End If
 		ShowMessages(ML("The conversation context was saved to") & " " & ExePath & "/AIChat/" & FileName)
 		AIMessages.Clear
@@ -9744,7 +9732,6 @@ Sub frmMain_Close(ByRef Designer As My.Sys.Object, ByRef Sender As Form, ByRef A
 		Dim As WString * MAX_PATH FileName = IIf(RecentAIChat, *RecentAIChat, Mid(FormatFileName(Left(AIMessages.Item(0)->Key, 50)) & Format(Now, "yyyymmdd_hhmm") & ".md", 16))
 		If Not MRUAIChat.Contains(FileName) Then
 			MRUAIChat.Add FileName
-			miRecentAIChat->Add(FileName, "", FileName, @mClickAIChat)
 		End If
 		AIMessages.SaveToFile(ExePath & "/AIChat/" & FileName)
 		AIMessages.Clear
