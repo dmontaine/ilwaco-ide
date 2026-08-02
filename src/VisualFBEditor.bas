@@ -140,16 +140,6 @@ Sub ReplaceInFiles
 	ThreadCounter(ThreadCreate_(@ReplaceSub))
 End Sub
 
-Sub mClickUseDefine(ByRef Designer As My.Sys.Object, Sender As My.Sys.Object)
-	Dim As String MenuName = Sender.ToString
-	Dim As Integer Pos1 = InStr(MenuName, ":")
-	If Pos1 = 0 Then Exit Sub
-	If miUseDefine <> 0 Then miUseDefine->Checked = False
-	If Pos1 = 0 Then Pos1 = Len(MenuName)
-	UseDefine = Mid(MenuName, Pos1 + 1)
-	miUseDefine = Cast(MenuItem Ptr, @Sender)
-	miUseDefine->Checked = True
-End Sub
 Sub mClickAIChat(ByRef Designer As My.Sys.Object, Sender As My.Sys.Object)
 	Dim As WString * MAX_PATH FileName
 	Select Case Sender.ToString
@@ -318,7 +308,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 	Case "SaveProject":                         SaveProject ptvExplorer->SelectedNode
 	Case "SaveProjectAs":                       SaveProject ptvExplorer->SelectedNode, True
 	Case "SaveSession":                         SaveSession
-	Case "CloseFolder":                         CloseFolder GetParentNode(ptvExplorer->SelectedNode)
 	Case "CloseProject":                        CloseProject GetParentNode(ptvExplorer->SelectedNode)
 	Case "New":                                 Dim As TabWindow Ptr tb = AddTab(ExePath & "/Templates/Files/Module.bas", False) : If tb <> 0 Then tb->FileName = ML("Untitled") : tb->Caption = tb->FileName + "*"
 	Case "Open":                                OpenProgram
@@ -417,18 +406,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 	Case "GenerateSignedAPK":                   GenerateSignedBundleAPK("apk")
 	Case "FormatProject":                       ThreadCounter(ThreadCreate_(@FormatProject)) 'FormatProject 0
 	Case "UnformatProject":                     ThreadCounter(ThreadCreate_(@FormatProject, Cast(Any Ptr, 1))) 'FormatProject Cast(Any Ptr, 1)
-	Case "ProjectNumberOn":                     ThreadCounter(ThreadCreate_(@NumberingProject, @Sender))
-	Case "ProjectMacroNumberOn":                ThreadCounter(ThreadCreate_(@NumberingProject, @Sender))
-	Case "ProjectMacroNumberOnStartsOfProcs":ThreadCounter(ThreadCreate_(@NumberingProject, @Sender))
-	Case "ProjectNumberOff":            ThreadCounter(ThreadCreate_(@NumberingProject, @Sender))
-	Case "ProjectPreprocessorNumberOn": ThreadCounter(ThreadCreate_(@NumberingProject, @Sender))
-	Case "ProjectPreprocessorNumberOff": ThreadCounter(ThreadCreate_(@NumberingProject, @Sender))
-	Case "ProjectNumberOn":             ThreadCounter(ThreadCreate_(@NumberingProject, @Sender))
-	Case "ModuleMacroNumberOn":        ThreadCounter(ThreadCreate_(@NumberingModule, @Sender))
-	Case "ModuleMacroNumberOnStartsOfProcs": ThreadCounter(ThreadCreate_(@NumberingModule, @Sender))
-	Case "ModuleNumberOff":            ThreadCounter(ThreadCreate_(@NumberingModule, @Sender))
-	Case "ModulePreprocessorNumberOn": ThreadCounter(ThreadCreate_(@NumberingModule, @Sender))
-	Case "ModulePreprocessorNumberOff": ThreadCounter(ThreadCreate_(@NumberingModule, @Sender))
 	Case "Parameters":                          pfParameters->ShowModal *pfrmMain : pfParameters->CenterToParent
 	Case "GDBCommand":                          GDBCommand
 	Case "LocateProcedure":                     proc_loc
@@ -929,9 +906,41 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 	Case "FindInFiles":                     mFormFindInFile = True:  pfFindFile->Show *pfrmMain : pfFindFile->CenterToParent
 	Case "ReplaceInFiles":                  mFormFindInFile = False:  pfFindFile->Show *pfrmMain : pfFindFile->CenterToParent
 	Case "Replace":                         pfFind->mFormFind = False: pfFind->Show *pfrmMain
-	Case "PinLeft":                         SetLeftClosedStyle Not tbLeft.Buttons.Item("PinLeft")->Checked, False
-	Case "PinRight":                        SetRightClosedStyle Not tbRight.Buttons.Item("PinRight")->Checked, False
-	Case "PinBottom":                       SetBottomClosedStyle Not tbBottom.Buttons.Item("PinBottom")->Checked, False
+	Case "PinLeft":
+		Dim pinLeftBtn As ToolButton Ptr = tbLeft.Buttons.Item("PinLeft")
+		If pinLeftBtn = 0 Then Exit Select
+		' Checked toggles before OnClick. When expanded, one click collapses to the tab strip
+		' instead of only restyling the tabs and relying on a later focus change to reclaim the space.
+		If splLeft.Visible Then
+			If pinLeftBtn->Checked Then pinLeftBtn->Checked = False
+			SetLeftClosedStyle True, True
+		ElseIf pinLeftBtn->Checked Then
+			SetLeftClosedStyle False, False
+		Else
+			SetLeftClosedStyle True, False
+		End If
+	Case "PinRight":
+		Dim pinRightBtn As ToolButton Ptr = tbRight.Buttons.Item("PinRight")
+		If pinRightBtn = 0 Then Exit Select
+		If splRight.Visible Then
+			If pinRightBtn->Checked Then pinRightBtn->Checked = False
+			SetRightClosedStyle True, True
+		ElseIf pinRightBtn->Checked Then
+			SetRightClosedStyle False, False
+		Else
+			SetRightClosedStyle True, False
+		End If
+	Case "PinBottom":
+		Dim pinBottomBtn As ToolButton Ptr = tbBottom.Buttons.Item("PinBottom")
+		If pinBottomBtn = 0 Then Exit Select
+		If splBottom.Visible Then
+			If pinBottomBtn->Checked Then pinBottomBtn->Checked = False
+			SetBottomClosedStyle True, True
+		ElseIf pinBottomBtn->Checked Then
+			SetBottomClosedStyle False, False
+		Else
+			SetBottomClosedStyle True, False
+		End If
 	Case "EraseOutputWindow":               txtOutput.Text = ""
 	Case "EraseImmediateWindow":            txtImmediate.Text = ""
 	Case "Update":
@@ -982,9 +991,9 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 		Case "ShowExpandVariable":          shwexp_new(tviewvar)
 		#endif
 	Case "Undo", "Redo", "CutCurrentLine", "Cut", "Copy", "Paste", "SelectAll", "Duplicate", "SingleComment", "BlockComment", "UnComment", _
-		"Indent", "Outdent", "Format", "Unformat", "AddSpaces", "NumberOn", "MacroNumberOn", "NumberOff", "ProcedureNumberOn", "ProcedureMacroNumberOn", "ProcedureNumberOff", _
-		"PreprocessorNumberOn", "PreprocessorNumberOff", "Breakpoint", "ToggleBookmark", "CollapseAll", "UnCollapseAll", "CollapseAllProcedures", "UnCollapseAllProcedures", _
-		"CollapseCurrent", "UnCollapseCurrent", "CompleteWord", "ParameterInfo", "OnErrorGoto", "OnErrorGotoResumeNext", "OnLocalErrorGoto", "OnLocalErrorGotoResumeNext", "RemoveErrorHandling", "Define", _
+		"Indent", "Outdent", "Format", "Unformat", "AddSpaces", _
+		"Breakpoint", "ToggleBookmark", "CollapseAll", "UnCollapseAll", "CollapseAllProcedures", "UnCollapseAllProcedures", _
+		"CollapseCurrent", "UnCollapseCurrent", "CompleteWord", "ParameterInfo", "Define", _
 		"AlignLefts", "AlignCenters", "AlignRights", "AlignTops", "AlignMiddles", "AlignBottoms", "AlignToGrid", "MakeSameSizeWidth", "MakeSameSizeHeight", "MakeSameSizeBoth", "SizeToGrid", _
 		"HorizontalSpacingMakeEqual", "HorizontalSpacingIncrease", "HorizontalSpacingDecrease", "HorizontalSpacingRemove", "VerticalSpacingMakeEqual", "VerticalSpacingIncrease", "VerticalSpacingDecrease", _
 		"VerticalSpacingRemove", "CenterInParentHorizontally", "CenterInParentVertically", "SendToBack", "BringToFront", "LockControls", "TBLockControls"
@@ -1150,20 +1159,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 				Case "ParameterInfo":               ParameterInfo 0
 				Case "ToggleBookmark":              ec->Bookmark
 				Case "Define":                      tb->Define
-				Case "NumberOn":        	        tb->NumberOn
-				Case "MacroNumberOn":        	    tb->NumberOn , , True
-				Case "NumberOff":                   tb->NumberOff
-				Case "ProcedureNumberOn":           tb->ProcedureNumberOn
-				Case "ProcedureMacroNumberOn":      tb->ProcedureNumberOn True
-				Case "ProcedureNumberOff":          tb->ProcedureNumberOff
-				Case "PreprocessorNumberOn":        tb->PreprocessorNumberOn
-				Case "PreprocessorNumberOff":       tb->PreprocessorNumberOff
-					'Case "OnErrorResumeNext":       tb->SetErrorHandling "On Error Resume Next", ""
-				Case "OnErrorGoto":                 tb->SetErrorHandling "On Error Goto ErrorHandler", ""
-				Case "OnErrorGotoResumeNext":       tb->SetErrorHandling "On Error Goto ErrorHandler", "Resume Next"
-				Case "OnLocalErrorGoto":            tb->SetErrorHandling "On Local Error Goto ErrorHandler", ""
-				Case "OnLocalErrorGotoResumeNext":  tb->SetErrorHandling "On Local Error Goto ErrorHandler", "Resume Next"
-				Case "RemoveErrorHandling":         tb->RemoveErrorHandling
 				End Select
 			End If
 		End If

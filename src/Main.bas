@@ -101,10 +101,9 @@ Dim Shared As TrackBar trLeft
 Dim Shared As MainMenu mnuMain
 Dim Shared As MenuItem Ptr mnuStartWithCompile, mnuStart, mnuBreak, mnuEnd, mnuRestart, mnuStandardToolBar, mnuEditToolBar, mnuProjectToolBar, mnuFormatToolBar, mnuBuildToolBar, mnuDebugToolBar, mnuRunToolBar, mnuSplit, mnuSplitHorizontally, mnuSplitVertically, mnuWindowSeparator, miRecentProjects, miRecentFiles, miRecentFolders, miRecentSessions, miSetAsMain, miClearStartUp, miTabSetAsMain, miTabReloadHistoryCode, miRemoveFiles, miToolBars
 Dim Shared As MenuItem Ptr miRecentAIChat,  miFileAIChat
-Dim Shared As MenuItem Ptr miSaveProject, miSaveProjectAs, miCloseProject, miCloseFolder, miSave, miSaveAs, miSaveAll, miClose, miCloseAll, miCloseSession, miPrint, miPrintPreview, miPageSetup, miOpenProjectFolder, miProjectProperties, miExplorerOpenProjectFolder, miExplorerRename, miExplorerProjectProperties, miExplorerCloseProject, miRename, miRemoveFileFromProject
+Dim Shared As MenuItem Ptr miSaveProject, miSaveProjectAs, miCloseProject, miSave, miSaveAs, miSaveAll, miClose, miCloseAll, miCloseSession, miPrint, miPrintPreview, miPageSetup, miOpenProjectFolder, miProjectProperties, miExplorerOpenProjectFolder, miExplorerRename, miExplorerProjectProperties, miExplorerCloseProject, miRename, miRemoveFileFromProject
 Dim Shared As MenuItem Ptr miUndo, miRedo, miCutCurrentLine, miCut, miCopy, miPaste, miSingleComment, miBlockComment, miUncommentBlock, miDuplicate, miSelectAll, miIndent, miOutdent, miFormat, miUnformat, miFormatProject, miUnformatProject, miAddSpaces, miDeleteBlankLines, miSuggestions, miCompleteWord, miParameterInfo, miStepInto, miStepOver, miStepOut, miRunToCursor, miGDBCommand, miAddWatch, miToggleBreakpoint, miClearAllBreakpoints, miSetNextStatement, miShowNextStatement
-Dim Shared As MenuItem Ptr miNumbering, miMacroNumbering, miRemoveNumbering, miProcedureNumbering, miProcedureMacroNumbering, miRemoveProcedureNumbering, miProjectMacroNumbering, miProjectMacroNumberingStartsOfProcedures, miRemoveProjectNumbering, miModuleMacroNumbering, miModuleMacroNumberingStartsOfProcedures, miRemoveModuleNumbering, miPreprocessorNumbering, miRemovePreprocessorNumbering, miProjectPreprocessorNumbering, miRemoveProjectPreprocessorNumbering, miModulePreprocessorNumbering, miRemoveModulePreprocessorNumbering, miOnErrorResumeNext, miOnErrorGoto, miOnErrorGotoResumeNext, miOnLocalErrorGoto, miOnLocalErrorGotoResumeNext, miRemoveErrorHandling
-Dim Shared As MenuItem Ptr dmiNumbering, dmiMacroNumbering, dmiRemoveNumbering, dmiProcedureNumbering, dmiProcedureMacroNumbering, dmiRemoveProcedureNumbering, dmiModuleMacroNumbering, dmiModuleMacroNumberingStartsOfProcedures, dmiRemoveModuleNumbering, dmiPreprocessorNumbering, dmiRemovePreprocessorNumbering, dmiModulePreprocessorNumbering, dmiRemoveModulePreprocessorNumbering, dmiOnErrorResumeNext, dmiOnErrorGoto, dmiOnErrorGotoResumeNext, dmiOnLocalErrorGoto, dmiOnLocalErrorGotoResumeNext, dmiRemoveErrorHandling, dmiMake, dmiMakeClean
+Dim Shared As MenuItem Ptr dmiMake, dmiMakeClean
 Dim Shared As MenuItem Ptr miCode, miForm, miCodeAndForm, miGotoCodeForm, miCollapseCurrent, miCollapseAllProcedures, miCollapseAll, miUnCollapseCurrent, miUnCollapseAllProcedures, miUnCollapseAll, miImageManager, miAddProcedure, miAddType, miFind, miReplace, miFindNext, miFindPrevious, miGoto, miDefine, miToggleBookmark, miNextBookmark, miPreviousBookmark, miClearAllBookmarks, miSyntaxCheck, miCompile, miCompileAll, miBuildBundle, miBuildAPK, miGenerateSignedBundle, miGenerateSignedAPK, miMake, miMakeClean
 Dim Shared As MenuItem Ptr miAlignLefts, miAlignCenters, miAlignRights, miAlignTops, miAlignMiddles, miAlignBottoms, miAlignToGrid, miMakeSameSizeWidth, miMakeSameSizeHeight, miMakeSameSizeBoth, miSizeToGrid, miHorizontalSpacingMakeEqual, miHorizontalSpacingIncrease, miHorizontalSpacingDecrease, miHorizontalSpacingRemove, miVerticalSpacingMakeEqual, miVerticalSpacingIncrease, miVerticalSpacingDecrease, miVerticalSpacingRemove, miCenterInParentHorizontally, miCenterInParentVertically, miOrderBringToFront, miOrderSendToBack, miLockControls
 Dim Shared As MenuItem Ptr miShowWithFolders, miShowWithoutFolders, miShowAsFolder
@@ -1611,31 +1610,6 @@ Sub ExpandFolder(ByRef tn As TreeNode Ptr)
 	Next i
 End Sub
 
-Sub CloseFolder(ByRef tn As TreeNode Ptr)
-	Dim As TabWindow Ptr tb
-	For jj As Integer = 0 To TabPanels.Count - 1
-		Var ptabCode = @Cast(TabPanel Ptr, TabPanels.Item(jj))->tabCode
-		For i As Integer = 0 To ptabCode->TabCount - 1
-			tb = Cast(TabWindow Ptr, ptabCode->Tab(i))
-			If tb->ptn = tn Then
-				If Not CloseTab(tb, True) Then Return
-				Exit For
-			End If
-		Next i
-	Next jj
-	ClearTreeNode tn
-	'miSaveProject->Enabled = False
-	'miSaveProjectAs->Enabled = False
-	'miCloseProject->Enabled = False
-	'miCloseFolder->Enabled = False
-	'miExplorerCloseProject->Enabled = False
-	'miProjectProperties->Enabled = False
-	'miExplorerProjectProperties->Enabled = False
-	Var Index = tvExplorer.Nodes.IndexOf(tn)
-	If Index <> -1 Then tvExplorer.Nodes.Remove Index
-	ChangeMenuItemsEnabled
-	'Delete tn
-End Sub
 
 Function AddFolder(ByRef FolderName As WString) As TreeNode Ptr
 	Dim As TreeNode Ptr tn
@@ -3282,7 +3256,6 @@ Function CloseProject(tn As TreeNode Ptr, WithoutMessage As Boolean = False) As 
 	'miSaveProject->Enabled = False
 	'miSaveProjectAs->Enabled = False
 	'miCloseProject->Enabled = False
-	'miCloseFolder->Enabled = False
 	'miExplorerCloseProject->Enabled = False
 	'miProjectProperties->Enabled = False
 	'miExplorerProjectProperties->Enabled = False
@@ -7421,7 +7394,6 @@ Sub CreateMenusAndToolBars
 	miFile->Add(ML("Save Session") & HK("SaveFolder", "Ctrl+Alt+S"), "", "SaveSession", @mClick)
 	miFile->Add("-")
 	miFile->Add(ML("Open Folder") & HK("OpenFolder", "Alt+O"), "", "OpenFolder", @mClick)
-	miCloseFolder = miFile->Add(ML("Close Folder") & HK("CloseFolder", "Alt+F4"), "", "CloseFolder", @mClick, , , False)
 	miFile->Add("-")
 	miSave = miFile->Add(ML("&Save") & "..." & HK("Save", "Ctrl+S"), "Save", "Save", @mClick, , , False)
 	miSaveAs = miFile->Add(ML("Save &As") & "..." & HK("SaveAs"), "", "SaveAs", @mClick, , , False)
@@ -7555,39 +7527,6 @@ Sub CreateMenusAndToolBars
 	miSuggestions = miEdit->Add(ML("Suggestions") & HK("Suggestions"), "Suggestions", "Suggestions", @mClick, , , False)
 	miCompleteWord = miEdit->Add(ML("Complete Word") & HK("CompleteWord", "Ctrl+Space"), "CompleteWord", "CompleteWord", @mClick, , , False)
 	miParameterInfo = miEdit->Add(ML("Parameter Info") & HK("ParameterInfo", "Ctrl+J"), "ParameterInfo", "ParameterInfo", @mClick, , , False)
-	miEdit->Add("-")
-	Var miTry = miEdit->Add(ML("Error Handling"), "", "Try")
-	miNumbering = miTry->Add(ML("Numbering") & HK("NumberOn"), "Numbering", "NumberOn", @mClick, , , False)
-	miMacroNumbering = miTry->Add(ML("Macro numbering") & HK("MacroNumberOn"), "", "MacroNumberOn", @mClick, , , False)
-	miRemoveNumbering = miTry->Add(ML("Remove Numbering") & HK("NumberOff"), "", "NumberOff", @mClick, , , False)
-	miTry->Add("-")
-	miPreprocessorNumbering = miTry->Add(ML("Preprocessor numbering") & HK("PreprocessorNumberOn"), "Numbering", "PreprocessorNumberOn", @mClick, , , False)
-	miRemovePreprocessorNumbering = miTry->Add(ML("Remove Preprocessor numbering") & HK("PreprocessorNumberOff"), "", "PreprocessorNumberOff", @mClick, , , False)
-	miTry->Add("-")
-	miProcedureNumbering = miTry->Add(ML("Procedure numbering") & HK("ProcedureNumberOn"), "Numbering", "ProcedureNumberOn", @mClick, , , False)
-	miProcedureMacroNumbering = miTry->Add(ML("Procedure macro numbering") & HK("ProcedureMacroNumberOn"), "", "ProcedureMacroNumberOn", @mClick, , , False)
-	miRemoveProcedureNumbering = miTry->Add(ML("Remove Procedure numbering") & HK("ProcedureNumberOff"), "", "ProcedureNumberOff", @mClick, , , False)
-	miTry->Add("-")
-	miModuleMacroNumbering = miTry->Add(ML("Module macro numbering") & HK("ModuleMacroNumberOn"), "Numbering", "ModuleMacroNumberOn", @mClick, , , False)
-	miModuleMacroNumberingStartsOfProcedures = miTry->Add(ML("Module macro numbering: Starts of procedures") & HK("ModuleMacroNumberOnStartsOfProcs"), "", "ModuleMacroNumberOnStartsOfProcs", @mClick, , , False)
-	miRemoveModuleNumbering = miTry->Add(ML("Remove Module numbering") & HK("ModuleNumberOff"), "", "ModuleNumberOff", @mClick, , , False)
-	miTry->Add("-")
-	miModulePreprocessorNumbering = miTry->Add(ML("Module preprocessor numbering") & HK("ModulePreprocessorNumberOn"), "Numbering", "ModulePreprocessorNumberOn", @mClick, , , False)
-	miRemoveModulePreprocessorNumbering = miTry->Add(ML("Remove Module preprocessor numbering") & HK("ModulePreprocessorNumberOff"), "", "ModulePreprocessorNumberOff", @mClick, , , False)
-	miTry->Add("-")
-	miProjectMacroNumbering = miTry->Add(ML("Project macro numbering") & HK("ProjectMacroNumberOn"), "Numbering", "ProjectMacroNumberOn", @mClick, , , False)
-	miProjectMacroNumberingStartsOfProcedures = miTry->Add(ML("Project macro numbering: Starts of procedures") & HK("ProjectMacroNumberOnStartsOfProcs"), "", "ProjectMacroNumberOnStartsOfProcs", @mClick, , , False)
-	miRemoveProjectNumbering = miTry->Add(ML("Remove Project numbering") & HK("ProjectNumberOff"), "", "ProjectNumberOff", @mClick, , , False)
-	miTry->Add("-")
-	miProjectPreprocessorNumbering = miTry->Add(ML("Project preprocessor numbering") & HK("ProjectPreprocessorNumberOn"), "Numbering", "ProjectPreprocessorNumberOn", @mClick, , , False)
-	miRemoveProjectPreprocessorNumbering = miTry->Add(ML("Remove Project preprocessor numbering") & HK("ProjectPreprocessorNumberOff"), "", "ProjectPreprocessorNumberOff", @mClick, , , False)
-	miTry->Add("-")
-	'miOnErrorResumeNext = miTry->Add("On Error Resume Next" & HK("OnErrorResumeNext"), "", "OnErrorResumeNext", @mClick, , , False)
-	miOnErrorGoto = miTry->Add("On Error Goto ..." & HK("OnErrorGoto"), "", "OnErrorGoto", @mClick, , , False)
-	miOnErrorGotoResumeNext = miTry->Add("On Error Goto ... Resume Next" & HK("OnErrorGotoResumeNext"), "", "OnErrorGotoResumeNext", @mClick, , , False)
-	miOnLocalErrorGoto = miTry->Add("On Local Error Goto ..." & HK("OnLocalErrorGoto"), "", "OnLocalErrorGoto", @mClick, , , False)
-	miOnLocalErrorGotoResumeNext = miTry->Add("On Local Error Goto ... Resume Next" & HK("OnLocalErrorGotoResumeNext"), "", "OnLocalErrorGotoResumeNext", @mClick, , , False)
-	miRemoveErrorHandling = miTry->Add(ML("Remove Error Handling") & HK("RemoveErrorHandling"), "", "RemoveErrorHandling", @mClick, , , False)
 	
 	Var miSearch = mnuMain.Add(ML("&Search"), "", "Search")
 	miFind = miSearch->Add(ML("&Find") & "..." & HK("Find", "Ctrl+F"), "Find", "Find", @mClick, , , False)
@@ -7756,13 +7695,13 @@ Sub CreateMenusAndToolBars
 	mnuEnd = miRun->Add(ML("&End") & HK("End"), "EndProgram", "End", @mClick, , , False)
 	mnuRestart = miRun->Add(ML("&Restart") & HK("Restart", "Shift+F5"), "", "Restart", @mClick, , , False)
 	
-	miXizmat = mnuMain.Add(ML("Servi&ce"), "", "Service")
+	miXizmat = mnuMain.Add(ML("&Tools"), "", "Service")
 	miAddProcedure = miXizmat->Add(ML("Add &Procedure") & "..." & HK("AddProcedure"), "", "AddProcedure", @mClick, , , False)
 	miAddType = miXizmat->Add(ML("Add &Type") & "..." & HK("AddType"), "", "AddType", @mClick, , , False)
 	miXizmat->Add("-")
 	miXizmat->Add(ML("&Add-Ins") & "..." & HK("AddIns"), "", "AddIns", @mClick)
 	miXizmat->Add("-")
-	miXizmat->Add(ML("&Tools") & "..." & HK("Tools"), "", "Tools", @mClick)
+	miXizmat->Add(ML("&External Tools") & "..." & HK("Tools"), "", "Tools", @mClick)
 	miXizmat->Add("-")
 	Dim As My.Sys.Drawing.BitmapType Bitm
 	Dim As WString * 1024 Buff
@@ -7968,32 +7907,6 @@ Sub CreateMenusAndToolBars
 	tbEdit.Buttons.Add tbsSeparator
 	tbtSyntaxCheck = tbEdit.Buttons.Add(, "SyntaxCheck", , @mClick, "SyntaxCheck", , ML("Syntax Check"), True, ToolButtonState.tstNone)
 	tbtSuggestions = tbEdit.Buttons.Add(, "Suggestions", , @mClick, "Suggestions", , ML("Suggestions"), True, ToolButtonState.tstNone)
-	Var tbButton = tbEdit.Buttons.Add(tbsWholeDropdown, "List", , @mClick, "Try", ML("Error Handling"), ML("Error Handling"), True)
-	'tbButton->DropDownMenu.ImagesList = @imgList
-	dmiNumbering = tbButton->DropDownMenu.Add(ML("Numbering"), "Numbering", "NumberOn", @mClick, , , False)
-	dmiMacroNumbering = tbButton->DropDownMenu.Add(ML("Macro numbering"), "", "MacroNumberOn", @mClick, , , False)
-	dmiRemoveNumbering = tbButton->DropDownMenu.Add(ML("Remove Numbering"), "", "NumberOff", @mClick, , , False)
-	tbButton->DropDownMenu.Add "-"
-	dmiPreprocessorNumbering = tbButton->DropDownMenu.Add(ML("Preprocessor Numbering"), "Numbering", "PreprocessorNumberOn", @mClick, , , False)
-	dmiRemovePreprocessorNumbering = tbButton->DropDownMenu.Add(ML("Remove Preprocessor Numbering"), "", "PreprocessorNumberOff", @mClick, , , False)
-	tbButton->DropDownMenu.Add "-"
-	dmiProcedureNumbering = tbButton->DropDownMenu.Add(ML("Procedure numbering"), "Numbering", "ProcedureNumberOn", @mClick, , , False)
-	dmiProcedureMacroNumbering = tbButton->DropDownMenu.Add(ML("Procedure macro numbering"), "", "ProcedureMacroNumberOn", @mClick, , , False)
-	dmiRemoveProcedureNumbering = tbButton->DropDownMenu.Add(ML("Remove Procedure numbering"), "", "ProcedureNumberOff", @mClick, , , False)
-	tbButton->DropDownMenu.Add "-"
-	dmiModuleMacroNumbering = tbButton->DropDownMenu.Add(ML("Module macro numbering"), "Numbering", "ModuleMacroNumberOn", @mClick, , , False)
-	dmiModuleMacroNumberingStartsOfProcedures = tbButton->DropDownMenu.Add(ML("Module macro numbering: Starts of procedures"), "", "ModuleMacroNumberOnStartsOfProcs", @mClick, , , False)
-	dmiRemoveModuleNumbering = tbButton->DropDownMenu.Add(ML("Remove Module numbering"), "", "ModuleNumberOff", @mClick, , , False)
-	tbButton->DropDownMenu.Add "-"
-	dmiModulePreprocessorNumbering = tbButton->DropDownMenu.Add(ML("Module preprocessor numbering"), "Numbering", "ModulePreprocessorNumberOn", @mClick, , , False)
-	dmiRemoveModulePreprocessorNumbering = tbButton->DropDownMenu.Add(ML("Remove Module preprocessor numbering"), "", "ModulePreprocessorNumberOff", @mClick, , , False)
-	tbButton->DropDownMenu.Add "-"
-	'dmiOnErrorResumeNext = tbButton->DropDownMenu.Add("On Error Resume Next", "", "OnErrorResumeNext", @mClick, , , False)
-	dmiOnErrorGoto = tbButton->DropDownMenu.Add("On Error Goto ...", "", "OnErrorGoto", @mClick, , , False)
-	dmiOnErrorGotoResumeNext = tbButton->DropDownMenu.Add("On Error Goto ... Resume Next", "", "OnErrorGotoResumeNext", @mClick, , , False)
-	dmiOnLocalErrorGoto = tbButton->DropDownMenu.Add("On Local Error Goto ...", "", "OnLocalErrorGoto", @mClick, , , False)
-	dmiOnLocalErrorGotoResumeNext = tbButton->DropDownMenu.Add("On Local Error Goto ... Resume Next", "", "OnLocalErrorGotoResumeNext", @mClick, , , False)
-	dmiRemoveErrorHandling = tbButton->DropDownMenu.Add(ML("Remove Error Handling"), "", "RemoveErrorHandling", @mClick, , , False)
 	'tbStandard.Buttons.Add tbsSeparator
 	tbBuild.Name = "Build"
 	tbBuild.ImagesList = @imgList
@@ -8072,38 +7985,8 @@ Sub CreateMenusAndToolBars
 		tbt32Bit->Checked = True
 	#endif
 	tbProject.Buttons.Add tbsSeparator
-	tbButton = tbProject.Buttons.Add(Cast(ToolButtonStyle, tbsWholeDropdown Or tbsAutosize), "Apply", , @mClick, "Use", ML("Use"), ML("Use"), True)
-	Var mnuDefault = tbButton->DropDownMenu.Add(ML("Default"), "", "Default:", @mClickUseDefine, True)
-	tbButton->DropDownMenu.Add "-"
-	Var mnuWinAPI = tbButton->DropDownMenu.Add("WinAPI", "", "WinAPI", @mClickUseDefine)
-	Var mnuDefaultWinAPI = mnuWinAPI->Add(ML("Default"), "", "DefaultWinAPI:__USE_WINAPI__", @mClickUseDefine, True)
-	mnuWinAPI->Add "-"
-	mnuWinAPI->Add "Windows NT 4.0", "", "WindowsNT4:__USE_WINAPI__ -d _WIN32_WINNT=&h0400", @mClickUseDefine, True
-	mnuWinAPI->Add "Windows 2000", "", "Windows2000:__USE_WINAPI__ -d _WIN32_WINNT=&h0500", @mClickUseDefine, True
-	mnuWinAPI->Add "Windows XP", "", "WindowsXP:__USE_WINAPI__ -d _WIN32_WINNT=&h0501", @mClickUseDefine, True
-	mnuWinAPI->Add "Windows Server 2003", "", "WindowsServer2003:__USE_WINAPI__ -d _WIN32_WINNT=&h0502", @mClickUseDefine, True
-	mnuWinAPI->Add "Windows Vista", "", "WindowsVista:__USE_WINAPI__ -d _WIN32_WINNT=&h0600", @mClickUseDefine, True
-	mnuWinAPI->Add "Windows Server 2008", "", "WindowsServer2008:__USE_WINAPI__ -d _WIN32_WINNT=&h0600", @mClickUseDefine, True
-	mnuWinAPI->Add "Windows 7", "", "Windows7:__USE_WINAPI__ -d _WIN32_WINNT=&h0601", @mClickUseDefine, True
-	mnuWinAPI->Add "Windows 8", "", "Windows8:__USE_WINAPI__ -d _WIN32_WINNT=&h0602", @mClickUseDefine, True
-	mnuWinAPI->Add "Windows 8.1", "", "Windows8_1:__USE_WINAPI__ -d _WIN32_WINNT=&h0603", @mClickUseDefine, True
-	mnuWinAPI->Add "Windows 10", "", "Windows10:__USE_WINAPI__ -d _WIN32_WINNT=&h0A00", @mClickUseDefine, True
-	Var mnuGTK = tbButton->DropDownMenu.Add("GTK", "", "GTK", @mClickUseDefine)
-	mnuGTK->Add ML("Default"), "", "Default:__USE_GTK__", @mClickUseDefine, True
-	mnuGTK->Add "-"
-	mnuGTK->Add "GTK2", "", "GTK2:__USE_GTK__ -d __USE_GTK2__", @mClickUseDefine, True
-	mnuGTK->Add "GTK3", "", "GTK3:__USE_GTK__ -d __USE_GTK3__", @mClickUseDefine, True
-	mnuGTK->Add "GTK4", "", "GTK4:__USE_GTK__ -d __USE_GTK4__", @mClickUseDefine, True
-	Var mnuJNI = tbButton->DropDownMenu.Add("JNI", "", "JNI", @mClickUseDefine)
-	mnuJNI->Add ML("Default"), "", "Default:__USE_JNI__", @mClickUseDefine, True
-	mnuJNI->Add "-"
-	mnuJNI->Add "Android GUI", "", "AndroidGUI:__USE_JNI__ -d __USE_ANDROIDGUI__", @mClickUseDefine, True
-	mnuJNI->Add "Native GUI", "", "NativeGUI:__USE_JNI__ -d __USE_NATIVEGUI__", @mClickUseDefine, True
-	Var mnuWASM = tbButton->DropDownMenu.Add("WASM", "", "WASM:__USE_WASM__ -target js-asmjs -r", @mClickUseDefine)
-	mnuDefault->Checked = True
-	miUseDefine = mnuDefault
 	tbProject.Buttons.Add tbsSeparator
-	tbButton = tbProject.Buttons.Add(tbsCustom)
+	Var tbButton = tbProject.Buttons.Add(tbsCustom)
 	tbButton->Width = 170
 	tbButton->Child = @cboBuildConfiguration
 	tbFormat.Name = "Format"
@@ -8536,7 +8419,6 @@ Sub tvExplorer_SelChange(ByRef Designer As My.Sys.Object, ByRef Sender As TreeVi
 			'miSaveProject->Enabled = False
 			'miSaveProjectAs->Enabled = False
 			'miCloseProject->Enabled = False
-			'miCloseFolder->Enabled = False
 			'miExplorerCloseProject->Enabled = False
 			'miProjectProperties->Enabled = False
 			'miExplorerProjectProperties->Enabled = False
@@ -8546,7 +8428,6 @@ Sub tvExplorer_SelChange(ByRef Designer As My.Sys.Object, ByRef Sender As TreeVi
 			'miSaveProject->Enabled = True
 			'miSaveProjectAs->Enabled = True
 			'miCloseProject->Enabled = True
-			'miCloseFolder->Enabled = True
 			'miExplorerCloseProject->Enabled = True
 			'miProjectProperties->Enabled = True
 			'miExplorerProjectProperties->Enabled = True
@@ -11567,34 +11448,6 @@ Sub frmMain_ActiveControlChanged(ByRef Designer As My.Sys.Object, ByRef sender A
 	tbtCompleteWord->Enabled = bEnabledEditControl
 	miParameterInfo->Enabled = bEnabledEditControl
 	tbtParameterInfo->Enabled = bEnabledEditControl
-	miNumbering->Enabled = bEnabledEditControl
-	dmiNumbering->Enabled = bEnabledEditControl
-	miMacroNumbering->Enabled = bEnabledEditControl
-	dmiMacroNumbering->Enabled = bEnabledEditControl
-	miRemoveNumbering->Enabled = bEnabledEditControl
-	dmiRemoveNumbering->Enabled = bEnabledEditControl
-	miProcedureNumbering->Enabled = bEnabledEditControl
-	dmiProcedureNumbering->Enabled = bEnabledEditControl
-	miProcedureMacroNumbering->Enabled = bEnabledEditControl
-	dmiProcedureMacroNumbering->Enabled = bEnabledEditControl
-	miRemoveProcedureNumbering->Enabled = bEnabledEditControl
-	dmiRemoveProcedureNumbering->Enabled = bEnabledEditControl
-	miPreprocessorNumbering->Enabled = bEnabledEditControl
-	dmiPreprocessorNumbering->Enabled = bEnabledEditControl
-	miRemovePreprocessorNumbering->Enabled = bEnabledEditControl
-	dmiRemovePreprocessorNumbering->Enabled = bEnabledEditControl
-	'miOnErrorResumeNext->Enabled = bEnabledEditControl
-	'dmiOnErrorResumeNext->Enabled = bEnabledEditControl
-	miOnErrorGoto->Enabled = bEnabledEditControl
-	dmiOnErrorGoto->Enabled = bEnabledEditControl
-	miOnErrorGotoResumeNext->Enabled = bEnabledEditControl
-	dmiOnErrorGotoResumeNext->Enabled = bEnabledEditControl
-	miOnLocalErrorGoto->Enabled = bEnabledEditControl
-	dmiOnLocalErrorGoto->Enabled = bEnabledEditControl
-	miOnLocalErrorGotoResumeNext->Enabled = bEnabledEditControl
-	dmiOnLocalErrorGotoResumeNext->Enabled = bEnabledEditControl
-	miRemoveErrorHandling->Enabled = bEnabledEditControl
-	dmiRemoveErrorHandling->Enabled = bEnabledEditControl
 	miCollapseCurrent->Enabled = bEnabledEditControl
 	miCollapseAllProcedures->Enabled = bEnabledEditControl
 	miCollapseAll->Enabled = bEnabledEditControl

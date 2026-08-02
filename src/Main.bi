@@ -126,7 +126,6 @@ Declare Sub mClickMRU(ByRef Designer As My.Sys.Object, Sender As My.Sys.Object)
 Declare Sub mClickHelp(ByRef Designer As My.Sys.Object, Sender As My.Sys.Object)
 Declare Sub mClickTool(ByRef Designer As My.Sys.Object, Sender As My.Sys.Object)
 Declare Sub mClickWindow(ByRef Designer As My.Sys.Object, Sender As My.Sys.Object)
-Declare Sub mClickUseDefine(ByRef Designer As My.Sys.Object, Sender As My.Sys.Object)
 Declare Sub LoadSettings
 Declare Sub LoadLanguageTexts
 
@@ -146,7 +145,7 @@ Common Shared As TabControl Ptr ptabCode, ptabLeft, ptabBottom, ptabRight
 Common Shared As TreeView Ptr ptvExplorer
 Common Shared As IniFile Ptr piniSettings, piniTheme
 Common Shared As MenuItem Ptr mnuUseDebugger, mnuUseProfiler, miHelps, miXizmat, miWindow
-Common Shared As MenuItem Ptr miPlainText, miUtf8, miUtf8BOM, miUtf16BOM, miUtf32BOM, miWindowsCRLF, miLinuxLF, miMacOSCR, miUseDefine
+Common Shared As MenuItem Ptr miPlainText, miUtf8, miUtf8BOM, miUtf16BOM, miUtf32BOM, miWindowsCRLF, miLinuxLF, miMacOSCR
 Common Shared As HTTPConnection Ptr pHTTPAIAgent
 Common Shared As FileEncodings DefaultFileFormat
 Common Shared As NewLineTypes DefaultNewLineFormat
