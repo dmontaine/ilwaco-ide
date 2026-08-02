@@ -57,9 +57,12 @@ missed twice and caught by the compiler in `TabWindow.bas`. Watch **shared `Var`
 and it never reported a final status — I ran the confirming build. Next time instruct the worker to run
 the build as a **surviving background job** and report the log.
 
-**Build/run env:** in-repo bundled `fbc` (`Compilers/FreeBASIC-1.10.1-linux-x86_64/bin/fbc`) + a
+**Build/run env:** in-repo bundled `fbc` (`Compilers/FreeBASIC-1.10.1-linux-x86_64/bin/fbc`, tracked)
+and the GTK-capable MFF source (`Controls/MyFbFramework/`, now vendored as real files — the old
+submodule gitlink was dropped, commit `60015e4`), so the repo is self-contained **except** for a
 userspace shim for `libtinfo.so.5` and the GTK `-dev` symlinks, **currently in the assistant's
-scratchpad** (`/tmp/claude-.../scratchpad/fbclibs`) — NOT yet vendored into the repo. A durable
+scratchpad** (`/tmp/claude-.../scratchpad/fbclibs`) — NOT yet vendored into the repo (ephemeral;
+recreate per memory `reference-linux-build`). A durable
 `build-linux.sh` + vendored shim remains an open infra task (memory `reference-linux-build` has the
 exact recipe). Build command:
 `cd src && LD_LIBRARY_PATH=<shim> fbc VisualFBEditor.bas -i ../Controls/MyFbFramework -d __USE_GTK3__ -p <shim> -l tinfo`
