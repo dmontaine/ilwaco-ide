@@ -234,24 +234,12 @@ pfProjectProperties = @fProjectProperties
 		cboIconResourceFile.TabIndex = 13
 		cboIconResourceFile.SetBounds 224, 142, 252, 21
 		cboIconResourceFile.Parent = @tpGeneral
-		' lblCompilationArguments32Linux
-		lblCompilationArguments32Linux.Name = "lblCompilationArguments32Linux"
-		lblCompilationArguments32Linux.Text = ML("For *nix/*bsd") & ", " & ML("32-bit") & ":"
-		lblCompilationArguments32Linux.TabIndex = 62
-		lblCompilationArguments32Linux.SetBounds 5, 57, 202, 18
-		lblCompilationArguments32Linux.Parent = @picCompilationArguments
 		' lblCompilationArguments64Linux
 		lblCompilationArguments64Linux.Name = "lblCompilationArguments64Linux"
 		lblCompilationArguments64Linux.Text = ML("For *nix/*bsd") & ", " & ML("64-bit") & ":"
 		lblCompilationArguments64Linux.TabIndex = 64
 		lblCompilationArguments64Linux.SetBounds 5, 85, 212, 18
 		lblCompilationArguments64Linux.Parent = @picCompilationArguments
-		' lblCompilationArguments32
-		lblCompilationArguments32.Name = "lblCompilationArguments32"
-		lblCompilationArguments32.Text = ML("For Windows") & ", " & ML("32-bit") & ":"
-		lblCompilationArguments32.TabIndex = 58
-		lblCompilationArguments32.SetBounds 5, 4, 192, 18
-		lblCompilationArguments32.Parent = @picCompilationArguments
 		' lblType
 		lblType.Name = "lblType"
 		lblType.Text = ML("Type") & ":"
@@ -399,25 +387,11 @@ pfProjectProperties = @fProjectProperties
 			.SetBounds 213, 83, 228, 21
 			.Parent = @picCompilationArguments
 		End With
-		' txtCompilationArguments32Linux
-		With txtCompilationArguments32Linux
-			.Name = "txtCompilationArguments32Linux"
-			.TabIndex = 63
-			.SetBounds 213, 56, 228, 21
-			.Parent = @picCompilationArguments
-		End With
 		' txtCompilationArguments64Windows
 		With txtCompilationArguments64Windows
 			.Name = "txtCompilationArguments64Windows"
 			.TabIndex = 61
 			.SetBounds 213, 28, 228, 21
-			.Parent = @picCompilationArguments
-		End With
-		' txtCompilationArguments32Windows
-		With txtCompilationArguments32Windows
-			.Name = "txtCompilationArguments32Windows"
-			.TabIndex = 59
-			.SetBounds 213, 0, 228, 21
 			.Parent = @picCompilationArguments
 		End With
 		' lstType
@@ -1037,9 +1011,7 @@ Private Sub frmProjectProperties.cmdOK_Click(ByRef Designer As My.Sys.Object, By
 		ppe->OptimizationFastCode = .optOptimizationFastCode.Checked
 		ppe->OptimizationSmallCode = .optOptimizationSmallCode.Checked
 		ppe->OptimizationLevel = IIf(.optOptimizationLevel.Checked, Val(.cboOptimizationLevel.Text), 0)
-		WLet(ppe->CompilationArguments32Windows, .txtCompilationArguments32Windows.Text)
 		WLet(ppe->CompilationArguments64Windows, .txtCompilationArguments64Windows.Text)
-		WLet(ppe->CompilationArguments32Linux, .txtCompilationArguments32Linux.Text)
 		WLet(ppe->CompilationArguments64Linux, .txtCompilationArguments64Linux.Text)
 		ppe->Components.Clear
 		For i As Integer = 0 To .lstComponents.ItemCount - 1
@@ -1290,9 +1262,7 @@ Public Sub frmProjectProperties.RefreshProperties()
 				.cboOptimizationLevel.ItemIndex = ppe->OptimizationLevel
 				.optOptimizationSmallCode.Checked = ppe->OptimizationSmallCode
 				.optOptimizationFastCode.Checked = ppe->OptimizationFastCode
-				.txtCompilationArguments32Windows.Text = *ppe->CompilationArguments32Windows
 				.txtCompilationArguments64Windows.Text = *ppe->CompilationArguments64Windows
-				.txtCompilationArguments32Linux.Text = *ppe->CompilationArguments32Linux
 				.txtCompilationArguments64Linux.Text = *ppe->CompilationArguments64Linux
 				For i As Integer = 0 To ppe->Components.Count - 1
 					.lstComponents.AddItem ppe->Components.Item(i)
@@ -1375,9 +1345,7 @@ Public Sub frmProjectProperties.RefreshProperties()
 			.chkManifest.Checked = True
 			.chkRunAsAdministrator.Checked = False
 			.chkManifest_Click(.chkManifest)
-			.txtCompilationArguments32Windows.Text = ""
 			.txtCompilationArguments64Windows.Text = ""
-			.txtCompilationArguments32Linux.Text = ""
 			.txtCompilationArguments64Linux.Text = ""
 			.txtAndroidSDKLocation.Text = ""
 			.txtAndroidNDKLocation.Text = ""

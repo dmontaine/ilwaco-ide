@@ -54,14 +54,6 @@
 		cmdCancel.SetBounds 624, 340, 96, 24
 		cmdCancel.OnClick = @cmdCancel_Click
 		cmdCancel.Parent = @This
-		' txtfbc32
-		With txtfbc32
-			.Name = "txtfbc32"
-			.TabIndex = 3
-			.RightMargin = 20
-			.SetBounds 376, 24, 321, 21
-			.Parent = @grbCompile
-		End With
 		' txtfbc64
 		With txtfbc64
 			.Name = "txtfbc64"
@@ -90,15 +82,6 @@
 			.TabIndex = 17
 			.SetBounds 376, 24, 321, 21
 			.Parent = @grbRun
-		End With
-		' lblfbc32
-		With lblfbc32
-			.Name = "lblfbc32"
-			.Text = "fbc" & " " & ML("32-bit") & ":"
-			.TabIndex = 1
-			.SetBounds 16, 24, 66, 16
-			.Caption = "fbc" & " " & ML("32-bit") & ":"
-			.Parent = @grbCompile
 		End With
 		' lblfbc64
 		With lblfbc64
@@ -188,20 +171,6 @@
 			.SetBounds 90, 48, 278, 21
 			.Parent = @grbDebug
 		End With
-		' lblAddCompilerOption32
-		With lblAddCompilerOption32
-			.Name = "lblAddCompilerOption32"
-			.Text = "+"
-			.Graphic = "//Add"
-			.ID = 1175
-			.BorderStyle = BorderStyles.bsNone
-			.Style = LabelStyle.lsText
-			.Transparent = False
-			.SetBounds 680, 28, 12, 12
-			.Designer = @This
-			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @lblAddCompilerOption32_Click)
-			.Parent = @grbCompile
-		End With
 		' lblAddCompilerOption64
 		With lblAddCompilerOption64
 			.Name = "lblAddCompilerOption64"
@@ -230,7 +199,6 @@
 
 Sub frmParameters.LoadSettings()
 	With fParameters
-		.txtfbc32.Text = *Compiler32Arguments
 		.txtfbc64.Text = *Compiler64Arguments
 		.txtMake1.Text = *Make1Arguments
 		.txtMake2.Text = *Make2Arguments
@@ -276,7 +244,6 @@ End Sub
 
 Private Sub frmParameters.cmdOK_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	With fParameters
-		WLet(Compiler32Arguments, .txtfbc32.Text)
 		WLet(Compiler64Arguments, .txtfbc64.Text)
 		WLet(Make1Arguments, .txtMake1.Text)
 		WLet(Make2Arguments, .txtMake2.Text)
@@ -290,7 +257,6 @@ Private Sub frmParameters.cmdOK_Click(ByRef Designer As My.Sys.Object, ByRef Sen
 		WLet(CurrentDebugger64, IIf(.cboDebug64.ItemIndex = 0, "Integrated IDE Debugger", IIf(.cboDebug64.ItemIndex = 1, "Integrated GDB Debugger", .cboDebug64.Text)))
 		CurrentDebuggerType64 = IIf(.cboDebug64.ItemIndex = 0, IntegratedIDEDebugger, IIf(.cboDebug64.ItemIndex = 1, IntegratedGDBDebugger, CustomDebugger))
 		WLet(Debugger64Path, IIf(.cboDebug64.ItemIndex = 0, pDebuggers->Get(*DefaultDebugger64), pDebuggers->Get(*CurrentDebugger64)))
-		piniSettings->WriteString "Parameters", "Compiler32Arguments", *Compiler32Arguments
 		piniSettings->WriteString "Parameters", "Compiler64Arguments", *Compiler64Arguments
 		piniSettings->WriteString "Parameters", "Make1Arguments", *Make1Arguments
 		piniSettings->WriteString "Parameters", "Make2Arguments", *Make2Arguments
@@ -302,18 +268,6 @@ End Sub
 
 Private Sub frmParameters.cmdCancel_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	fParameters.CloseForm
-End Sub
-
-Private Sub frmParameters.lblAddCompilerOption32_Click(ByRef Sender As Label)
-	If frmCompilerOptions.ShowModal(Me) = ModalResults.OK Then
-		For i As Integer = 0 To frmCompilerOptions.lvCompilerOptions.ListItems.Count - 1
-			If frmCompilerOptions.lvCompilerOptions.ListItems.Item(i)->Checked Then
-				txtfbc32.Text = RTrim(txtfbc32.Text) & " " & frmCompilerOptions.lvCompilerOptions.ListItems.Item(i)->Text(0)
-			End If
-		Next
-		frmCompilerOptions.CloseForm
-		Me.BringToFront
-	End If
 End Sub
 
 Private Sub frmParameters.lblAddCompilerOption64_Click(ByRef Sender As Label)

@@ -322,11 +322,7 @@ Function GetLibKey As String
 	#ifndef __FB_WIN32__
 		LibKey &= "X"
 	#endif
-	#ifdef __FB_64BIT__
-		LibKey &= "64"
-	#else
-		LibKey &= "32"
-	#endif
+	LibKey &= "64"
 	#ifdef __USE_GTK__
 		#ifdef __USE_GTK4__
 			LibKey &= "_gtk4"

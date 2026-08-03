@@ -76,9 +76,7 @@ Type ProjectElement Extends ExplorerElement
 	ShowUnusedVariableWarnings As Boolean
 	ShowUnusedButSetVariableWarnings As Boolean
 	ShowMainWarnings As Boolean
-	CompilationArguments32Windows As WString Ptr
 	CompilationArguments64Windows As WString Ptr
-	CompilationArguments32Linux As WString Ptr
 	CompilationArguments64Linux As WString Ptr
 	CommandLineArguments As WString Ptr
 	CreateDebugInfo As Boolean

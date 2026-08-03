@@ -44,9 +44,7 @@ Destructor ProjectElement
 	WDeAllocate(LegalTrademarks)
 	WDeAllocate(OriginalFilename)
 	WDeAllocate(ProductName)
-	WDeAllocate(CompilationArguments32Windows)
 	WDeAllocate(CompilationArguments64Windows)
-	WDeAllocate(CompilationArguments32Linux)
 	WDeAllocate(CompilationArguments64Linux)
 	WDeAllocate(CommandLineArguments)
 	WDeAllocate(AndroidSDKLocation)
@@ -4105,7 +4103,6 @@ Sub FillFileIntellisenses(ByRef Path As WString = "", ByRef Starts As WString = 
 			If Not CtlLibrary->Enabled Then Continue For
 			If Not AddPaths(tb, GetOSPath(GetFullPath(GetFullPath(CtlLibrary->IncludeFolder, CtlLibrary->Path))), Starts, c) Then Exit Sub
 		Next
-			If Not AddPaths(tb, GetOSPath(GetFolderName(GetFolderName(GetFullPath(*Compiler32Path))) & "include/freebasic"), Starts, c) Then Exit Sub
 			If Not AddPaths(tb, GetOSPath(GetFolderName(GetFolderName(GetFullPath(*Compiler64Path))) & "include/freebasic"), Starts, c) Then Exit Sub
 		For i As Integer = 0 To pIncludePaths->Count - 1
 			If Not AddPaths(tb, GetOSPath(pIncludePaths->Item(i)), Starts, c) Then Exit Sub

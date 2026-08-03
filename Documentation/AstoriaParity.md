@@ -24,24 +24,31 @@ runtime-verified after each. The strip was then **extended across the whole tree
      remains — a packaging concern, not a code bug). Full surface in PROJECT_STATUS "Task 13 DONE" block.
    - **Net result:** the only compiler path in the system is the hard-coded `BundledCompilerPath`. "One
      compiler, no picker, no INI machinery" fully realized.
-2. **Strip all 32-bit code (Ilwaco is 64-bit only) — STARTED 2026-08-02; pass 1 DONE.** Owner directive:
-   "we can remove anything 32-bit related, ilwaco will be 64-bit only." Incremental, build after each pass.
-   - **Pass 1 — DONE, build+runtime-verified, staged (uncommitted).** Removed the `tbt32Bit`/`tbt64Bit`
+2. **Strip all 32-bit code (Ilwaco is 64-bit only) — DONE 2026-08-03 (passes 1, 2a, 2b, 2c).** Owner
+   directive: "we can remove anything 32-bit related, ilwaco will be 64-bit only." Incremental, build after
+   each pass.
+   - **Pass 1 — DONE, build+runtime-verified, committed `a1b2722`.** Removed the `tbt32Bit`/`tbt64Bit`
      32/64 build-target toolbar toggle and collapsed every `Bit32`/`tbt32Bit->Checked` consumer to the 64
      branch (compile path, debugger picks, `-gen gas64`, lib folder). Fixed a latent both-branches-32 bug in
-     the intellisense temp-compile. `Bit32`/`tbt32Bit`/`tbt64Bit` now zero refs. Files: Main.bas,
-     TabWindow.bas, Debug.bas, VisualFBEditor.bas.
-   - **Pass 2a — debugger-32 subsystem — DONE, build-verified, committed.** Removed all `*Debugger32*`/
-     `*DebuggerType32`/`Debug32Arguments` globals + the `cboDebug32`/`txtDebug32`/`cboDebugger32`/
-     `cboGDBDebugger32` form controls (frmParameters + frmOptions) + load/save/dealloc; repointed shared
-     debugger handlers to the 64 combo; fixed two more latent 32/64 bugs. Kept `lblDebugger321`.
-   - **Pass 2b — compiler-32 — NOT started; EXACT edits in PROJECT_STATUS "Pass 2b" bullet** (context all
-     read). `Compiler32Path`/`Compiler32Arguments`/`LibX32Folder`, the `Main.bas` include-resolver collapse,
-     `TabWindow.bas` lib-path line, and frmParameters `txtfbc32`/`lblfbc32`/`lblAddCompilerOption32` + handler.
-   - **Pass 2c — `CompilationArguments32` project property (~54 refs) — NOT started.** frmProjectProperties
-     32-bit compilation-arg rows + TabWindow.bi struct + save/load. **Trap:** `lblCompilationArguments321`
-     is a different control, keep it. Then a final `#ifdef __FB_64BIT__` guard sweep (keep the 64 branch;
-     not Windows-only). See memory `project-64bit-only`.
+     the intellisense temp-compile. `Bit32`/`tbt32Bit`/`tbt64Bit` now zero refs.
+   - **Pass 2a — debugger-32 subsystem — DONE, build-verified, committed `12044a1`.** Removed all
+     `*Debugger32*`/`*DebuggerType32`/`Debug32Arguments` globals + the `cboDebug32`/`txtDebug32`/
+     `cboDebugger32`/`cboGDBDebugger32` form controls (frmParameters + frmOptions) + load/save/dealloc;
+     repointed shared debugger handlers to the 64 combo; fixed two more latent 32/64 bugs. Kept `lblDebugger321`.
+   - **Pass 2b — compiler-32 — DONE, build-verified.** Removed `Compiler32Path`/`Compiler32Arguments`
+     (Main.bi globals + Main.bas assign/read/dealloc), `LibX32Folder` (Main.bi struct field + Main.bas load),
+     collapsed the `Main.bas` include-resolver + the `TabWindow.bas` lib-path pair to the 64 attempt, and the
+     frmParameters `txtfbc32`/`lblfbc32`/`lblAddCompilerOption32` designer blocks + populate/apply/save +
+     the `lblAddCompilerOption32_Click` handler + `.bi` declares/dims. Kept the `…64` equivalents.
+   - **Pass 2c — `CompilationArguments32` project property — DONE, build+runtime-verified.**
+     frmProjectProperties `lblCompilationArguments32`/`…32Linux` labels + `txtCompilationArguments32Windows`/
+     `…32Linux` textboxes + populate/apply/clear; `TabWindow.bi` struct fields `CompilationArguments32Windows`/
+     `…32Linux` + `TabWindow.bas` deallocs; `Main.bas` `.vfp` parse + save. Kept `lblCompilationArguments321`
+     (a different "Command Line Arguments" control). Also collapsed the live `#ifdef __FB_64BIT__` guards in
+     frmSplash/frmComponents/frmOptions to the 64 branch. Grep of `Compiler32|LibX32|CompilationArguments32`
+     (excl. `…321`) is empty. **Left:** three commented-out `#ifdef __FB_64BIT__` lines inside large
+     pre-existing dead-comment blocks in `Debug.bas` (~914/4568/9498) — belong to the standing
+     "no commented-out code" sweep of Debug.bas, not the 32-bit feature strip. See memory `project-64bit-only`.
 3. **Resume the changelog walk** — next candidates: `53d8e473` (compile-warning fixes — check Ilwaco's
    shared files), then the menu-taxonomy feature ports.
 

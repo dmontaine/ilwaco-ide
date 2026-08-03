@@ -21,16 +21,15 @@ Using My.Sys.Forms
 		Declare Static Sub Form_Create(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		Declare Sub LoadSettings()
 		Declare Static Sub Form_Show(ByRef Designer As My.Sys.Object, ByRef Sender As Form)
-		Declare Sub lblAddCompilerOption32_Click(ByRef Sender As Label)
 		Declare Sub lblAddCompilerOption64_Click(ByRef Sender As Label)
 		Declare Constructor
 		
 		Dim As GroupBox grbCompile, grbMake, grbRun, grbDebug
 		Dim As CommandButton cmdOK, cmdCancel
-		Dim As Label lblfbc32, lblfbc64, lblMake1, llblMake2, lblRun, lblDebug64
-		Dim As TextBox txtfbc64, txtfbc32, txtMake1, txtMake2, txtRun, txtDebug64
+		Dim As Label lblfbc64, lblMake1, llblMake2, lblRun, lblDebug64
+		Dim As TextBox txtfbc64, txtMake1, txtMake2, txtRun, txtDebug64
 		Dim As ComboBoxEdit cboMake1, cboMake2, cboRun, cboDebug64
-		Dim As Label lblAddCompilerOption32, lblAddCompilerOption64
+		Dim As Label lblAddCompilerOption64
 	End Type
 	
 	Common Shared pfParameters As frmParameters Ptr

@@ -1437,12 +1437,8 @@ Function AddProject(ByRef FileName As WString = "", pFilesList As WStringList Pt
 					ppe->OptimizationFastCode = CBool(Mid(Buff, Pos1 + 1))
 				ElseIf Parameter = "OptimizationSmallCode" Then
 					ppe->OptimizationFastCode = CBool(Mid(Buff, Pos1 + 1))
-				ElseIf Parameter = "CompilationArguments32Windows" Then
-					WLet(ppe->CompilationArguments32Windows, Mid(Buff, Pos1 + 2, Len(Buff) - Pos1 - 2))
 				ElseIf Parameter = "CompilationArguments64Windows" Then
 					WLet(ppe->CompilationArguments64Windows, Mid(Buff, Pos1 + 2, Len(Buff) - Pos1 - 2))
-				ElseIf Parameter = "CompilationArguments32Linux" Then
-					WLet(ppe->CompilationArguments32Linux, Mid(Buff, Pos1 + 2, Len(Buff) - Pos1 - 2))
 				ElseIf Parameter = "CompilationArguments64Linux" Then
 					WLet(ppe->CompilationArguments64Linux, Mid(Buff, Pos1 + 2, Len(Buff) - Pos1 - 2))
 				ElseIf Parameter = "CommandLineArguments" Then
@@ -2055,9 +2051,7 @@ Function SaveProject(ByRef tnP As TreeNode Ptr, bWithQuestion As Boolean = False
 	Print #Fn, "OptimizationLevel=" & ppe->OptimizationLevel
 	Print #Fn, "OptimizationFastCode=" & ppe->OptimizationFastCode
 	Print #Fn, "OptimizationSmallCode=" & ppe->OptimizationSmallCode
-	Print #Fn, "CompilationArguments32Windows=""" & *ppe->CompilationArguments32Windows & """"
 	Print #Fn, "CompilationArguments64Windows=""" & *ppe->CompilationArguments64Windows & """"
-	Print #Fn, "CompilationArguments32Linux=""" & *ppe->CompilationArguments32Linux & """"
 	Print #Fn, "CompilationArguments64Linux=""" & *ppe->CompilationArguments64Linux & """"
 	Print #Fn, "CommandLineArguments=""" & *ppe->CommandLineArguments & """"
 	Print #Fn, "CreateDebugInfo=" & ppe->CreateDebugInfo
@@ -3172,20 +3166,15 @@ Function GetRelativePath(ByRef Path As WString, ByRef FromFile As WString = "") 
 				Result = GetOSPath(GetFullPath(GetFullPath(CtlLibrary->IncludeFolder, CtlLibrary->Path)) & IIf(EndsWith(CtlLibrary->IncludeFolder, "\") OrElse EndsWith(CtlLibrary->IncludeFolder, "/"), "", Slash) & Path)
 				If FileExists(Result) Then Return Result
 			Next
-				Result = GetOSPath(GetFolderName(GetFolderName(GetFullPath(*Compiler32Path))) & "include/freebasic/" & Path)
+				Result = GetOSPath(GetFolderName(GetFolderName(GetFullPath(*Compiler64Path))) & "include/freebasic/" & Path)
 			If FileExists(Result) Then
 				Return Result
 			Else
-					Result = GetOSPath(GetFolderName(GetFolderName(GetFullPath(*Compiler64Path))) & "include/freebasic/" & Path)
-				If FileExists(Result) Then
-					Return Result
-				Else
-					For i As Integer = 0 To pIncludePaths->Count - 1
-						Result = GetOSPath(pIncludePaths->Item(i) & IIf(EndsWith(pIncludePaths->Item(i), "\") OrElse EndsWith(pIncludePaths->Item(i), "/"), "", Slash) & Path)
-						If FileExists(Result) Then Return Result
-					Next
-					Return GetOSPath(Path)
-				End If
+				For i As Integer = 0 To pIncludePaths->Count - 1
+					Result = GetOSPath(pIncludePaths->Item(i) & IIf(EndsWith(pIncludePaths->Item(i), "\") OrElse EndsWith(pIncludePaths->Item(i), "/"), "", Slash) & Path)
+					If FileExists(Result) Then Return Result
+				Next
+				Return GetOSPath(Path)
 			End If
 		End If
 	End If
@@ -5002,7 +4991,6 @@ Sub LoadToolBox(ForLibrary As Library Ptr = 0)
 			CtlLibrary->Lib32Folder = GetFullPath(GetFullPath(ini.ReadString("Setup", "Lib32Folder"), Temp))
 			CtlLibrary->Lib64Folder = GetFullPath(GetFullPath(ini.ReadString("Setup", "Lib64Folder"), Temp))
 			CtlLibrary->Lib64ArmFolder = GetFullPath(GetFullPath(ini.ReadString("Setup", "Lib64ArmFolder"), Temp))
-			CtlLibrary->LibX32Folder = GetFullPath(GetFullPath(ini.ReadString("Setup", "LibX32Folder"), Temp))
 			CtlLibrary->LibX64Folder = GetFullPath(GetFullPath(ini.ReadString("Setup", "LibX64Folder"), Temp))
 			CtlLibrary->Enabled = iniSettings.ReadBool("ControlLibraries", "Enabled_" & WStr(i), False)
 			If Temp = MFF Then
@@ -5572,7 +5560,6 @@ Sub LoadSettings
 		i += 1
 	Loop
 	
-	WLet(Compiler32Path, BundledCompilerPath)
 	WLet(Compiler64Path, BundledCompilerPath)
 	WLet(DefaultMakeTool, iniSettings.ReadString("MakeTools", "DefaultMakeTool", "make"))
 	WLet(CurrentMakeTool1, *DefaultMakeTool)
@@ -5675,7 +5662,6 @@ Sub LoadSettings
 	MainReBar.Visible = ShowMainToolBar
 	SetDarkMode DarkMode, False
 	
-	WLet(Compiler32Arguments, iniSettings.ReadString("Parameters", "Compiler32Arguments", "-b {S} -exx"))
 	WLet(Compiler64Arguments, iniSettings.ReadString("Parameters", "Compiler64Arguments", "-b {S} -exx"))
 	WLet(Make1Arguments, iniSettings.ReadString("Parameters", "Make1Arguments", ""))
 	WLet(Make2Arguments, iniSettings.ReadString("Parameters", "Make2Arguments", "clean"))
@@ -10458,9 +10444,7 @@ Sub OnProgramQuit() Destructor
 	WDeAllocate(DefaultTerminal)
 	WDeAllocate(CurrentTerminal)
 	WDeAllocate(TerminalPath)
-	WDeAllocate(Compiler32Path)
 	WDeAllocate(Compiler64Path)
-	WDeAllocate(Compiler32Arguments)
 	WDeAllocate(Compiler64Arguments)
 	WDeAllocate(Make1Arguments)
 	WDeAllocate(Make2Arguments)
