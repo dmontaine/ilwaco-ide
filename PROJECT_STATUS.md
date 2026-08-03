@@ -37,8 +37,22 @@ all AI dispatch cases; from `Main.bi` the AI declares/globals + the `ModelInfo` 
 **Follow-up (minor, deferred):** the `.rc` still registers now-unused AI toolbar icons (NewChat/AddComment/…);
 harmless. The kept `[AIAgents]` INI loop term is the only remaining "AI" token in `src/` (functional, not dead).
 
-**NEXT:** the two owner-directed strips (UTF-8/LF, AI) are done. Resume the Astoria→Ilwaco changelog walk
-(AstoriaParity) — the 32-bit strip and these two strips are the standing owner directives now cleared.
+**Changelog backlog seeded (2026-08-03).** Created [Documentation/AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md)
+— a **pruned** copy of Astoria's 888-commit `DetailedChangelog.md`. Deleted everything already resolved for
+Ilwaco: the 6 AstoriaParity *done ports* (pass 1), then **481 non-actionable** commits (pass 2 — NONCODE 426,
+INVERT 9, WIN32 20, AI 26), leaving **401 actionable** entries oldest-first. The file's header carries the
+**maintenance rule** (delete DONE + the four non-actionable classes, matched on the commit *headline*). The
+one-off classifier is in scratchpad (`prune_changelog.py`) — criteria are re-derivable from the rule.
+
+**NEXT — resume the changelog walk from the 5 oldest remaining in that file:**
+1. `bbfa3999` — the fork-import anchor (base; not a port — the walk's start marker).
+2. `e212819d` — bottom-panel **persistence** (collapse half DONE; persistence still deferred — see the
+   "panel collapse-on-pin" Done section below for the infrastructure it needs).
+3. `ef3b43e9` — fix first-start collapsed bottom layout (same panel-persistence cluster).
+4. `5a097399` — "update INI + rebuild exe" (near-noise; a rebuild/state-save — low value).
+5. `bef92671` — Form Designer never activating (**REVIEW** — Astoria's root cause was a Win build tool;
+   verify whether the underlying designer export-table issue reproduces in Ilwaco).
+The 32-bit strip and the UTF-8/LF + AI strips are the standing owner directives, now all cleared.
 
 ---
 

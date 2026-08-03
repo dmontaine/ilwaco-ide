@@ -78,6 +78,11 @@ Source of truth: `../astoria-ide/Documentation/DetailedChangelog.md` (888 commit
 2026-08-02) and `../astoria-ide/Documentation/AstoriaIDESignificantChanges.md` (curated §1 added /
 §2 removed / §3 inherited-defect fixes).
 
+**Working backlog:** [AstoriaDetailedChangeLog.md](AstoriaDetailedChangeLog.md) is a *pruned* copy of
+that changelog (2026-08-03: 888 → **401 actionable** entries; DONE ports + NONCODE/INVERT/WIN32/AI
+non-actionable classes deleted — see its header rule and memory `project-changelog-backlog`). Walk it
+oldest-first; when an item lands, delete its entry there and add a "Done" narrative here.
+
 ## Classification per change
 
 - **PORT** — platform-neutral (UI/behaviour/warning/base fix); bring it over, adapting Win32→GTK.
