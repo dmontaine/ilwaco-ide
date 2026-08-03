@@ -39,6 +39,13 @@ the actionable PORT / REIMPLEMENT / REVIEW queue. Two deletion triggers:
 - **2026-08-03 (pass 2):** removed **481** non-actionable commits — NONCODE 426, INVERT 9, WIN32 20, AI 26.
   **888 → 401** actionable entries remain. (The classifier's exact regex criteria are the four classes
   above; re-derivable from this rule.)
+- **2026-08-03 (walk, oldest 3):** removed `bbfa3999` (the fork-import anchor — the base itself, not a
+  port), `5a097399` (NONCODE: INI window-state + exe rebuild only), and `bef92671` (**N/A** — Astoria's
+  Form-Designer-dead bug was caused by *Astoria's own* `strip_gtk_preprocessor.ps1` deleting the
+  `#ifdef __EXPORT_PROCS__` blocks from mff; Ilwaco's `ppstrip.py` preserved every such block, and the
+  built `libmff64_gtk3.so` exports all 36 dispatcher symbols `src/Designer.bas` resolves — verified with
+  `nm -D`. See AstoriaParity "N/A — Form Designer export table intact"). **401 → 398.** Kept `e212819d`
+  + `ef3b43e9` (bottom-panel persistence cluster, partial).
 
 ---
 
@@ -71,17 +78,10 @@ Everything above the **Total: 888 commits, 2026-07-02 to 2026-08-02.**
 
 ## 2026-07-02
 
-- **`bbfa3999`** — Initial Win64 fork import
-  *Build/Tools, Docs, Examples, Framework/Controls, IDE, Settings, Templates · 2263 files*
 - **`e212819d`** — Fix bottom panel persistence and collapse layout; add project status handoff doc.
-  *Docs, IDE, Settings · 6 files*
+  *Docs, IDE, Settings · 6 files* — **PARTIAL: collapse done; bottom-panel persistence deferred.**
 - **`ef3b43e9`** — Fix first-start collapsed bottom layout; update handoff status and gitignore docompile.bat.
-  *Build/Tools, Docs, IDE · 3 files*
-- **`5a097399`** — Update INI window/panel state and rebuild VisualFBEditor64.exe.
-  *IDE, Settings · 2 files*
-- **`bef92671`** — Fix Form Designer never activating: strip tool silently deleted exported component dispatchers.
-  Root cause: Tools/strip_gtk_preprocessor.ps1 only recognized a fixed set of platform macros (__FB_WIN32__, __USE_GTK__, etc.).
-  *Build/Tools, Framework/Controls, IDE, Settings · 769 files*
+  *Build/Tools, Docs, IDE · 3 files* — **PARTIAL: same panel-persistence cluster as `e212819d`.**
 - **`53d8e473`** — Fix all compile warnings.
   - Canvas.bas, Debug.bas: wrap bare string literals passed as WString Ptr (@"...") with WStr(...) - FreeBASIC defaults untyped literals to ZString, so the pointer type didn't match the declared WString Ptr parameters. - Main.bas/TabWindow.bi: same fix for SelectSearchResult()'s SearchText default...
   *Framework/Controls, IDE · 6 files*

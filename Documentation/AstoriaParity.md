@@ -122,7 +122,7 @@ Some Astoria *infrastructure* choices are independently already true in Ilwaco:
 | `e212819d` | Bottom panel **collapse-on-pin** (+ persistence, split out below); add PROJECT_STATUS | PORT | **collapse-on-pin DONE** 2026-08-02 (build-clean); persistence deferred ↓ |
 | `c2672840` | Right panel not collapsing on Pin click | PORT | **DONE** 2026-08-02 (build-clean) |
 | `64daa66e` | Left panel not collapsing on Pin click | PORT | **DONE** 2026-08-02 (build-clean) |
-| `bef92671` | Form Designer never activating (strip-tool root cause) | REVIEW | root cause was a Win build tool; underlying designer export-table issue may be base-general — verify against Ilwaco |
+| `bef92671` | Form Designer never activating (strip-tool root cause) | N/A | **verified does NOT reproduce** 2026-08-03 — Astoria's cause was its own `strip_gtk_preprocessor.ps1` deleting `#ifdef __EXPORT_PROCS__` blocks; Ilwaco's `ppstrip.py` preserved them, `libmff64_gtk3.so` exports all 36 Designer.bas dispatchers (`nm -D`). See ↓ |
 | `b5554063` | Bundle FBC + GDB toolchain in-repo | DONE | Ilwaco bundles Linux fbc (no gdb yet) |
 | `15e66cc5`,`e139c2cc` | Remove 32-bit compiler binaries | SKIP | Ilwaco is 64-bit; no Win32 toolchain to remove |
 | `53d8e473` | Fix all compile warnings (WStr wrapping etc.) | PORT | check if same warnings exist in Ilwaco's shared files |
@@ -130,6 +130,30 @@ Some Astoria *infrastructure* choices are independently already true in Ilwaco:
 | `c494207f`,`7baebd1e`,`add4642a`,`76abaa5a` | Delete dead GTK/Linux/32-bit code | INVERT/SKIP | do **not** apply — this is Ilwaco's live platform |
 | `ae74b31c` | Rename "Service"→"Tools" menu, inner "Tools"→"External Tools" | PORT | **DONE** 2026-08-02 (caption-only, internal names unchanged; `Main.bas` `miXizmat`) |
 | `49ec5ccd`, §menu-taxonomy | UI approachability: per-menu **Advanced** submenus; menu reorg; caption cleanups; options-dialog simplification | PORT (big) | **deferred, and re-scoped — see "Menu taxonomy" section below** |
+
+## N/A 2026-08-03 — Form Designer export table intact (Astoria `bef92671` does not reproduce)
+
+Astoria's `bef92671` fixed a **dead Form Designer**: its `Tools/strip_gtk_preprocessor.ps1` had no
+awareness of `__EXPORT_PROCS__` (unconditionally `#define`d in `mff.bi` to gate the DLL export layer),
+so it evaluated every `#ifdef __EXPORT_PROCS__` block as false and deleted them — shipping `mff64.dll`
+with zero exports, so every `DyLibSymbol()` in `Designer.bas` returned null and the designer never
+activated.
+
+**This is Astoria-tooling damage, not a base defect** — Ilwaco never ran that PowerShell tool. Verified
+empirically that it does not reproduce here:
+- Ilwaco's MFF source still contains the `#ifdef __EXPORT_PROCS__` blocks (`ppstrip.py` treated
+  `__EXPORT_PROCS__` as opaque/defined and preserved every one).
+- The built `Controls/MyFbFramework/libmff64_gtk3.so` exports **469** text symbols, including all four
+  core dispatchers (`CreateComponent`, `CreateControl`, `ReadProperty`, `WriteProperty`).
+- **Definitive test:** all **36** symbols `src/Designer.bas` resolves via `DyLibSymbol()` are exported —
+  `comm -23 <wanted> <exported>` is empty. (Astoria's broken build had only 56/58.)
+
+Verify command (re-runnable):
+`comm -23 <(grep -oE 'DyLibSymbol\([^,]*,\s*"[^"]*"' src/Designer.bas | grep -oE '"[^"]*"$' | tr -d '"' | sort -u) <(nm -D --defined-only Controls/MyFbFramework/libmff64_gtk3.so | awk '$2=="T"||$2=="W"{print $3}' | sort -u)`
+
+Pruned from the changelog backlog. (Runtime end-to-end designer-activation — cboClass populates,
+Form/CodeAndForm buttons enabled, Properties panel renders — remains a general "verify by effect" item,
+but the specific export-table root cause of `bef92671` is conclusively absent.)
 
 ## Done 2026-08-02 — removed legacy Error Handling + Line Numbering (Astoria `ec42ea83`)
 
