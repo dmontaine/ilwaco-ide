@@ -15,11 +15,66 @@ Ilwaco keeps GTK, so our GTK fixes apply upstream where Astoria's Win64-only one
 
 ---
 
-## Session handoff (2026-08-02, latest) — compiler stage 2 IN PROGRESS (task 12 DONE; 11 & 13 remain)
+## Session handoff (2026-08-02, latest) — compiler stage 2 COMPLETE (tasks 11, 12, 13 all DONE)
 
-**START HERE. Paused (out of credits).** The whole-tree non-target strip (below) is done, committed, and pushed.
-Then began **compiler removal stage 2** (the "one compiler, no picker" completion). Stage 2 has three parts —
-11 (Options picker UI), 12 (per-project `CompilerPath` override), 13 (`[Compilers]` INI machinery). **Status:**
+**START HERE.** The whole-tree non-target strip (below) is done, committed, and pushed. Then **compiler
+removal stage 2** (the "one compiler, no picker" completion) was finished. Stage 2 had three parts — 11
+(Options picker UI), 12 (per-project `CompilerPath` override), 13 (`[Compilers]` INI machinery). **All three
+are DONE and build+runtime-verified. Tasks 11 & 13 are staged (uncommitted); task 12 was committed `0fb1746`.**
+The "one bundled compiler, no picker, no INI machinery" goal is fully realized — the only compiler path in the
+system is the hard-coded `BundledCompilerPath`.
+
+- **Task 13 — `[Compilers]` INI machinery: DONE — build-verified (`fbc` exit 0) AND runtime-verified with a
+  real compile.** Retired the entire vestigial machinery: the `Compilers` `Dictionary` + `pCompilers` pointer,
+  `Current/DefaultCompiler32/64` globals, the `[Compilers]` INI **read** (`Main.bas` load loop) and **write**
+  (`frmOptions.frm`), the compiler lookup in the compile-command builder, and the cleanup/dealloc. **−441
+  lines net** across `Main.bas`/`Main.bi`/`frmOptions.frm`. Key safety points honoured:
+  - **Kept the fragile 10-section load loop's `Compilers` KeyExists term** (`Main.bas:5498`) so the shared
+    `Do Until … = -10` loop still terminates correctly; only dropped the `Compilers.Add` body inside it.
+  - **Kept `Compiler32Path`/`Compiler64Path`** (set from `BundledCompilerPath`; used by `FbcExe` and the
+    include/lib path resolvers) — those are the bundled paths, not the retired picker machinery.
+  - Compile-command builder (`Main.bas` ~604-613): dropped the `Else` branch that set `CompilerTool` from
+    `pCompilers`; for a normal compile `CompilerTool` stays 0 and `CompileWith` is built entirely by the
+    in-code `WAdd` flag chain (every `Command_N` template was empty anyway, so this is behaviour-preserving).
+  - **Runtime-verified by real compile:** opened a trivial `.bas` in the IDE and hit Compile — fbc ran with
+    the **bundled compiler** and compiled `.bas → .c → .asm → .o` cleanly. Only the final `ld` link failed
+    with `cannot find -lncurses` — a **missing system lib in the dev shim** (fbc's default console link wants
+    libncurses; task 13 never touched link flags), **not** a code regression. See "Known env gap" below.
+  - **Known env gap (packaging/shim, not a code bug):** the dev shim provides `libtinfo.so.5` but no
+    `libncurses.so`, so the IDE can't fully *link* a console app in this environment. Pre-existing; relevant to
+    the AppImage/shim packaging task (add a `libncurses` dev symlink to `$SHIM`), tracked separately from the
+    compiler work.
+
+- **Task 11 — Options + Parameters picker UI: DONE — build-verified (`fbc` exit 0, zero warnings) AND
+  runtime-verified.** Staged in the working tree (not yet committed). Removed the entire compiler-picker
+  subsystem across 4 files, **−398 lines in `frmOptions.frm`** alone:
+
+- **Task 11 — Options + Parameters picker UI: DONE — build-verified (`fbc` exit 0, zero warnings) AND
+  runtime-verified.** Staged in the working tree (not yet committed). Removed the entire compiler-picker
+  subsystem across 4 files, **−398 lines in `frmOptions.frm`** alone:
+  - `frmOptions.frm`/`.bi` — the `grbDefaultCompilers`/`grbCompilerPaths` groupboxes, `lvCompilerPaths`,
+    `cboCompiler32`/`cboCompiler64`, the `hbxCompilers` Add/Change/Remove/Clear button bar, the
+    `cmdFindCompilers` button + `lblFindCompilersFromComputer`, the whole `FindCompilers`/
+    `FindProcessStartStop`/`FindCompilersSub`/`FindedCompilersCount`/`FolderName` disk-scan subsystem, the
+    4 handler bodies + their `Declare`s, the `lvCompilerPaths_ItemActivate` + `cmdFindCompilers_Click`
+    handlers, and the LoadSettings populate + `cmdApply_Click` save blocks. **Kept** (shared): `bStop`
+    (used by `HistoryCodeClean`), `Dim As UString tempStr` + `Dim As ToolType Ptr Tool` (used by the
+    MakeTools/Debuggers/etc. save loops).
+  - `frmParameters.frm`/`.bi` — the per-build `cboCompiler32`/`cboCompiler64` selector (designer, populate,
+    apply). **Kept** `txtfbc32/64` (fbc-arguments), `lblfbc32/64`, `lblAddCompilerOption32/64`,
+    `frmCompilerOptions` — the arg-string editor is a separate feature.
+  - **Bonus fix:** both the Options Apply and the frmParameters OK used to `WLet(Compiler32/64Path,
+    pCompilers->Get(...))`, **clobbering** the hard-coded bundled path on every OK/Apply. That clobber is
+    now gone — the bundled `Compiler32/64Path` (set from `BundledCompilerPath` in LoadSettings) survives.
+  - **Design decision:** kept `pnlCompiler` + the "Compiler" tree node — it is a *parent* category
+    (children Build Configurations / Includes / Make Tool), so it now shows an **empty parent panel**
+    (normal tree behaviour). Runtime-verified: Options opens, Compiler node shows empty panel, Apply works,
+    no crash, no `DebugInfo.log`.
+  - **Left intact for task 13:** `pCompilers`/`Compilers`, `Current/DefaultCompiler32/64`, and the
+    `[Compilers]` INI read (`Main.bas` ~5506-5512) + write (`frmOptions.frm` save loop ~4353) — retiring
+    that machinery is task 13, which touches the hot compile path and the fragile 10-section loop.
+
+**Prior status (still current for task 12; task 11 now superseded above):**
 
 - **Task 12 — per-project `CompilerPath` override: DONE — build-verified (`fbc` exit 0, zero warnings) and
   committed.** Runtime spot-check still advisable (open Project Properties ▸ Compile tab — the compiler row
@@ -39,17 +94,10 @@ Then began **compiler removal stage 2** (the "one compiler, no picker" completio
     compiler row should be gone). Commit message ready in spirit: "Compiler stage 2: remove per-project
     CompilerPath override".
 
-- **Task 11 — Options picker UI: SURVEYED, NOT started.** Remove in `frmOptions.frm`/`.bi`: the `lvCompilerPaths`
-  ListView, `grbCompilerPaths` + `grbDefaultCompilers` groupboxes, `cboCompiler32`/`cboCompiler64`,
-  `cmdFindCompilers` (+`lblFindCompilersFromComputer`), `cmdChangeCompiler`, and handlers
-  `cmdFindCompilers_Click(_)`, `lvCompilerPaths_ItemActivate(_)`, `cmdChangeCompiler_Click`, plus the module-level
-  `Declare Sub FindCompilersSub` / `FindCompilersSub` body and the save loop (`frmOptions.frm` ~4350 writing
-  `[Compilers]`) and load/apply (~3606, ~4034-4056). Also **`frmParameters.frm`** has a per-build compiler
-  selector: `cboCompiler32`/`cboCompiler64` (designer ~136-146; populate ~279-288; apply ~341-344) — remove it too
-  (keep `txtfbc32/64` fbc-*arguments*, `frmCompilerOptions`, and `lblAddCompilerOption32/64` — those are the
-  arg-string editor, a separate feature). Use **edit-form-safely** for all three forms.
+- **Task 11 — Options picker UI: DONE (see the DONE block at the top of this handoff for the full surface).**
 
-- **Task 13 — `[Compilers]` INI machinery: NOT started, now LOW-RISK.** Key finding: every `Command_N` (the fbc
+- **Task 13 — `[Compilers]` INI machinery: DONE (see the DONE block at the top of this handoff).** Original
+  survey notes retained below for reference. Key finding: every `Command_N` (the fbc
   argument template) is **empty** in the INIs, so `CompileWith` starts empty and all real flags are built in code
   (`Main.bas` ~622-677). So `pCompilers`/`Compilers` is used only by (a) the picker UI removed in task 11, (b) the
   arg-template lookup `Main.bas:616-617` (`CompilerTool = pCompilers->Item(Idx)->Object`; empty → contributes
@@ -57,7 +105,14 @@ Then began **compiler removal stage 2** (the "one compiler, no picker" completio
   replace 616-621 with `WLet(CompileWith, "")` for the non-Make branch, drop the `Compilers.Add` block **without
   touching the shared 10-section `Do Until…Loop` termination condition** (5509-5512 — leave the `Compilers` term
   in the KeyExists sum so the loop still ends correctly), then retire `Compilers`/`pCompilers`/`CurrentCompiler32/64`/
-  `DefaultCompiler32/64` if nothing else references them. Build after each micro-step.
+  `DefaultCompiler32/64` if nothing else references them. Build after each micro-step. **Exact surface after task 11
+  (verified 2026-08-02):** the `[Compilers]` write lives in `frmOptions.frm` cmdApply save section, now
+  **`4142-4151`** (`WriteString "Compilers", "DefaultCompiler32/64"` + the `Version_/Path_/Command_` loop + the
+  `Do…KeyRemove` cleanup) — remove it in task 13. Main.bas anchors are unchanged by task 11: dict/pointer
+  `84`/`122`/`199` (`Compilers`/`pCompilers = @Compilers`), lookup `612-613`, load `5502`/`5506-5512` +
+  `5593-5596`, cleanup `10507-10510`/`10558-10559`. Note: after task 11 the `If CompilerTool <> 0` guard at
+  `615-617` already yields empty `CompileWith` when `pCompilers` is empty, so real fbc flags are still built in
+  code — retiring the machinery is safe.
 
 **Build/run:** `./build-linux.sh` (committed `0b61d0c`) — `editor` | `lib` | `all`; run with
 `LD_LIBRARY_PATH="$(./build-linux.sh --print-shim)" DISPLAY=:0 ./VisualFBEditor64_gtk3`. `git checkout Settings/`

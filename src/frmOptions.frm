@@ -313,21 +313,6 @@ pfOptions = @fOptions
 		lblBlack.TabIndex = 61
 		lblBlack.SetBounds 0, 0, 604, 1
 		lblBlack.Parent = @pnlLine
-		' grbDefaultCompilers
-		With grbDefaultCompilers
-			.Name = "grbDefaultCompilers"
-			.Text = ML("Default Compilers")
-			.AutoSize = True
-			.Align = DockStyle.alTop
-			.ExtraMargins.Left = 0
-			.Margins.Top = 20
-			.Margins.Right = 15
-			.Margins.Left = 15
-			.Margins.Bottom = 15
-			.TabIndex = 84
-			.SetBounds 10, 0, 417, 123
-			.Parent = @pnlCompiler
-		End With
 		' grbDefaults
 		With grbDefaults
 			.Name = "grbDefaults"
@@ -355,21 +340,6 @@ pfOptions = @fOptions
 			.TabIndex = 85
 			.SetBounds 10, 0, 417, 400
 			.Parent = @pnlShortcuts
-		End With
-		' grbCompilerPaths
-		With grbCompilerPaths
-			.Name = "grbCompilerPaths"
-			.Text = ML("Compiler Paths")
-			.ExtraMargins.Left = 0
-			.Align = DockStyle.alClient
-			.ExtraMargins.Top = 5
-			.Margins.Top = 20
-			.Margins.Right = 15
-			.Margins.Left = 15
-			.Margins.Bottom = 15
-			.TabIndex = 86
-			.SetBounds 10, 128, 417, 272
-			.Parent = @pnlCompiler
 		End With
 		' lblShortcut
 		lblShortcut.Name = "lblShortcut"
@@ -583,56 +553,6 @@ pfOptions = @fOptions
 		cboLanguage.TabIndex = 98
 		cboLanguage.SetBounds 0, 0, 257, 21
 		cboLanguage.Parent = @pnlLanguage
-		' cmdClearCompilers
-		With cmdClearCompilers
-			.Name = "cmdClearCompilers"
-			.Text = ML("&Clear")
-			.ExtraMargins.Right = 0
-			.ExtraMargins.Left = 0
-			.ExtraMargins.Bottom = 0
-			.Align = DockStyle.alRight
-			.TabIndex = 4
-			.SetBounds 290, 0, 97, 24
-			.OnClick = @cmdClearCompilers_Click
-			.Parent = @hbxCompilers
-		End With
-		' cmdRemoveCompiler
-		With cmdRemoveCompiler
-			.Name = "cmdRemoveCompiler"
-			.Text = ML("&Remove")
-			.ExtraMargins.Bottom = 0
-			.ExtraMargins.Right = 0
-			.ExtraMargins.Left = 0
-			.Align = DockStyle.alRight
-			.TabIndex = 5
-			.SetBounds 193, 0, 97, 24
-			.OnClick = @cmdRemoveCompiler_Click
-			.Parent = @hbxCompilers
-		End With
-		' cmdChangeCompiler
-		With cmdChangeCompiler
-			.Name = "cmdChangeCompiler"
-			.Text = ML("Chan&ge")
-			.ExtraMargins.Bottom = 0
-			.ExtraMargins.Left = 0
-			.ExtraMargins.Right = 0
-			.Align = DockStyle.alRight
-			.TabIndex = 6
-			.SetBounds 96, 0, 97, 24
-			.OnClick = @cmdChangeCompiler_Click
-			.Parent = @hbxCompilers
-		End With
-		' cmdAddCompiler
-		cmdAddCompiler.Name = "cmdAddCompiler"
-		cmdAddCompiler.Text = ML("&Add")
-		cmdAddCompiler.ExtraMargins.Left = 0
-		cmdAddCompiler.ExtraMargins.Bottom = 0
-		cmdAddCompiler.ExtraMargins.Right = 0
-		cmdAddCompiler.Align = DockStyle.alRight
-		cmdAddCompiler.TabIndex = 7
-		cmdAddCompiler.SetBounds -1, 0, 97, 24
-		cmdAddCompiler.OnClick = @cmdAddCompiler_Click
-		cmdAddCompiler.Parent = @hbxCompilers
 		' vbxGeneral
 		With vbxGeneral
 			.Name = "vbxGeneral"
@@ -1587,57 +1507,6 @@ pfOptions = @fOptions
 		chkUseMakeOnStartWithCompile.SetBounds 25, 66, 293, 21
 		'chkUseMakeOnStartWithCompile.Caption = ML("Use make on start with compile (if exists makefile)")
 		chkUseMakeOnStartWithCompile.Parent = @pnlMake
-		' lvCompilerPaths
-		With lvCompilerPaths
-			.Name = "lvCompilerPaths"
-			.Text = "ListView1"
-			.Align = DockStyle.alClient
-			.ExtraMargins.Left = 0
-			.ExtraMargins.Right = 0
-			.ExtraMargins.Bottom = 15
-			.ExtraMargins.Top = 15
-		lvCompilerPaths.TabIndex = 141
-			.SetBounds 15, 57, 387, 161
-			.Images = @imgList
-			'.StateImages = @imgList
-			.SmallImages = @imgList
-			.Designer = @This
-			.OnItemActivate = @lvCompilerPaths_ItemActivate_
-			.Parent = @grbCompilerPaths
-		End With
-		' lblCompiler32
-		lblCompiler32.Name = "lblCompiler32"
-		lblCompiler32.Text = ML("Compiler") & " " & ML("32-bit")
-		lblCompiler32.Align = DockStyle.alTop
-		lblCompiler32.TabIndex = 142
-		lblCompiler32.SetBounds 15, 20, 387, 18
-		lblCompiler32.Parent = @grbDefaultCompilers
-		' cboCompiler32
-		With cboCompiler32
-			.Name = "cboCompiler32"
-			.Text = "ComboBoxEdit2"
-			.Align = DockStyle.alTop
-			.TabIndex = 143
-			.SetBounds 15, 38, 387, 21
-			.Parent = @grbDefaultCompilers
-		End With
-		' lblCompiler64
-		lblCompiler64.Name = "lblCompiler64"
-		lblCompiler64.Text = ML("Compiler") & " " & ML("64-bit")
-		lblCompiler64.Align = DockStyle.alTop
-		lblCompiler64.ExtraMargins.Top = 10
-		lblCompiler64.TabIndex = 144
-		lblCompiler64.SetBounds 15, 69, 387, 18
-		lblCompiler64.Parent = @grbDefaultCompilers
-		' cboCompiler64
-		With cboCompiler64
-			.Name = "cboCompiler64"
-			.Text = "ComboBoxEdit21"
-			.Align = DockStyle.alTop
-			.TabIndex = 145
-			.SetBounds 15, 87, 387, 21
-			.Parent = @grbDefaultCompilers
-		End With
 		' lvDebuggerPaths
 		With lvDebuggerPaths
 			.Name = "lvDebuggerPaths"
@@ -2286,32 +2155,6 @@ pfOptions = @fOptions
 			.SetBounds 100, 0, 287, 21
 			.Parent = @hbxDefaultNewLineFormat
 		End With
-		' cmdFindCompilers
-		With cmdFindCompilers
-			.Name = "cmdFindCompilers"
-			.Text = ML("&Find")
-			.TabIndex = 177
-			.Align = DockStyle.alTop
-			.ExtraMargins.Left = 300
-			.ExtraMargins.Right = -1
-			.SetBounds 315, 20, 88, 24
-			'.Caption = ML("&Find")
-			.Designer = @This
-			.OnClick = @cmdFindCompilers_Click_
-			.Parent = @grbCompilerPaths
-		End With
-		' lblFindCompilersFromComputer
-		With lblFindCompilersFromComputer
-			.Name = "lblFindCompilersFromComputer"
-			.Text = ML("Find Compilers from Computer?")
-			.TabIndex = 178
-			.ExtraMargins.Top = -22
-			.ExtraMargins.Right = 100
-			.Align = DockStyle.alTop
-			.SetBounds 15, 22, 287, 20
-			'.Caption = ML("Find Compilers from Computer:")
-			.Parent = @grbCompilerPaths
-		End With
 		' optPromptToSave
 		With optPromptToSave
 			.Name = "optPromptToSave"
@@ -2716,9 +2559,6 @@ pfOptions = @fOptions
 		lvOtherEditors.Columns.Add ML("Extensions"), , 126
 		lvOtherEditors.Columns.Add ML("Path"), , 126
 		lvOtherEditors.Columns.Add ML("Command line"), , 80
-		lvCompilerPaths.Columns.Add ML("Version"), , 190
-		lvCompilerPaths.Columns.Add ML("Path"), , 190
-		lvCompilerPaths.Columns.Add ML("Command line"), , 80
 		lvMakeToolPaths.Columns.Add ML("Version"), , 190
 		lvMakeToolPaths.Columns.Add ML("Path"), , 190
 		lvMakeToolPaths.Columns.Add ML("Command line"), , 80
@@ -2751,16 +2591,6 @@ pfOptions = @fOptions
 			.SetBounds 15, 361, 387, 24
 			.Designer = @This
 			.Parent = @grbOtherEditors
-		End With
-		' hbxCompilers
-		With hbxCompilers
-			.Name = "hbxCompilers"
-			.Text = "HorizontalBox1"
-			.TabIndex = 210
-			.Align = DockStyle.alBottom
-			.SetBounds 15, 233, 387, 24
-			.Designer = @This
-			.Parent = @grbCompilerPaths
 		End With
 		' hbxHelp
 		With hbxHelp
@@ -3598,20 +3428,6 @@ Sub frmOptions.LoadSettings()
 		Case NewLineTypes.LinuxLF: .cboDefaultNewLineFormat.ItemIndex = 1
 		Case NewLineTypes.MacOSCR: .cboDefaultNewLineFormat.ItemIndex = 2
 		End Select
-		.cboCompiler32.Clear
-		.cboCompiler64.Clear
-		.lvCompilerPaths.ListItems.Clear
-		.cboCompiler32.AddItem ML("(not selected)")
-		.cboCompiler64.AddItem ML("(not selected)")
-		For i As Integer = 0 To pCompilers->Count - 1
-			.lvCompilerPaths.ListItems.Add pCompilers->Item(i)->Key, IIf(FileExists(GetFullPath(pCompilers->Item(i)->Text)), "", "FileError")
-			.lvCompilerPaths.ListItems.Item(i)->Text(1) = pCompilers->Item(i)->Text
-			.lvCompilerPaths.ListItems.Item(i)->Text(2) = Cast(ToolType Ptr, pCompilers->Item(i)->Object)->Parameters
-			.cboCompiler32.AddItem pCompilers->Item(i)->Key
-			.cboCompiler64.AddItem pCompilers->Item(i)->Key
-		Next
-		.cboCompiler32.ItemIndex = Max(0, .cboCompiler32.IndexOf(*DefaultCompiler32))
-		.cboCompiler64.ItemIndex = Max(0, .cboCompiler64.IndexOf(*DefaultCompiler64))
 		.cboAIAgent.Clear
 		.lvAIAgentTypes.ListItems.Clear
 		.cboAIAgent.AddItem ML("(not selected)")
@@ -4031,29 +3847,7 @@ Private Sub frmOptions.cmdApply_Click(ByRef Designer As My.Sys.Object, ByRef Sen
 	On Error Goto ErrorHandler
 	Dim As ToolType Ptr Tool
 	With fOptions
-		For i As Integer = 0 To pCompilers->Count - 1
-			_Delete(Cast(ToolType Ptr, pCompilers->Item(i)->Object))
-		Next
-		pCompilers->Clear
 		Dim As UString tempStr
-		For i As Integer = 0 To .lvCompilerPaths.ListItems.Count - 1
-			tempStr = .lvCompilerPaths.ListItems.Item(i)->Text(0)
-			Tool = _New(ToolType)
-			Tool->Name = tempStr
-			Tool->Path = .lvCompilerPaths.ListItems.Item(i)->Text(1)
-			Tool->Parameters = .lvCompilerPaths.ListItems.Item(i)->Text(2)
-			pCompilers->Add tempStr, .lvCompilerPaths.ListItems.Item(i)->Text(1), Tool
-		Next
-		If *DefaultCompiler32 <> IIf(.cboCompiler32.ItemIndex = 0, "", .cboCompiler32.Text) OrElse Not pCompilers->ContainsKey(*CurrentCompiler32) Then
-			WLet(DefaultCompiler32, IIf(.cboCompiler32.ItemIndex = 0, "", .cboCompiler32.Text))
-			WLet(CurrentCompiler32, *DefaultCompiler32)
-		End If
-		If *DefaultCompiler64 <> IIf(.cboCompiler64.ItemIndex = 0, "", .cboCompiler64.Text) OrElse Not pCompilers->ContainsKey(*CurrentCompiler64) Then
-			WLet(DefaultCompiler64, IIf(.cboCompiler64.ItemIndex = 0, "", .cboCompiler64.Text))
-			WLet(CurrentCompiler64, *DefaultCompiler64)
-		End If
-		WLet(Compiler32Path, pCompilers->Get(*CurrentCompiler32))
-		WLet(Compiler64Path, pCompilers->Get(*CurrentCompiler64))
 		For i As Integer = 0 To pMakeTools->Count - 1
 			_Delete(Cast(ToolType Ptr, pMakeTools->Item(i)->Object))
 		Next
@@ -4343,20 +4137,6 @@ Private Sub frmOptions.cmdApply_Click(ByRef Designer As My.Sys.Object, ByRef Sen
 			piniSettings->KeyRemove "AIAgents", "Top_P_" & WStr(i)
 			piniSettings->KeyRemove "AIAgents", "Stream_" & WStr(i)
 			piniSettings->KeyRemove "AIAgents", "ContentSize_" & WStr(i)
-			i += 1
-		Loop
-		piniSettings->WriteString "Compilers", "DefaultCompiler32", *DefaultCompiler32
-		piniSettings->WriteString "Compilers", "DefaultCompiler64", *DefaultCompiler64
-		For i As Integer = 0 To pCompilers->Count - 1
-			piniSettings->WriteString "Compilers", "Version_" & WStr(i), pCompilers->Item(i)->Key
-			piniSettings->WriteString "Compilers", "Path_" & WStr(i), pCompilers->Item(i)->Text
-			piniSettings->WriteString "Compilers", "Command_" & WStr(i), Cast(ToolType Ptr, pCompilers->Item(i)->Object)->Parameters
-		Next
-		i = pCompilers->Count
-		Do Until piniSettings->KeyExists("Compilers", "Version_" & WStr(i)) = -1
-			piniSettings->KeyRemove "Compilers", "Version_" & WStr(i)
-			piniSettings->KeyRemove "Compilers", "Path_" & WStr(i)
-			piniSettings->KeyRemove "Compilers", "Command_" & WStr(i)
 			i += 1
 		Loop
 		piniSettings->WriteString "MakeTools", "DefaultMakeTool", *DefaultMakeTool
@@ -5316,73 +5096,6 @@ Private Sub frmOptions.cmdRemove_Click(ByRef Designer As My.Sys.Object, ByRef Se
 	End With
 End Sub
 
-Private Sub frmOptions.cmdAddCompiler_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
-	pfPath->txtVersion.Text = ""
-	pfPath->txtPath.Text = ""
-	pfPath->txtCommandLine.Text = ""
-	If pfPath->ShowModal(fOptions) = ModalResults.OK Then
-		With fOptions
-			If .cboCompiler32.IndexOf(pfPath->txtVersion.Text) = -1 Then
-				.lvCompilerPaths.ListItems.Add pfPath->txtVersion.Text, IIf(FileExists(pfPath->txtPath.Text), "", "FileError")
-				.lvCompilerPaths.ListItems.Item(.lvCompilerPaths.ListItems.Count - 1)->Text(1) = pfPath->txtPath.Text
-				.lvCompilerPaths.ListItems.Item(.lvCompilerPaths.ListItems.Count - 1)->Text(2) = pfPath->txtCommandLine.Text
-				.cboCompiler32.AddItem pfPath->txtVersion.Text
-				.cboCompiler64.AddItem pfPath->txtVersion.Text
-			Else
-				MsgBox ML("This version is exists!")
-			End If
-		End With
-	End If
-End Sub
-
-Private Sub frmOptions.cmdChangeCompiler_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
-	With fOptions
-		If .lvCompilerPaths.SelectedItem = 0 Then Exit Sub
-		pfPath->txtVersion.Text = .lvCompilerPaths.SelectedItem->Text(0)
-		pfPath->txtPath.Text = .lvCompilerPaths.SelectedItem->Text(1)
-		pfPath->txtCommandLine.Text = .lvCompilerPaths.SelectedItem->Text(2)
-		If pfPath->ShowModal(fOptions) = ModalResults.OK Then
-			If .lvCompilerPaths.SelectedItem->Text(0) = pfPath->txtVersion.Text OrElse .cboCompiler32.IndexOf(pfPath->txtVersion.Text) = -1 Then
-				Var i = .cboCompiler32.IndexOf(.lvCompilerPaths.SelectedItem->Text(0))
-				.cboCompiler32.Item(i) = pfPath->txtVersion.Text
-				.cboCompiler64.Item(i) = pfPath->txtVersion.Text
-				.lvCompilerPaths.SelectedItem->Text(0) = pfPath->txtVersion.Text
-				.lvCompilerPaths.SelectedItem->Text(1) = pfPath->txtPath.Text
-				.lvCompilerPaths.SelectedItem->Text(2) = pfPath->txtCommandLine.Text
-				.lvCompilerPaths.SelectedItem->ImageKey = IIf(FileExists(GetFullPath(pfPath->txtPath.Text)), "", "FileError")
-				.lvCompilerPaths.SelectedItem->SelectedImageKey = IIf(FileExists(GetFullPath(pfPath->txtPath.Text)), "", "FileError")
-			Else
-				MsgBox ML("This version is exists!")
-			End If
-		End If
-	End With
-End Sub
-
-Private Sub frmOptions.cmdRemoveCompiler_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
-	With fOptions
-		If .lvCompilerPaths.SelectedItem = 0 Then Exit Sub
-		Var iIndex = .cboCompiler32.IndexOf(.lvCompilerPaths.SelectedItem->Text(0))
-		If iIndex > -1 Then .cboCompiler32.RemoveItem iIndex
-		If .cboCompiler32.ItemIndex = -1 Then .cboCompiler32.ItemIndex = 0
-		iIndex = .cboCompiler64.IndexOf(.lvCompilerPaths.SelectedItem->Text(0))
-		If iIndex > -1 Then .cboCompiler64.RemoveItem iIndex
-		If .cboCompiler64.ItemIndex = -1 Then .cboCompiler64.ItemIndex = 0
-		.lvCompilerPaths.ListItems.Remove .lvCompilerPaths.SelectedItemIndex
-	End With
-End Sub
-
-Private Sub frmOptions.cmdClearCompilers_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
-	With fOptions
-		.lvCompilerPaths.ListItems.Clear
-		.cboCompiler32.Clear
-		.cboCompiler64.Clear
-		.cboCompiler32.AddItem ML("(not selected)")
-		.cboCompiler64.AddItem ML("(not selected)")
-		.cboCompiler32.ItemIndex = 0
-		.cboCompiler64.ItemIndex = 0
-	End With
-End Sub
-
 Private Sub frmOptions.cmdAddMakeTool_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	pfPath->txtVersion.Text = ""
 	pfPath->txtPath.Text = ""
@@ -5881,115 +5594,6 @@ Private Sub frmOptions.optDoNotNothing_Click(ByRef Designer As My.Sys.Object, By
 End Sub
 
 Dim Shared As Boolean bStop
-Dim Shared As Integer FindedCompilersCount
-Dim Shared As UString FolderName = GetFolderName(pApp->FileName)
-Sub FindCompilers(ByRef Path As WString)
-	Dim As WString * 1024 f, f1, f2, f3
-	Dim As Integer Attr = 0, NameCount = 0
-	Dim As WStringList Folders
-	#ifdef __FB_WIN32__
-	If Path = "" Then Exit Sub
-	#endif
-	If FormClosing OrElse bStop Then Exit Sub
-	If EndsWith(Path, "\Windows") Then Exit Sub
-	ThreadsEnter
-	'fOptions.lblFindCompilersFromComputer.Text = Path
-	pstBar->Panels[0]->Caption = Path
-	ThreadsLeave
-	f = Dir(Path & Slash & "*", fbDirectory Or fbHidden Or fbSystem Or fbArchive Or fbReadOnly, Attr)
-	While f <> ""
-		If FormClosing OrElse bStop Then Exit Sub
-		Dim isDir As Boolean = ((Attr And fbDirectory) <> 0)
-		If isDir AndAlso f <> "." AndAlso f <> ".." Then 
-			If EndsWith(Path, Slash) Then
-				Folders.Add Path & f
-			Else
-				Folders.Add Path & Slash & f
-			End If
-		End If
-		f = Dir(Attr)
-	Wend
-	f = Dir(Path & Slash & "fbc*", fbReadOnly Or fbHidden Or fbSystem Or fbArchive, Attr)
-	While f <> ""
-		If FormClosing OrElse bStop Then Exit Sub
-		'		If (Attr And fbDirectory) <> 0 Then
-		'			If f <> "." AndAlso f <> ".." Then Folders.Add Path & IIf(EndsWith(Path, Slash), "", Slash) & f
-		#ifdef __FB_WIN32__
-			If LCase(f) = "fbc.exe" OrElse LCase(f) = "fbc32.exe" OrElse LCase(f) = "fbc64.exe" Then
-		#else
-			If LCase(f) = "fbc" Then
-		#endif
-			f1 = Path & IIf(EndsWith(Path, Slash), "", Slash) & f
-			ThreadsEnter
-			With fOptions.lvCompilerPaths.ListItems
-				For i As Integer = 0 To .Count - 1
-					If EqualPaths(.Item(i)->Text(1), f1) Then f = Dir(Attr): ThreadsLeave: Continue While
-				Next
-				If FolderName <> "" AndAlso StartsWith(f1, FolderName) Then f1 = "." & Slash & Mid(f1, Len(FolderName) + 1)
-				f2 = GetFileName(GetFolderName(f1, False))
-				If f2 = "bin" Then f2 = GetFileName(GetFolderName(GetFolderName(f1, False), False))
-				If EndsWith(f, "32.exe") Then: f2 = f2 & " 32": ElseIf EndsWith(f, "64.exe") Then: f2 = f2 & " 64": End If
-				NameCount = 0
-				f3 = f2
-				While .Contains(f3)
-					NameCount += 1
-					f3 = f2 & " " & NameCount
-				Wend
-				.Add f3
-				.Item(.Count - 1)->Text(1) = f1
-				fOptions.cboCompiler32.AddItem f3
-				fOptions.cboCompiler64.AddItem f3
-			End With
-			ThreadsLeave
-			FindedCompilersCount += 1
-		End If
-		f = Dir(Attr)
-	Wend
-	For i As Integer = 0 To Folders.Count - 1
-		FindCompilers Folders.Item(i)
-	Next
-	Folders.Clear
-End Sub
-
-Sub FindProcessStartStop()
-	With fOptions
-		If bStop Then
-			StopProgress
-			.cmdFindCompilers.Text = ML("&Find")
-			'fOptions.lblFindCompilersFromComputer.Text = ML("Find Compilers from Computer:")
-			RestoreStatusText
-		Else
-			StartProgress
-			.cmdFindCompilers.Text = ML("Stop")
-			ThreadCounter(ThreadCreate_(@FindCompilersSub))
-		End If
-		.cmdAddCompiler.Enabled = bStop
-		.cmdChangeCompiler.Enabled = bStop
-		.cmdRemoveCompiler.Enabled = bStop
-		.cmdClearCompilers.Enabled = bStop
-	End With
-End Sub
-
-Sub FindCompilersSub(Param As Any Ptr)
-	#ifdef __FB_WIN32__
-		Dim As String disk0 = CurDir
-		For i As Integer = 65 To 90
-			If FormClosing OrElse bStop Then Exit For
-			If ChDir(Chr(i) & ":") = 0 Then FindCompilers Chr(i) & ":"
-		Next
-		ChDir(disk0)
-	#else
-		FindCompilers ""
-	#endif
-	ThreadsEnter
-	bStop = True: FindProcessStartStop
-	If FindedCompilersCount = 0 Then
-		MsgBox ML("No сompilers found"), App.Title
-	Else
-		MsgBox ML("Number of compilers found") & ": " & Str(FindedCompilersCount), App.Title
-	End If
-	ThreadsLeave
-End Sub
 
 Sub HistoryCodeClean(ByRef Path As WString)
 	Dim As WString * 1024 f, f1
@@ -6009,15 +5613,6 @@ Sub HistoryCodeClean(ByRef Path As WString)
 		f = Dir()
 	Wend
 	HistoryCodeCleanDay = DateValue(Format(Now, "yyyy/mm/dd"))
-End Sub
-
-Private Sub frmOptions.cmdFindCompilers_Click_(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
-	(*Cast(frmOptions Ptr, Sender.Designer)).cmdFindCompilers_Click(Sender)
-End Sub
-
-Private Sub frmOptions.cmdFindCompilers_Click(ByRef Sender As Control)
-	bStop = cmdFindCompilers.Text = ML("Stop")
-	FindProcessStartStop()
 End Sub
 
 Private Sub frmOptions.lvOtherEditors_ItemActivate_(ByRef Designer As My.Sys.Object, ByRef Sender As ListView, ByVal ItemIndex As Integer)
@@ -6053,13 +5648,6 @@ Private Sub frmOptions.lvMakeToolPaths_ItemActivate_(ByRef Designer As My.Sys.Ob
 End Sub
 Private Sub frmOptions.lvMakeToolPaths_ItemActivate(ByRef Sender As ListView, ByVal ItemIndex As Integer)
 	cmdChangeMakeTool_Click *cmdChangeMakeTool.Designer, cmdChangeMakeTool
-End Sub
-
-Private Sub frmOptions.lvCompilerPaths_ItemActivate_(ByRef Designer As My.Sys.Object, ByRef Sender As ListView, ByVal ItemIndex As Integer)
-	(*Cast(frmOptions Ptr, Sender.Designer)).lvCompilerPaths_ItemActivate(Sender, ItemIndex)
-End Sub
-Private Sub frmOptions.lvCompilerPaths_ItemActivate(ByRef Sender As ListView, ByVal ItemIndex As Integer)
-	cmdChangeCompiler_Click *cmdChangeCompiler.Designer, cmdChangeCompiler
 End Sub
 
 Private Sub frmOptions.cmdInFolder_Click_(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
@@ -7009,4 +6597,4 @@ Private Sub frmOptions.chkInterfaceColor_Click(ByRef Sender As CheckBox)
 	Var i = lstInterfaceColorKeys.ItemIndex
 	If i = -1 Then Exit Sub
 	InterfaceColors(i) = IIf(chkInterfaceColor.Checked, -1, txtInterfaceColor.BackColor)
-End Sub
+End Sub

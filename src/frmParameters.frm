@@ -133,22 +133,6 @@
 			.SetBounds 16, 24, 256, 16
 			.Parent = @grbRun
 		End With
-		' cboCompiler32
-		With cboCompiler32
-			.Name = "cboCompiler32"
-			.Text = "ComboBoxEdit1"
-			.TabIndex = 2
-			.SetBounds 90, 24, 278, 21
-			.Parent = @grbCompile
-		End With
-		' cboCompiler64
-		With cboCompiler64
-			.Name = "cboCompiler64"
-			.Text = "ComboBoxEdit11"
-			.TabIndex = 5
-			.SetBounds 90, 48, 278, 21
-			.Parent = @grbCompile
-		End With
 		' cboMake1
 		With cboMake1
 			.Name = "cboMake1"
@@ -276,16 +260,6 @@ Sub frmParameters.LoadSettings()
 		.txtRun.Text = *RunArguments
 		.txtDebug32.Text = *Debug32Arguments
 		.txtDebug64.Text = *Debug64Arguments
-		.cboCompiler32.Clear
-		.cboCompiler64.Clear
-		For i As Integer = 0 To pCompilers->Count - 1
-			.cboCompiler32.AddItem pCompilers->Item(i)->Key
-			.cboCompiler64.AddItem pCompilers->Item(i)->Key
-		Next
-		.cboCompiler32.ItemIndex = .cboCompiler32.IndexOf(*CurrentCompiler32)
-		.cboCompiler64.ItemIndex = .cboCompiler64.IndexOf(*CurrentCompiler64)
-		If .cboCompiler32.ItemIndex = -1 Then .cboCompiler32.ItemIndex = .cboCompiler32.IndexOf(*DefaultCompiler32)
-		If .cboCompiler64.ItemIndex = -1 Then .cboCompiler64.ItemIndex = .cboCompiler64.IndexOf(*DefaultCompiler64)
 		.cboMake1.Clear
 		.cboMake2.Clear
 		For i As Integer = 0 To pMakeTools->Count - 1
@@ -338,10 +312,6 @@ Private Sub frmParameters.cmdOK_Click(ByRef Designer As My.Sys.Object, ByRef Sen
 		WLet(Make1Arguments, .txtMake1.Text)
 		WLet(Make2Arguments, .txtMake2.Text)
 		WLet(RunArguments, .txtRun.Text)
-		WLet(CurrentCompiler32, .cboCompiler32.Text)
-		WLet(Compiler32Path, pCompilers->Get(*CurrentCompiler32, pCompilers->Get(*DefaultCompiler32)))
-		WLet(CurrentCompiler64, .cboCompiler64.Text)
-		WLet(Compiler64Path, pCompilers->Get(*CurrentCompiler64, pCompilers->Get(*DefaultCompiler64)))
 		WLet(CurrentMakeTool1, .cboMake1.Text)
 		WLet(MakeToolPath1, pMakeTools->Get(*CurrentMakeTool1, pMakeTools->Get(*DefaultMakeTool)))
 		WLet(CurrentMakeTool2, .cboMake2.Text)

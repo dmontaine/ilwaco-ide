@@ -1,6 +1,6 @@
 # Astoria → Ilwaco parity tracking
 
-## ⇢ NEXT ACTION (staged for a fresh session) — finish compiler removal (stage 2); then resume the changelog walk
+## ⇢ NEXT ACTION (staged for a fresh session) — compiler removal COMPLETE; resume the changelog walk
 
 The big non-target strip is **done** for the whole compiled surface: `src/` (EditControl as staged task A,
 then the rest of `src/*.bas`/`*.bi` — 11 files, 626 chains — **landed 2026-08-02**) and the MFF framework
@@ -11,10 +11,19 @@ runtime-verified after each. The strip was then **extended across the whole tree
 16 Windows-only demos deleted, Astoria-mirror) — landed 2026-08-02 in commits `a0919c5`, `422e931`,
 `d0b22a1` (+ infra `0b61d0c`). See "Done — whole-tree non-target strip" below. Remaining:
 
-1. **Compiler removal stage 2** — remove the picker UI (Options ▸ compilers list + "Find Compilers"
-   button), the per-project `CompilerPath` override, and the vestigial `[Compilers]` INI machinery
-   (fragile 10-section loop must be refactored, not just deleted). Full surface in "Done — compiler path
-   hard-coded" below.
+1. **Compiler removal stage 2 — COMPLETE (2026-08-02). All three tasks DONE + build+runtime-verified.**
+   - *Task 12 (per-project `CompilerPath` override)* — DONE, committed `0fb1746`.
+   - *Task 11 (picker UI)* — DONE, **staged (uncommitted)**. Removed the Options compilers ListView +
+     Default-Compilers combos + Add/Change/Remove/Clear + "Find Compilers" scan subsystem, and the
+     frmParameters per-build compiler selector; also removed the `Compiler32/64Path` clobber on OK/Apply.
+     Compiler tab is now an empty parent node.
+   - *Task 13 (`[Compilers]` INI machinery)* — DONE, **staged (uncommitted)**. Retired `Compilers`/
+     `pCompilers`/`Current/DefaultCompiler32/64` + the `[Compilers]` INI read/write; kept the fragile
+     10-section load loop's `Compilers` KeyExists term and the bundled `Compiler32/64Path`. Runtime-verified
+     by a real in-IDE compile (bundled fbc ran, `.bas→.c→.asm→.o` clean; only a shim `-lncurses` link gap
+     remains — a packaging concern, not a code bug). Full surface in PROJECT_STATUS "Task 13 DONE" block.
+   - **Net result:** the only compiler path in the system is the hard-coded `BundledCompilerPath`. "One
+     compiler, no picker, no INI machinery" fully realized.
 2. **Resume the changelog walk** — next candidates: `53d8e473` (compile-warning fixes — check Ilwaco's
    shared files), then the menu-taxonomy feature ports.
 

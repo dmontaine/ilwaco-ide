@@ -29,7 +29,7 @@ Using My.Sys.Forms
 		Dim As CommandButton cmdOK, cmdCancel
 		Dim As Label lblfbc32, lblfbc64, lblMake1, llblMake2, lblRun, lblDebug32, lblDebug64
 		Dim As TextBox txtfbc64, txtfbc32, txtMake1, txtMake2, txtRun, txtDebug32, txtDebug64
-		Dim As ComboBoxEdit cboCompiler32, cboCompiler64, cboMake1, cboMake2, cboRun, cboDebug32, cboDebug64
+		Dim As ComboBoxEdit cboMake1, cboMake2, cboRun, cboDebug32, cboDebug64
 		Dim As Label lblAddCompilerOption32, lblAddCompilerOption64
 	End Type
 	

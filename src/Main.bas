@@ -81,7 +81,7 @@ Dim Shared As WStringOrStringList Comps, GlobalAsmFunctionsHelp, GlobalFunctions
 'Dim Shared As WStringOrStringList GlobalNamespaces, GlobalTypes, GlobalEnums, GlobalDefines, GlobalFunctions, GlobalTypeProcedures, GlobalArgs
 Dim Shared As WStringList AddIns, IncludeFiles, LoadPaths, IncludePaths, LibraryPaths, MRUAIChat, MRUFiles, MRUFolders, MRUProjects, MRUSessions, ProfilingFunctions ' add Sessions
 Dim Shared As WString Ptr RecentFiles, RecentFile, RecentProject, RecentFolder, RecentSession, RecentAIChat
-Dim Shared As Dictionary Helps, HotKeys, Compilers, MakeTools, Debuggers, Terminals, OtherEditors, BuildConfigurations, mlCompiler, mlTemplates, AIAgents, mpKeys, mcKeys
+Dim Shared As Dictionary Helps, HotKeys, MakeTools, Debuggers, Terminals, OtherEditors, BuildConfigurations, mlCompiler, mlTemplates, AIAgents, mpKeys, mcKeys
 Dim Shared As ListView lvProblems, lvSuggestions, lvSearch, lvToDo, lvMemory
 Dim Shared As ProgressBar prProgress
 Dim Shared As CommandButton btnPropertyValue
@@ -119,7 +119,6 @@ piniTheme = @iniTheme
 pAddIns = @AddIns
 pTools = @Tools
 pControlLibraries = @ControlLibraries
-pCompilers = @Compilers
 pMakeTools = @MakeTools
 pDebuggers = @Debuggers
 pTerminals = @Terminals
@@ -510,7 +509,7 @@ Function Compile(Parameter As String = "", bAll As Boolean = False) As Integer
 	Dim As ProjectElement Ptr Project
 	Dim As TreeNode Ptr ProjectNode
 	Dim As Boolean Bit32 = tbt32Bit->Checked
-	Dim As WString Ptr FbcExe, CurrentCompiler = IIf(Bit32, CurrentCompiler32, CurrentCompiler64)
+	Dim As WString Ptr FbcExe
 	ThreadsEnter()
 	ClearMessages
 	NodesCount = IIf(bAll, tvExplorer.Nodes.Count, 1)
@@ -608,9 +607,6 @@ Function Compile(Parameter As String = "", bAll As Boolean = False) As Integer
 		ElseIf Parameter = "MakeClean" Then
 			Idx = pMakeTools->IndexOfKey(*CurrentMakeTool2)
 			If Idx <> -1 Then CompilerTool = pMakeTools->Item(Idx)->Object
-		Else
-			Idx = pCompilers->IndexOfKey(*CurrentCompiler)
-			If Idx <> -1 Then CompilerTool = pCompilers->Item(Idx)->Object
 		End If
 		If CompilerTool <> 0 Then
 			WLet(CompileWith, CompilerTool->GetCommand(, True))
@@ -5503,14 +5499,6 @@ Sub LoadSettings
 		iniSettings.KeyExists("Debuggers", "Version_" & WStr(i)) + iniSettings.KeyExists("Terminals", "Version_" & WStr(i)) + iniSettings.KeyExists("BuildConfigurations", "Name_" & WStr(i)) + _
 		iniSettings.KeyExists("Helps", "Version_" & WStr(i)) + iniSettings.KeyExists("OtherEditors", "Version_" & WStr(i)) + _
 		iniSettings.KeyExists("IncludePaths", "Path_" & WStr(i)) + iniSettings.KeyExists("LibraryPaths", "Path_" & WStr(i)) = -10
-		Temp = iniSettings.ReadString("Compilers", "Version_" & WStr(i), "")
-		If Temp <> "" Then
-			Tool = _New(ToolType)
-			Tool->Name = Temp
-			Tool->Path = iniSettings.ReadString("Compilers", "Path_" & WStr(i), "")
-			Tool->Parameters = iniSettings.ReadString("Compilers", "Command_" & WStr(i), "")
-			Compilers.Add Temp, Tool->Path, Tool
-		End If
 		Temp = iniSettings.ReadString("AIAgents", "Version_" & WStr(i), "")
 		If i = 0 AndAlso Temp = "" Then Temp = "deepseek/deepseek-chat-v3-0324:free|OpenRouter"
 		If Temp <> "" Then
@@ -5590,10 +5578,6 @@ Sub LoadSettings
 		i += 1
 	Loop
 	
-	WLet(DefaultCompiler32, iniSettings.ReadString("Compilers", "DefaultCompiler32", ""))
-	WLet(CurrentCompiler32, *DefaultCompiler32)
-	WLet(DefaultCompiler64, iniSettings.ReadString("Compilers", "DefaultCompiler64", ""))
-	WLet(CurrentCompiler64, *DefaultCompiler64)
 	WLet(Compiler32Path, BundledCompilerPath)
 	WLet(Compiler64Path, BundledCompilerPath)
 	WLet(DefaultMakeTool, iniSettings.ReadString("MakeTools", "DefaultMakeTool", "make"))
@@ -10504,10 +10488,6 @@ Sub OnProgramQuit() Destructor
 	WDeAllocate(DefaultTerminal)
 	WDeAllocate(CurrentTerminal)
 	WDeAllocate(TerminalPath)
-	WDeAllocate(DefaultCompiler32)
-	WDeAllocate(CurrentCompiler32)
-	WDeAllocate(DefaultCompiler64)
-	WDeAllocate(CurrentCompiler64)
 	WDeAllocate(Compiler32Path)
 	WDeAllocate(Compiler64Path)
 	WDeAllocate(Compiler32Arguments)
@@ -10555,10 +10535,6 @@ Sub OnProgramQuit() Destructor
 	MutexDestroy tlockSuggestions
 	Dim As UserToolType Ptr tt
 	Dim As ToolType Ptr Tool
-	For i As Integer = 0 To pCompilers->Count - 1
-		Tool = pCompilers->Item(i)->Object
-		_Delete(Tool)
-	Next i
 	For i As Integer = 0 To pMakeTools->Count - 1
 		Tool = pMakeTools->Item(i)->Object
 		_Delete(Tool)
