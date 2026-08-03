@@ -567,7 +567,7 @@ Namespace Debug
 				CloseFile_(Fn)
 			End If
 				If bPrintMsg OrElse bPrintToDebugWindow Then .Print Msg
-			If bShowMsg Then MsgBox Msg, "Visual FB Editor"
+			If bShowMsg Then MsgBox Msg, "Ilwaco IDE"
 			If bPrintToDebugWindow Then
 					If 1 = 0 AndAlso GTK_IS_TEXT_VIEW(DebugWindowHandle) Then
 						Dim As GtkWidget Ptr TabPageHandle = gtk_widget_get_parent(DebugWindowHandle)

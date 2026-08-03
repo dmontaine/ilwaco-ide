@@ -7,7 +7,7 @@
 'Avoid using another Msgbox in SimpleVariantPlus.bi
 'Function MsgBox cdecl Overload (ByVal Msg As LPCWSTR, ByVal Flags As Long = MB_ICONINFORMATION) As Long'
 
-#define APP_TITLE "Visual FB Editor"
+#define APP_TITLE "Ilwaco IDE"
 #include once "UString.bi"
 Private Enum MessageType
 	mtInfo
