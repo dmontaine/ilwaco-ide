@@ -48,7 +48,6 @@ Destructor ProjectElement
 	WDeAllocate(CompilationArguments64Windows)
 	WDeAllocate(CompilationArguments32Linux)
 	WDeAllocate(CompilationArguments64Linux)
-	WDeAllocate(CompilerPath)
 	WDeAllocate(CommandLineArguments)
 	WDeAllocate(AndroidSDKLocation)
 	WDeAllocate(AndroidNDKLocation)

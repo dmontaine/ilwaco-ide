@@ -688,45 +688,6 @@ pfProjectProperties = @fProjectProperties
 			.SetBounds 80, 400, 16, 16
 			.Parent = @This
 		End With
-		' lblCompiler
-		With lblCompiler
-			.Name = "lblCompiler"
-			.Text = ML("Compiler") & ":"
-			.TabIndex = 66
-			'.Caption = ML("Compiler") & ":"
-			.SetBounds 29, 288, 90, 20
-			.Parent = @tpCompile
-		End With
-		' cboCompiler
-		With cboCompiler
-			.Name = "cboCompiler"
-			.Text = "ComboBoxEdit1"
-			.TabIndex = 67
-			.SetBounds 102, 285, 126, 21
-			.Designer = @This
-			.OnSelected = @cboCompiler_Selected_
-			.Parent = @tpCompile
-		End With
-		' txtCompilerPath
-		With txtCompilerPath
-			.Name = "txtCompilerPath"
-			.Text = ""
-			.TabIndex = 68
-			.SetBounds 236, 285, 198, 20
-			.Designer = @This
-			.OnChange = @txtCompilerPath_Change_
-			.Parent = @tpCompile
-		End With
-		' cmdCompiler
-		With cmdCompiler
-			.Name = "cmdCompiler"
-			.Text = "..."
-			.TabIndex = 69
-			.SetBounds 441, 284, 25, 22
-			.Designer = @This
-			.OnClick = @cmdCompiler_Click_
-			.Parent = @tpCompile
-		End With
 		' chkManifest
 		With chkManifest
 			.Name = "chkManifest"
@@ -1022,18 +983,6 @@ pfProjectProperties = @fProjectProperties
 		(*Cast(frmProjectProperties Ptr, Sender.Designer)).chkManifest_Click(Sender)
 	End Sub
 	
-	Private Sub frmProjectProperties.cboCompiler_Selected_(ByRef Designer As My.Sys.Object, ByRef Sender As ComboBoxEdit, ItemIndex As Integer)
-		(*Cast(frmProjectProperties Ptr, Sender.Designer)).cboCompiler_Selected(Sender, ItemIndex)
-	End Sub
-
-	Private Sub frmProjectProperties.txtCompilerPath_Change_(ByRef Designer As My.Sys.Object, ByRef Sender As TextBox)
-		(*Cast(frmProjectProperties Ptr, Sender.Designer)).txtCompilerPath_Change(Sender)
-	End Sub
-	
-	Private Sub frmProjectProperties.cmdCompiler_Click_(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
-		(*Cast(frmProjectProperties Ptr, Sender.Designer)).cmdCompiler_Click(Sender)
-	End Sub
-
 	#ifndef _NOT_AUTORUN_FORMS_
 		fProjectProperties.Show
 		
@@ -1092,7 +1041,6 @@ Private Sub frmProjectProperties.cmdOK_Click(ByRef Designer As My.Sys.Object, By
 		WLet(ppe->CompilationArguments64Windows, .txtCompilationArguments64Windows.Text)
 		WLet(ppe->CompilationArguments32Linux, .txtCompilationArguments32Linux.Text)
 		WLet(ppe->CompilationArguments64Linux, .txtCompilationArguments64Linux.Text)
-		WLet(ppe->CompilerPath, .txtCompilerPath.Text)
 		ppe->Components.Clear
 		For i As Integer = 0 To .lstComponents.ItemCount - 1
 			ppe->Components.Add .lstComponents.Item(i)
@@ -1346,7 +1294,6 @@ Public Sub frmProjectProperties.RefreshProperties()
 				.txtCompilationArguments64Windows.Text = *ppe->CompilationArguments64Windows
 				.txtCompilationArguments32Linux.Text = *ppe->CompilationArguments32Linux
 				.txtCompilationArguments64Linux.Text = *ppe->CompilationArguments64Linux
-				.txtCompilerPath.Text = *ppe->CompilerPath
 				For i As Integer = 0 To ppe->Components.Count - 1
 					.lstComponents.AddItem ppe->Components.Item(i)
 				Next
@@ -1432,7 +1379,6 @@ Public Sub frmProjectProperties.RefreshProperties()
 			.txtCompilationArguments64Windows.Text = ""
 			.txtCompilationArguments32Linux.Text = ""
 			.txtCompilationArguments64Linux.Text = ""
-			.txtCompilerPath.Text = ""
 			.txtAndroidSDKLocation.Text = ""
 			.txtAndroidNDKLocation.Text = ""
 			.txtJDKLocation.Text = ""
@@ -1569,34 +1515,6 @@ Private Sub frmProjectProperties.cmdJDKLocation_Click(ByRef Sender As Control)
 	End If
 End Sub
 
-Private Sub frmProjectProperties.cmdCompiler_Click(ByRef Sender As Control)
-	OpenD.InitialDir = GetFolderName(txtCompilerPath.Text)
-	If OpenD.Execute Then
-		txtCompilerPath.Text = OpenD.FileName
-	End If
-End Sub
-
-Private Sub frmProjectProperties.txtCompilerPath_Change(ByRef Sender As TextBox)
-	If Trim(txtCompilerPath.Text) = "" Then
-		cboCompiler.ItemIndex = 0
-	Else
-		Var Idx = pCompilers->IndexOf(Trim(txtCompilerPath.Text))
-		If Idx = -1 Then
-			cboCompiler.ItemIndex = cboCompiler.ItemCount - 1
-		Else
-			cboCompiler.ItemIndex = Idx + 1
-		End If
-	End If
-End Sub
-
-Private Sub frmProjectProperties.cboCompiler_Selected(ByRef Sender As ComboBoxEdit, ItemIndex As Integer)
-	If ItemIndex = 0 Then
-		txtCompilerPath.Text = ""
-	ElseIf ItemIndex > 0 AndAlso ItemIndex <= pCompilers->Count - 1 Then
-		txtCompilerPath.Text = pCompilers->Item(ItemIndex - 1)->Text
-	End If
-End Sub
-
 Private Sub frmProjectProperties.chkManifest_Click(ByRef Sender As CheckBox)
 	chkRunAsAdministrator.Enabled = chkManifest.Checked
 End Sub
@@ -1606,12 +1524,6 @@ Private Sub frmProjectProperties.cboOptimizationLevel_Selected(ByRef Sender As C
 End Sub
 
 Private Sub frmProjectProperties.Form_Create(ByRef Sender As Control)
-	fProjectProperties.cboCompiler.Clear
-	fProjectProperties.cboCompiler.AddItem ML("Default")
-	For i As Integer = 0 To pCompilers->Count - 1
-		fProjectProperties.cboCompiler.AddItem pCompilers->Item(i)->Key
-	Next
-	fProjectProperties.cboCompiler.AddItem ML("Custom")
 	fProjectProperties.RefreshProperties
 End Sub
 

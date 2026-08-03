@@ -15,7 +15,57 @@ Ilwaco keeps GTK, so our GTK fixes apply upstream where Astoria's Win64-only one
 
 ---
 
-## Session handoff (2026-08-02, latest) — whole-tree non-target strip complete (MFF + src + Controls + Examples)
+## Session handoff (2026-08-02, latest) — compiler stage 2 IN PROGRESS (task 12 DONE; 11 & 13 remain)
+
+**START HERE. Paused (out of credits).** The whole-tree non-target strip (below) is done, committed, and pushed.
+Then began **compiler removal stage 2** (the "one compiler, no picker" completion). Stage 2 has three parts —
+11 (Options picker UI), 12 (per-project `CompilerPath` override), 13 (`[Compilers]` INI machinery). **Status:**
+
+- **Task 12 — per-project `CompilerPath` override: DONE — build-verified (`fbc` exit 0, zero warnings) and
+  committed.** Runtime spot-check still advisable (open Project Properties ▸ Compile tab — the compiler row
+  should be gone; leaves a harmless gap at y≈285). 5 files, −103 net lines:
+  - `frmProjectProperties.frm` — removed the Compile-tab "Compiler" row (designer blocks for `lblCompiler`,
+    `cboCompiler`, `txtCompilerPath`, `cmdCompiler`), their 3 dispatch stubs + 3 handler bodies, the
+    `cboCompiler` population in `Form_Create`, and the load/save of `ppe->CompilerPath`. (Leaves a visual gap
+    at y≈285 on `tpCompile` — controls use absolute bounds, so harmless; reflow later if desired.)
+  - `frmProjectProperties.bi` — removed the 6 handler `Declare`s and `cmdCompiler`/`lblCompiler`/`cboCompiler`/
+    `txtCompilerPath` from the `Dim As` lines.
+  - `TabWindow.bi` / `TabWindow.bas` — removed the `CompilerPath As WString Ptr` project field + its `WDeAllocate`.
+  - `Main.bas` — build branch now always `WLet(FbcExe, GetFullPath(IIf(Bit32, *Compiler32Path, *Compiler64Path)))`
+    (dropped the `Project->CompilerPath` override); removed the `.vfp` `CompilerPath` parse (~1462) and save (~2078).
+  - Verified by grep: zero remaining `CompilerPath`/`cboCompiler`/`txtCompilerPath`/`cmdCompiler` refs in `src/`.
+    **Do NOT touch `Compiler32Path`/`Compiler64Path`** — those are the global bundled-compiler paths (keep).
+  - Resume build: `./build-linux.sh editor` then runtime-check (open Project Properties ▸ Compile tab: the
+    compiler row should be gone). Commit message ready in spirit: "Compiler stage 2: remove per-project
+    CompilerPath override".
+
+- **Task 11 — Options picker UI: SURVEYED, NOT started.** Remove in `frmOptions.frm`/`.bi`: the `lvCompilerPaths`
+  ListView, `grbCompilerPaths` + `grbDefaultCompilers` groupboxes, `cboCompiler32`/`cboCompiler64`,
+  `cmdFindCompilers` (+`lblFindCompilersFromComputer`), `cmdChangeCompiler`, and handlers
+  `cmdFindCompilers_Click(_)`, `lvCompilerPaths_ItemActivate(_)`, `cmdChangeCompiler_Click`, plus the module-level
+  `Declare Sub FindCompilersSub` / `FindCompilersSub` body and the save loop (`frmOptions.frm` ~4350 writing
+  `[Compilers]`) and load/apply (~3606, ~4034-4056). Also **`frmParameters.frm`** has a per-build compiler
+  selector: `cboCompiler32`/`cboCompiler64` (designer ~136-146; populate ~279-288; apply ~341-344) — remove it too
+  (keep `txtfbc32/64` fbc-*arguments*, `frmCompilerOptions`, and `lblAddCompilerOption32/64` — those are the
+  arg-string editor, a separate feature). Use **edit-form-safely** for all three forms.
+
+- **Task 13 — `[Compilers]` INI machinery: NOT started, now LOW-RISK.** Key finding: every `Command_N` (the fbc
+  argument template) is **empty** in the INIs, so `CompileWith` starts empty and all real flags are built in code
+  (`Main.bas` ~622-677). So `pCompilers`/`Compilers` is used only by (a) the picker UI removed in task 11, (b) the
+  arg-template lookup `Main.bas:616-617` (`CompilerTool = pCompilers->Item(Idx)->Object`; empty → contributes
+  nothing), and (c) the `LoadSettings` read (~5513-5520 `Compilers.Add`) + cleanup (~10565). After task 11,
+  replace 616-621 with `WLet(CompileWith, "")` for the non-Make branch, drop the `Compilers.Add` block **without
+  touching the shared 10-section `Do Until…Loop` termination condition** (5509-5512 — leave the `Compilers` term
+  in the KeyExists sum so the loop still ends correctly), then retire `Compilers`/`pCompilers`/`CurrentCompiler32/64`/
+  `DefaultCompiler32/64` if nothing else references them. Build after each micro-step.
+
+**Build/run:** `./build-linux.sh` (committed `0b61d0c`) — `editor` | `lib` | `all`; run with
+`LD_LIBRARY_PATH="$(./build-linux.sh --print-shim)" DISPLAY=:0 ./VisualFBEditor64_gtk3`. `git checkout Settings/`
+after any IDE launch (it writes session state on exit).
+
+---
+
+## Session handoff (2026-08-02, earlier) — whole-tree non-target strip complete (MFF + src + Controls + Examples)
 
 **START HERE.** Following the MFF strip below, the non-target strip was **extended across the whole tree**
 per owner direction ("extend to all code in src, Controls and Examples"). Landed in these commits (on

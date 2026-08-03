@@ -543,11 +543,7 @@ Function Compile(Parameter As String = "", bAll As Boolean = False) As Integer
 		Versioning *MainFile, *FirstLine & CompileLine, Project, ProjectNode
 		Dim FileOut As Integer
 		WLet(ExeName, GetExeFileName(*MainFile, CompileLine & " " & *FirstLine))
-		If Project AndAlso Trim(*Project->CompilerPath) <> "" Then
-			WLet(FbcExe, GetFullPath(*Project->CompilerPath))
-		Else
-			WLet(FbcExe, GetFullPath(IIf(Bit32, *Compiler32Path, *Compiler64Path)))
-		End If
+		WLet(FbcExe, GetFullPath(IIf(Bit32, *Compiler32Path, *Compiler64Path)))
 		If *FbcExe = "" Then
 			ThreadsEnter()
 			ShowMessages ML("Invalid defined compiler path.")
@@ -1459,8 +1455,6 @@ Function AddProject(ByRef FileName As WString = "", pFilesList As WStringList Pt
 					WLet(ppe->CompilationArguments32Linux, Mid(Buff, Pos1 + 2, Len(Buff) - Pos1 - 2))
 				ElseIf Parameter = "CompilationArguments64Linux" Then
 					WLet(ppe->CompilationArguments64Linux, Mid(Buff, Pos1 + 2, Len(Buff) - Pos1 - 2))
-				ElseIf Parameter = "CompilerPath" Then
-					WLet(ppe->CompilerPath, Mid(Buff, Pos1 + 2, Len(Buff) - Pos1 - 2))
 				ElseIf Parameter = "CommandLineArguments" Then
 					WLet(ppe->CommandLineArguments, Mid(Buff, Pos1 + 2, Len(Buff) - Pos1 - 2))
 				ElseIf Parameter = "CreateDebugInfo" Then
@@ -2075,7 +2069,6 @@ Function SaveProject(ByRef tnP As TreeNode Ptr, bWithQuestion As Boolean = False
 	Print #Fn, "CompilationArguments64Windows=""" & *ppe->CompilationArguments64Windows & """"
 	Print #Fn, "CompilationArguments32Linux=""" & *ppe->CompilationArguments32Linux & """"
 	Print #Fn, "CompilationArguments64Linux=""" & *ppe->CompilationArguments64Linux & """"
-	Print #Fn, "CompilerPath=""" & *ppe->CompilerPath & """"
 	Print #Fn, "CommandLineArguments=""" & *ppe->CommandLineArguments & """"
 	Print #Fn, "CreateDebugInfo=" & ppe->CreateDebugInfo
 	Print #Fn, "AndroidSDKLocation=""" & *ppe->AndroidSDKLocation & """"
