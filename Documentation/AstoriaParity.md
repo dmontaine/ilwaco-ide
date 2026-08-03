@@ -6,22 +6,16 @@ The big non-target strip is **done** for the whole compiled surface: `src/` (Edi
 then the rest of `src/*.bas`/`*.bi` — 11 files, 626 chains — **landed 2026-08-02**) and the MFF framework
 (**staged task B — landed 2026-08-02**, see "Done — MFF non-target strip" below). The editor +
 `libmff64_gtk3.so` are clean of *real* non-target `#if`/`#ifdef` directives; both build clean and the IDE
-runtime-verified after each. Remaining:
+runtime-verified after each. The strip was then **extended across the whole tree** — non-MFF `Controls/`
+(MariaDBBox, SQLite3, ScintillaControl, cJSON) and `Examples/` (cross-platform demos branch-stripped;
+16 Windows-only demos deleted, Astoria-mirror) — landed 2026-08-02 in commits `a0919c5`, `422e931`,
+`d0b22a1` (+ infra `0b61d0c`). See "Done — whole-tree non-target strip" below. Remaining:
 
-1. **Extend the strip to off-build-path code** (owner direction 2026-08-02: "extend to all code in src,
-   Controls and Examples"). `src/` is done; still to do — **non-MFF `Controls/`** (`MariaDBBox`, `SQLite3`,
-   `cJSON` are `__FB_WIN32__`/`__USE_WASM__`-guarded = builtin-safe; `ScintillaControl` uses
-   `__USE_GTK__`/`__USE_WINAPI__`) and **`Examples/`** (~11 cross-platform demos → strip the Windows
-   branch; ~15 whole Windows-only demos: directshow/directsound/WMI/SAPI/WLan/MediaFoundation/Midi/
-   gdipClock/IFileDialog/Com_VBA… → wholesale delete). **Caveat:** both are OFF the Ilwaco build path, so
-   the eliminator's truth table (which relies on MFF `SysUtils.bi` defining `__USE_GTK__`) is only safe
-   for compiler-builtin guards there; `__USE_*` guards need the per-project target assumption and can't be
-   Ilwaco-build-verified. Whole-project deletion in `Examples/` is destructive → confirm the list first.
-2. **Compiler removal stage 2** — remove the picker UI (Options ▸ compilers list + "Find Compilers"
+1. **Compiler removal stage 2** — remove the picker UI (Options ▸ compilers list + "Find Compilers"
    button), the per-project `CompilerPath` override, and the vestigial `[Compilers]` INI machinery
    (fragile 10-section loop must be refactored, not just deleted). Full surface in "Done — compiler path
    hard-coded" below.
-3. **Resume the changelog walk** — next candidates: `53d8e473` (compile-warning fixes — check Ilwaco's
+2. **Resume the changelog walk** — next candidates: `53d8e473` (compile-warning fixes — check Ilwaco's
    shared files), then the menu-taxonomy feature ports.
 
 **Deferred strip sub-items** (low-value / off the compiled path — do opportunistically, not blocking):
@@ -192,6 +186,23 @@ was live-but-useless. Removed that toggle, **build-verified clean** (fbc exit 0,
 EditControl's whole Windows branch (23 `#ifdef __USE_WINAPI__` blocks + 137 `#ifdef __USE_GTK*…#else…
 #endif` pairs, ~2,135 lines, GDI+D2D interleaved) and is inseparable from it. Retargeted as **staged
 task A** at the top of this file (full EditControl WINAPI strip). MFF's Direct2D is **staged task B**.
+
+## Done 2026-08-02 — whole-tree non-target strip (src + Controls + Examples)
+
+After MFF (task B) and the full `src/` strip (both build- + runtime-verified), the owner asked to extend
+the strip to **all** of `src`, `Controls`, `Examples` ("removing all the cruft made subsequent edits much
+simpler when developing Astoria"). Landed:
+- **`src/`** (`a0919c5`) — 11 files, 626 chains; editor builds clean + runtime-verified. No src file
+  defines the truth symbols and `inc/pipe.bi` is not in the editor TU, so the `-d __USE_GTK3__` table holds.
+- **Non-MFF `Controls/`** (`422e931`) — MariaDBBox, SQLite3, ScintillaControl, cJSON (11 files, 28 chains).
+- **`Examples/`** — cross-platform demos branch-stripped (`422e931`, 10 files); **16 Windows-only demos
+  deleted** (`d0b22a1`): directshow, directsound, MediaFoundation, Midi, Sapi, WMI, WLan, Com_VBA,
+  WellCOM Example, IFileDialog, gdipClock, gdipGoldFish, ChineseCalendar, MultipleDisplay, NTPClient,
+  AndroidProject. **Astoria kept its whole Examples/ tree** (it is the Windows build); the mirror for the
+  GTK build is to keep the runnable demos and drop the Windows-only ones (dead code on Linux).
+- **Caveat:** `Controls/` and `Examples/` are **off the Ilwaco build path**, so those strips are not
+  IDE-build-verified — the eliminator was run conservatively (compiler-builtin `__FB_WIN32__` guards are
+  safe anywhere; `__USE_*` guards under the GTK-target assumption) and every edit was subsequence-checked.
 
 ## Done 2026-08-02 — MFF non-target strip (staged task B) — build-verified
 
