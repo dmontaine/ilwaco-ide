@@ -13,21 +13,6 @@ Private Destructor BassSpectrum
 	Erase specbuf
 End Destructor
 
-#ifdef __FB_64BIT__
-#else
-	'MATH Functions
-	Function fMod(ByVal a As Single , b As Single) As Single
-		Function = a - Fix(a / b) * b
-	End Function
-	
-	Function Sqrt(ByVal num As Double) As Double
-		Function = num ^ 0.5
-	End Function
-	
-	Function Log10(ByVal X As Double) As Double
-		Function = Log(X) / Log(10#)
-	End Function
-#endif
 
 Private Property BassSpectrum.Mode() As Integer
 	Property = specmode
@@ -117,11 +102,7 @@ Private Sub BassSpectrum.Update(Chan As DWORD, hWnd As HANDLE)
 			ReDim specbuf(SpecWidth * (SpecHeight + 1))
 			' memset(specbuf, 0, SpecWidth * SpecHeight)
 			For x = 0 To SpecWidth / 2 - 1
-#if 1
 				y = Sqrt(fft(x + 1)) * 3 * SpecHeight - 4 '  scale it (sqrt To make low values more visible)
-#else
-				y = fft(x + 1) * 10 * SpecHeight ' scale it (linearly)
-#endif
 				If y > SpecHeight Then y = SpecHeight '  cap it
 				If x Then ' interpolate from previous To make the display smoother Then
 					y1 = (y + y1) / 2

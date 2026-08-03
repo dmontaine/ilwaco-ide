@@ -4,11 +4,7 @@
 #include once "commctrl.bi"
 #include once "devpropdef.bi"
 
-#if defined(__FB_WIN32__) and defined(__FB_64BIT__)
-	#include once "pshpack8.bi"
-#else
 	#include once "pshpack1.bi"
-#endif
 
 #include once "poppack.bi"
 

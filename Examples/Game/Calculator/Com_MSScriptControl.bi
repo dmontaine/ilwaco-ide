@@ -54,17 +54,10 @@ Type Object_MSScriptControl
 	Declare Constructor (RHS As Object_MSScriptControl)
 	Declare Operator Let(RHS As Object_MSScriptControl)
 	
-	#ifdef __FB_64BIT__
 		Declare Function Call cdecl (ByVal MethodName As LPOLESTR, TypeChars As String = "", ByVal Arg0 As Any Ptr = 0, ByVal Arg1 As Any Ptr = 0, ByVal Arg2 As Any Ptr = 0, ByVal Arg3 As Any Ptr = 0, ByVal Arg4 As Any Ptr = 0, ByVal Arg5 As Any Ptr = 0, ByVal Arg6 As Any Ptr = 0, ByVal Arg7 As Any Ptr = 0, ByVal Arg8 As Any Ptr = 0, ByVal Arg9 As Any Ptr = 0, ByVal Arg10 As Any Ptr = 0, ByVal Arg11 As Any Ptr = 0, ByVal Arg12 As Any Ptr = 0, ByVal Arg13 As Any Ptr = 0, ByVal Arg14 As Any Ptr = 0, ByVal Arg15 As Any Ptr = 0, ByVal Arg16 As Any Ptr = 0, ByVal Arg17 As Any Ptr = 0, ByVal Arg18 As Any Ptr = 0, ByVal Arg19 As Any Ptr = 0, ByVal Arg20 As Any Ptr = 0, ByVal Arg21 As Any Ptr = 0, ByVal Arg22 As Any Ptr = 0, ByVal Arg23 As Any Ptr = 0, ByVal Arg24 As Any Ptr = 0, ByVal Arg25 As Any Ptr = 0, ByVal Arg26 As Any Ptr = 0, ByVal Arg27 As Any Ptr = 0, ByVal Arg28 As Any Ptr = 0, ByVal Arg29 As Any Ptr = 0, ByVal Arg30 As Any Ptr = 0, ByVal Arg31 As Any Ptr = 0) As Object_MSScriptControl
 		Declare Function  Get cdecl (ByVal MethodName As LPOLESTR, TypeChars As String = "", ByVal Arg0 As Any Ptr = 0, ByVal Arg1 As Any Ptr = 0, ByVal Arg2 As Any Ptr = 0, ByVal Arg3 As Any Ptr = 0, ByVal Arg4 As Any Ptr = 0, ByVal Arg5 As Any Ptr = 0, ByVal Arg6 As Any Ptr = 0, ByVal Arg7 As Any Ptr = 0, ByVal Arg8 As Any Ptr = 0, ByVal Arg9 As Any Ptr = 0, ByVal Arg10 As Any Ptr = 0, ByVal Arg11 As Any Ptr = 0, ByVal Arg12 As Any Ptr = 0, ByVal Arg13 As Any Ptr = 0, ByVal Arg14 As Any Ptr = 0, ByVal Arg15 As Any Ptr = 0, ByVal Arg16 As Any Ptr = 0, ByVal Arg17 As Any Ptr = 0, ByVal Arg18 As Any Ptr = 0, ByVal Arg19 As Any Ptr = 0, ByVal Arg20 As Any Ptr = 0, ByVal Arg21 As Any Ptr = 0, ByVal Arg22 As Any Ptr = 0, ByVal Arg23 As Any Ptr = 0, ByVal Arg24 As Any Ptr = 0, ByVal Arg25 As Any Ptr = 0, ByVal Arg26 As Any Ptr = 0, ByVal Arg27 As Any Ptr = 0, ByVal Arg28 As Any Ptr = 0, ByVal Arg29 As Any Ptr = 0, ByVal Arg30 As Any Ptr = 0, ByVal Arg31 As Any Ptr = 0) As Object_MSScriptControl
 		Declare Sub       Put cdecl (ByVal MethodName As LPOLESTR, TypeChars As String = "", ByVal Arg0 As Any Ptr = 0, ByVal Arg1 As Any Ptr = 0, ByVal Arg2 As Any Ptr = 0, ByVal Arg3 As Any Ptr = 0, ByVal Arg4 As Any Ptr = 0, ByVal Arg5 As Any Ptr = 0, ByVal Arg6 As Any Ptr = 0, ByVal Arg7 As Any Ptr = 0, ByVal Arg8 As Any Ptr = 0, ByVal Arg9 As Any Ptr = 0, ByVal Arg10 As Any Ptr = 0, ByVal Arg11 As Any Ptr = 0, ByVal Arg12 As Any Ptr = 0, ByVal Arg13 As Any Ptr = 0, ByVal Arg14 As Any Ptr = 0, ByVal Arg15 As Any Ptr = 0, ByVal Arg16 As Any Ptr = 0, ByVal Arg17 As Any Ptr = 0, ByVal Arg18 As Any Ptr = 0, ByVal Arg19 As Any Ptr = 0, ByVal Arg20 As Any Ptr = 0, ByVal Arg21 As Any Ptr = 0, ByVal Arg22 As Any Ptr = 0, ByVal Arg23 As Any Ptr = 0, ByVal Arg24 As Any Ptr = 0, ByVal Arg25 As Any Ptr = 0, ByVal Arg26 As Any Ptr = 0, ByVal Arg27 As Any Ptr = 0, ByVal Arg28 As Any Ptr = 0, ByVal Arg29 As Any Ptr = 0, ByVal Arg30 As Any Ptr = 0, ByVal Arg31 As Any Ptr = 0)
 		'Declare Sub       Set cdecl (ByVal MethodName As LPOLESTR, TypeChars As String = "", ByVal Arg0 As Any Ptr = 0, ByVal Arg1 As Any Ptr = 0, ByVal Arg2 As Any Ptr = 0, ByVal Arg3 As Any Ptr = 0, ByVal Arg4 As Any Ptr = 0, ByVal Arg5 As Any Ptr = 0, ByVal Arg6 As Any Ptr = 0, ByVal Arg7 As Any Ptr = 0, ByVal Arg8 As Any Ptr = 0, ByVal Arg9 As Any Ptr = 0, ByVal Arg10 As Any Ptr = 0, ByVal Arg11 As Any Ptr = 0, ByVal Arg12 As Any Ptr = 0, ByVal Arg13 As Any Ptr = 0, ByVal Arg14 As Any Ptr = 0, ByVal Arg15 As Any Ptr = 0, ByVal Arg16 As Any Ptr = 0, ByVal Arg17 As Any Ptr = 0, ByVal Arg18 As Any Ptr = 0, ByVal Arg19 As Any Ptr = 0, ByVal Arg20 As Any Ptr = 0, ByVal Arg21 As Any Ptr = 0, ByVal Arg22 As Any Ptr = 0, ByVal Arg23 As Any Ptr = 0, ByVal Arg24 As Any Ptr = 0, ByVal Arg25 As Any Ptr = 0, ByVal Arg26 As Any Ptr = 0, ByVal Arg27 As Any Ptr = 0, ByVal Arg28 As Any Ptr = 0, ByVal Arg29 As Any Ptr = 0, ByVal Arg30 As Any Ptr = 0, ByVal Arg31 As Any Ptr = 0)
-	#else
-		Declare Function Call cdecl (ByVal MethodName As LPOLESTR, TypeChars As String = "", ...) As Object_MSScriptControl
-		Declare Function  Get cdecl (ByVal MethodName As LPOLESTR, TypeChars As String = "", ...) As Object_MSScriptControl
-		Declare Sub       Put cdecl (ByVal MethodName As LPOLESTR, TypeChars As String = "", ...)
-		'Declare Sub       Set cdecl (ByVal MethodName As LPOLESTR, TypeChars As String = "", ...)
-	#endif
 	Declare Function  vbV() As Object_MSScriptControl
 
 ' 添加声明在以下位置 21:33:01, 06-13-2024
@@ -336,7 +329,6 @@ Operator Object_MSScriptControl.Let(RHS As Object_MSScriptControl)
 	VariantCopy @V, @RHS.V
 End Operator
 
-#ifdef __FB_64BIT__
 	Function Object_MSScriptControl.Call cdecl (ByVal MethodName As LPOLESTR, TypeChars As String = "", ByVal Arg0 As Any Ptr = 0, ByVal Arg1 As Any Ptr = 0, ByVal Arg2 As Any Ptr = 0, ByVal Arg3 As Any Ptr = 0, ByVal Arg4 As Any Ptr = 0, ByVal Arg5 As Any Ptr = 0, ByVal Arg6 As Any Ptr = 0, ByVal Arg7 As Any Ptr = 0, ByVal Arg8 As Any Ptr = 0, ByVal Arg9 As Any Ptr = 0, ByVal Arg10 As Any Ptr = 0, ByVal Arg11 As Any Ptr = 0, ByVal Arg12 As Any Ptr = 0, ByVal Arg13 As Any Ptr = 0, ByVal Arg14 As Any Ptr = 0, ByVal Arg15 As Any Ptr = 0, ByVal Arg16 As Any Ptr = 0, ByVal Arg17 As Any Ptr = 0, ByVal Arg18 As Any Ptr = 0, ByVal Arg19 As Any Ptr = 0, ByVal Arg20 As Any Ptr = 0, ByVal Arg21 As Any Ptr = 0, ByVal Arg22 As Any Ptr = 0, ByVal Arg23 As Any Ptr = 0, ByVal Arg24 As Any Ptr = 0, ByVal Arg25 As Any Ptr = 0, ByVal Arg26 As Any Ptr = 0, ByVal Arg27 As Any Ptr = 0, ByVal Arg28 As Any Ptr = 0, ByVal Arg29 As Any Ptr = 0, ByVal Arg30 As Any Ptr = 0, ByVal Arg31 As Any Ptr = 0) As Object_MSScriptControl
 		Dim tv As tagVariant
 		tv = CallByName(V, MethodName, DISPATCH_METHOD Or DISPATCH_PROPERTYGET, TypeChars, Arg0, Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10, Arg11, Arg12, Arg13, Arg14, Arg15, Arg16, Arg17, Arg18, Arg19, Arg20, Arg21, Arg22, Arg23, Arg24, Arg25, Arg26, Arg27, Arg28, Arg29, Arg30, Arg31)
@@ -351,20 +343,4 @@ End Operator
 	'Sub Object_MSScriptControl.Set cdecl (ByVal MethodName As LPOLESTR, TypeChars As String = "", ByVal Arg0 As Any Ptr = 0, ByVal Arg1 As Any Ptr = 0, ByVal Arg2 As Any Ptr = 0, ByVal Arg3 As Any Ptr = 0, ByVal Arg4 As Any Ptr = 0, ByVal Arg5 As Any Ptr = 0, ByVal Arg6 As Any Ptr = 0, ByVal Arg7 As Any Ptr = 0, ByVal Arg8 As Any Ptr = 0, ByVal Arg9 As Any Ptr = 0, ByVal Arg10 As Any Ptr = 0, ByVal Arg11 As Any Ptr = 0, ByVal Arg12 As Any Ptr = 0, ByVal Arg13 As Any Ptr = 0, ByVal Arg14 As Any Ptr = 0, ByVal Arg15 As Any Ptr = 0, ByVal Arg16 As Any Ptr = 0, ByVal Arg17 As Any Ptr = 0, ByVal Arg18 As Any Ptr = 0, ByVal Arg19 As Any Ptr = 0, ByVal Arg20 As Any Ptr = 0, ByVal Arg21 As Any Ptr = 0, ByVal Arg22 As Any Ptr = 0, ByVal Arg23 As Any Ptr = 0, ByVal Arg24 As Any Ptr = 0, ByVal Arg25 As Any Ptr = 0, ByVal Arg26 As Any Ptr = 0, ByVal Arg27 As Any Ptr = 0, ByVal Arg28 As Any Ptr = 0, ByVal Arg29 As Any Ptr = 0, ByVal Arg30 As Any Ptr = 0, ByVal Arg31 As Any Ptr = 0)
 	'	CallByName(V, MethodName, DISPATCH_PROPERTYPUTREF,  TypeChars, Arg0, Arg1, Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8, Arg9, Arg10, Arg11, Arg12, Arg13, Arg14, Arg15, Arg16, Arg17, Arg18, Arg19, Arg20, Arg21, Arg22, Arg23, Arg24, Arg25, Arg26, Arg27, Arg28, Arg29, Arg30, Arg31)
 	'End Sub
-#else
-	Function Object_MSScriptControl.Call cdecl (ByVal MethodName As LPOLESTR, TypeChars As String = "", ...) As Object_MSScriptControl
-		Dim tv As tagVARIANT
-		tv = CallByName(V, MethodName, DISPATCH_METHOD Or DISPATCH_PROPERTYGET, TypeChars, va_first)
-		Function = tv
-	End Function
-	Function Object_MSScriptControl.Get cdecl (ByVal MethodName As LPOLESTR, TypeChars As String = "", ...) As Object_MSScriptControl
-		Return CallByName(V, MethodName, DISPATCH_METHOD Or DISPATCH_PROPERTYGET, TypeChars, va_first)
-	End Function
-	Sub Object_MSScriptControl.Put cdecl (ByVal MethodName As LPOLESTR, TypeChars As String = "", ...)
-		CallByName(V, MethodName, DISPATCH_PROPERTYPUT, TypeChars, va_first)
-	End Sub
-	'Sub Object_MSScriptControl.Set cdecl (ByVal MethodName As LPOLESTR, TypeChars As String = "", ...)
-	'	CallByName(V, MethodName, DISPATCH_PROPERTYPUTREF,  TypeChars, va_first)
-	'End Sub
-#endif
 

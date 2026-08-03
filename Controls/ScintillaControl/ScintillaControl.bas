@@ -31,56 +31,6 @@
 #endif
 
 Private Sub ScintillaControl.ProcessMessage(ByRef msg As Message)
-	#ifndef __USE_GTK__
-		Dim scMsg As SCNotification
-		Select Case msg.Msg
-		Case CM_NOTIFY
-			CopyMemory(@scMsg, Cast(Any Ptr, msg.lParam), Len(scMsg))
-			If (scMsg.hdr.hwndFrom = FHandle) Then
-				'Scintilla has given some information. Let's see what it is
-				'and route it to the proper place.
-				'Any commented with TODO have not been implimented yet.
-				Select Case scMsg.hdr.code
-				Case SCN_MODIFIED
-					'Debug.Print "SCN_MODIFIED"
-					'Debug.Print "modificationType=" & scMsg.modificationType
-					'Changed = True
-					If OnModify Then OnModify(*Designer, This)
-				Case SCN_HOTSPOTCLICK
-					'Debug.Print "SCN_HOTSPOTCLICK"
-				Case SCN_DOUBLECLICK
-					'Debug.Print "SCN_DOUBLECLICK"
-					If OnDblClick Then OnDblClick(*Designer, This)
-					
-				Case SCN_UPDATEUI
-					'Debug.Print "SCN_UPDATEUI"
-					'Debug.Print  "updated=" & scMsg.updated
-					Select Case scMsg.updated
-					Case SC_UPDATE_NONE
-					Case SC_UPDATE_CONTENT
-						If OnUpdate Then OnUpdate(*Designer, This)
-						
-					Case SC_UPDATE_SELECTION
-						If OnUpdate Then OnUpdate(*Designer, This)
-						
-					Case SC_UPDATE_V_SCROLL
-						'line number margin auto width
-						If MarginWidth(0) <> 0 Then MarginWidth(0) = 10
-						'Dim s As String = Format(SendMessage(FHandle, SCI_GETFIRSTVISIBLELINE, 0, 0) + SendMessage(FHandle, SCI_LINESONSCREEN, 0, 0), "#0")
-						'MarginWidth(0) = SendMessage(FHandle, SCI_TEXTWIDTH, STYLE_DEFAULT, Cast(LPARAM, StrPtr(s))) + 5
-						'End If
-					Case SC_UPDATE_H_SCROLL
-					End Select
-				Case SCN_AUTOCSELECTIONCHANGE
-					'Debug.Print "SCN_AUTOCSELECTIONCHANGE"
-				Case SCN_KEY
-					'Debug.Print "SCN_KEY"
-				Case SCN_PAINTED
-					'Debug.Print "SCN_PAINTED"
-				End Select
-			End If
-		End Select
-	#endif
 	Base.ProcessMessage(msg)
 End Sub
 
@@ -130,38 +80,10 @@ Namespace My.Sys.Forms
 	
 End Namespace
 
-#ifndef __USE_GTK__
-	Private Sub ScintillaControl.HandleIsAllocated(ByRef Sender As Control)
-		If Sender.Child Then
-			
-		End If
-	End Sub
-#endif
 
-#ifndef __USE_GTK__
-	Private Sub ScintillaControl.WndProc(ByRef message As Message)
-	End Sub
-#endif
 
 Constructor ScintillaControl
-	#ifdef __USE_GTK__
 		'
-	#else
-		#ifdef __FB_64BIT__
-			' Load the ScintillaControl code editing dll
-			pLibLexilla = DyLibLoad("Lexilla64.dll")
-			pLibScintilla = DyLibLoad("Scintilla64.dll")
-		#else
-			' Load the ScintillaControl code editing dll
-			pLibLexilla = DyLibLoad("Lexilla32.dll")
-			pLibScintilla = DyLibLoad("Scintilla32.dll")
-		#endif
-		FExStyle = 0
-		FStyle = WS_CHILD Or WS_VISIBLE Or WS_TABSTOP Or WS_BORDER
-		RegisterClass "ScintillaControl", "Scintilla"
-		OnHandleIsAllocated = @HandleIsAllocated
-		ChildProc		= @WndProc
-	#endif
 	WLet(FClassName, "ScintillaControl")
 	WLet(FClassAncestor, "Scintilla")
 	FTabIndex          = -1
@@ -289,21 +211,9 @@ Private Function ScintillaControl.IndexFind(ByVal FindWarp As Boolean = True, By
 End Function
 
 Private Sub App_DoEvents
-	#ifdef __USE_GTK__
 		While gtk_events_pending()
 			gtk_main_iteration
 		Wend
-	#elseif defined(__USE_WINAPI__)
-		Dim As MSG M
-		While PeekMessage(@M, NULL, 0, 0, PM_REMOVE)
-			If M.message <> WM_QUIT Then
-				TranslateMessage @M
-				DispatchMessage @M
-			Else
-				If (GetWindowLong(M.hwnd,GWL_EXSTYLE) And WS_EX_APPWINDOW) = WS_EX_APPWINDOW Then End -1
-			End If
-		Wend
-	#endif
 End Sub
 
 Private Function ScintillaControl.Find(ByRef toFind As Const ZString Ptr, ByVal RegularExp As Boolean = False, ByVal MatchCase As Boolean = False, ByVal FindWarp As Boolean = True, ByVal FindBack As Boolean = False, ByVal MoveNext As Boolean = False, ByVal FindForce As Boolean = False) As Integer

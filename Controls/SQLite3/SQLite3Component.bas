@@ -445,11 +445,7 @@ Function SQLite3Component.FindByteUtf(Table_Utf8 As String, Cond_Utf8 As String,
 					If r = 2 Then Exit While
 					If siz And r <> 1 Then
 						rs_Utf8(yi, i) = String(siz, 0)
-						#ifdef __USE_WASM__
-							Fb_MemCopy rs_Utf8(yi, i), value, siz
-						#else
 							memcpy StrPtr(rs_Utf8(yi, i)), value, siz
-						#endif
 					End If
 				Case 4 ' SQLITE_BLOB
 					value = Cast(Any Ptr, sqlite3_column_blob(ppStmt, i))
@@ -462,11 +458,7 @@ Function SQLite3Component.FindByteUtf(Table_Utf8 As String, Cond_Utf8 As String,
 					If r = 2 Then Exit While
 					If siz And r <> 1 Then
 						rs_Utf8(yi, i) = String(siz, 0)
-						#ifdef __USE_WASM__
-							Fb_MemCopy rs_Utf8(yi, i), value, siz
-						#else
 							memcpy StrPtr(rs_Utf8(yi, i)), value, siz
-						#endif
 					End If
 					
 				Case 5 ' SQLITE_NULL
@@ -543,11 +535,7 @@ Function SQLite3Component.FindOneByteUtf(Table_Utf8 As String, Cond_Utf8 As Stri
 					If r = 2 Then Exit For
 					If siz And r <> 1 Then
 						rs_Utf8(i) = String(siz, 0)
-						#ifdef __USE_WASM__
-							Fb_MemCopy rs_Utf8(i), value, siz
-						#else
 							memcpy StrPtr(rs_Utf8(i)), value, siz
-						#endif
 					End If
 				Case 4 ' SQLITE_BLOB
 					value = Cast(Any Ptr, sqlite3_column_blob(ppStmt, i))
@@ -560,11 +548,7 @@ Function SQLite3Component.FindOneByteUtf(Table_Utf8 As String, Cond_Utf8 As Stri
 					If r = 2 Then Exit For
 					If siz And r <> 1 Then
 						rs_Utf8(i) = String(siz, 0)
-						#ifdef __USE_WASM__
-							Fb_MemCopy rs_Utf8(i), value, siz
-						#else
 							memcpy StrPtr(rs_Utf8(i)), value, siz
-						#endif
 					End If
 					
 				Case 5 ' SQLITE_NULL

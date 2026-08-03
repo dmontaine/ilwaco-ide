@@ -1,20 +1,9 @@
 ﻿'#Region "Form"
 	#if defined(__FB_MAIN__) AndAlso Not defined(__MAIN_FILE__)
 		#define __MAIN_FILE__
-		#ifdef __FB_WIN32__
-			#ifdef __FB_64BIT__
-				#cmdline "Form1.rc -x ./release/win64/Untitled.exe"
-			#else
-				#cmdline "Form1.rc -x ./release/win32/Untitled.exe"
-			#endif
-		#endif
 		Const _MAIN_FILE_ = __FILE__
 	#endif
-	#ifdef __FB_64BIT__
 		#libpath "./lib/win64"
-	#else
-		#libpath "./lib/win32"
-	#endif
 	#include once "mff/Form.bi"
 	#include once "mff/Picture.bi"
 	#include once "mff/CommandButton.bi"

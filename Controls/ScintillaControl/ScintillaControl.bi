@@ -18,10 +18,6 @@ Private:
 	Dim mDarkMode As Boolean = False
 	Dim As Any Ptr pLibLexilla
 	Dim As Any Ptr pLibScintilla
-	#ifndef __USE_GTK__
-		Declare Static Sub WndProc(ByRef message As Message)
-		Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-	#endif
 Protected:
 	Declare Virtual Sub ProcessMessage(ByRef msg As Message)
 Public:

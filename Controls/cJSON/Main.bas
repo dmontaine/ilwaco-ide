@@ -1,8 +1,4 @@
-﻿#ifdef __FB_64BIT__
-	#cmdline "cJSON.rc -dll -x cJSONComponent_x64.dll"
-#else
-	#cmdline "cJSON.rc -dll -x cJSONComponent_x32.dll"
-#endif
+﻿	#cmdline "cJSON.rc -dll -x cJSONComponent_x64.dll"
 #define __EXPORT_PROCS__
 
 #include once "cJSON.bi"

@@ -4,9 +4,6 @@
 '#  Authors: Xusinboy Bekchanov, Liu XiaLin                                     #
 '################################################################################
 
-#ifdef __FB_WIN32__
-	#cmdline "CanvasDraw.rc"
-#endif
 '#Region "Form"
 	#include once "mff/Form.bi"
 	#include once "mff/Label.bi"

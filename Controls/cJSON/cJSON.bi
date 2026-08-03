@@ -22,25 +22,13 @@
 
 #include once "crt/stddef.bi"
 
-#ifdef __FB_WIN32__
-	Extern "Windows"
-#else
 	Extern "C"
-#endif
 
 #define cJSON__h
 
-#ifdef __FB_WIN32__
-	#define __WINDOWS__
-	#define CJSON_CDECL __cdecl
-	#define CJSON_STDCALL __stdcall
-	#define CJSON_EXPORT_SYMBOLS
-	'' TODO: #define CJSON_PUBLIC(type) __declspec(dllexport) type CJSON_STDCALL
-#else
 	#define CJSON_CDECL
 	#define CJSON_STDCALL
 	#define CJSON_PUBLIC(type) type
-#endif
 
 Const CJSON_VERSION_MAJOR = 1
 Const CJSON_VERSION_MINOR = 7
@@ -172,7 +160,6 @@ Type JSON_ISFALSEPROC As Function cdecl (ByVal item As Const cJSON Ptr) As cJSON
 Type JSON_GETARRAYSIZEPROC As Function cdecl (ByVal item As Const cJSON Ptr) As Long
 Type JSON_GETARRAYITEMPROC As Function cdecl (ByVal array As Const cJSON Ptr, ByVal index As Long) As cJSON Ptr
 
-#ifdef __FB_64BIT__
    #define DECL_CJSON_DLL_NAME        "./cJSON64.dll"
    #define DECL_CJSON_VERSION         "cJSON_Version"
    #define DECL_CJSON_PARSE           "cJSON_Parse"
@@ -185,20 +172,6 @@ Type JSON_GETARRAYITEMPROC As Function cdecl (ByVal array As Const cJSON Ptr, By
    #define DECL_CJSON_GETOBJECTITEM   "cJSON_GetObjectItem"
    #define DECL_CJSON_GETARRAYSIZE    "cJSON_GetArraySize"
    #define DECL_CJSON_GETARRAYITEM    "cJSON_GetArrayItem"
-#else
-   #define DECL_CJSON_DLL_NAME        "./cJSON32.dll"
-   #define DECL_CJSON_VERSION         "_cJSON_Version@0"
-   #define DECL_CJSON_PARSE           "_cJSON_Parse@4"
-   #define DECL_CJSON_DELETE          "_cJSON_Delete@4"
-   #define DECL_CJSON_ISSTRING        "_cJSON_IsString@4"
-   #define DECL_CJSON_ISNUMBER        "_cJSON_IsNumber@4"
-   #define DECL_CJSON_ISBOOL          "_cJSON_IsBool@4"
-   #define DECL_CJSON_ISTRUE          "_cJSON_IsTrue@4"
-   #define DECL_CJSON_ISFALSE         "_cJSON_IsFalse@4"
-   #define DECL_CJSON_GETOBJECTITEM   "_cJSON_GetObjectItem@8"
-   #define DECL_CJSON_GETARRAYSIZE    "_cJSON_GetArraySize@4"
-   #define DECL_CJSON_GETARRAYITEM    "_cJSON_GetArrayItem@8"
-#endif
 
 #include once "mff/Component.bi"
 

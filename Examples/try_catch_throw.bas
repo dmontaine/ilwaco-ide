@@ -156,13 +156,8 @@ Function VectoredHandler(ByVal pexp As PEXCEPTION_POINTERS) As Long
 	'' Increment the instruction pointer in the context record past the
 	'' 1-byte breakpoint instruction to avoid having the exception recur.
 	''--------------------------------------------------------------------
-	#ifndef __FB_64BIT__
-		If VERBOSE Then Print Hex(pctxr -> Eip)
-		pctxr -> Eip += 1
-	#else
 		If VERBOSE Then Print Hex(pctxr -> Rip)
 		pctxr -> Rip += 1
-	#endif
 	'return EXCEPTION_CONTINUE_EXECUTION '-1
 	'return EXCEPTION_CONTINUE_SEARCH '0
 	If iflag = -1 Then  THROW_MSG( - 1, status)

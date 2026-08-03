@@ -1,16 +1,4 @@
-﻿#ifdef __FB_WIN32__
-	#ifdef __FB_64BIT__
-		'#Compile -dll -x "../../AddIns/My Add-In (x64).dll" "My Add-In.rc"
-	#else
-		'#Compile -dll -x "../../AddIns/My Add-In (x32).dll" "My Add-In.rc"
-	#endif
-#else
-	#ifdef __FB_64BIT__
-		'#Compile -dll -x "../../AddIns/MyAddInx64.so"
-	#else
-		'#Compile -dll -x "../../AddIns/MyAddInx32.so"
-	#endif
-#endif
+﻿		'#Compile -dll -x "../../AddIns/MyAddInx64.so"
 
 Enum MessageType '...'
 	mtInfo
@@ -104,15 +92,7 @@ End Sub
 Sub OnConnection Alias "OnConnection"(VisualFBEditorApp As Any Ptr, ByRef AppPath As WString) Export
 	VFBEditorApp = VisualFBEditorApp
 	
-	#ifdef __FB_WIN32__
-		#ifdef __FB_64BIT__
-			VFBEditorLib = DyLibLoad(GetFolderPath(AppPath) & "/Controls/MyFbFramework/mff64.dll")
-		#else
-			VFBEditorLib = DyLibLoad(GetFolderPath(AppPath) & "/Controls/MyFbFramework/mff32.dll")
-		#endif
-	#else
 		VFBEditorLib = DyLibLoad(GetFolderPath(AppPath) & "/Controls/MyFbFramework/libmff" & Right(AppPath, 7) & ".so")
-	#endif
 	If s <> 0 Then Deallocate s
 	
 	If VFBEditorLib = 0 Then Exit Sub
