@@ -295,7 +295,7 @@ Enum DebuggerTypes
 	CustomDebugger
 End Enum
 
-Dim Shared As DebuggerTypes DefaultDebuggerType32, DefaultDebuggerType64, CurrentDebuggerType32, CurrentDebuggerType64
+Dim Shared As DebuggerTypes DefaultDebuggerType64, CurrentDebuggerType64
 
 '===================================================
 '' set/unset breakpoint markers

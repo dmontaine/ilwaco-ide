@@ -406,14 +406,6 @@ pfOptions = @fOptions
 			.SetBounds 10, 203, 417, 197
 			.Parent = @pnlDebugger
 		End With
-		' cboDebugger32
-		With cboDebugger32
-			.Name = "cboDebugger32"
-			.Text = "cboCompiler321"
-			.TabIndex = 90
-			.SetBounds 18, 39, 184, 21
-			.Parent = @grbDefaultDebuggers
-		End With
 		' grbDefaultTerminal
 		With grbDefaultTerminal
 			.Name = "grbDefaultTerminal"
@@ -1893,14 +1885,6 @@ pfOptions = @fOptions
 			.OnClick = @chkCreateNonStaticEventHandlers_Click_
 			.Parent = @pnlDesigner
 		End With
-		' lblDebugger32
-		With lblDebugger32
-			.Name = "lblDebugger32"
-			.Text = ML("Debugger") & " " & ML("32-bit")
-			.TabIndex = 163
-			.SetBounds 22, 21, 260, 18
-			.Parent = @grbDefaultDebuggers
-		End With
 		' cboDebugger1
 		With cboDebugger64
 			.Name = "cboDebugger64"
@@ -2297,14 +2281,6 @@ pfOptions = @fOptions
 			.TabIndex = 190
 			'.Caption = ML("GDB") & " " & ML("32-bit")
 			.SetBounds 222, 21, 180, 18
-			.Parent = @grbDefaultDebuggers
-		End With
-		' cboGDBDebugger32
-		With cboGDBDebugger32
-			.Name = "cboGDBDebugger32"
-			.Text = "cboCompiler321"
-			.TabIndex = 192
-			.SetBounds 218, 39, 184, 21
 			.Parent = @grbDefaultDebuggers
 		End With
 		' lblDebugger641
@@ -3455,27 +3431,19 @@ Sub frmOptions.LoadSettings()
 			.cboMakeTool.AddItem pMakeTools->Item(i)->Key
 		Next
 		.cboMakeTool.ItemIndex = Max(0, .cboMakeTool.IndexOf(*DefaultMakeTool))
-		.cboDebugger32.Clear
 		.cboDebugger64.Clear
-		.cboGDBDebugger32.Clear
 		.cboGDBDebugger64.Clear
 		.lvDebuggerPaths.ListItems.Clear
-		.cboDebugger32.AddItem ML("Integrated IDE Debugger")
-		.cboDebugger32.AddItem ML("Integrated GDB Debugger")
 		.cboDebugger64.AddItem ML("Integrated IDE Debugger")
 		.cboDebugger64.AddItem ML("Integrated GDB Debugger")
 		For i As Integer = 0 To pDebuggers->Count - 1
 			.lvDebuggerPaths.ListItems.Add pDebuggers->Item(i)->Key
 			.lvDebuggerPaths.ListItems.Item(i)->Text(1) = pDebuggers->Item(i)->Text
 			.lvDebuggerPaths.ListItems.Item(i)->Text(2) = Cast(ToolType Ptr, pDebuggers->Item(i)->Object)->Parameters
-			.cboDebugger32.AddItem pDebuggers->Item(i)->Key
 			.cboDebugger64.AddItem pDebuggers->Item(i)->Key
-			.cboGDBDebugger32.AddItem pDebuggers->Item(i)->Key
 			.cboGDBDebugger64.AddItem pDebuggers->Item(i)->Key
 		Next
-		.cboDebugger32.ItemIndex = IIf(DefaultDebuggerType32 = DebuggerTypes.CustomDebugger, Max(0, .cboDebugger32.IndexOf(ML(*DefaultDebugger32))), DefaultDebuggerType32)
-		.cboDebugger64.ItemIndex = IIf(DefaultDebuggerType32 = DebuggerTypes.CustomDebugger, Max(0, .cboDebugger64.IndexOf(ML(*DefaultDebugger64))), DefaultDebuggerType64)
-		.cboGDBDebugger32.ItemIndex = Max(0, .cboGDBDebugger32.IndexOf(*GDBDebugger32))
+		.cboDebugger64.ItemIndex = IIf(DefaultDebuggerType64 = DebuggerTypes.CustomDebugger, Max(0, .cboDebugger64.IndexOf(ML(*DefaultDebugger64))), DefaultDebuggerType64)
 		.cboGDBDebugger64.ItemIndex = Max(0, .cboGDBDebugger64.IndexOf(*GDBDebugger64))
 		.cboTerminal.Clear
 		.lvTerminalPaths.ListItems.Clear
@@ -3879,23 +3847,14 @@ Private Sub frmOptions.cmdApply_Click(ByRef Designer As My.Sys.Object, ByRef Sen
 			Tool->Parameters = .lvDebuggerPaths.ListItems.Item(i)->Text(2)
 			pDebuggers->Add tempStr, .lvDebuggerPaths.ListItems.Item(i)->Text(1), Tool
 		Next
-		If *DefaultDebugger32 <> IIf(.cboDebugger64.ItemIndex = 0, "Integrated IDE Debugger", IIf(.cboDebugger32.ItemIndex = 1, "Integrated GDB Debugger", .cboDebugger32.Text)) OrElse Not pDebuggers->ContainsKey(*CurrentDebugger32) Then
-			WLet(DefaultDebugger32, IIf(.cboDebugger32.ItemIndex = 0, "Integrated IDE Debugger", IIf(.cboDebugger32.ItemIndex = 1, "Integrated GDB Debugger", .cboDebugger32.Text)))
-			WLet(CurrentDebugger32, *DefaultDebugger32)
-			DefaultDebuggerType32 = IIf(.cboDebugger32.ItemIndex = 0, IntegratedIDEDebugger, IIf(.cboDebugger32.ItemIndex = 1, IntegratedGDBDebugger, CustomDebugger))
-			CurrentDebuggerType32 = DefaultDebuggerType32
-		End If
 		If *DefaultDebugger64 <> IIf(.cboDebugger64.ItemIndex = 0, "Integrated IDE Debugger", IIf(.cboDebugger64.ItemIndex = 1, "Integrated GDB Debugger", .cboDebugger64.Text)) OrElse Not pDebuggers->ContainsKey(*CurrentDebugger64) Then
 			WLet(DefaultDebugger64, IIf(.cboDebugger64.ItemIndex = 0, "Integrated IDE Debugger", IIf(.cboDebugger64.ItemIndex = 1, "Integrated GDB Debugger", .cboDebugger64.Text)))
 			WLet(CurrentDebugger64, *DefaultDebugger64)
 			DefaultDebuggerType64 = IIf(.cboDebugger64.ItemIndex = 0, IntegratedIDEDebugger, IIf(.cboDebugger64.ItemIndex = 1, IntegratedGDBDebugger, CustomDebugger))
 			CurrentDebuggerType64 = DefaultDebuggerType64
 		End If
-		WLet(Debugger32Path, pDebuggers->Get(*CurrentDebugger32))
 		WLet(Debugger64Path, pDebuggers->Get(*CurrentDebugger64))
-		WLet(GDBDebugger32, .cboGDBDebugger32.Text)
 		WLet(GDBDebugger64, .cboGDBDebugger64.Text)
-		WLet(GDBDebugger32Path, pDebuggers->Get(*GDBDebugger32))
 		WLet(GDBDebugger64Path, pDebuggers->Get(*GDBDebugger64))
 		For i As Integer = 0 To pTerminals->Count - 1
 			_Delete(Cast(ToolType Ptr, pTerminals->Item(i)->Object))
@@ -4152,9 +4111,7 @@ Private Sub frmOptions.cmdApply_Click(ByRef Designer As My.Sys.Object, ByRef Sen
 			piniSettings->KeyRemove "MakeTools", "Command_" & WStr(i)
 			i += 1
 		Loop
-		piniSettings->WriteString "Debuggers", "DefaultDebugger32", *DefaultDebugger32
 		piniSettings->WriteString "Debuggers", "DefaultDebugger64", *DefaultDebugger64
-		piniSettings->WriteString "Debuggers", "GDBDebugger32", *GDBDebugger32
 		piniSettings->WriteString "Debuggers", "GDBDebugger64", *GDBDebugger64
 		For i As Integer = 0 To pDebuggers->Count - 1
 			piniSettings->WriteString "Debuggers", "Version_" & WStr(i), pDebuggers->Item(i)->Key
@@ -5159,11 +5116,10 @@ Private Sub frmOptions.cmdAddDebugger_Click(ByRef Designer As My.Sys.Object, ByR
 	pfPath->txtCommandLine.Text = ""
 	If pfPath->ShowModal(fOptions) = ModalResults.OK Then
 		With fOptions
-			If .cboDebugger32.IndexOf(pfPath->txtVersion.Text) = -1 Then
+			If .cboDebugger64.IndexOf(pfPath->txtVersion.Text) = -1 Then
 				.lvDebuggerPaths.ListItems.Add pfPath->txtVersion.Text
 				.lvDebuggerPaths.ListItems.Item(.lvDebuggerPaths.ListItems.Count - 1)->Text(1) = pfPath->txtPath.Text
 				.lvDebuggerPaths.ListItems.Item(.lvDebuggerPaths.ListItems.Count - 1)->Text(2) = pfPath->txtCommandLine.Text
-				.cboDebugger32.AddItem pfPath->txtVersion.Text
 				.cboDebugger64.AddItem pfPath->txtVersion.Text
 			Else
 				MsgBox ML("This version is exists!")
@@ -5179,9 +5135,8 @@ Private Sub frmOptions.cmdChangeDebugger_Click(ByRef Designer As My.Sys.Object, 
 		pfPath->txtPath.Text = .lvDebuggerPaths.SelectedItem->Text(1)
 		pfPath->txtCommandLine.Text = .lvDebuggerPaths.SelectedItem->Text(2)
 		If pfPath->ShowModal(fOptions) = ModalResults.OK Then
-			If .lvDebuggerPaths.SelectedItem->Text(0) = pfPath->txtVersion.Text OrElse .cboDebugger32.IndexOf(pfPath->txtVersion.Text) = -1 Then
-				Var i = .cboDebugger32.IndexOf(.lvDebuggerPaths.SelectedItem->Text(0))
-				.cboDebugger32.Item(i) = pfPath->txtVersion.Text
+			If .lvDebuggerPaths.SelectedItem->Text(0) = pfPath->txtVersion.Text OrElse .cboDebugger64.IndexOf(pfPath->txtVersion.Text) = -1 Then
+				Var i = .cboDebugger64.IndexOf(.lvDebuggerPaths.SelectedItem->Text(0))
 				.cboDebugger64.Item(i) = pfPath->txtVersion.Text
 				.lvDebuggerPaths.SelectedItem->Text(0) = pfPath->txtVersion.Text
 				.lvDebuggerPaths.SelectedItem->Text(1) = pfPath->txtPath.Text
@@ -5196,9 +5151,8 @@ End Sub
 Private Sub frmOptions.cmdRemoveDebugger_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	With fOptions
 		If .lvDebuggerPaths.SelectedItem = 0 Then Exit Sub
-		Var iIndex = .cboDebugger32.IndexOf(.lvDebuggerPaths.SelectedItem->Text(0))
-		If iIndex > -1 Then .cboDebugger32.RemoveItem iIndex: .cboDebugger64.RemoveItem iIndex
-		If .cboDebugger32.ItemIndex = -1 Then .cboDebugger32.ItemIndex = 0
+		Var iIndex = .cboDebugger64.IndexOf(.lvDebuggerPaths.SelectedItem->Text(0))
+		If iIndex > -1 Then .cboDebugger64.RemoveItem iIndex
 		If .cboDebugger64.ItemIndex = -1 Then .cboDebugger64.ItemIndex = 0
 		.lvDebuggerPaths.ListItems.Remove .lvDebuggerPaths.SelectedItemIndex
 	End With
@@ -5207,15 +5161,10 @@ End Sub
 Private Sub frmOptions.cmdClearDebuggers_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	With fOptions
 		.lvDebuggerPaths.ListItems.Clear
-		.cboDebugger32.Clear
-		.cboDebugger32.AddItem ML("Integrated IDE Debugger")
-		.cboDebugger32.AddItem ML("Integrated GDB Debugger")
-		.cboDebugger32.ItemIndex = 0
 		.cboDebugger64.Clear
 		.cboDebugger64.AddItem ML("Integrated IDE Debugger")
 		.cboDebugger64.AddItem ML("Integrated GDB Debugger")
 		.cboDebugger64.ItemIndex = 0
-		.cboGDBDebugger32.Clear
 		.cboGDBDebugger64.Clear
 	End With
 End Sub

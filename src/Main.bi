@@ -130,12 +130,12 @@ Common Shared As WString Ptr gSearchSave, EnvironmentVariables
 Common Shared As WString Ptr ProjectsPath, LastOpenPath, CommandPromptFolder
 Common Shared As WString Ptr DefaultHelp, HelpPath, KeywordsHelpPath, AsmKeywordsHelpPath, DefaultBuildConfiguration
 Common Shared As WString Ptr DefaultMakeTool, CurrentMakeTool1, CurrentMakeTool2, DefaultAIAgent, CurrentAIAgent
-Common Shared As WString Ptr DefaultDebugger32, DefaultDebugger64, GDBDebugger32, GDBDebugger64, CurrentDebugger32, CurrentDebugger64, DefaultTerminal, CurrentTerminal
-Common Shared As WString Ptr MakeToolPath1, MakeToolPath2, Debugger32Path, Debugger64Path, GDBDebugger32Path, GDBDebugger64Path, TerminalPath, Compiler32Path, Compiler64Path
+Common Shared As WString Ptr DefaultDebugger64, GDBDebugger64, CurrentDebugger64, DefaultTerminal, CurrentTerminal
+Common Shared As WString Ptr MakeToolPath1, MakeToolPath2, Debugger64Path, GDBDebugger64Path, TerminalPath, Compiler32Path, Compiler64Path
 ' The bundled FreeBASIC compiler is the one and only compiler, hard-coded here
 ' (resolved relative to the executable, so it travels inside the AppImage bundle).
 #define BundledCompilerPath "./Compilers/FreeBASIC-1.10.1-linux-x86_64/bin/fbc"
-Common Shared As WString Ptr Compiler32Arguments, Compiler64Arguments, Make1Arguments, Make2Arguments, RunArguments, Debug32Arguments, Debug64Arguments
+Common Shared As WString Ptr Compiler32Arguments, Compiler64Arguments, Make1Arguments, Make2Arguments, RunArguments, Debug64Arguments
 Common Shared As Any Ptr tlock, tlockSave, tlockToDo, tlockGDB, tlockSuggestions
 
 Type Library

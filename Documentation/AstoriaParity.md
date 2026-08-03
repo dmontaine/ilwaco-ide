@@ -31,16 +31,17 @@ runtime-verified after each. The strip was then **extended across the whole tree
      branch (compile path, debugger picks, `-gen gas64`, lib folder). Fixed a latent both-branches-32 bug in
      the intellisense temp-compile. `Bit32`/`tbt32Bit`/`tbt64Bit` now zero refs. Files: Main.bas,
      TabWindow.bas, Debug.bas, VisualFBEditor.bas.
-   - **Pass 2 — remove the now-dead 32-bit config (globals + forms) — NOT started, fully mapped in
-     PROJECT_STATUS "Pass 2" bullet.** `Compiler32Path`/`Compiler32Arguments`, the debugger-32 subsystem
-     (`Debugger32Path`/`GDBDebugger32Path`/`CurrentDebugger32`/`DefaultDebugger32`/`Current/DefaultDebuggerType32`),
-     `Debug32Arguments`, `LibX32Folder`, form controls `cboDebug32`/`txtDebug32`/`txtfbc32`/`lblfbc32`/
-     `cboDebugger32`, and the `CompilationArguments32Windows/Linux` project property (frmProjectProperties +
-     TabWindow.bi struct, ~54 refs). Atomic for the build (globals + form consumers together); task-11-scale
-     form surgery — use edit-form-safely. **Trap:** `lblCompilationArguments321` is a different control, keep it.
-   - **Still to check:** the `#ifdef __FB_64BIT__` guards (frmSplash/frmComponents/Debug.bas/frmOptions) —
-     keep the 64 branch, delete the else; `__FB_64BIT__` is *not* Windows-only, read each. See memory
-     `project-64bit-only`.
+   - **Pass 2a — debugger-32 subsystem — DONE, build-verified, committed.** Removed all `*Debugger32*`/
+     `*DebuggerType32`/`Debug32Arguments` globals + the `cboDebug32`/`txtDebug32`/`cboDebugger32`/
+     `cboGDBDebugger32` form controls (frmParameters + frmOptions) + load/save/dealloc; repointed shared
+     debugger handlers to the 64 combo; fixed two more latent 32/64 bugs. Kept `lblDebugger321`.
+   - **Pass 2b — compiler-32 — NOT started; EXACT edits in PROJECT_STATUS "Pass 2b" bullet** (context all
+     read). `Compiler32Path`/`Compiler32Arguments`/`LibX32Folder`, the `Main.bas` include-resolver collapse,
+     `TabWindow.bas` lib-path line, and frmParameters `txtfbc32`/`lblfbc32`/`lblAddCompilerOption32` + handler.
+   - **Pass 2c — `CompilationArguments32` project property (~54 refs) — NOT started.** frmProjectProperties
+     32-bit compilation-arg rows + TabWindow.bi struct + save/load. **Trap:** `lblCompilationArguments321`
+     is a different control, keep it. Then a final `#ifdef __FB_64BIT__` guard sweep (keep the 64 branch;
+     not Windows-only). See memory `project-64bit-only`.
 3. **Resume the changelog walk** — next candidates: `53d8e473` (compile-warning fixes — check Ilwaco's
    shared files), then the menu-taxonomy feature ports.
 

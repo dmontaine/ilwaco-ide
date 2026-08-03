@@ -15,42 +15,58 @@ Ilwaco keeps GTK, so our GTK fixes apply upstream where Astoria's Win64-only one
 
 ---
 
-## Session handoff (2026-08-02, latest) — 64-bit-only strip STARTED (pass 1 DONE; pass 2 scoped)
+## Session handoff (2026-08-02, latest) — 64-bit-only strip IN PROGRESS (pass 1 + 2a DONE; 2b/2c remain)
 
 **START HERE.** Owner directive: **Ilwaco is 64-bit only — strip all 32-bit code** (memory
-`project-64bit-only`). Being done incrementally, build after each pass. Compiler stage 2 (below) is
-committed + pushed (`609d1d2`); the 32-bit strip is **staged, uncommitted**.
+`project-64bit-only`). Incremental, build after each pass. Paused mid-strip (credits). State:
+`a1b2722` = pass 1 (pushed). Pass 2a is committed **this session** (build-verified). **Pass 2b + 2c remain,
+fully mapped below with exact edits.** Do them as separate build-verified passes (each is atomic for the
+whole-program build — a global can't be removed while a form still references it).
 
-- **Pass 1 — collapse the 32/64 build target to 64-bit: DONE, build-verified (`fbc` exit 0) AND
-  runtime-verified** (the "32 | 64" toolbar toggle is gone; IDE loads clean, no crash/`DebugInfo.log`).
-  Removed the `tbt32Bit`/`tbt64Bit` check-group toolbar buttons + their `imgList` "B32"/"B64" images + Dim
-  (`Main.bas`), and collapsed every `Bit32`/`tbt32Bit->Checked` consumer to the 64 branch:
-  `IIf(Bit32, X32, Y64)`→`Y64`, `IIf(Not Bit32,"64","")`→`"64"`, `If Bit32 Then…Else…`→the Else, and the 10
-  `IIf(tbt32Bit->Checked, CurrentDebuggerType32, …64)` in `VisualFBEditor.bas`→`CurrentDebuggerType64`.
-  Files: `Main.bas`, `TabWindow.bas`, `Debug.bas`, `VisualFBEditor.bas`. **Also fixed a latent bug** at the
-  old `Main.bas` intellisense temp-compile: `If tbt32Bit->Checked … Else …` had **both** branches using
-  `*Compiler32Path`; now `*Compiler64Path`. `Bit32`/`tbt32Bit`/`tbt64Bit` refs are now zero.
+- **Pass 1 — DONE (committed `a1b2722`, pushed).** Removed the `tbt32Bit`/`tbt64Bit` 32/64 build-target
+  toolbar toggle; collapsed every `Bit32`/`tbt32Bit->Checked` consumer to the 64 branch. Fixed a latent
+  both-branches-32 bug. `Bit32`/`tbt32Bit`/`tbt64Bit` refs are zero.
 
-- **Pass 2 — remove the now-dead 32-bit config vars/controls: NOT started, fully mapped.** These are unused
-  after pass 1 but must go (no dead code). **Note it is atomic for the build** — a whole-program compile
-  won't link if a global is removed while a form still references it, so globals + their form consumers go
-  together. Surface (all the `…32`/`…32-bit` where a `…64` sibling exists):
-  - **Globals `Main.bi`:** line 133 `DefaultDebugger32`/`GDBDebugger32`/`CurrentDebugger32`; line 134
-    `Debugger32Path`/`GDBDebugger32Path`/`Compiler32Path`; line 138 `Compiler32Arguments`/`Debug32Arguments`;
-    line 151 `LibX32Folder` (struct field). **Keep every `…64` sibling.**
-  - **`Main.bas`:** include-resolver `~3175` (`*Compiler32Path` branch — read the 32/64 `If`, keep 64);
-    `LibX32Folder` load `~5005`; `WLet(Compiler32Path,…)` `~5575`; the debugger-32 load block `~5582-5588`
-    (`DefaultDebugger32`/`DefaultDebuggerType32`/`CurrentDebugger32`/`CurrentDebuggerType32`/`Debugger32Path`/
-    `GDBDebugger32Path`); `Compiler32Arguments` `~5685`; `Debug32Arguments` `~5690`; the `WDeAllocate` block
-    `~10461-10481` (7 lines). **Keep the settings 10-section load loop's term.**
-  - **`Debug.bas`:** line 298 `DefaultDebuggerType32`/`CurrentDebuggerType32` (Dim Shared).
-  - **Forms (edit-form-safely, task-11-scale):** `frmParameters` `cboDebug32`/`txtDebug32`/`txtfbc32`/
-    `lblfbc32` + their populate/apply (the 64-only directive means the 32-bit fbc-arg editor goes too, unlike
-    task 11); `frmOptions` `cboDebugger32` + the Debugger-32 default/paths load/save; `frmProjectProperties`
-    the `CompilationArguments32Windows`/`CompilationArguments32Linux` rows (`lbl…32`/`lbl…32Linux`/`txt…32`/
-    `txt…32Linux`) — **⚠ `lblCompilationArguments321` is a DIFFERENT control ("Command Line Arguments"), keep
-    it** — plus the `TabWindow.bi` struct fields `CompilationArguments32Windows`/`…Linux` + save/load. This
-    is ~54 refs for CompilationArguments32 alone.
+- **Pass 2a — debugger-32 subsystem: DONE, build-verified (`fbc` exit 0), committed this session.** Removed
+  `DefaultDebugger32`/`GDBDebugger32`/`CurrentDebugger32`/`Debugger32Path`/`GDBDebugger32Path`/
+  `Default/CurrentDebuggerType32`/`Debug32Arguments` (globals `Main.bi` 133/134/138, `Debug.bas` 298),
+  their `Main.bas` load block + `Debug32Arguments` load + 6 `WDeAllocate`s, and the form controls
+  `cboDebug32`/`txtDebug32`/`lblDebug32` (frmParameters) + `cboDebugger32`/`cboGDBDebugger32`/`lblDebugger32`
+  (frmOptions) with all their populate/apply/save + the shared Add/Change/Remove/Clear handlers repointed to
+  `cboDebugger64`. **Fixed two more latent 32/64 bugs** in frmOptions (populate `.cboDebugger64.ItemIndex`
+  used `DefaultDebuggerType32`; the apply `If *DefaultDebugger32 …` block). **Kept `lblDebugger321`**
+  (different control). Grep-clean of all debugger-32 symbols.
+
+- **Pass 2b — compiler-32: NOT started, EXACT edits mapped (context all read; ready to apply):**
+  - `Main.bi`: line 134 remove `Compiler32Path, ` (keep Compiler64Path); line 138 remove
+    `Compiler32Arguments, `; line 151 remove `LibX32Folder As UString` (keep `LibX64Folder`).
+  - `Main.bas`: **include-resolver ~3175** — it does `Result = …*Compiler32Path…include/freebasic…`; `If
+    FileExists Return Else Result = …*Compiler64Path…; If FileExists Return Else <pIncludePaths loop> End If
+    End If`. Collapse to the 64 attempt only (drop the outer 32 `Result=`/`If`/`Else` and one `End If`,
+    dedent the inner block). Remove `WLet(Compiler32Path, BundledCompilerPath)` (~5575), the
+    `WLet(Compiler32Arguments, iniSettings.ReadString("Parameters","Compiler32Arguments","-b {S} -exx"))`
+    (~5678), `CtlLibrary->LibX32Folder = GetFullPath(…ini.ReadString("Setup","LibX32Folder")…)` (~5005), and
+    `WDeAllocate(Compiler32Path)`/`WDeAllocate(Compiler32Arguments)`.
+  - `TabWindow.bas` ~4108: remove the `AddPaths(tb, …*Compiler32Path…"include/freebasic"…)` line (keep the
+    `*Compiler64Path` line right below).
+  - `frmParameters.frm`: remove designer blocks `txtfbc32` (marker `' txtfbc32`), `lblfbc32`,
+    `lblAddCompilerOption32` (has `.OnClick … @lblAddCompilerOption32_Click`); remove populate
+    `.txtfbc32.Text = *Compiler32Arguments`, apply `WLet(Compiler32Arguments, .txtfbc32.Text)`, save
+    `WriteString "Parameters","Compiler32Arguments"…`; remove the whole `lblAddCompilerOption32_Click` Sub
+    (body appends to `txtfbc32.Text`). **Keep the 64 equivalents** (`txtfbc64`/`lblfbc64`/
+    `lblAddCompilerOption64`).
+  - `frmParameters.bi`: remove `Declare Sub lblAddCompilerOption32_Click` (line 24), and `lblfbc32` (30),
+    `txtfbc32` (31), `lblAddCompilerOption32` (33) from the Dims.
+
+- **Pass 2c — `CompilationArguments32` (project property): NOT started, ~54 refs.** `frmProjectProperties`
+  the Windows/Linux 32-bit compilation-arg rows (`lblCompilationArguments32`, `lblCompilationArguments32Linux`,
+  `txtCompilationArguments32`, `txtCompilationArguments32Linux`) — **⚠ `lblCompilationArguments321` is a
+  DIFFERENT control ("Command Line Arguments"), keep it** — plus the `TabWindow.bi` struct fields
+  `CompilationArguments32Windows`/`…32Linux` and their save/load in `frmProjectProperties.frm`/`.bi` +
+  `Main.bas`/`TabWindow.bas`. Then a final sweep of the `#ifdef __FB_64BIT__` guards
+  (frmSplash/frmComponents/Debug.bas/frmOptions — keep the 64 branch; `__FB_64BIT__` is **not** Windows-only,
+  read each). Grep `Compiler32|LibX32|CompilationArguments32|__FB_64BIT__` should be empty (except the kept
+  `…321` controls) when done.
 
 ## Session handoff (2026-08-02, earlier) — compiler stage 2 COMPLETE (tasks 11, 12, 13 all DONE)
 

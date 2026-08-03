@@ -166,22 +166,6 @@
 			.SetBounds 8, 244, 712, 88
 			.Parent = @This
 		End With
-		' txtRun1
-		With txtDebug32
-			.Name = "txtDebug32"
-			.Text = ""
-			.TabIndex = 21
-			.SetBounds 376, 24, 321, 21
-			.Parent = @grbDebug
-		End With
-		' lblDebug32
-		With lblDebug32
-			.Name = "lblDebug32"
-			.Text = ML("debug") & " " & ML("32-bit") & ":"
-			.TabIndex = 19
-			.SetBounds 16, 28, 236, 16
-			.Parent = @grbDebug
-		End With
 		' lblDebug1
 		With lblDebug64
 			.Name = "lblDebug64"
@@ -202,13 +186,6 @@
 			.Name = "cboDebug64"
 			.TabIndex = 23
 			.SetBounds 90, 48, 278, 21
-			.Parent = @grbDebug
-		End With
-		With cboDebug32
-			.Name = "cboDebug32"
-			.Text = "ComboBoxEdit112"
-			.TabIndex = 20
-			.SetBounds 90, 24, 278, 21
 			.Parent = @grbDebug
 		End With
 		' lblAddCompilerOption32
@@ -258,7 +235,6 @@ Sub frmParameters.LoadSettings()
 		.txtMake1.Text = *Make1Arguments
 		.txtMake2.Text = *Make2Arguments
 		.txtRun.Text = *RunArguments
-		.txtDebug32.Text = *Debug32Arguments
 		.txtDebug64.Text = *Debug64Arguments
 		.cboMake1.Clear
 		.cboMake2.Clear
@@ -276,21 +252,14 @@ Sub frmParameters.LoadSettings()
 		Next
 		.cboRun.ItemIndex = .cboRun.IndexOf(*CurrentTerminal)
 		If .cboRun.ItemIndex = -1 Then .cboRun.ItemIndex = .cboRun.IndexOf(*DefaultTerminal)
-		.cboDebug32.Clear
-		.cboDebug32.AddItem ML("Integrated IDE Debugger")
-		.cboDebug32.AddItem ML("Integrated GDB Debugger")
 		.cboDebug64.Clear
 		.cboDebug64.AddItem ML("Integrated IDE Debugger")
 		.cboDebug64.AddItem ML("Integrated GDB Debugger")
 		For i As Integer = 0 To pDebuggers->Count - 1
-			.cboDebug32.AddItem pDebuggers->Item(i)->Key
 			.cboDebug64.AddItem pDebuggers->Item(i)->Key
 		Next
-		.cboDebug32.ItemIndex = IIf(CurrentDebuggerType32 = CustomDebugger, .cboDebug32.IndexOf(*CurrentDebugger32), CurrentDebuggerType32)
 		.cboDebug64.ItemIndex = IIf(CurrentDebuggerType64 = CustomDebugger, .cboDebug64.IndexOf(*CurrentDebugger64), CurrentDebuggerType64)
-		If .cboDebug32.ItemIndex = -1 Then .cboDebug32.ItemIndex = IIf(DefaultDebuggerType32 = CustomDebugger, .cboDebug32.IndexOf(ML(*DefaultDebugger32)), DefaultDebuggerType32)
 		If .cboDebug64.ItemIndex = -1 Then .cboDebug64.ItemIndex = IIf(DefaultDebuggerType64 = CustomDebugger, .cboDebug64.IndexOf(ML(*DefaultDebugger64)), DefaultDebuggerType64)
-		If .cboDebug32.ItemIndex = -1 Then .cboDebug32.ItemIndex = 0
 		If .cboDebug64.ItemIndex = -1 Then .cboDebug64.ItemIndex = 0
 	End With
 End Sub
@@ -318,18 +287,14 @@ Private Sub frmParameters.cmdOK_Click(ByRef Designer As My.Sys.Object, ByRef Sen
 		WLet(MakeToolPath2, pMakeTools->Get(*CurrentMakeTool2, pMakeTools->Get(*DefaultMakeTool)))
 		WLet(CurrentTerminal, .cboRun.Text)
 		WLet(TerminalPath, IIf(.cboRun.ItemIndex = 0, pTerminals->Get(*DefaultTerminal), pTerminals->Get(*CurrentTerminal)))
-		WLet(CurrentDebugger32, IIf(.cboDebug32.ItemIndex = 0, "Integrated IDE Debugger", IIf(.cboDebug32.ItemIndex = 1, "Integrated GDB Debugger", .cboDebug32.Text)))
 		WLet(CurrentDebugger64, IIf(.cboDebug64.ItemIndex = 0, "Integrated IDE Debugger", IIf(.cboDebug64.ItemIndex = 1, "Integrated GDB Debugger", .cboDebug64.Text)))
-		CurrentDebuggerType32 = IIf(.cboDebug32.ItemIndex = 0, IntegratedIDEDebugger, IIf(.cboDebug32.ItemIndex = 1, IntegratedGDBDebugger, CustomDebugger))
 		CurrentDebuggerType64 = IIf(.cboDebug64.ItemIndex = 0, IntegratedIDEDebugger, IIf(.cboDebug64.ItemIndex = 1, IntegratedGDBDebugger, CustomDebugger))
-		WLet(Debugger32Path, IIf(.cboDebug32.ItemIndex = 0, pDebuggers->Get(*DefaultDebugger32), pDebuggers->Get(*CurrentDebugger32)))
 		WLet(Debugger64Path, IIf(.cboDebug64.ItemIndex = 0, pDebuggers->Get(*DefaultDebugger64), pDebuggers->Get(*CurrentDebugger64)))
 		piniSettings->WriteString "Parameters", "Compiler32Arguments", *Compiler32Arguments
 		piniSettings->WriteString "Parameters", "Compiler64Arguments", *Compiler64Arguments
 		piniSettings->WriteString "Parameters", "Make1Arguments", *Make1Arguments
 		piniSettings->WriteString "Parameters", "Make2Arguments", *Make2Arguments
 		piniSettings->WriteString "Parameters", "RunArguments", *RunArguments
-		piniSettings->WriteString "Parameters", "Debug32Arguments", *Debug32Arguments
 		piniSettings->WriteString "Parameters", "Debug64Arguments", *Debug64Arguments
 		.CloseForm
 	End With
