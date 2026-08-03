@@ -5679,7 +5679,7 @@ Sub LoadLanguageTexts
 		iniSettings.Load SettingsPath
 	End If
 	App.CurLanguagePath = ExePath & "/Settings/Languages/"
-	App.CurLanguage = iniSettings.ReadString("Options", "Language", "english")
+	App.CurLanguage = "english"
 	Dim As Boolean StartGeneral = True, StartKeyWords, StartProperty, StartCompiler, StartTemplates
 	If App.CurLanguage = "" Then
 		mpKeys.Add "#Til", "English"

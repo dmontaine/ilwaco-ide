@@ -15,7 +15,36 @@ Ilwaco keeps GTK, so our GTK fixes apply upstream where Astoria's Win64-only one
 
 ---
 
-## Session handoff (2026-08-03, latest) — rebrand VisualFBEditor → Ilwaco IDE
+## Session handoff (2026-08-03, latest) — English-only (all other languages removed)
+
+**START HERE.** Owner directive: **the app is English-only; remove other languages.** Build- and
+runtime-verified (`fbc` exit 0; the IDE launches and renders fully in English — all menus, panels, and
+the 14 bottom tabs; no garble, no `DebugInfo.log`; screenshot-confirmed).
+
+- **How it works (no call-site churn):** MFF's `ML(V)` returns its argument `V` unchanged when
+  `App.CurLanguage = App.Language`, and `English.lng`'s `[General]` values are empty (so English already
+  resolves to the literal `ML("…")` argument). Forcing English makes all 1,829 `ML()` call sites pass
+  through to their English text — **no call sites changed**. `LoadLanguageTexts` now hard-codes
+  `App.CurLanguage = "english"` (dropped the `iniSettings.ReadString("Options","Language",…)`), and still
+  loads the kept `Settings/Languages/English.lng`.
+- **Removed the entire "Localization" Options page** (`frmOptions.frm`/`.bi`): the language picker
+  (`cboLanguage`), the `grbLanguage`/`pnlLanguage`/`pnlLocalization` container tree, the "Localization"
+  options-tree node + its panel-switch line, the `Language` INI save, the `newIndex`/`oldIndex`
+  change-detect + "Localization changes… next run" message, the `Languages` `WStringList`, **and the whole
+  ~665-line `cmdUpdateLng_Click` translator tool** ("Scan and Update … language files") with its
+  `chkAllLNG` checkbox, `lblShowMsg` status label, and the unused `cmdUpdateLngHTMLFolds`/`cmdReplaceInFiles`
+  vestigial declares. All six Localization-page child controls were accounted for (no orphans); tree-wide
+  grep of every removed symbol is clean.
+- **Deleted files:** all `Settings/Languages/*.lng` **except `English.lng`** (22 files incl. the `-AI`
+  variants, `default.lng`, `tester`/`swabian`, `english.html`, translator `Readme.txt`) and the 4
+  non-English per-language assets in `Settings/Others/` (`Compiler options.chinese(*)`, `KeywordsHelp.chinese(*)`;
+  kept the base `KeywordsHelp.txt`/`AsmKeywordsHelp.txt`/`Compiler options.txt`).
+- **Residual (harmless, deferred):** `English.lng` + the `LoadLanguageTexts` parser are kept as the active
+  English path (not dead code). A few per-asset runtime guards (`If CurLanguage="english" … Else <lang>`) in
+  Main.bas now always take the English branch — left as-is (runtime-guarded, low value). MFF's `ML`/
+  `CurLanguage` i18n *mechanism* stays (framework capability, now inert for our app).
+
+## Session handoff (2026-08-03, earlier) — rebrand VisualFBEditor → Ilwaco IDE
 
 **START HERE.** Owner directive: rebrand the product. **User-facing name is "Ilwaco IDE"; files, the
 executable, and build artifacts are "ilwaco" (lowercase).** Build- and runtime-verified.
