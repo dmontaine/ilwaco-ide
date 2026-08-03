@@ -16,12 +16,22 @@ to VisualFBEditor upstream, where Astoria's Win64-only ones cannot apply).
 
 ---
 
-## Session handoff (2026-08-03, latest) — changelog walk resumed: 5 entries resolved (`4cf72752` ported)
+## Session handoff (2026-08-03, latest) — changelog walk + debug-tab visibility ported
 
 **START HERE.** Continued the Astoria→Ilwaco changelog walk from the oldest entries in
-[AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md). Resolved 5, kept 2. Backlog
-**401 → 396**. Committed+pushed: first three (doc-only) as `72a741b`, `53d8e473` as `c087255`. `4cf72752`
+[AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md). Resolved 5 entries (backlog
+**401 → 396**) plus one sub-item pulled forward. Committed+pushed: first three (doc-only) `72a741b`,
+`53d8e473` `c087255`, `4cf72752` `c8c9ce7`, doc-clarification `e09fa37`. The debug-tab-visibility work
 (below) is source+docs, build+runtime-verified, **staged/uncommitted** at time of writing.
+
+- **Debug-tab visibility** (`49ec5ccd` sub-item, pulled forward at owner's request) — **DONE,
+  build+runtime-verified.** The 7 debug tabs (Locals…Profiler) now show only when `UseDebugger` is on
+  (Immediate stays permanently visible). Required a new **MFF `DetachTab`** method (remove a tab without
+  destroying its `TabPage`, with a GTK `g_object_ref` so the page widget survives re-add) + three subs +
+  4 call sites in `Main.bas`. Verified both states by screenshot (off → tabs hidden; on → re-appear, no
+  crash). Additive/non-virtual MFF change → no `.so` rebuild. This is **distinct** from `4cf72752`'s
+  content-*clearing*. See AstoriaParity "Done — debug-tab visibility". `49ec5ccd` stays in the backlog
+  (only this sub-item is done; the menu-taxonomy bulk remains deferred).
 
 - **`4cf72752`** (WIN32_WINNT header bug + bottom-panel tab clearing) — **PORT (partial), DONE.** The
   `_WIN32_WINNT` `=`→`>=` header fix is N/A (Windows headers, not on the GTK build path); the AI-KnowledgeBase

@@ -541,7 +541,23 @@ Namespace My.Sys.Forms
 	Private Sub TabControl.DeleteTab(Value As TabPage Ptr)
 		DeleteTab IndexOfTab(Value)
 	End Sub
-	
+
+	' Remove a tab from the control *without destroying its TabPage* so it can be re-added later.
+	' DeleteTab only frees the page when FDynamic is set, so clear it across the removal. On GTK
+	' gtk_notebook_remove_page (inside DeleteTab) drops the notebook's reference to the page widget,
+	' which would finalize it; take an extra ref first (the same idiom Control.BringToFront uses when
+	' reparenting) so the widget survives and AddTab can re-append it.
+	Private Sub TabControl.DetachTab(Value As TabPage Ptr)
+		If Value = 0 Then Exit Sub
+		Dim As Integer idx = IndexOfTab(Value)
+		If idx < 0 Then Exit Sub
+		If Value->widget Then g_object_ref(G_OBJECT(Value->widget))
+		Dim As Boolean bDynamic = Value->FDynamic
+		Value->FDynamic = False
+		DeleteTab idx
+		Value->FDynamic = bDynamic
+	End Sub
+
 	Private Function TabControl.InsertTab(Index As Integer, ByRef Caption As WString, AObject As Any Ptr = 0) As TabPage Ptr
 		Dim As Integer i
 		Dim As TabPage Ptr It, tp

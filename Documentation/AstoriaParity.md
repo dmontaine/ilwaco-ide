@@ -130,7 +130,36 @@ Some Astoria *infrastructure* choices are independently already true in Ilwaco:
 | `56f6d180`,`b3633bc5`,`a7c7839d` | Dark mode (uxtheme/ntdll Win32) | REIMPLEMENT | Ilwaco needs GTK dark mode (settings already have `DarkMode=true`) |
 | `c494207f`,`7baebd1e`,`add4642a`,`76abaa5a` | Delete dead GTK/Linux/32-bit code | INVERT/SKIP | do **not** apply — this is Ilwaco's live platform |
 | `ae74b31c` | Rename "Service"→"Tools" menu, inner "Tools"→"External Tools" | PORT | **DONE** 2026-08-02 (caption-only, internal names unchanged; `Main.bas` `miXizmat`) |
-| `49ec5ccd`, §menu-taxonomy | UI approachability: per-menu **Advanced** submenus; menu reorg; caption cleanups; options-dialog simplification; **debug-tab visibility** (`SetDebugTabsVisible` — show the 7 debug tabs only when the debugger is enabled) | PORT (big) | **deferred, and re-scoped — see "Menu taxonomy" section below.** ⚠ NB: the debug-tab *visibility* half is distinct from the *content-clearing* already done in `4cf72752`; helpers `AddBottomDebugTab`/`RemoveBottomDebugTab` land earlier in `b9735e8e` |
+| `49ec5ccd`, §menu-taxonomy | UI approachability: per-menu **Advanced** submenus; menu reorg; caption cleanups; options-dialog simplification; **debug-tab visibility** (`SetDebugTabsVisible` — show the 7 debug tabs only when the debugger is enabled) | PORT (big) | **debug-tab-visibility sub-item DONE 2026-08-03** (see ↓); the rest (menu taxonomy etc.) still **deferred/re-scoped — see "Menu taxonomy" section below** |
+
+## Done 2026-08-03 — debug-tab visibility (Astoria `49ec5ccd` sub-item + new MFF `DetachTab`)
+
+Ported the "show the 7 debug tabs only while the debugger is enabled" behavior — Astoria's
+`SetDebugTabsVisible`, extracted from the big `49ec5ccd` UI-evaluation cluster (the rest of which stays
+deferred). Locals/Globals/Procedures/Threads/Watches/Memory/Profiler are now **detached** from the bottom
+bar unless `UseDebugger` is on; **Immediate stays permanently visible** (matches Astoria). Build- +
+runtime-verified both ways (screenshots): `UseDebugger=false` → bottom bar ends at Immediate;
+`UseDebugger=true` → all 7 re-appear in order, no crash, no blank tabs.
+
+**Framework dependency (REIMPLEMENT for GTK).** The feature needs a tab that can be removed from the bar
+*without destroying its `TabPage`* so it can be re-added. Astoria added a new MFF method `DetachTab` (Win32);
+Ilwaco's MFF had only `DeleteTab` (destroys). Ported `DetachTab` into our MFF fork
+(`Controls/MyFbFramework/mff/TabControl.bi` + `.bas`):
+- It clears `FDynamic` across the removal so `DeleteTab` doesn't free the page (same trick as Astoria), **and**
+- on GTK, `gtk_notebook_remove_page` (inside `DeleteTab`) drops the notebook's reference to the page widget,
+  which would finalize it — so `DetachTab` takes an extra `g_object_ref(G_OBJECT(Value->widget))` first,
+  the **same idiom `Control.BringToFront`/`IsChild` already use** when reparenting. `AddTab(tp)` rebuilds the
+  tab-label widgets on re-add, so the cycle is self-contained. Additive + non-virtual → **no `.so` rebuild**
+  (the designer control lib doesn't call it; the editor compiles the MFF source directly).
+
+**Editor wiring (`src/Main.bas`).** Three subs after `ClearMessages()`: `RemoveBottomDebugTab`/
+`AddBottomDebugTab` (guard on `tp->Parent`) and `SetDebugTabsVisible(bVisible)` (static idempotency guard;
+add/detach the 7 pages). Call sites: `SetDebugTabsVisible False` at construction (top-level module code just
+after `ptabBottom` is wired); `SetDebugTabsVisible UseDebugger` in `frmMain_Show` (startup, after settings
+load), `ChangeEnabledDebug`, and `ChangeUseDebugger bUseDebugger` (the live toolbar/menu toggle); and
+`If Not UseDebugger Then SetDebugTabsVisible False` as a backstop at the end of `ClearDebugPanels`
+(whose 3 caption resets are now `tp->Parent`-guarded, since a detached tab has no parent). All callers are
+in `Main.bas` after the definitions, so no `Main.bi` forward-declare is needed.
 
 ## Done 2026-08-03 — bottom-panel/debug tab clearing (Astoria `4cf72752`, partial)
 
@@ -162,11 +191,9 @@ Verified: control types confirmed (`ListView`→`.ListItems`, `TreeListView`/`Tr
 The end-to-end clear (open → populate → close → panes empty) was not independently UI-driven here; it is a
 faithful port of Astoria's owner-verified code.
 
-**⚠ This is *not* the "debug tabs only show when a session is active" behavior.** That is a **distinct,
-later** change — Astoria's `SetDebugTabsVisible(bVisible)` (introduced in `49ec5ccd`; add/remove helpers
-`AddBottomDebugTab`/`RemoveBottomDebugTab` in `b9735e8e`), which *hides/shows* the 7 debug tabs from the
-bottom bar based on `UseDebugger` (hidden on startup via `SetDebugTabsVisible False`). It is orthogonal to
-this content-clearing and still to be ported — tracked in the `49ec5ccd` menu-taxonomy row above.
+**⚠ This is *not* the "debug tabs only show when a session is active" behavior.** That is a **distinct**
+change — Astoria's `SetDebugTabsVisible(bVisible)` (from `49ec5ccd`) — **now also ported, 2026-08-03**; see
+"Done — debug-tab visibility" below. It is orthogonal to this content-clearing.
 
 ## Done 2026-08-03 — compile-warnings port (Astoria `53d8e473`, partial)
 

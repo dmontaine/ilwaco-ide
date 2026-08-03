@@ -318,6 +318,42 @@ Sub ClearMessages()
 	txtOutput.Update
 End Sub
 
+' The debug panes (Locals/Globals/Procedures/Threads/Watches/Memory/Profiler) are only meaningful while
+' debugging, so they are shown on the bottom bar only when the debugger is enabled and detached otherwise.
+' Immediate is intentionally left permanently visible. DetachTab keeps the TabPage alive for later re-add.
+Private Sub RemoveBottomDebugTab(tp As TabPage Ptr)
+	If tp = 0 OrElse tp->Parent = 0 Then Exit Sub
+	ptabBottom->DetachTab tp
+End Sub
+
+Private Sub AddBottomDebugTab(tp As TabPage Ptr)
+	If tp = 0 OrElse tp->Parent <> 0 Then Exit Sub
+	ptabBottom->AddTab tp
+End Sub
+
+Sub SetDebugTabsVisible(bVisible As Boolean)
+	Static As Boolean bAlreadyVisible = True
+	If bVisible = bAlreadyVisible Then Exit Sub
+	bAlreadyVisible = bVisible
+	If bVisible Then
+		AddBottomDebugTab tpLocals
+		AddBottomDebugTab tpGlobals
+		AddBottomDebugTab tpProcedures
+		AddBottomDebugTab tpThreads
+		AddBottomDebugTab tpWatches
+		AddBottomDebugTab tpMemory
+		AddBottomDebugTab tpProfiler
+	Else
+		RemoveBottomDebugTab tpLocals
+		RemoveBottomDebugTab tpGlobals
+		RemoveBottomDebugTab tpProcedures
+		RemoveBottomDebugTab tpThreads
+		RemoveBottomDebugTab tpWatches
+		RemoveBottomDebugTab tpMemory
+		RemoveBottomDebugTab tpProfiler
+	End If
+End Sub
+
 ' Output/Problems/Suggestions/Find/ToDo/Change Log hold results scoped to whichever
 ' project or file produced them; stale entries from a closed project are misleading
 ' once a different project is open. Cleared on CloseProject/CloseSession.
@@ -342,18 +378,19 @@ End Sub
 Sub ClearDebugPanels()
 	ClearThreadsWindow
 	lvLocals.Nodes.Clear
-	tpLocals->Caption = ML("Locals")
+	If tpLocals <> 0 AndAlso tpLocals->Parent <> 0 Then tpLocals->Caption = ML("Locals")
 	tvVar.Nodes.Clear
 	lvGlobals.Nodes.Clear
-	tpGlobals->Caption = ML("Globals")
+	If tpGlobals <> 0 AndAlso tpGlobals->Parent <> 0 Then tpGlobals->Caption = ML("Globals")
 	tvPrc.Nodes.Clear
 	lvWatches.Nodes.Clear
-	tpWatches->Caption = ML("Watches")
+	If tpWatches <> 0 AndAlso tpWatches->Parent <> 0 Then tpWatches->Caption = ML("Watches")
 	tvWch.Nodes.Clear
 	tvThd.Nodes.Clear
 	lvMemory.ListItems.Clear
 	lvProfiler.Nodes.Clear
 	txtImmediate.Text = ""
+	If Not UseDebugger Then SetDebugTabsVisible False
 End Sub
 
 Sub SetCodeVisible(tb As TabWindow Ptr)
@@ -2800,6 +2837,7 @@ Sub ChangeUseDebugger(bUseDebugger As Boolean, ChangeObject As Integer = -1)
 	UseDebugger = bUseDebugger
 	If ChangeObject <> 0 Then tbtUseDebugger->Checked = bUseDebugger
 	If ChangeObject <> 1 AndAlso mnuUseDebugger->Checked <> UseDebugger Then mnuUseDebugger->Checked = bUseDebugger
+	SetDebugTabsVisible bUseDebugger
 End Sub
 
 Sub ChangeLockControls(bLockControls As Boolean, ChangeObject As Integer = -1)
@@ -2830,6 +2868,7 @@ Sub ChangeEnabledDebug(bStart As Boolean, bBreak As Boolean, bEnd As Boolean)
 	miAddWatch->Enabled = bEnd
 	miStepOut->Enabled = bEnd
 	miShowNextStatement->Enabled = bEnd
+	SetDebugTabsVisible UseDebugger
 End Sub
 
 	Sub TimerProc()
@@ -8482,6 +8521,8 @@ ptabBottom->OnClick = @tabBottom_Click
 ptabBottom->OnDblClick = @tabBottom_DblClick
 ptabBottom->OnSelChange = @tabBottom_SelChange
 ptabBottom->Parent = @pnlBottomTab
+' Debug panes start detached; frmMain_Show / ChangeUseDebugger re-show them when the debugger is enabled.
+SetDebugTabsVisible False
 
 pnlBottomTab.Align = DockStyle.alClient
 pnlBottomTab.Parent = @pnlBottom
@@ -9031,7 +9072,8 @@ Sub frmMain_Show(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		tbBottom.Buttons.Item("AddWatch")->Visible = False
 		tbBottom.Buttons.Item("RemoveWatch")->Visible = False
 		tbBottom.Buttons.Item("Update")->Visible = False
-	
+		SetDebugTabsVisible UseDebugger
+
 	pfSplash->CloseForm
 	
 	Var File = Command(-1)
