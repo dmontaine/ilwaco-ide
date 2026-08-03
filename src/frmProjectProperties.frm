@@ -705,7 +705,7 @@ pfProjectProperties = @fProjectProperties
 			.Designer = @This
 			.Parent = @tpGeneral
 		End With
-		' cboBatchСompilationFileWindows
+		' cboBatchCompilationFileWindows
 		With cboBatchCompilationFileWindows
 			.Name = "cboBatchCompilationFileWindows"
 			.Text = "cboMainFile1"

@@ -42,7 +42,7 @@ Function RTFToPts(ByVal rtfSize As Integer) As Integer
 	Return rtfSize \ 2
 End Function
 
-' Pounds to RTF（Pounds → Half Pounds）
+' Pounds to RTF (Pounds -> Half Pounds)
 Function PtsToRTF(ByVal pts As Integer) As Integer
 	Return pts * 2
 End Function
@@ -52,26 +52,26 @@ Function RGBToRTF(ByVal r As Integer, ByVal g As Integer, ByVal b As Integer) As
 	Return "\red" & Str(r) & "\green" & Str(g) & "\blue" & Str(b) & ";"
 End Function
 
-' RTF Color Table to RGB (Input：\red255\green0\blue0;)
+' RTF Color Table to RGB (Input:\red255\green0\blue0;)
 Function RTFToRGB(ByVal rtfColor As String) As Long
 	Dim As Integer r, g, b
 	Dim As Integer p1, p2, p3
 	
-	' 提取红色分量
+	' extract red component
 	p1 = InStr(rtfColor, "\red")
 	p2 = InStr(p1 + 1, rtfColor, "\")
 	If p1 > 0 And p2 > p1 Then
 		r = Val(Mid(rtfColor, p1 + 4, p2 - (p1 + 4)))
 	End If
 	
-	' 提取绿色分量
+	' extract green component
 	p1 = InStr(rtfColor, "\green")
 	p2 = InStr(p1 + 1, rtfColor, "\")
 	If p1 > 0 And p2 > p1 Then
 		g = Val(Mid(rtfColor, p1 + 6, p2 - (p1 + 6)))
 	End If
 	
-	' 提取蓝色分量
+	' extract blue component
 	p1 = InStr(rtfColor, "\blue")
 	p2 = InStr(p1 + 1, rtfColor, ";")
 	If p1 > 0 And p2 > p1 Then
@@ -81,7 +81,7 @@ Function RTFToRGB(ByVal rtfColor As String) As Long
 	Return RGB(r, g, b)
 End Function
 
-' 示例使用
+' example usage
 ' Main function: VB code to RTF (with syntax highlighting)
 Function freeBasicToRTF(ByRef vbCode As WString) As WString Ptr
 	' RTF header with proper color table
@@ -180,7 +180,7 @@ Function MDtoRTF(ByRef mdiText As WString) As WString Ptr
 		_Deallocate(ResultPtr ): ResultPtr = 0
 		If LineLength = 0 Then
 			WAdd(rtfiText, "\f0\" & AIRTF_FontSize & "\" & AIColorFore & "\highlight" & AIColorBK & "\par")
-			inListItem = False ' 空行重置列表状态
+			inListItem = False ' blank line resets list state
 			Continue For
 		Else
 			Ch = Left(*Lines(i), 1)
@@ -212,18 +212,18 @@ Function MDtoRTF(ByRef mdiText As WString) As WString Ptr
 					WAdd(rtfiText, "```\par\f0\" & AIRTF_FontSize & "\" & AIColorFore & "\highlight" & AIColorBK & "\par")
 					Continue For
 				End If
-			Case "1" To "9" ' 2. 解析 "1. **title 1**" 等数字标题列表
+			Case "1" To "9" ' 2. parse numbered-heading lists like "1. **title 1**"
 				Dim As Integer dotPos = InStr(*Lines(i), ". ")
 				If dotPos > 0 Then
 					Dim As String listNum = Left(*Lines(i), dotPos - 1)
 					Dim As String afterDot = Mid(*Lines(i), dotPos + 2)
-					' 格式化标题：加粗、加大字号(cf15代表Keywords色)
+					' format heading: bold, larger font (cf15 = Keywords color)
 					WAdd(rtfiText, "\b\fs32\cf15 " & listNum & ". " )
-					inListItem = True ' 标记进入列表项，后续缩进行属于此列表
+					inListItem = True ' mark entering a list item; subsequent indented lines belong to it
 					ResultPtr = ProcessInlineStyles(afterDot)
 					If ResultPtr Then WAdd(rtfiText, "\f0\" & AIRTF_FontSize & "\highlight" & AIColorBK & *ResultPtr & "\par")
 				Else
-					' 若不是指定的 Title 格式，按常规文本处理
+					' if not the designated Title format, treat as normal text
 					ResultPtr = ProcessInlineStyles(*Lines(i))
 					If ResultPtr Then WAdd(rtfiText, "\f0\" & AIRTF_FontSize & "\" & AIColorFore & "\highlight" & AIColorBK & *ResultPtr & "\par")
 				End If
@@ -277,13 +277,13 @@ Function MDtoRTF(ByRef mdiText As WString) As WString Ptr
 				'	If i <= UBound(Lines) Then i -= 1
 				'	Continue For
 				'End If
-			Case " " ' 3. 处理列表项下方的缩进内容 (如 "   abcd")
+			Case " " ' 3. handle indented content under a list item (e.g. "   abcd")
 				If inListItem Then
 					Dim As Integer indentCount = 0
 					While indentCount < Len(*Lines(i)) AndAlso Mid(*Lines(i), indentCount + 1, 1) = " "
 						indentCount += 1
 					Wend
-					' 转换为 RTF 缩进 (每 3 个空格约 360 twips，再加上列表自身的 360 偏移)
+					' convert to RTF indent (~360 twips per 3 spaces, plus the list's own 360 offset)
 					Dim As Integer rtfIndent = (indentCount \ 3) * 360 + 360
 					ResultPtr = ProcessInlineStyles(Trim(*Lines(i)))
 					If ResultPtr Then WAdd(rtfiText, "\li" & rtfIndent & "\f0\" & AIRTF_FontSize & "\" & AIColorFore & "\highlight" & AIColorBK & *ResultPtr & "\par")
@@ -520,39 +520,39 @@ End Function
 ' Helper function: RTF special character escaping
 Function EscapeRTF(ByRef iText As WString) As WString Ptr
 	Dim As Integer Posi = 0, iLen = Len(iText)
-	' 预分配内存（按最大需求：每个字符最多6个转义字符）
+	' pre-allocate memory (worst case: up to 6 escape chars per char)
 	Dim As Integer bufferSize = iLen * 6 + 2
 	If iLen < 1 Then Return 0
 	Dim As String TmpStr
-	Dim As WString Ptr ResultPtr = _Allocate(bufferSize * SizeOf(WString))     ' 预分配最大可能空间
+	Dim As WString Ptr ResultPtr = _Allocate(bufferSize * SizeOf(WString))     ' pre-allocate maximum possible space
 	For i As Integer = 0 To iLen - 1
 		If Posi >= bufferSize- 6 Then
 			bufferSize *= 2
 			ResultPtr = _Reallocate(ResultPtr, bufferSize * SizeOf(WString))
 		End If
 		Select Case iText[i]
-		Case 92, 123, 125, 126, 94  ' ASCII码值: \ { }   ^
+		Case 92, 123, 125, 126, 94  ' ASCII codes: \ { }   ^
 			(*ResultPtr)[Posi] = 92
 			(*ResultPtr)[Posi + 1] = iText[i]
 			Posi += 2
-		Case 13  ' ASCII码值: Cr LF
+		Case 13  ' ASCII codes: Cr LF
 			If i < iLen - 1 AndAlso iText[i + 1] = 10 Then
-				i += 1  ' 跳过后续的换行符 (LF)
+				i += 1  ' skip the following newline (LF)
 			End If
 			(*ResultPtr)[Posi] = 10
 			Posi += 1
 			'If i < iLen - 1 AndAlso iText[i + 1] = 10 Then
-			'             i += 1  ' 跳过后续的换行符 (LF)
+			'             i += 1  ' skip the following newline (LF)
 			'         End If
 			'         (*ResultPtr)[Posi] = 92  ' \p
 			'         (*ResultPtr)[Posi + 1] = 112 ' p
 			'         (*ResultPtr)[Posi + 2] = 97  ' a
 			'         (*ResultPtr)[Posi + 3] = 114 ' r
 			'         Posi += 4
-		Case 10  ' ASCII码值: Cr LF
+		Case 10  ' ASCII codes: Cr LF
 			(*ResultPtr)[Posi] = 10
 			Posi += 1
-		Case 9  ' ASCII码值: TAB
+		Case 9  ' ASCII codes: TAB
 			(*ResultPtr)[Posi] = 32
 			Posi += 1
 			(*ResultPtr)[Posi] = 32
@@ -561,7 +561,7 @@ Function EscapeRTF(ByRef iText As WString) As WString Ptr
 			Posi += 1
 			(*ResultPtr)[Posi] = 32
 			Posi += 1
-		Case 0 To 31: ' 控制字符 \uXXXX
+		Case 0 To 31: ' control character \uXXXX
 			TmpStr = Hex(iText[i], 4)
 			(*ResultPtr)[Posi] = 92
 			Posi += 1
@@ -580,7 +580,7 @@ Function EscapeRTF(ByRef iText As WString) As WString Ptr
 			Posi += 1
 		End Select
 	Next
-	(*ResultPtr)[Posi] = 0: (*ResultPtr)[Posi + 1] = 0   ' 截取实际使用长度
+	(*ResultPtr)[Posi] = 0: (*ResultPtr)[Posi + 1] = 0   ' truncate to actual used length
 	Return ResultPtr
 End Function
 

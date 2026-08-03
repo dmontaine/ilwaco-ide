@@ -1764,16 +1764,16 @@ End Sub
 	#define SIGCONT 18
 	#define SIGSTOP 19
 	'SIGHUP 1
-	'SIGINT	     2	Term	Interruption depuis le clavier.
-	'SIGQUIT	 3	Core	Demande « Quitter » depuis le clavier.
-	'SIGILL	     4	Core	Instruction illégale.
-	'SIGABRT	 6	Core	Signal d'arrêt depuis abort(3).
-	'SIGFPE	     8	Core	Erreur mathématique virgule flottante.
-	'SIGKILL	 9	Term	Signal « KILL ».
-	'SIGSEGV	11	Core	Référence mémoire invalide.
-	'SIGPIPE	13	Term	Écriture dans un tube sans lecteur.
-	'SIGALRM	14	Term	Temporisation alarm(2) écoulée.
-	'SIGTERM	15	Term	Signal de fin.
+	'SIGINT	     2	Term	Interrupt from keyboard.
+	'SIGQUIT	 3	Core	Quit request from keyboard.
+	'SIGILL	     4	Core	Illegal instruction.
+	'SIGABRT	 6	Core	Abort signal from abort(3).
+	'SIGFPE	     8	Core	Floating-point arithmetic error.
+	'SIGKILL	 9	Term	Kill signal.
+	'SIGSEGV	11	Core	Invalid memory reference.
+	'SIGPIPE	13	Term	Broken pipe: write to pipe with no readers.
+	'SIGALRM	14	Term	Timer signal from alarm(2).
+	'SIGTERM	15	Term	Termination signal.
 	'Signal	Code	Reason
 	'SIGILL	ILL_ILLOPC	Illegal opcode
 	'ILL_ILLOPN	Illegal operand (not currently used)
@@ -2026,111 +2026,16 @@ End Sub
 	Const RDI   =14
 	Const SYS_write =1
 	/'
-	siginfo_t {
-	int      si_signo;    /* NumÃ©ro de signal*/
-	int      si_errno;    /* NumÃ©ro d'erreur */
-	int      si_code;     /* Code du signal  */
-	int      si_trapno;   /* NumÃ©ro de trappe qui a causÃ©
-	le signal gÃ©nÃ©rÃ© par le
-	matÃ©riel (pas utilisÃ© sur la
-	plupart des architectures) */
-	pid_t    si_pid;      /* PID de l'Ã©metteur          */
-	uid_t    si_uid;      /* UID rÃ©el de l'Ã©metteur     */
-	int      si_status;   /* Valeur de sortie ou signal */
-	clock_t  si_utime;    /* Temps utilisateur Ã©coulÃ©   */
-	clock_t  si_stime;    /* Temps systÃ¨me Ã©coulÃ©       */
-	sigval_t si_value;    /* Valeur de signal*/
-	int      si_int;      /* Signal POSIX.1b */
-	void    *si_ptr;      /* Signal POSIX.1b */
-	int      si_overrun;  /* DÃ©compte de dÃ©passement des
-	horloges (POSIX.1b)        */
-	int      si_timerid;  /* ID d'horloge (POSIX.1b)    */
-	void    *si_addr;     /* Emplacement mÃ©moire ayant
-	causÃ© l'erreur  */
-	long     si_band;     /* Band event (Ã©tait int dans
-	glibc 2.3.2 et antÃ©rieures */
-	int      si_fd;       /* Descripteur de fichier     */
-	short    si_addr_lsb; /* Bit le moins significatif de l'adresse
-	(depuis Linux 2.6.32)   */
-	=============================
-	wait() et waitpid()
-	L'appel  systÃ¨me  wait()  suspend l'exÃ©cution du processus appelant jusqu'Ã  ce que l'un de
-	ses enfants se termine. L'appel wait(&status) est Ã©quivalent Ã  :
-	
-	waitpid(-1, &status, 0);
-	
-	L'appel systÃ¨me waitpid() suspend l'exÃ©cution du processus appelant jusqu'Ã  ce qu'un  fils
-	spÃ©cifiÃ©  par  l'argument  pid  change d'Ã©tat. Par dÃ©faut, waitpid() n'attend que les fils
-	terminÃ©s, mais ce comportement peut Ãªtre modifiÃ©  par  l'argument  options,  de  la  faÃ§on
-	dÃ©crite ci-dessous.
-	
-	La valeur de pid peut Ãªtre l'une des suivantes :
-	
-	< -1   Attendre la fin de n'importe quel processus fils appartenant au groupe de processus
-	d'ID -pid.
-	
-	-1     Attendre n'importe lequel des processus fils.
-	
-	0      Attendre la fin de n'importe quel processus fils du mÃªme groupe que l'appelant.
-	
-	> 0    Attendre la fin du processus numÃ©ro pid.
-	
-	La valeur de l'argument option options est un OU binaire entre les constantes suivantes :
-	
-	WNOHANG     Ne pas bloquer si aucun fils ne s'est terminÃ©.
-	
-	WUNTRACED   Recevoir l'information concernant Ã©galement les fils bloquÃ©s (mais non  suivis
-	par  ptrace(2))  si  on  ne  l'a  pas encore reÃ§ue. L'Ã©tat des fils suivis est
-	fourni mÃªme sans cette option.
-	
-	WCONTINUED (Depuis Linux 2.6.10)
-	Renvoyer Ã©galement si un processus fils stoppÃ© a Ã©tÃ©  relancÃ©  par  le  signal
-	SIGCONT.
-	
-	(Pour les options spÃ©cifiques Ã  Linux, voir plus bas.)
-	
-	Si  status n'est pas NULL, wait() et waitpid() stockent l'Ã©tat du fils dans la variable de
-	type int pointÃ©e. Cet entier peut Ãªtre Ã©valuÃ© avec  les  macros  suivantes  (qui  prennent
-	l'entier  lui-mÃªme  comme argument, et pas un pointeur vers celui-ci, comme le font wait()
-	et waitpid() !) :
-	
-	WIFEXITED(status)
-	Vrai si le fils s'est terminÃ© normalement, c'est-Ã -dire par un appel Ã   exit(3)  ou
-	_exit(2), ou par un return depuis main().
-	
-	WEXITSTATUS(status)
-	Donne  le  code  de  retour, consistant en les 8 bits de poids faibles du paramÃ¨tre
-	status fourni Ã  exit(3) ou _exit(2) ou dans le return de la routine  main().  Cette
-	macro ne peut Ãªtre Ã©valuÃ©e que si WIFEXITED est non nul.
-	
-	WIFSIGNALED(status)
-	Vrai si le fils s'est terminÃ© Ã  cause d'un signal non interceptÃ©.
-	
-	WTERMSIG(status)
-	Donne  le  numÃ©ro  du  signal  qui a causÃ© la fin du fils. Cette macro ne peut Ãªtre
-	Ã©valuÃ©e que si WIFSIGNALED est non nul.
-	
-	WCOREDUMP(status)
-	Vrai si le processus fils a produit une image mÃ©moire (Â« core dump Â»). Cette  macro
-	ne doit Ãªtre Ã©valuÃ©e que si WIFSIGNALED a renvoyÃ© une valeur non nulle.
-	
-	WIFSTOPPED(status)
-	Vrai si le fils est actuellement arrÃªtÃ©. Cela n'est possible que si l'on a effectuÃ©
-	l'appel avec l'option WUNTRACED ou si le fils est suivi (voir ptrace(2)).
-	
-	WSTOPSIG(status)
-	Donne  le  numÃ©ro  du  signal qui a causÃ© l'arrÃªt du fils. Cette macro ne peut Ãªtre
-	Ã©valuÃ©e que si WIFSTOPPED est non nul.
-	
-	WIFCONTINUED(status)
-	(Depuis Linux 2.6.10) Vrai si le processus fils a Ã©tÃ© relancÃ© par SIGCONT.
-	=============================
-	* The conditions WIFEXITED, WIFSIGNALED, WIFSTOPPED
-	* are mutually exclusive:
-	* WIFEXITED:  (status & 0x7f) == 0, WEXITSTATUS: top 8 bits
-	* and now WCOREDUMP:  (status & 0x80) != 0
-	* WIFSTOPPED: (status & 0xff) == 0x7f, WSTOPSIG: top 8 bits
-	* WIFSIGNALED: all other cases, (status & 0x7f) is signal.
+	The siginfo_t struct and the wait(2)/waitpid(2) status macros used below are
+	documented in the public Linux man pages:
+	  https://man7.org/linux/man-pages/man2/wait.2.html
+	  https://man7.org/linux/man-pages/man2/sigaction.2.html
+
+	The conditions WIFEXITED, WIFSIGNALED, WIFSTOPPED are mutually exclusive:
+	  WIFEXITED:   (status & 0x7f) == 0,    WEXITSTATUS: top 8 bits
+	  WCOREDUMP:   (status & 0x80) != 0
+	  WIFSTOPPED:  (status & 0xff) == 0x7f, WSTOPSIG: top 8 bits
+	  WIFSIGNALED: all other cases, (status & 0x7f) is the signal.
 	'/
 	'#define WEXITSTATUS(status) (((status)  & 0xff00) >> 8) Return exit status.
 	#define WEXITSTATUS(status) (((status)  And &hff00) Shr 8)
@@ -6108,7 +6013,7 @@ Private Function debug_extract(exebase As UInteger, nfile As String, dllflag As 
 				'		procnodll=False
 				'		' procnmt=cutup_proc(Left(recup,InStr(recup,":")-1))
 				'		procnmt=cutup_proc(recup) '02/11/2014
-				'		If procnmt="main" Then flagstabd=True ' + A FAIRE supp l'йquivalent cidessous
+				'		If procnmt="main" Then flagstabd=True ' + TODO remove the equivalent below
 				'		'If procnmt<>"" And procnmt<>"{MODLEVEL}" And(flagmain=TRUE Or procnmt<>"main") Then '' mike's bug 02/12/2015
 				'		If procnmt<>"" And(flagmain=True Or procnmt<>"main") Then  '' mike's bug 02/12/2015
 				'			'If InStr(procnmt,"structor : IRHLCCTX")=0 And InStr(procnmt,".LT")=0 Then
@@ -6216,7 +6121,7 @@ Private Function debug_extract(exebase As UInteger, nfile As String, dllflag As 
 				'		lastline=0 ''2018/08/03
 				'		' ==
 				'		'If InStr(recup,":") Then 'new include file path name with file name
-				'		'	sourcenb+=1:source(sourcenb)=recup:sourceix=sourcenb' ????? Utilitй :sourcead(sourcenb)=recupstab.ad
+				'		'	sourcenb+=1:source(sourcenb)=recup:sourceix=sourcenb' ????? Purpose :sourcead(sourcenb)=recupstab.ad
 				'		'Else 'return in main source because no path name
 				'		'	sourceix=0
 				'		'EndIf
@@ -8092,9 +7997,9 @@ End Sub
 		
 		Type pollfd
 			
-			As Long fd          '/* РѕРїРёСЃР°С‚РµР»СЊ С„Р°Р№Р»Р° */
-			As Short events     '/* Р·Р°РїСЂРѕС€РµРЅРЅС‹Рµ СЃРѕР±С‹С‚РёСЏ */
-			As Short revents    '/* РІРѕР·РІСЂР°С‰РµРЅРЅС‹Рµ СЃРѕР±С‹С‚РёСЏ */
+			As Long fd          '/* file descriptor */
+			As Short events     '/* requested events */
+			As Short revents    '/* returned events */
 			
 		End Type
 		

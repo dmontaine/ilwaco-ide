@@ -120,8 +120,8 @@ Namespace My.Sys.Forms
 		Dim FHintWord As WString Ptr
 		Dim HScrollMax As Integer
 		Dim VScrollMax As Integer
-		Dim nCaretPosX As Integer = 0 ' горизонтальная координата каретки
-		Dim nCaretPosY As Integer = 0 ' вертикальная координата каретки
+		Dim nCaretPosX As Integer = 0 ' caret X coordinate
+		Dim nCaretPosY As Integer = 0 ' caret Y coordinate
 		Dim iPos As Integer
 		Dim iPP As Integer = 0
 		Dim jPos As Integer
@@ -146,13 +146,13 @@ Namespace My.Sys.Forms
 		Dim sChar As WString * 2
 		'Dim FSelStart As Integer
 		'Dim FSelLength As Integer
-		'Dim FSelEnd As Integer = 0   ' номер текущего символа
-		Dim FCurLineCharIdx As Integer = 0   ' номер текущего символа
+		'Dim FSelEnd As Integer = 0   ' current character index
+		Dim FCurLineCharIdx As Integer = 0   ' current character index
 		Dim OldnCaretPosX As Integer
 		Dim OldCharIndex As Integer
 		Dim OldLine As Integer
 		Dim OldChar As Integer
-		Dim As Integer dwLineHeight   ' высота строки
+		Dim As Integer dwLineHeight   ' line height
 		Dim As Integer HCaretPos, VCaretPos
 			Dim As GtkTooltip Ptr tooltip
 		Dim As ..RECT rc
@@ -247,8 +247,8 @@ Namespace My.Sys.Forms
 			Dim As Integer BlinkTime
 			Dim As Boolean InFocus
 			Dim As Boolean bChanged
-		Dim As Integer dwClientX    ' ширина клиентской области
-		Dim As Integer dwClientY    ' Высота клиентской области
+		Dim As Integer dwClientX    ' client area width
+		Dim As Integer dwClientY    ' client area height
 		Canvas As My.Sys.Drawing.Canvas
 		Modified As Boolean
 		WithHistory As Boolean

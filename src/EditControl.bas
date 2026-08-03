@@ -1569,7 +1569,7 @@ Namespace My.Sys.Forms
 			End If
 			FECLine->InAsm = InAsm
 			If Pos1 < 1 Then Exit Do
-			p = Pos1 + 1  ' 如果是 Windows 的 \r\n 换行，此处可能需要改为 Pos1 + 2
+			p = Pos1 + 1  ' if this is a Windows \r\n newline, this may need to become Pos1 + 2
 			PreviC = iC
 		Loop
 		FSelStartLine = iSelStartLine + LineIdx - 1
@@ -5692,7 +5692,7 @@ Namespace My.Sys.Forms
 						ChangeText "", -1
 					End If
 				End If
-			Case 10:  ' перевод строки
+			Case 10:  ' line feed
 			Case 27:  ' esc
 				msg.Result = 0
 			Case 9:  ' tab
@@ -5724,7 +5724,7 @@ Namespace My.Sys.Forms
 				End If
 				'End If
 				msg.Result = True
-			Case 13:  ' возврат каретки
+			Case 13:  ' carriage return
 				If ToolTipShowed Then CloseToolTip
 				If DropDownShowed Then
 					CloseDropDown()
@@ -5855,7 +5855,7 @@ Namespace My.Sys.Forms
 				'ChangeText Left(*FText, n) & Chr(13) & Space(d) & Space(k) & *FLineLeft & Mid(*FText, x + 1), "Enter bosildi", n + 1 + d + k
 				'ChangeText Chr(13), 0, "Enter bosildi", FSelStartLine + 1, 0
 				'End If
-			Case Else:    ' отображаемые символы
+			Case Else:    ' displayable characters
 					If CInt(Not bCtrl) AndAlso CInt(WChr(gdk_keyval_to_unicode(e->key.keyval)) <> "") Then
 					bAddText = True
 						ChangeText WChr(gdk_keyval_to_unicode(e->key.keyval))

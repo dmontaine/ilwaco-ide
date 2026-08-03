@@ -364,8 +364,8 @@ Namespace My.Sys.Forms
 		Dim HScrollVCRight As Integer
 		Dim VScrollVCTop As Integer
 		Dim VScrollVCBottom As Integer
-		Dim nCaretPosX As Integer = 0 ' горизонтальная координата каретки
-		Dim nCaretPosY As Integer = 0 ' вертикальная координата каретки
+		Dim nCaretPosX As Integer = 0 ' caret X coordinate
+		Dim nCaretPosY As Integer = 0 ' caret Y coordinate
 		Dim WithOldI As Integer = -1
 		Dim WithOldTypeName As String
 		Dim WithTeEnumOld As TypeElement Ptr
@@ -414,13 +414,13 @@ Namespace My.Sys.Forms
 		Dim sChar As WString * 2
 		'Dim FSelStart As Integer
 		'Dim FSelLength As Integer
-		'Dim FSelEnd As Integer = 0   ' номер текущего символа
-		Dim FCurLineCharIdx As Integer = 0   ' номер текущего символа
+		'Dim FSelEnd As Integer = 0   ' current character index
+		Dim FCurLineCharIdx As Integer = 0   ' current character index
 		Dim OldnCaretPosX As Integer
 		Dim OldCharIndex As Integer
 		Dim OldLine As Integer
 		Dim OldChar As Integer
-		Dim As Integer dwLineHeight   ' высота строки
+		Dim As Integer dwLineHeight   ' line height
 		Dim As Integer HCaretPos, VCaretPos
 			Dim As GtkTooltip Ptr tooltip
 			Dim As Integer dead_key
@@ -574,8 +574,8 @@ Namespace My.Sys.Forms
 			Dim As Boolean bChanged
 		Dim As TypeElement Ptr DropDownTypeElement
 		Dim As Integer ActiveCodePane
-		Dim As Integer dwClientX, OlddwClientX    ' ширина клиентской области
-		Dim As Integer dwClientY, OlddwClientY    ' Высота клиентской области
+		Dim As Integer dwClientX, OlddwClientX    ' client area width
+		Dim As Integer dwClientY, OlddwClientY    ' client area height
 		Modified As Boolean
 		WithHistory As Boolean
 		FileDropDown As Boolean

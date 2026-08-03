@@ -7388,52 +7388,52 @@ Function EscapeJsonForPrompt(ByRef iText As WString) As String
 	Dim As Integer Posi = 0, iLen = Len(iText)
 	If iLen < 1 Then Return ""
 	Dim As Integer bufferSize = iLen * 6 + 2
-	Dim As WString Ptr ResultPtr = _Allocate(bufferSize * SizeOf(WString))     ' 预分配最大可能空间
+	Dim As WString Ptr ResultPtr = _Allocate(bufferSize * SizeOf(WString))     ' pre-allocate maximum possible space
 	Dim As String TmpStr
 	For i As Integer = 0 To iLen  - 1
 		If Posi >= bufferSize - 6 Then
 			bufferSize *= 2
 			ResultPtr = _Reallocate(ResultPtr, bufferSize * SizeOf(WString))
 		End If
-		If ResultPtr = 0 Then Return "" ' 内存分配失败保护
+		If ResultPtr = 0 Then Return "" ' memory-allocation-failure guard
 		Select Case iText[i]
-		Case 92                  '"\\", "\"))    ' 反斜杠
+		Case 92                  '"\\", "\"))    ' backslash
 			(*ResultPtr)[Posi] = 92
 			Posi += 1
 			(*ResultPtr)[Posi] = 92
 			Posi += 1
 			i += 1
-		Case 34                  '"\""", """"))  ' 双引号
+		Case 34                  '"\""", """"))  ' double quote
 			(*ResultPtr)[Posi] = 92
 			Posi += 1
 			(*ResultPtr)[Posi] = 34
 			Posi += 1
-		Case 47                  '"\/", "/"))    ' 斜杠
+		Case 47                  '"\/", "/"))    ' slash
 			(*ResultPtr)[Posi] = 92
 			Posi += 1
 			(*ResultPtr)[Posi] = 47
 			Posi += 1
-		Case 8                  '"\b", Chr(8))) ' 退格
+		Case 8                  '"\b", Chr(8))) ' backspace
 			(*ResultPtr)[Posi] = 92
 			Posi += 1
 			(*ResultPtr)[Posi] = 98
 			Posi += 1
-		Case 12                 '"\f", Chr(12)))' 换页
+		Case 12                 '"\f", Chr(12)))' form feed
 			(*ResultPtr)[Posi] = 92
 			Posi += 1
 			(*ResultPtr)[Posi] = 102
 			Posi += 1
-		Case 10                 '"\n", Chr(10)))' 换行
+		Case 10                 '"\n", Chr(10)))' line feed
 			(*ResultPtr)[Posi] = 92
 			Posi += 1
 			(*ResultPtr)[Posi] = 110
 			Posi += 1
-		Case 13                 '"\r", Chr(13)))' 回车
+		Case 13                 '"\r", Chr(13)))' carriage return
 			(*ResultPtr)[Posi] = 92
 			Posi += 1
 			(*ResultPtr)[Posi] = 114
 			Posi += 1
-		Case 9                 '"\t", "    ")) ' 制表符
+		Case 9                 '"\t", "    ")) ' tab
 			(*ResultPtr)[Posi] = 32
 			Posi += 1
 			(*ResultPtr)[Posi] = 32
@@ -7442,7 +7442,7 @@ Function EscapeJsonForPrompt(ByRef iText As WString) As String
 			Posi += 1
 			(*ResultPtr)[Posi] = 32
 			Posi += 1
-		Case 0 To 31: ' 控制字符 \uXXXX
+		Case 0 To 31: ' control character \uXXXX
 			TmpStr = Hex(iText[i], 4)
 			(*ResultPtr)[Posi] = 92
 			Posi += 1
@@ -7470,9 +7470,9 @@ End Function
 Function EscapeFromJson(ByRef iText As WString) As WString Ptr
 	Dim As Integer iLen = Len(iText)
 	If iLen = 0 Then Return 0
-	' 预分配内存（按最大需求：每个制表符最多4个转义字符）
+	' pre-allocate memory (worst case: up to 4 escape chars per tab)
 	Dim As Integer bufferSize = iLen * 4 + 2
-	Dim As WString Ptr ResultPtr = _Allocate(bufferSize * SizeOf(WString)) ' 预分配最大可能空间
+	Dim As WString Ptr ResultPtr = _Allocate(bufferSize * SizeOf(WString)) ' pre-allocate maximum possible space
 	If ResultPtr = 0 Then Return 0
 	Dim As String HexVal
 	Dim As Integer CharCode, Posi
@@ -7483,35 +7483,35 @@ Function EscapeFromJson(ByRef iText As WString) As WString Ptr
 		End If
 		If iText[i] = 92  AndAlso i < iLen - 1 Then
 			Select Case iText[i + 1]
-			Case 92                  '"\\", "\"))    ' 反斜杠
+			Case 92                  '"\\", "\"))    ' backslash
 				(*ResultPtr)[Posi] = 92
 				Posi += 1
 				i += 1
-			Case 34                  '"\""", """"))  ' 双引号
+			Case 34                  '"\""", """"))  ' double quote
 				(*ResultPtr)[Posi] = 34
 				Posi += 1
 				i += 1
-			Case 47                  '"\/", "/"))    ' 斜杠
+			Case 47                  '"\/", "/"))    ' slash
 				(*ResultPtr)[Posi] = 47
 				Posi += 1
 				i += 1
-			Case 98                  '"\b", Chr(8))) ' 退格
+			Case 98                  '"\b", Chr(8))) ' backspace
 				(*ResultPtr)[Posi] = 8
 				Posi += 1
 				i += 1
-			Case 102                 '"\f", Chr(12)))' 换页
+			Case 102                 '"\f", Chr(12)))' form feed
 				(*ResultPtr)[Posi] = 12
 				Posi += 1
 				i += 1
-			Case 110                 '"\n", Chr(10)))' 换行
+			Case 110                 '"\n", Chr(10)))' line feed
 				(*ResultPtr)[Posi] = 10
 				Posi += 1
 				i += 1
-			Case 114                 '"\r", Chr(13)))' 回车
+			Case 114                 '"\r", Chr(13)))' carriage return
 				(*ResultPtr)[Posi] = 13
 				Posi += 1
 				i += 1
-			Case 116                 '"\t", "    ")) ' 制表符
+			Case 116                 '"\t", "    ")) ' tab
 				(*ResultPtr)[Posi] = 32
 				Posi += 1
 				(*ResultPtr)[Posi] = 32
@@ -7521,13 +7521,13 @@ Function EscapeFromJson(ByRef iText As WString) As WString Ptr
 				(*ResultPtr)[Posi] = 32
 				Posi += 1
 				i += 1
-			Case 117  ' \u 处理 Unicode （如\u0026）
+			Case 117  ' \u handle Unicode (e.g. \u0026)
 				i += 1
 				HexVal = Mid(iText, i + 2, 4)
 				CharCode = Val("&h" & HexVal)
 				(*ResultPtr)[Posi] = CharCode
 				Posi += 1
-				i += 4 ' 跳过4位十六进制字符
+				i += 4 ' skip 4 hex digits
 			Case Else
 				(*ResultPtr)[Posi] = iText[i]
 				Posi += 1
@@ -7540,7 +7540,7 @@ Function EscapeFromJson(ByRef iText As WString) As WString Ptr
 			Posi += 1
 		End If
 	Next
-	(*ResultPtr)[Posi] = 0: (*ResultPtr)[Posi + 1] = 0   ' 截取实际使用长度
+	(*ResultPtr)[Posi] = 0: (*ResultPtr)[Posi + 1] = 0   ' truncate to actual used length
 	Return ResultPtr
 End Function
 
@@ -7595,14 +7595,14 @@ AIPostDataInitStr  = _
 	"{""model"": """ & AIAgentModelName & """, " & _
 	"""stream"": " & IIf(AIAgentStream, "true", "false") & ", " & _
 	"""messages"": [" & "{""role"": ""system"", ""content"": """ & "Begin to sent file in chunks." & """}"
-' 定义各AI平台的最大分块大小常量
-Const OPENAI_MAX_CHUNK = 4096       ' OpenAI标准模型
-Const DEEPSEEK_MAX_CHUNK = 4000     ' DeepSeek标准模型
-Const CLAUDE_MAX_CHUNK = 100000     ' Claude 100K上下文
-Const MISTRAL_MAX_CHUNK = 32000     ' Mistral 32K上下文
-Const OLLAMA_MAX_CHUNK = 4096       ' Ollama本地模型
-Const OPENROUTER_MAX_CHUNK = 8192    ' OpenRouter通用限制
-' 获取当前AI平台的最大分块大小
+' max chunk-size constants per AI platform
+Const OPENAI_MAX_CHUNK = 4096       ' OpenAI standard model
+Const DEEPSEEK_MAX_CHUNK = 4000     ' DeepSeek standard model
+Const CLAUDE_MAX_CHUNK = 100000     ' Claude 100K context
+Const MISTRAL_MAX_CHUNK = 32000     ' Mistral 32K context
+Const OLLAMA_MAX_CHUNK = 4096       ' Ollama local model
+Const OPENROUTER_MAX_CHUNK = 8192    ' OpenRouter general limit
+' get the current AI platform's max chunk size
 Function AIGetMaxChunkSize() As Integer
 	Select Case LCase(AIAgentProvider)
 	Case "openai", "gpt"
@@ -7618,7 +7618,7 @@ Function AIGetMaxChunkSize() As Integer
 	Case "openrouter"
 		Return OPENROUTER_MAX_CHUNK
 	Case Else
-		Return 4000 ' 默认值
+		Return 4000 ' default value
 	End Select
 End Function
 Sub AIPrintAnswer(ByRef Content As WString)
@@ -7734,14 +7734,14 @@ Sub HTTPAIAgent_Receive(ByRef Designer As My.Sys.Object, ByRef Sender As HTTPCon
 		If InStr(*tmpBodyWStrPtr, "data:") < 1 OrElse InStr(*tmpBodyWStrPtr, """content"":""") < 1 OrElse Right(*tmpBodyWStrPtr, 1) <> "}" Then _Deallocate(tmpBodyWStrPtr) : Return
 	End If
 	
-	'' 检查是否包含完整的JSON对象（用于判断是否是一个完整的数据包）
-	Dim As Boolean inString   = False   ' False 不在字符串中，True=在字符串中
-	Dim As Boolean escapeNext = False   ' 是否遇到了反斜杠转义
-	Dim As Integer braceCount = 0   ' 当前未闭合的大括号数量（{ 增加，} 减少）
-	Dim As Integer lastEndPos = -1  ' 记录最外层对象结束时 '}' 的位置
+	'' check for a complete JSON object (to decide if this is a full packet)
+	Dim As Boolean inString   = False   ' False = outside a string, True = inside a string
+	Dim As Boolean escapeNext = False   ' whether a backslash escape was seen
+	Dim As Integer braceCount = 0   ' count of unclosed braces ({ increments, } decrements)
+	Dim As Integer lastEndPos = -1  ' position of the '}' closing the outermost object
 	For i As Integer = 0 To Len(*tmpBodyWStrPtr) - 1
 		If escapeNext Then
-			' 上一个是反斜杠，当前字符直接被转义，无论是什么都不影响状态
+			' previous char was a backslash, so this char is escaped and does not change state
 			escapeNext = False
 		Else
 			Select Case (*tmpBodyWStrPtr)[i]
@@ -7754,22 +7754,22 @@ Sub HTTPAIAgent_Receive(ByRef Designer As My.Sys.Object, ByRef Sender As HTTPCon
 			Case 125  ' }
 				If Not inString Then
 					braceCount -= 1
-					' 找到一个顶级JSON对象的结束位置
+					' found the end of a top-level JSON object
 					If braceCount = 0 Then lastEndPos = i
 				End If
 			End Select
 		End If
 	Next
 	
-	' 判断结果
+	' evaluate result
 	If braceCount <> 0 Then
-		' 括号不匹配，数据可能不完整，等待更多数据
-		'ShowMessages("等待更多数据，当前未闭合括号数: " & braceCount & "  Buffer:" & *tmpBodyWStrPtr)
+		' braces unbalanced; data may be incomplete, wait for more
+		'ShowMessages("waiting for more data, unclosed brace count: " & braceCount & "  Buffer:" & *tmpBodyWStrPtr)
 		_Deallocate(tmpBodyWStrPtr)
 		Return
 		'ElseIf lastEndPos >= 0 Then
-		'	' 解析出一个完整JSON对象，其结束位置为 lastEndPos
-		'	ShowMessages("接收到完整JSON对象，最后一个'}'在位置: " & lastEndPos)
+		'	' parsed a complete JSON object; end position is lastEndPos
+		'	ShowMessages("received a complete JSON object; last '}' at position: " & lastEndPos)
 	End If
 	'                                      'qwen/qwen3.6-plus:free|OpenRouter    OpenRouter              'Silicon                       'GLM                          NO Thinking                                      'Nvidia
 	Dim As String ContentStart(0 To 6) = {  """content"":"""    ,           """content"":""",           """content"":""",                """content"":""",           """content"":""",             """content"":""",                ",""content"":"""   }
@@ -7965,17 +7965,17 @@ Sub txtAIRequest_Activate(ByRef Designer As My.Sys.Object, ByRef Sender As TextB
 	Dim As String site_url = "https://github.com/XusinboyBekchanov/VisualFBEditor"
 	Dim As String site_name = "VisualFBEditor"
 	Dim As String ExtraHeaders = IIf(InStr(LCase(AIAgentProvider),  "openrouter"), ", ""extra_headers"": {""HTTP-Referer"": """ & site_url & """, ""X-Title"": """ & site_name & """}}", "}")
-	'监控反馈：
-	'记录每次API调用的实际token使用量 自动调整后续分块大小:
+	'monitoring feedback:
+	'record actual token usage per API call, auto-adjust subsequent chunk size:
 	'If lastTokenUsage > MaxChunkSize * 0.9 Then
 	Dim As Integer MaxChunkSize = AIGetMaxChunkSize()
 	Dim As Integer ChunkThreshold, ChunkOverlap, MaxChunks
 	Dim As String UserChunks(), AssistantChunks()
 	
 	'AICalculateChunkParameters(ChunkThreshold, ChunkOverlap, MaxChunkSize)
-	ChunkThreshold = MaxChunkSize * 0.8  ' 代码需要更小分块
-	If ChunkThreshold < 512 Then ChunkThreshold = 512    '确保最小值
-	ChunkOverlap = 0       ' 代码需要更大重叠??????
+	ChunkThreshold = MaxChunkSize * 0.8  ' code needs smaller chunks
+	If ChunkThreshold < 512 Then ChunkThreshold = 512    'ensure minimum value
+	ChunkOverlap = 0       ' code needs larger overlap??????
 	Dim As WString * MAX_PATH FileName , IncludeFile
 	Dim As WString Ptr ControlBIContentPtr
 	Dim As Integer ControlBIIndex
