@@ -1,32 +1,13 @@
 # Astoria → Ilwaco parity tracking
 
-## ⇢ NEXT ACTION (staged for a fresh session) — strip ALL non-target-platform code
+## ⇢ NEXT ACTION (staged for a fresh session) — strip ALL non-target-platform code (task B) + finish compiler removal (stage 2)
 
 **Target = x86_64 Linux / GTK3 only.** Owner direction (2026-08-02): don't strip *just* Windows — strip
 **every** non-target platform's code (Windows, Android/JNI, GTK4, GTK2, Darwin/macOS, WASM, 32-bit),
 deleting it (never comment/no-op). Astoria found this comprehensive strip made later changes much
 easier. Guard list + keep-list + survey numbers in memory [[project-strip-windows-code]]. Phase 1
-(remove the user-facing Direct2D toggle) landed + build-verified this session — Direct2D "Done" section
-below. The rest becomes two staged strip tasks:
-
-### Staged task A — full `EditControl.bas`/`.bi` non-target strip (~2,135 lines)
-`EditControl.bas` carries **23 standalone `#ifdef __USE_WINAPI__` blocks + 137 `#ifdef __USE_GTK*…#else…
-#endif` pairs** — the entire Win32 rendering backend (GDI *and* Direct2D interleaved), all dead on GTK3.
-Single largest strip task in `src/`. **Own** carefully-checkpointed session, reviewable chunks, `fbc`
-build after each — never one sweep. In `src/` the non-target surface is ~99% Windows; also sweep the
-few stray `__USE_GTK4__`/`__USE_GTK2__`/`__FB_DARWIN__`/`__USE_WASM__` guards (~1–4 each) while here.
-- **Trap:** GTK guards are not uniform — `__USE_GTK2__` vs `__USE_GTK3__` vs bare `__USE_GTK__`. Since
-  GTK2 is itself a strip target, `#ifdef __USE_GTK2__ <gtk2> #else <gtk3> #endif` collapses to the GTK3
-  (`#else`) side — but you must **read which side is GTK3**; never blind-delete every `#else` (the
-  `#else` of a `__USE_GTK2__` block is the *live* GTK3 code). `fbc` is the safety net (deleting live GTK3
-  code errors; leaving non-target code is harmless — excluded). Block map parser saved in scratchpad.
-- Watch the **typo'd guards** ([[project-strip-windows-code]] landmine): `__US_GTK__`, `__FB_WIN32`,
-  `__FB_64BIT_` — silently-dead code, fix as bugs, don't strip blindly.
-- `EditControl.bi` D2D decls (all `#ifdef __USE_WINAPI__`): `#include D2D1_MFF.bi` (~16–17), the member
-  block (~382–395), `ReleaseDirect2D` decl (~574), plus the now-unused ungated `UseDirect2D` global
-  (:56) — remove the global together with the last of its WINAPI referents.
-- `Main.bas` also has a dead `#ifdef __USE_WINAPI__` D2D init block (`LoadD2D1`/`UnloadD2D1`/
-  `g_Direct2DEnabled`, ~7003–7010) to drop as part of this.
+(Direct2D toggle) and **staged task A (full `EditControl.bas`/`.bi` strip) both landed + build-verified**
+— see the two "Done" sections below. Remaining strip work is **task B**:
 
 ### Staged task B — MFF non-target strip (our fork — [[project-mff-is-our-fork]])
 Do after or independently of task A. **MFF is where the multi-platform bulk lives** (survey: WINAPI 945,
@@ -195,6 +176,54 @@ was live-but-useless. Removed that toggle, **build-verified clean** (fbc exit 0,
 EditControl's whole Windows branch (23 `#ifdef __USE_WINAPI__` blocks + 137 `#ifdef __USE_GTK*…#else…
 #endif` pairs, ~2,135 lines, GDI+D2D interleaved) and is inseparable from it. Retargeted as **staged
 task A** at the top of this file (full EditControl WINAPI strip). MFF's Direct2D is **staged task B**.
+
+## Done 2026-08-02 — full `EditControl.bas`/`.bi` non-target strip (staged task A)
+
+The single largest strip in `src/`. **`EditControl.bas` 9405 → 6582 lines, `EditControl.bi` 845 → 764**
+(−2,904 total). Every non-target branch deleted (Windows GDI+Direct2D, GTK2), the target-GTK guard
+wrappers collapsed, and the commented-out `'#ifdef …` cruft blocks removed. **Build-verified clean** at
+every step (fbc exit 0, zero warnings) and the IDE **launches to a fully-loaded editor** (menus, panels,
+"IntelliSense fully loaded"); no crash.
+
+**Method (durable — reuse for task B and any large guard strip):** all conditionals in the file were
+**single-symbol** `#ifdef`/`#ifndef` with **no `#if`-expressions and no `#elseif`**, so a *correct
+guard-evaluating* eliminator (not blind `#else` deletion) was safe. Truth table on the `-d __USE_GTK3__`
+build (auto-derived in `mff/SysUtils.bi`): `__USE_GTK__`,`__USE_GTK3__`,`__FB_64BIT__` = **defined**;
+`__USE_WINAPI__`,`__FB_WIN32__`,`__USE_GTK2__`,`__USE_GTK4__`,`__USE_JNI__`,`__USE_WASM__`,`__FB_DARWIN__`
+= **undefined**. Left fully opaque: `pango_version`/`PANGO_VERSION` (GTK/pango API version checks) and
+`__USE_MAKE__` (build-mode, not platform). Done in **two build-checkpointed phases**: **A** = delete the
+directly-non-target-guarded blocks (`__USE_WINAPI__`/`__FB_WIN32__`/`__USE_GTK2__`/`#ifndef __USE_GTK__`),
+leaving the positive GTK wrappers; **B** = collapse `#ifdef __USE_GTK__`/`__USE_GTK3__` (keep body, drop
+their Windows/GTK2 `#else`). The eliminator + a nesting-aware balance checker are in scratchpad
+(`ppstrip.py` / `ppmap.py`). No typo'd guards were present in this file.
+
+**Also dropped (finishing the Direct2D retirement):** the now-unused ungated `UseDirect2D` global
+(`EditControl.bi`), and the two dead `#ifdef __USE_WINAPI__` D2D init blocks in `Main.bas`
+(`LoadD2D1`/`UnloadD2D1`/`g_Direct2DEnabled`). Zero D2D/`ID2D1`/`pRenderTarget` references remain in
+`src/`. **In-file guards remaining:** only the 6 legitimate pango version-checks.
+
+## Done 2026-08-02 — compiler path hard-coded, no picker dialog (opinionated design, stage 1)
+
+Owner direction: *"The compiler path should be hard coded into the system, there is no choice anymore."*
+The bundled FreeBASIC is now **the one compiler**, hard-coded and resolved relative to the executable so
+it travels inside the AppImage. **Build-verified clean; the IDE now starts straight to the editor with no
+"Invalid defined compiler path / Find Compilers from Computer?" dialog** (the standing first-run blocker
+noted in PROJECT_STATUS is gone).
+- `Main.bi` — new `#define BundledCompilerPath "./Compilers/FreeBASIC-1.10.1-linux-x86_64/bin/fbc"`
+  (`GetFullPath` turns the leading `./` into `ExePath & …`).
+- `Main.bas` `LoadSettings` (~6851) — `Compiler32Path`/`Compiler64Path` now assigned from
+  `BundledCompilerPath` instead of the INI `Compilers.Get(...)` lookup. **The fragile `[Compilers]` INI
+  parse loop is untouched** (it reads 10 sections keyed by one index and crashes if restructured —
+  PROJECT_STATUS); `CurrentCompiler64` is still read so the per-compiler *argument* template
+  (`CompilerTool`, ~686) still resolves. Include-path derivation follows the hard-coded path automatically.
+- `Main.bas` — deleted `Function CheckCompilerPaths` (the startup validator that showed the dialog) and
+  set its one call site `bSharedFind = True` (the compiler is now always present).
+
+**Stage 2 (pending — "no choice" completion, its own session):** remove the *picker UI* — the Options ▸
+compilers list + "Find Compilers from Computer" button (`frmOptions`), the per-project `CompilerPath`
+override (build branch `Main.bas:612-613`, `frmProjectProperties` `txtCompilerPath`, `.vfp` `CompilerPath`
+parse/save), and — carefully — the now-vestigial `[Compilers]` INI machinery (the fragile 10-section loop
+must be refactored, not just deleted). Landing stage 1 first keeps each change build-checkpointed.
 
 ## Menu taxonomy — the surface of feature-parity, not a standalone task
 

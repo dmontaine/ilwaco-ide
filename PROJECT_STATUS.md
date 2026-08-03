@@ -15,7 +15,53 @@ Ilwaco keeps GTK, so our GTK fixes apply upstream where Astoria's Win64-only one
 
 ---
 
-## Session handoff (2026-08-02, latest) — GitHub menu + Direct2D option removed; build shim vendored; non-target strip scoped
+## Session handoff (2026-08-02, latest) — EditControl fully stripped; compiler hard-coded (no picker dialog)
+
+**START HERE.** Two substantive landings, both **build-verified clean** (fbc exit 0, zero warnings) and
+**runtime-verified** (the IDE launches to a fully-loaded editor — full menus/panels, "IntelliSense fully
+loaded" — with **no error dialog**; no crash, no `DebugInfo.log`).
+
+**1. Full `EditControl.bas`/`.bi` non-target strip (AstoriaParity staged task A — DONE).** The single
+largest strip in `src/`: **`EditControl.bas` 9405 → 6582, `EditControl.bi` 845 → 764** (−2,904). Deleted
+every non-target branch (Windows GDI + Direct2D, GTK2), collapsed the target-GTK guard wrappers, and
+removed the commented `'#ifdef …` cruft. Also finished the Direct2D retirement: dropped the unused ungated
+`UseDirect2D` global (`EditControl.bi`) and the two dead `#ifdef __USE_WINAPI__` D2D init blocks in
+`Main.bas` — **zero D2D refs remain in `src/`**. Method was a *correct guard-evaluating* eliminator (every
+conditional here is single-symbol `#ifdef`/`#ifndef`, no `#if`-exprs, no `#elseif`), run in two
+build-checkpointed phases (A: delete non-target-guarded blocks; B: collapse `__USE_GTK__`/`__USE_GTK3__`
+wrappers). Tools + full method in AstoriaParity's "Done — staged task A" section; scripts (`ppstrip.py`,
+`ppmap.py`) in scratchpad. **Remaining strip = task B** (MFF), top of AstoriaParity.
+
+**2. Compiler path hard-coded, first-run dialog gone (opinionated design, stage 1).** Owner: *"The
+compiler path should be hard coded into the system, there is no choice anymore."* Added
+`#define BundledCompilerPath "./Compilers/FreeBASIC-1.10.1-linux-x86_64/bin/fbc"` (Main.bi; `./` resolves
+to `ExePath` via `GetFullPath`, so it travels in the AppImage) and assigned `Compiler32/64Path` from it in
+`LoadSettings` — **without touching the fragile 10-section `[Compilers]` INI parse loop** (kept
+`CurrentCompiler64` so the argument template still resolves). Deleted `Function CheckCompilerPaths` and set
+its call site `bSharedFind = True`. **The "Invalid defined compiler path / Find Compilers?" first-run
+blocker (see Known issues below) is now gone.** **Stage 2 pending** (remove the picker UI + per-project
+`CompilerPath` override + vestigial INI machinery — needs the fragile loop refactored, own session; see
+AstoriaParity "Done — compiler path hard-coded" for the exact surface).
+
+**Verification note / caution for next session:** driving the GTK build over `:0` with `xdotool type` is
+**focus-fragile** — keystrokes leaked into the *host* window during this session. Prefer opening a file via
+CLI args or verifying by effect (window loads, no error dialog) over synthetic typing. Also: **`pkill -f
+VisualFBEditor64_gtk3` matches its own shell** (kills the caller, exit 144) — use `pkill -x` on the exact
+name, or `pgrep`/`kill` by PID. The IDE **writes window/session state into the INI on exit** — `git
+checkout` the `Settings/*.ini` afterward to keep it pristine.
+
+**Follow-up pass (2026-08-02, this handoff):** removed the remaining commented-out Win32 lines in
+`EditControl.bas` (`'txtCode.*`, the `'SendMessage`/`ComboBoxInfo`/`PostMessage` block, `'…SelectObject(bufDC…)`)
+— build re-verified (fbc exit 0), IDE relaunched to a fully-loaded editor. **Caveat on the "no crash"
+claim above:** on the first launch this session the process exited with **SIGSEGV (139) ~1 min in**; it did
+**not** reproduce on relaunch (91 s idle, clean, no `DebugInfo.log`), so it is an *unconfirmed, possibly
+interaction-triggered* crash, not a verified idle regression. Get a source-line backtrace next session by
+rebuilding with `-g` (FreeBASIC's handler then reports error 12 with a line) and opening a file. A handful
+(~4) of `'txtCode`-style dead comments still remain elsewhere in `EditControl.bas` for a later full sweep.
+
+---
+
+## Session handoff (2026-08-02, earlier) — GitHub menu + Direct2D option removed; build shim vendored; non-target strip scoped
 
 **START HERE.** Continued the parity walk, removed the Direct2D user option, closed a standing infra
 gap (vendored the fbc shim), and scoped the big non-target-platform strip for a fresh session.
@@ -144,13 +190,12 @@ and the committed binary would not run. All three are resolved.
   error is gone.
 
 ### Known issues surfaced (not blockers for the restructuring work)
-- **First-run "Invalid defined compiler path" dialog.** The shipped `Settings/VisualFBEditorX64_gtk3.ini`
-  `[Compilers]` points at the original author's dead `/mnt/media/...` paths. Pointing it at the
-  bundled fbc is trivial, **but the settings parser crashes on startup if the `[Compilers]` block is
-  *restructured*** (removing `Version_N`/`Path_N` entries or renaming the default) — a null-deref of
-  the class Astoria documents. So the eventual "one compiler, no picker" change must edit the parser,
-  not just the ini. The ini was reverted to pristine for now; this is a **parity/restructuring item**,
-  not something to hot-patch.
+- **First-run "Invalid defined compiler path" dialog — RESOLVED 2026-08-02** (see the latest handoff,
+  stage 1). The shipped `[Compilers]` pointed at the original author's dead `/mnt/media/...` paths. Rather
+  than restructure the fragile parse loop (it crashes if the `[Compilers]` block is restructured — a
+  null-deref), the compiler path is now **hard-coded** from `BundledCompilerPath` after the loop and the
+  `CheckCompilerPaths` validator/dialog was removed. The INI block is left intact (ignored for path). The
+  full "one compiler, no picker" UI removal is **stage 2** (AstoriaParity).
 - **Runtime needs the fbc shim on `LD_LIBRARY_PATH`** when the IDE spawns fbc to build a user
   project. Launching the IDE with the shim env makes the child fbc inherit it; a shipped build needs
   a launcher/wrapper that sets this (packaging concern).

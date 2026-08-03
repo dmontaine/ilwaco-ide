@@ -6848,8 +6848,8 @@ Sub LoadSettings
 	WLet(CurrentCompiler32, *DefaultCompiler32)
 	WLet(DefaultCompiler64, iniSettings.ReadString("Compilers", "DefaultCompiler64", ""))
 	WLet(CurrentCompiler64, *DefaultCompiler64)
-	WLet(Compiler32Path, Compilers.Get(*CurrentCompiler32, "fbc"))
-	WLet(Compiler64Path, Compilers.Get(*CurrentCompiler64, "fbc"))
+	WLet(Compiler32Path, BundledCompilerPath)
+	WLet(Compiler64Path, BundledCompilerPath)
 	WLet(DefaultMakeTool, iniSettings.ReadString("MakeTools", "DefaultMakeTool", "make"))
 	WLet(CurrentMakeTool1, *DefaultMakeTool)
 	WLet(MakeToolPath1, MakeTools.Get(*CurrentMakeTool1, "make"))
@@ -6999,14 +6999,6 @@ Sub LoadSettings
 	LoadKeyWords
 	LoadInterfaceTheme
 	LoadTheme
-	#ifdef __USE_WINAPI__
-		'Print Date & " " & Time & Chr(9) & __FUNCTION__ & Chr(9) & " (Line " & __LINE__ & ") " & "Initial DWriteFactory failure! pDWriteFactory =" & pDWriteFactory & " pD2D1Factory" &  pD2D1Factory 
-		If pDWriteFactory <> 0  AndAlso pD2D1Factory <> 0  Then
-			UnloadD2D1
-			g_Direct2DEnabled = True
-		End If
-		LoadD2D1
-	#endif
 	EditControlFrame.LoadFromFile(ExePath & "/Resources/Frame.png")
 End Sub
 
@@ -11707,46 +11699,6 @@ tbToolBox.Groups.Item(1)->Buttons.Add(tbsCheckGroup, it, , @ToolBoxClick, it, it
 tbToolBox.Groups.Item(2)->Buttons.Add(tbsCheckGroup, it, , @ToolBoxClick, it, it, it, True, Cast(ToolButtonState, tstEnabled Or tstWrap Or tstChecked))
 tbToolBox.Groups.Item(3)->Buttons.Add(tbsCheckGroup, it, , @ToolBoxClick, it, it, it, True, Cast(ToolButtonState, tstEnabled Or tstWrap Or tstChecked))
 
-Function CheckCompilerPaths As Boolean
-	Dim As Boolean bFind
-	For i As Integer = 0 To pCompilers->Count - 1
-		If FileExists(GetFullPath(pCompilers->Item(i)->Text)) Then
-			bFind = True
-			Exit For
-		End If
-	Next
-	Dim As WString Ptr CompilerPath
-	#ifdef __FB_64BIT__
-		CompilerPath = Compiler64Path
-	#else
-		CompilerPath = Compiler32Path
-	#endif
-	If Not bFind Then
-		If MsgBox(ML("Invalid defined compiler path.") & !"\r" & ML("Find Compilers from Computer?"), , mtQuestion, btYesNo) = mrYes Then
-			pfOptions->Show *pfrmMain
-			pfOptions->tvOptions.Nodes.Item(2)->SelectItem
-			pfOptions->cmdFindCompilers_Click(pfOptions->cmdFindCompilers)
-		End If
-	Else
-		If *CompilerPath = "" Then
-			If MsgBox(ML("Invalid defined compiler path.") & !"\r" & ML("Do you want to choose from the available compilers?"), , mtQuestion, btYesNo) = mrYes Then
-				pfOptions->Show *pfrmMain
-				pfOptions->tvOptions.Nodes.Item(2)->SelectItem
-			End If
-			#ifdef __USE_GTK__
-			ElseIf g_find_program_in_path(ToUtf8(GetFullPath(*CompilerPath))) = NULL Then
-			#else
-			ElseIf Not FileExists(GetFullPath(*CompilerPath)) Then
-			#endif
-			If MsgBox(ML("File") & " """ & *CompilerPath & """ " & ML("not found") & "." & !"\r" & ML("Do you want to choose from the available compilers?"), , mtQuestion, btYesNo) = mrYes Then
-				pfOptions->Show *pfrmMain
-				pfOptions->tvOptions.Nodes.Item(2)->SelectItem
-			End If
-		End If
-	End If
-	Return bFind
-End Function
-
 Dim Shared As Boolean bSharedFind
 Sub frmMain_Create(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	#ifdef __USE_GTK__
@@ -11881,7 +11833,7 @@ Sub frmMain_Create(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	pfSplash->lblProcess.Text = ML("Load On Startup") & ": " & ML("Tools")
 	LoadTools
 	
-	bSharedFind = CheckCompilerPaths
+	bSharedFind = True
 	
 	gLocalProperties = True
 	
@@ -12409,9 +12361,6 @@ Sub OnProgramQuit() Destructor
 	MutexDestroy tlockSave
 	MutexDestroy tlockGDB
 	MutexDestroy tlockSuggestions
-	#ifdef __USE_WINAPI__
-		UnloadD2D1
-	#endif
 	Dim As UserToolType Ptr tt
 	#ifndef __USE_GTK__
 		For i As Integer = 0 To Tools.Count - 1
