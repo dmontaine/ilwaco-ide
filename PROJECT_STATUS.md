@@ -15,18 +15,19 @@ Ilwaco keeps GTK, so our GTK fixes apply upstream where Astoria's Win64-only one
 
 ---
 
-## Session handoff (2026-08-02, latest) — Help ▸ GitHub menu removed; build shim vendored into repo
+## Session handoff (2026-08-02, latest) — GitHub menu + Direct2D option removed; build shim vendored; non-target strip scoped
 
-**START HERE.** Continued the parity walk and closed a standing infra gap.
+**START HERE.** Continued the parity walk, removed the Direct2D user option, closed a standing infra
+gap (vendored the fbc shim), and scoped the big non-target-platform strip for a fresh session.
 
-**Landed this session (both build-verified clean, committed + pushed / committed):**
+**Landed this session (both build-verified clean, committed + pushed):**
 - **Removed the Help ▸ GitHub submenu** (Astoria `d275dc93`) — `src/Main.bas` (the `miGitHub` block,
   8 items + 2 separators) and `src/VisualFBEditor.bas` (8 `Case` handlers incl. orphan `GitHubWebSite`).
   Kept `OpenUrl` (used by other Help commands) and the FreeBasic WiKi/Forums items. Commit `6f79c39`.
 - **Removed the Direct2D user option** (Astoria `DIRECT2D_REMOVAL.md` §1, "Phase 1") — the
   "Use Direct2D (For Windows)" toolbar button + Options checkbox + INI key + dispatch. On GTK the whole
   Direct2D *render* path was already `#ifdef __USE_WINAPI__`-gated (never compiled); only the toggle was
-  live-but-useless. `frmOptions.frm` done via **edit-form-safely**. Commit `735ffc2` (not yet pushed).
+  live-but-useless. `frmOptions.frm` done via **edit-form-safely**. Commit `5bc101d`.
 
 **Re-scoping discovered (important):** the editor's remaining Direct2D can't be stripped on its own —
 it's interleaved through **EditControl's entire Windows branch** (23 `#ifdef __USE_WINAPI__` blocks +
