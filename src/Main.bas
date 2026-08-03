@@ -2801,37 +2801,11 @@ Sub ChangeLockControls(bLockControls As Boolean, ChangeObject As Integer = -1)
 End Sub
 
 Sub ChangeFileEncoding(FileEncoding As FileEncodings)
-	If miPlainText <> 0 Then miPlainText->Checked = FileEncoding = FileEncodings.PlainText
-	If miUtf8 <> 0 Then miUtf8->Checked = FileEncoding = FileEncodings.Utf8
-	If miUtf8BOM <> 0 Then miUtf8BOM->Checked = FileEncoding = FileEncodings.Utf8BOM
-	If miUtf16BOM <> 0 Then miUtf16BOM->Checked = FileEncoding = FileEncodings.Utf16BOM
-	If miUtf32BOM <> 0 Then miUtf32BOM->Checked = FileEncoding = FileEncodings.Utf32BOM
-	If stBar.Count > 3 Then
-		With *stBar.Panels[3]
-			Select Case FileEncoding
-			Case FileEncodings.PlainText: .Caption = "ASCII"
-			Case FileEncodings.Utf8: .Caption = "UTF-8"
-			Case FileEncodings.Utf8BOM: .Caption = "UTF-8 (BOM)"
-			Case FileEncodings.Utf16BOM: .Caption = "UTF-16 (BOM)"
-			Case FileEncodings.Utf32BOM: .Caption = "UTF-32 (BOM)"
-			End Select
-		End With
-	End If
+	If stBar.Count > 3 Then stBar.Panels[3]->Caption = "UTF-8"
 End Sub
 
 Sub ChangeNewLineType(NewLineType As NewLineTypes)
-	If miWindowsCRLF <> 0 Then miWindowsCRLF->Checked = NewLineType = NewLineTypes.WindowsCRLF
-	If miLinuxLF <> 0 Then miLinuxLF->Checked = NewLineType = NewLineTypes.LinuxLF
-	If miMacOSCR <> 0 Then miMacOSCR->Checked = NewLineType = NewLineTypes.MacOSCR
-	If stBar.Count > 4 Then
-		With *stBar.Panels[4]
-			Select Case NewLineType
-			Case NewLineTypes.WindowsCRLF: .Caption = "CR+LF"
-			Case NewLineTypes.LinuxLF: .Caption = "LF"
-			Case NewLineTypes.MacOSCR: .Caption = "CR"
-			End Select
-		End With
-	End If
+	If stBar.Count > 4 Then stBar.Panels[4]->Caption = "LF"
 End Sub
 
 Sub ChangeEnabledDebug(bStart As Boolean, bBreak As Boolean, bEnd As Boolean)
@@ -5604,8 +5578,8 @@ Sub LoadSettings
 	AddRelativePathsToRecent = iniSettings.ReadBool("Options", "AddRelativePathsToRecent", True)
 	WhenVisualFBEditorStarts = iniSettings.ReadInteger("Options", "WhenVisualFBEditorStarts", 2)
 	WLet(DefaultProjectFile, iniSettings.ReadString("Options", "DefaultProjectFile", "Files/Form.frm"))
-	DefaultFileFormat = iniSettings.ReadInteger("Options", "DefaultFileFormat", FileEncodings.Utf8BOM)
-		DefaultNewLineFormat = iniSettings.ReadInteger("Options", "DefaultNewLineFormat", NewLineTypes.LinuxLF)
+	DefaultFileFormat = FileEncodings.Utf8
+	DefaultNewLineFormat = NewLineTypes.LinuxLF
 	LastOpenedFileType = iniSettings.ReadInteger("Options", "LastOpenedFileType", 0)
 	AutoComplete = iniSettings.ReadBool("Options", "AutoComplete", True)
 		AutoSuggestions = iniSettings.ReadBool("Options", "AutoSuggestions", False)
@@ -5830,8 +5804,8 @@ stBar.Align = DockStyle.alBottom
 stBar.Add ML("Press F1 for get more information"), tWidth * 25
 stBar.Add("", tWidth * 50) 'Row +Col 
 stBar.Add ML("IntelliSense fully loaded"), tWidth * 27
-stBar.Add "UTF-8 (BOM)", tWidth * 11
-stBar.Add "CR+LF", tWidth * 6
+stBar.Add "UTF-8", tWidth * 11
+stBar.Add "LF", tWidth * 6
 stBar.Add "NUM", tWidth * 4
 stBar.Panels[0]->Width = Max(stBar.Width - 50 - stBar.Panels[1]->Width - stBar.Panels[2]->Width - stBar.Panels[3]->Width  - stBar.Panels[4]->Width - stBar.Panels[5]->Width, 20)
 Var spProgress = stBar.Add("")
@@ -6052,20 +6026,7 @@ Sub CreateMenusAndToolBars
 	miPrintPreview = miFile->Add(ML("Print P&review") & HK("PrintPreview"), "PrintPreview", "PrintPreview", @mClick, , , False)
 	miPageSetup = miFile->Add(ML("Page Set&up") & "..." & HK("PageSetup"), "", "PageSetup", @mClick, , , False)
 	miFile->Add("-")
-	Var miFileFormat = miFile->Add(ML("File format"))
-	miPlainText = miFileFormat->Add(ML("Encoding") & ": " & ML("Plain text") & HK("PlainText"), "", "PlainText", @mClick, True)
-	miUtf8 = miFileFormat->Add(ML("Encoding") & ": " & ML("Utf8") & HK("Utf8"), "", "Utf8", @mClick, True)
-	miUtf8BOM = miFileFormat->Add(ML("Encoding") & ": " & ML("Utf8 (BOM)") & HK("Utf8BOM"), "", "Utf8BOM", @mClick, True)
-	miUtf16BOM = miFileFormat->Add(ML("Encoding") & ": " & ML("Utf16 (BOM)") & HK("Utf16BOM"), "", "Utf16BOM", @mClick, True)
-	miUtf32BOM = miFileFormat->Add(ML("Encoding") & ": " & ML("Utf32 (BOM)") & HK("Utf32BOM"), "", "Utf32BOM", @mClick, True)
-	miFileFormat->Add("-")
-	miWindowsCRLF = miFileFormat->Add(ML("Newline") & ": " & ML("Windows (CRLF)") & HK("WindowsCRLF"), "", "WindowsCRLF", @mClick, True)
-	miLinuxLF = miFileFormat->Add(ML("Newline") & ": " & ML("Linux (LF)") & HK("LinuxLF"), "", "LinuxLF", @mClick, True)
-	miMacOSCR = miFileFormat->Add(ML("Newline") & ": " & ML("MacOS (CR)") & HK("MacOSCR"), "", "MacOSCR", @mClick, True)
-	miUtf8BOM->Checked = True
-		miLinuxLF->Checked = True
-	miFile->Add("-")
-	
+
 	'David Change  Add Recent Sessions
 	miRecentSessions = miFile->Add(ML("Recent Sessions"), "", "RecentSessions", @mClick)
 	Dim sTmp As WString * 1024

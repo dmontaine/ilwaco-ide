@@ -1776,7 +1776,7 @@ Namespace My.Sys.Forms
 	
 	Sub EditControl.LoadFromFile(ByRef FileName As WString, ByRef FileEncoding As FileEncodings, ByRef NewLineType As NewLineTypes, WithoutScroll As Boolean = False)
 		Dim As WString Ptr pBuff
-		Dim As String Buff, EncodingStr, NewLineStr, InContinueStr, InContinueStrOld, InContinueStrTmp
+		Dim As String Buff, EncodingStr, InContinueStr, InContinueStrOld, InContinueStrTmp
 		Dim As WString Ptr BuffRead
 		Dim As Integer Result = -1, Fn, FileSize
 		Dim As FileEncodings OldFileEncoding
@@ -1794,46 +1794,18 @@ Namespace My.Sys.Forms
 				FileSize = LOF(Fn) + 1
 				Buff = String(4, 0)
 				Get #Fn, , Buff
-				If Buff[0] = &HFF AndAlso Buff[1] = &HFE AndAlso Buff[2] = 0 AndAlso Buff[3] = 0 Then 'Little Endian
-					FileEncoding = FileEncodings.Utf32BOM
-					EncodingStr = "utf-32"
-					Buff = String(1024, 0)
-					Get #Fn, 0, Buff
-					'ElseIf (Buff[0] = = OxFE && Buff[1] = = 0xFF) 'Big Endian
-				ElseIf Buff[0] = &HFF AndAlso Buff[1] = &HFE Then 'Little Endian
-					FileEncoding = FileEncodings.Utf16BOM
-					EncodingStr = "utf-16"
-					Buff = String(1024, 0)
-					Get #Fn, 0, Buff
-				ElseIf Buff[0] = &HEF AndAlso Buff[1] = &HBB AndAlso Buff[2] = &HBF Then
+				If Buff[0] = &HEF AndAlso Buff[1] = &HBB AndAlso Buff[2] = &HBF Then
 					FileEncoding = FileEncodings.Utf8BOM
 					EncodingStr = "utf-8"
 					Buff = String(1024, 0)
 					Get #Fn, , Buff
 				Else
+					FileEncoding = FileEncodings.Utf8
+					EncodingStr = "ascii"
 					Buff = String(FileSize, 0)
 					Get #Fn, 0, Buff
-					If (CheckUTF8NoBOM(Buff)) Then
-						FileEncoding = FileEncodings.Utf8
-						EncodingStr = "ascii"
-					Else
-						FileEncoding = FileEncodings.PlainText
-						EncodingStr = "ascii"
-					End If
 				End If
-				If InStr(Buff, Chr(13, 10)) Then
-					NewLineType= NewLineTypes.WindowsCRLF
-					NewLineStr = Chr(10)
-				ElseIf InStr(Buff, Chr(10)) Then
-					NewLineType= NewLineTypes.LinuxLF
-					NewLineStr = Chr(10)
-				ElseIf InStr(Buff, Chr(13)) Then
-					NewLineType= NewLineTypes.MacOSCR
-					NewLineStr = Chr(13)
-				Else
-					NewLineType= NewLineTypes.WindowsCRLF
-					NewLineStr = Chr(10)
-				End If
+				NewLineType = NewLineTypes.LinuxLF
 			Else
 				MsgBox ML("Open file failure!") &  " " & ML("in function") & " EditControl.LoadFromFile" & Chr(13, 10) & " " & FileName
 				CloseFile_(Fn)
@@ -1919,31 +1891,14 @@ Namespace My.Sys.Forms
 	Sub EditControl.SaveToFile(ByRef FileName As WString, FileEncoding As FileEncodings, NewLineType As NewLineTypes)
 		Dim As Integer Fn = FreeFile_
 		Dim As Integer Result
-		Dim As String FileEncodingText, NewLine, FileEncodingSymbols
+		Dim As String FileEncodingText, NewLine
 		Dim As Boolean FileSaved
-		If FileEncoding = FileEncodings.Utf8 Then
-			FileEncodingText = "ascii"
-			FileEncodingSymbols = ""
-		ElseIf FileEncoding = FileEncodings.Utf8BOM Then
+		If FileEncoding = FileEncodings.Utf8BOM Then
 			FileEncodingText = "utf-8"
-			FileEncodingSymbols = Chr(&HEF, &HBB, &HBF)
-		ElseIf FileEncoding = FileEncodings.Utf16BOM Then
-			FileEncodingText = "utf-16"
-			FileEncodingSymbols = Chr(&HFF, &HFE)
-		ElseIf FileEncoding = FileEncodings.Utf32BOM Then
-			FileEncodingText = "utf-32"
-			FileEncodingSymbols = Chr(&HFF, &HFE, 0, 0)
 		Else
 			FileEncodingText = "ascii"
-			FileEncodingSymbols = ""
 		End If
-		If NewLineType = NewLineTypes.LinuxLF Then
-			NewLine = Chr(10)
-		ElseIf NewLineType = NewLineTypes.MacOSCR Then
-			NewLine = Chr(13)
-		Else
-			NewLine = Chr(13, 10)
-		End If
+		NewLine = Chr(10)
 		If Not FileSaved Then
 			If Open(FileName For Output Encoding FileEncodingText As #Fn) = 0 Then
 				Var iCount = Content.Lines.Count - 1
@@ -1953,14 +1908,6 @@ Namespace My.Sys.Forms
 							Print #Fn, ToUtf8(*Cast(EditControlLine Ptr, Content.Lines.Item(i))->Text);
 						Else
 							Print #Fn, ToUtf8(*Cast(EditControlLine Ptr, Content.Lines.Item(i))->Text) & NewLine;
-						End If
-					Next
-				ElseIf FileEncoding = FileEncodings.PlainText  Then
-					For i As Integer = 0 To iCount
-						If i = iCount Then
-							Print #Fn, *Cast(EditControlLine Ptr, Content.Lines.Item(i))->Text;
-						Else
-							Print #Fn, *Cast(EditControlLine Ptr, Content.Lines.Item(i))->Text & NewLine;
 						End If
 					Next
 				Else
