@@ -126,10 +126,41 @@ Some Astoria *infrastructure* choices are independently already true in Ilwaco:
 | `b5554063` | Bundle FBC + GDB toolchain in-repo | DONE | Ilwaco bundles Linux fbc (no gdb yet) |
 | `15e66cc5`,`e139c2cc` | Remove 32-bit compiler binaries | SKIP | Ilwaco is 64-bit; no Win32 toolchain to remove |
 | `53d8e473` | Fix all compile warnings (WStr wrapping etc.) | PORT (partial) | **DONE** 2026-08-03 — ported the 2 still-applicable `@literal→WString Ptr` hunks (`Debug.bas` `brk_comp`/`list_all`); rest N/A (already-stripped / doesn't reproduce). Build-clean. See ↓ |
+| `4cf72752` | `_WIN32_WINNT` header bug + bottom-panel tab clearing | PORT (partial) | **DONE** 2026-08-03 — ported the tab-clearing (`ClearAnalysisPanels`/`ClearDebugPanels`, wired into `CloseProject` + debug-`End`); `_WIN32_WINNT` header fix N/A (Windows headers), AI-KnowledgeBase fix N/A (AI removed). Build+runtime-verified. See ↓ |
 | `56f6d180`,`b3633bc5`,`a7c7839d` | Dark mode (uxtheme/ntdll Win32) | REIMPLEMENT | Ilwaco needs GTK dark mode (settings already have `DarkMode=true`) |
 | `c494207f`,`7baebd1e`,`add4642a`,`76abaa5a` | Delete dead GTK/Linux/32-bit code | INVERT/SKIP | do **not** apply — this is Ilwaco's live platform |
 | `ae74b31c` | Rename "Service"→"Tools" menu, inner "Tools"→"External Tools" | PORT | **DONE** 2026-08-02 (caption-only, internal names unchanged; `Main.bas` `miXizmat`) |
 | `49ec5ccd`, §menu-taxonomy | UI approachability: per-menu **Advanced** submenus; menu reorg; caption cleanups; options-dialog simplification | PORT (big) | **deferred, and re-scoped — see "Menu taxonomy" section below** |
+
+## Done 2026-08-03 — bottom-panel/debug tab clearing (Astoria `4cf72752`, partial)
+
+Astoria's `4cf72752` bundled three things; only one is a port here:
+- **`_WIN32_WINNT` header fix** (116 `=`→`>=` across `Compiler/inc/win/*.bi`, the exact-equality
+  Windows-version gate that hid Win8.1+ APIs) — **N/A.** Those are Windows platform headers; Ilwaco's
+  Linux/GTK user-project compiles never include them.
+- **AI KnowledgeBase reference-doc path fix** — **N/A** (Ilwaco removed the AI subsystem).
+- **Bottom-panel / debug tab clearing** — **PORTED.** A real UX-robustness fix: previously the bottom
+  panels kept results from a closed project (Output/Problems/Suggestions/Find/ToDo/Change Log) and stale
+  debug state (Locals/Globals/Procedures/Threads/Watches/Memory/Profiler/Immediate), so after closing one
+  project and opening another the panes showed misleading leftovers — exactly the "beginner can't tell a
+  stale tool from their own mistake" trap the product standard targets.
+
+What landed in Ilwaco (line-for-line from Astoria, against verified-identical control types):
+- **`src/Main.bas`** — two new subs after `ClearMessages()`: `ClearAnalysisPanels()` (clears the 6 analysis
+  panels + resets their tab captions via `ML(...)`, and `mLoadLog`/`mLoadToDo`) and `ClearDebugPanels()`
+  (clears the 8 debug panels; calls `ClearThreadsWindow`). Both are invoked from `CloseProject` before
+  `ChangeMenuItemsEnabled`.
+- **`src/Main.bi`** — forward-`Declare Sub ClearThreadsWindow()` (it's defined in `ilwaco.bas`, but
+  `Main.bi` pulls in `Main.bas` first, so `ClearDebugPanels` needs the declaration in scope).
+- **`src/ilwaco.bas`** — `ClearDebugPanels` at the end of the debug-`End` case in `mClick`, so the debug
+  panes clear when a session ends.
+
+Verified: control types confirmed (`ListView`→`.ListItems`, `TreeListView`/`TreeView`→`.Nodes`,
+`TextBox`→`.Text`); `fbc` exit 0, zero warnings; the IDE launches clean and all 14 bottom tabs render
+(screenshot). Matched Astoria's actual diff (calls in `CloseProject` + debug-`End` only; its comment names
+`CloseSession` as intent, but `CloseProject` runs during session close and the commit wired nothing else).
+The end-to-end clear (open → populate → close → panes empty) was not independently UI-driven here; it is a
+faithful port of Astoria's owner-verified code.
 
 ## Done 2026-08-03 — compile-warnings port (Astoria `53d8e473`, partial)
 

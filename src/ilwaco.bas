@@ -358,6 +358,7 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 			ChangeEnabledDebug True, False, False
 			'#endif
 		End If
+		ClearDebugPanels
 	Case "Restart"
 		ClearThreadsWindow
 		Dim As DebuggerTypes CurrentDebugger = CurrentDebuggerType64

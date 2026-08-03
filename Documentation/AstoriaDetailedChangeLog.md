@@ -39,6 +39,13 @@ the actionable PORT / REIMPLEMENT / REVIEW queue. Two deletion triggers:
 - **2026-08-03 (pass 2):** removed **481** non-actionable commits — NONCODE 426, INVERT 9, WIN32 20, AI 26.
   **888 → 401** actionable entries remain. (The classifier's exact regex criteria are the four classes
   above; re-derivable from this rule.)
+- **2026-08-03 (walk, `4cf72752`):** removed `4cf72752` (WIN32_WINNT header bug + bottom-panel tab
+  clearing) — **PORT (partial), DONE.** The `_WIN32_WINNT` `=`→`>=` header fix is Windows-only (N/A on the
+  GTK build) and the AI-KnowledgeBase path fix is N/A (AI removed); ported the **bottom-panel/debug tab
+  clearing** — new `ClearAnalysisPanels`/`ClearDebugPanels` in `Main.bas`, called from `CloseProject` and
+  the debug-`End` case in `ilwaco.bas`, so stale project/debug results don't persist after a project
+  closes. Build- + runtime-verified (all 14 bottom tabs present; IDE launches clean). See AstoriaParity
+  "Done — bottom-panel/debug tab clearing (`4cf72752`)". **397 → 396.**
 - **2026-08-03 (walk, `53d8e473`):** removed `53d8e473` (Fix all compile warnings) — **PORT (partial),
   DONE.** Ilwaco's production build (`build-linux.sh`, default `-w`, gas64) was already warning-clean; two
   of Astoria's fixes targeted code Ilwaco had already stripped (Canvas.bas Direct2D `@"en-us"`, Debug.bas
@@ -96,9 +103,6 @@ Everything above the **Total: 888 commits, 2026-07-02 to 2026-08-02.**
   *Build/Tools, Docs, Examples, Settings · 6 files*
 - **`5eeb2f93`** — Rebuild mff64.dll and VisualFBEditor64.exe (clean compile, 0 errors/0 warnings)
   *Framework/Controls, IDE · 2 files*
-- **`4cf72752`** — Fix critical _WIN32_WINNT header bug blocking user-project compiles; bottom-panel tab clearing
-  Bundled compiler headers (Compiler/inc/win/*.bi) gated all Windows-8.1+ API declarations behind exact-equality _WIN32_WINNT checks instead of minimum-version checks, so targeting Windows 10 (this project's TARGET_COMPILE_DEFINE) silently excluded them.
-  *Build/Tools, Docs, Examples, Framework/Controls, IDE, Settings · 30 files*
 - **`4bd02894`** — Add missing example .vfp project files; add "no unnecessary options" guiding principle; audit Examples/ for GTK/Linux/Win32-only
   Audited all 33 Examples/ subdirectories for GTK dependency, Linux-only code, or Win32-only (non-64-bit) source, per the owner's ad-hoc request.
   *Docs, Examples, Framework/Controls, IDE · 18 files*

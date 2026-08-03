@@ -16,19 +16,24 @@ to VisualFBEditor upstream, where Astoria's Win64-only ones cannot apply).
 
 ---
 
-## Session handoff (2026-08-03, latest) — changelog walk resumed: 4 entries resolved (`53d8e473` ported)
+## Session handoff (2026-08-03, latest) — changelog walk resumed: 5 entries resolved (`4cf72752` ported)
 
 **START HERE.** Continued the Astoria→Ilwaco changelog walk from the oldest entries in
-[AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md). Resolved 4, kept 2. Backlog
-**401 → 397**. Committed+pushed: the first three (doc-only) as [`72a741b`](Documentation/AstoriaParity.md);
-`53d8e473` (below) is a 1-file source fix, build-verified, **staged/uncommitted** at time of writing.
+[AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md). Resolved 5, kept 2. Backlog
+**401 → 396**. Committed+pushed: first three (doc-only) as `72a741b`, `53d8e473` as `c087255`. `4cf72752`
+(below) is source+docs, build+runtime-verified, **staged/uncommitted** at time of writing.
 
-- **`53d8e473`** (Fix all compile warnings) — **PORT (partial), DONE, build-clean.** Ilwaco's production
-  build was already warning-clean; most of Astoria's fixes targeted already-stripped code (Canvas Direct2D,
-  Debug `SetConsoleTitle`) or don't reproduce (`SelectSearchResult` decl/def already match; Ilwaco uses
-  `And`, not `AndAlso`). Ported the 2 still-applicable `@literal→WString Ptr` type-correctness hunks in
-  `src/Debug.bas` (`brk_comp`, `list_all` → `WStr(...)`). Full build clean (`fbc` exit 0). See AstoriaParity
-  "Done — compile-warnings port (`53d8e473`)".
+- **`4cf72752`** (WIN32_WINNT header bug + bottom-panel tab clearing) — **PORT (partial), DONE.** The
+  `_WIN32_WINNT` `=`→`>=` header fix is N/A (Windows headers, not on the GTK build path); the AI-KnowledgeBase
+  path fix is N/A (AI removed). Ported the **bottom-panel/debug tab clearing**: new `ClearAnalysisPanels`/
+  `ClearDebugPanels` in `Main.bas`, wired into `CloseProject` + the debug-`End` case in `ilwaco.bas`, so
+  stale project/debug results don't linger after a project closes. Forward-declared `ClearThreadsWindow` in
+  `Main.bi`. Build clean (`fbc` exit 0); IDE launches, all 14 bottom tabs render. See AstoriaParity
+  "Done — bottom-panel/debug tab clearing (`4cf72752`)".
+- **`53d8e473`** (Fix all compile warnings) — **PORT (partial), DONE, committed `c087255`.** Ilwaco's
+  production build was already warning-clean; most of Astoria's fixes targeted already-stripped code (Canvas
+  Direct2D, Debug `SetConsoleTitle`) or don't reproduce. Ported the 2 `@literal→WString Ptr` hunks in
+  `src/Debug.bas` (`brk_comp`, `list_all` → `WStr(...)`).
 
 - **`bbfa3999`** (Initial Win64 fork import) — the fork anchor / base snapshot itself, not a port. Pruned.
 - **`5a097399`** (Update INI window-state + rebuild exe) — NONCODE (Settings + binary only). Pruned.
@@ -44,11 +49,14 @@ to VisualFBEditor upstream, where Astoria's Win64-only ones cannot apply).
 **NEXT — continue the walk. The two persistence entries are the oldest remaining; after them:**
 1. `e212819d` / `ef3b43e9` — bottom-panel **persistence** (deferred infra: save/restore collapsed panel
    state across sessions; see AstoriaParity "Deferred, split out: bottom-panel persistence").
-2. `4cf72752` — critical `_WIN32_WINNT` header bug blocking user-project compiles + bottom-panel tab
-   clearing (REVIEW — Win32 header guard likely N/A on GTK, but the tab-clearing half may port).
-3. `4bd02894` — add missing example `.vfp` files + "no unnecessary options" principle + Examples audit.
+2. `4bd02894` — add missing example `.vfp` files + "no unnecessary options" principle + Examples audit
+   (REVIEW — the `.vfp` additions may be Windows-example-specific; the guiding principle is already ours).
 Then the menu-taxonomy feature ports (`49ec5ccd` cluster). All owner directives (32-bit, UTF-8/LF, AI,
 English-only) remain cleared.
+
+**Repo-hygiene note:** the tracked `./ilwaco` binary drifts from source — `c087255` committed source
+without rebuilding it, and source commits generally omit the 4.6 MB artifact. Consider `.gitignore`-ing the
+built binary (it rebuilds via `./build-linux.sh editor`) rather than tracking a perpetually-stale blob.
 
 ---
 
