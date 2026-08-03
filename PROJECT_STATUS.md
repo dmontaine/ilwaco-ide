@@ -19,11 +19,23 @@ Ilwaco keeps GTK, so our GTK fixes apply upstream where Astoria's Win64-only one
 
 **START HERE.** Continued the parity walk and closed a standing infra gap.
 
-**Landed this session:**
+**Landed this session (both build-verified clean, committed + pushed / committed):**
 - **Removed the Help ▸ GitHub submenu** (Astoria `d275dc93`) — `src/Main.bas` (the `miGitHub` block,
   8 items + 2 separators) and `src/VisualFBEditor.bas` (8 `Case` handlers incl. orphan `GitHubWebSite`).
-  Kept `OpenUrl` (used by other Help commands) and the FreeBasic WiKi/Forums items. All-files grep
-  confirmed no stragglers. **Build-verified** with the recipe below. Details in AstoriaParity.md.
+  Kept `OpenUrl` (used by other Help commands) and the FreeBasic WiKi/Forums items. Commit `6f79c39`.
+- **Removed the Direct2D user option** (Astoria `DIRECT2D_REMOVAL.md` §1, "Phase 1") — the
+  "Use Direct2D (For Windows)" toolbar button + Options checkbox + INI key + dispatch. On GTK the whole
+  Direct2D *render* path was already `#ifdef __USE_WINAPI__`-gated (never compiled); only the toggle was
+  live-but-useless. `frmOptions.frm` done via **edit-form-safely**. Commit `735ffc2` (not yet pushed).
+
+**Re-scoping discovered (important):** the editor's remaining Direct2D can't be stripped on its own —
+it's interleaved through **EditControl's entire Windows branch** (23 `#ifdef __USE_WINAPI__` blocks +
+137 `#ifdef __USE_GTK*…#else…#endif` pairs, ~2,135 lines, GDI+D2D together). Retargeted as the **full
+EditControl WINAPI strip**, staged in AstoriaParity (task A), with MFF Direct2D as task B. Owner steer:
+prefer a **comprehensive global strip** of all non-GTK code (delete, never comment/no-op) — it makes
+later work much easier (memory `project-strip-windows-code`). **GTK-guard trap:** `__USE_GTK2__` vs
+`__USE_GTK3__` differ — the `#else` of a `__USE_GTK2__` block can be the live GTK3 branch; no blind
+`#else` deletion.
 
 **Infra fixed — the build shim no longer lives only in scratchpad:**
 - `libtinfo.so.5` (the one piece `fbc` needs that Debian 13 dropped) is now **vendored in-repo at
@@ -39,8 +51,12 @@ Ilwaco keeps GTK, so our GTK fixes apply upstream where Astoria's Win64-only one
 **Build recipe (this session, working):**
 `cd src && LD_LIBRARY_PATH=$SHIM ../Compilers/FreeBASIC-1.10.1-linux-x86_64/bin/fbc VisualFBEditor.bas -i ../Controls/MyFbFramework -d __USE_GTK3__ -p $SHIM -l tinfo`
 
-**NEXT:** continue the walk — candidate is the **Direct2D strip** (`UseDirect2D=true` in settings,
-Windows-only; Astoria has `DIRECT2D_REMOVAL.md`). See AstoriaParity.md.
+**NEXT (staged for a fresh session — see AstoriaParity "NEXT ACTION"):** strip **all non-target-platform
+code** (target = x86_64 Linux/GTK3; strip Windows, Android/JNI, GTK4, GTK2, Darwin, WASM, 32-bit — delete,
+never no-op). Two staged tasks: **A** = full `EditControl.bas`/`.bi` strip (~2,135 lines, its own
+carefully-chunked, build-after-each session); **B** = MFF non-target strip (MFF holds the multi-platform
+bulk — WINAPI 945, GTK4 125, WASM 129, JNI 88, GTK2 35 — rebuild `libmff64_gtk3.so`). Guard/keep lists
++ typo-guard landmines in memory `project-strip-windows-code`. Phase 1 is the parity win already banked.
 
 ---
 

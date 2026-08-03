@@ -1,11 +1,49 @@
 # Astoria → Ilwaco parity tracking
 
-## ⇢ NEXT ACTION — continue the walk (Help ▸ GitHub removal DONE 2026-08-02, ↓)
+## ⇢ NEXT ACTION (staged for a fresh session) — strip ALL non-target-platform code
 
-The GitHub submenu removal (Astoria `d275dc93`) is landed and build-verified — see the "Done" section
-below. **Candidate next PORT:** the Direct2D strip (Astoria `DIRECT2D_REMOVAL.md`; `UseDirect2D=true`
-in Ilwaco settings, Windows-only) — a clear early GTK-side item. See the Menu-taxonomy / strip-windows
-notes for context.
+**Target = x86_64 Linux / GTK3 only.** Owner direction (2026-08-02): don't strip *just* Windows — strip
+**every** non-target platform's code (Windows, Android/JNI, GTK4, GTK2, Darwin/macOS, WASM, 32-bit),
+deleting it (never comment/no-op). Astoria found this comprehensive strip made later changes much
+easier. Guard list + keep-list + survey numbers in memory [[project-strip-windows-code]]. Phase 1
+(remove the user-facing Direct2D toggle) landed + build-verified this session — Direct2D "Done" section
+below. The rest becomes two staged strip tasks:
+
+### Staged task A — full `EditControl.bas`/`.bi` non-target strip (~2,135 lines)
+`EditControl.bas` carries **23 standalone `#ifdef __USE_WINAPI__` blocks + 137 `#ifdef __USE_GTK*…#else…
+#endif` pairs** — the entire Win32 rendering backend (GDI *and* Direct2D interleaved), all dead on GTK3.
+Single largest strip task in `src/`. **Own** carefully-checkpointed session, reviewable chunks, `fbc`
+build after each — never one sweep. In `src/` the non-target surface is ~99% Windows; also sweep the
+few stray `__USE_GTK4__`/`__USE_GTK2__`/`__FB_DARWIN__`/`__USE_WASM__` guards (~1–4 each) while here.
+- **Trap:** GTK guards are not uniform — `__USE_GTK2__` vs `__USE_GTK3__` vs bare `__USE_GTK__`. Since
+  GTK2 is itself a strip target, `#ifdef __USE_GTK2__ <gtk2> #else <gtk3> #endif` collapses to the GTK3
+  (`#else`) side — but you must **read which side is GTK3**; never blind-delete every `#else` (the
+  `#else` of a `__USE_GTK2__` block is the *live* GTK3 code). `fbc` is the safety net (deleting live GTK3
+  code errors; leaving non-target code is harmless — excluded). Block map parser saved in scratchpad.
+- Watch the **typo'd guards** ([[project-strip-windows-code]] landmine): `__US_GTK__`, `__FB_WIN32`,
+  `__FB_64BIT_` — silently-dead code, fix as bugs, don't strip blindly.
+- `EditControl.bi` D2D decls (all `#ifdef __USE_WINAPI__`): `#include D2D1_MFF.bi` (~16–17), the member
+  block (~382–395), `ReleaseDirect2D` decl (~574), plus the now-unused ungated `UseDirect2D` global
+  (:56) — remove the global together with the last of its WINAPI referents.
+- `Main.bas` also has a dead `#ifdef __USE_WINAPI__` D2D init block (`LoadD2D1`/`UnloadD2D1`/
+  `g_Direct2DEnabled`, ~7003–7010) to drop as part of this.
+
+### Staged task B — MFF non-target strip (our fork — [[project-mff-is-our-fork]])
+Do after or independently of task A. **MFF is where the multi-platform bulk lives** (survey: WINAPI 945,
+GTK4 125, WASM 129, JNI 88, GTK2 35, Win32 37, Darwin 1) — so this is a full non-target strip of the
+framework, not only Direct2D. Rebuild `libmff64_gtk3.so` (designer control lib) as well as the editor.
+Direct2D portion specifically:
+- `Controls/MyFbFramework/mff/D2D1/D2D1.bi` (2,769 lines; `#include`'d only by `Canvas.bi:19`) — delete
+  outright once nothing includes it. Also `D2D1_MFF.bi`.
+- `Controls/MyFbFramework/mff/Canvas.bas` (~145 D2D branches) + `Canvas.bi` decls — delete the
+  `FUseDirect2D`/`pRenderTarget`-gated D2D branches in each drawing method, keep GTK. `RichTextBox.bas`
+  is NOT involved (0 real D2D refs).
+- `mff/Application.bas` D2D init, `MyFbFramework.vfp` manifest entry for `D2D1.bi`, the `examples/Canvas`
+  D2D demo option (Astoria removed `RadioD2D1`) if present — and, more broadly, the GTK4/GTK2/JNI/WASM/
+  Darwin branches throughout `mff/`.
+- Reference: Astoria's `DIRECT2D_REMOVAL.md` §"Scope of the removal" items 2–4 (for the D2D slice).
+
+Then continue the changelog walk.
 
 ---
 
@@ -138,6 +176,25 @@ HotKeys.txt, `.bi` decls, or enable-lines):
 
 Done directly by Opus (edit is trivial once scoped); no worker needed. `HK(...)` calls for removed
 commands just returned empty and had no HotKeys.txt entries, so removing the callers was safe.
+
+## Done 2026-08-02 — removed the Direct2D user option (Astoria `DIRECT2D_REMOVAL.md` §1, Phase 1)
+
+Astoria removed Direct2D entirely (owner decision: it had been force-disabled the whole time, zero
+real-world verification, didn't fit "no unnecessary options"). Ilwaco's situation is sharper: on the
+GTK build the **entire Direct2D render path is already `#ifdef __USE_WINAPI__`-gated and never compiled**
+— only the *toggle* (a "Use Direct2D (For Windows)" toolbar button + Options checkbox + settings key)
+was live-but-useless. Removed that toggle, **build-verified clean** (fbc exit 0, no warnings):
+- `Main.bas` — `tbtUseDirect2D` (shared-list decl + button add + the `Var b`/`Checked`/restore dance),
+  the `imgList.Add "UseDirect2D"`, and the ungated `UseDirect2D = iniSettings.ReadBool(...)` load.
+- `VisualFBEditor.bas` — the ungated `Case "UseDirect2D"` dispatch.
+- `frmOptions.frm` (via **edit-form-safely**) — the `chkUseDirect2D` designer block + its load/save/
+  WriteBool references. `frmOptions.bi` — `chkUseDirect2D` out of the shared `Dim As CheckBox` list.
+- `Settings/VisualFBEditorX64_gtk3.ini` — dropped `UseDirect2D=true` (an `[Options]` key, safe).
+
+**Phase 2 re-scoped (do NOT treat as a Direct2D task):** the editor's remaining Direct2D lives inside
+EditControl's whole Windows branch (23 `#ifdef __USE_WINAPI__` blocks + 137 `#ifdef __USE_GTK*…#else…
+#endif` pairs, ~2,135 lines, GDI+D2D interleaved) and is inseparable from it. Retargeted as **staged
+task A** at the top of this file (full EditControl WINAPI strip). MFF's Direct2D is **staged task B**.
 
 ## Menu taxonomy — the surface of feature-parity, not a standalone task
 
