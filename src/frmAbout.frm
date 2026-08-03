@@ -1,6 +1,6 @@
 ﻿'#########################################################
 '#  frmAbout.bi                                         #
-'#  This file is part of VisualFBEditor                  #
+'#  This file is part of Ilwaco IDE                      #
 '#  Authors: Xusinboy Bekchanov (bxusinboy@mail.ru)      #
 '#           Liu XiaLin (LiuZiQi.HK@hotmail.com)         #
 '#########################################################
@@ -26,7 +26,7 @@
 		Label1.Font.Name = "Times New Roman"
 		Label1.Font.Bold = True
 		Label1.Font.Size = 18
-		Label1.Text = "Visual FB Editor"
+		Label1.Text = "Ilwaco IDE"
 		Label1.SetBounds 21, 7, 438, 54
 		Label1.Alignment = AlignmentConstants.taCenter
 		Label1.Parent = @This
@@ -72,7 +72,7 @@
 		lblIcon.Text = "lblIcon"
 		'lblIcon.RealSizeImage = false
 		#ifdef __USE_GTK__
-			If Dir(ExePath & "/Resources/VisualFBEditor.ico")<>"" Then lblIcon.Graphic.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico", 48, 48)
+			If Dir(ExePath & "/Resources/ilwaco.ico")<>"" Then lblIcon.Graphic.Icon.LoadFromFile(ExePath & "/Resources/ilwaco.ico", 48, 48)
 		#else
 			lblIcon.Graphic.Icon.LoadFromResourceID(1, , 48, 48)
 		#endif

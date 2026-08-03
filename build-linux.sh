@@ -23,13 +23,13 @@
 #   ./build-linux.sh              # generate shim, then build the control lib + editor
 #   ./build-linux.sh shim         # (re)generate the shim dir only
 #   ./build-linux.sh lib          # build the MFF designer control lib only (libmff64_gtk3.so)
-#   ./build-linux.sh editor       # build the editor only (VisualFBEditor64_gtk3)
+#   ./build-linux.sh editor       # build the editor only (ilwaco)
 #   ./build-linux.sh --print-shim # print the shim dir path (for LD_LIBRARY_PATH) and exit
 #   ./build-linux.sh -h|--help
 #
 # To RUN the built IDE, put the shim on LD_LIBRARY_PATH so the fbc it spawns to
 # compile your projects can find libtinfo.so.5:
-#   LD_LIBRARY_PATH="$(./build-linux.sh --print-shim)" DISPLAY=:0 ./VisualFBEditor64_gtk3
+#   LD_LIBRARY_PATH="$(./build-linux.sh --print-shim)" DISPLAY=:0 ./ilwaco
 #
 set -euo pipefail
 
@@ -104,11 +104,11 @@ build_lib() {
 
 build_editor() {
 	need_shim
-	echo "build-linux.sh: building VisualFBEditor64_gtk3 (editor, whole-program ~3-4 min)…"
+	echo "build-linux.sh: building ilwaco (editor, whole-program ~3-4 min)…"
 	( cd "$REPO/src" \
-		&& LD_LIBRARY_PATH="$SHIM" "$FBC" VisualFBEditor.bas -i ../Controls/MyFbFramework \
+		&& LD_LIBRARY_PATH="$SHIM" "$FBC" ilwaco.bas -i ../Controls/MyFbFramework \
 			-d __USE_GTK3__ -p "$SHIM" -l tinfo )
-	echo "build-linux.sh: -> $REPO/VisualFBEditor64_gtk3"
+	echo "build-linux.sh: -> $REPO/ilwaco"
 }
 
 case "${1:-all}" in
@@ -119,6 +119,6 @@ case "${1:-all}" in
 	editor)         build_editor ;;
 	all)            build_shim; build_lib; build_editor
 	                echo "build-linux.sh: done. Run with:"
-	                echo "  LD_LIBRARY_PATH=\"$SHIM\" DISPLAY=:0 \"$REPO/VisualFBEditor64_gtk3\"" ;;
+	                echo "  LD_LIBRARY_PATH=\"$SHIM\" DISPLAY=:0 \"$REPO/ilwaco\"" ;;
 	*)              die "unknown argument '$1' (try --help)" ;;
 esac

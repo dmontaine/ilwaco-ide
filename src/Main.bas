@@ -1,6 +1,6 @@
 ﻿'#########################################################
 '#  Main.bas                                             #
-'#  This file is part of VisualFBEditor                  #
+'#  This file is part of Ilwaco IDE                      #
 '#  Authors: Xusinboy Bekchanov (bxusinboy@mail.ru)      #
 '#           Liu XiaLin (LiuZiQi.HK@hotmail.com)         #
 '#########################################################
@@ -1537,7 +1537,7 @@ End Sub
 Sub OpenProject()
 	Dim As OpenFileDialog OpenD
 	OpenD.InitialDir = GetFullPath(*ProjectsPath)
-	OpenD.Filter = ML("VisualFBEditor Project") & " (*.vfp)|*.vfp|" & ML("All Files") & "|*.*|"
+	OpenD.Filter = ML("Ilwaco IDE Project") & " (*.vfp)|*.vfp|" & ML("All Files") & "|*.*|"
 	If Not OpenD.Execute Then Exit Sub
 	AddProject OpenD.FileName
 	WLet(RecentProject, OpenD.FileName)
@@ -1637,7 +1637,7 @@ End Function
 
 Sub OpenSession()
 	Dim As OpenFileDialog OpenD
-	OpenD.Filter = ML("VisualFBEditor Session") & " (*.vfs)|*.vfs|" & ML("All Files") & "|*.*|"
+	OpenD.Filter = ML("Ilwaco IDE Session") & " (*.vfs)|*.vfs|" & ML("All Files") & "|*.*|"
 	If WGet(LastOpenPath) <> "" Then
 		OpenD.InitialDir = *LastOpenPath
 	Else
@@ -1774,7 +1774,7 @@ Sub OpenProgram()
 		OpenD.InitialDir = GetFullPath(*ProjectsPath)
 	End If
 	'  Add *.inc
-	OpenD.Filter = ML("FreeBasic Files") & " (*.vfs, *.vfp, *.bas, *.frm, *.bi, *.inc, *.rc)|*.vfs;*.vfp;*.bas;*.frm;*.bi;*.inc;*.rc|" & ML("VisualFBEditor Project Group") & " (*.vfs)|*.vfs|" & ML("VisualFBEditor Project") & " (*.vfp)|*.vfp|" & ML("FreeBasic Module") & " (*.bas)|*.bas|" & ML("FreeBasic Form Module") & " (*.frm)|*.frm|" & ML("FreeBasic Include File") & " (*.bi)|*.bi|" & ML("Other Include File") & " (*.inc)|*.inc|" & ML("Resource File") & " (*.rc)|*.rc|" & ML("All Files") & "|*.*|"
+	OpenD.Filter = ML("FreeBasic Files") & " (*.vfs, *.vfp, *.bas, *.frm, *.bi, *.inc, *.rc)|*.vfs;*.vfp;*.bas;*.frm;*.bi;*.inc;*.rc|" & ML("Ilwaco IDE Project Group") & " (*.vfs)|*.vfs|" & ML("Ilwaco IDE Project") & " (*.vfp)|*.vfp|" & ML("FreeBasic Module") & " (*.bas)|*.bas|" & ML("FreeBasic Form Module") & " (*.frm)|*.frm|" & ML("FreeBasic Include File") & " (*.bi)|*.bi|" & ML("Other Include File") & " (*.inc)|*.inc|" & ML("Resource File") & " (*.rc)|*.rc|" & ML("All Files") & "|*.*|"
 	If OpenD.Execute Then
 		WLet(LastOpenPath, GetFolderName(OpenD.FileName))
 		OpenFiles(GetFullPath(OpenD.FileName))
@@ -1789,7 +1789,7 @@ Function SaveSession(WithoutQuestion As Boolean = False) As Boolean
 		SaveD.FileName = *RecentSession
 	Else
 		SaveD.Caption = ML("Save Session As")
-		SaveD.Filter = ML("VisualFBEditor Session") & " (*.vfs)|*.vfs|"
+		SaveD.Filter = ML("Ilwaco IDE Session") & " (*.vfs)|*.vfs|"
 		If WGet(LastOpenPath) <> "" Then
 			SaveD.InitialDir = *LastOpenPath
 		Else
@@ -1799,7 +1799,7 @@ Function SaveSession(WithoutQuestion As Boolean = False) As Boolean
 		WLet(LastOpenPath, GetFolderName(SaveD.FileName))
 		WLet(RecentSession, *LastOpenPath)
 		If FileExists(SaveD.FileName) Then
-			Select Case MsgBox(ML("Are you sure you want to overwrite the session") & "?" & WChr(13,10) & SaveD.FileName, "Visual FB Editor", mtWarning, btYesNo)
+			Select Case MsgBox(ML("Are you sure you want to overwrite the session") & "?" & WChr(13,10) & SaveD.FileName, "Ilwaco IDE", mtWarning, btYesNo)
 			Case mrYes:
 			Case mrNo: Return SaveSession()
 			End Select
@@ -1955,11 +1955,11 @@ Function SaveProject(ByRef tnP As TreeNode Ptr, bWithQuestion As Boolean = False
 			'				SaveD.FileName = WGet(ppe->FileName)
 			'			End If
 		End If
-		SaveD.Filter = ML("VisualFBEditor Project") & " (*.vfp)|*.vfp|"
+		SaveD.Filter = ML("Ilwaco IDE Project") & " (*.vfp)|*.vfp|"
 		If Not SaveD.Execute Then Return False
 		WLet(LastOpenPath, GetFolderName(SaveD.FileName))
 		If FileExists(SaveD.FileName) Then
-			Select Case MsgBox(ML("Are you sure you want to overwrite the project") & "?" & WChr(13,10) & SaveD.FileName, "Visual FB Editor", mtWarning, btYesNo)
+			Select Case MsgBox(ML("Are you sure you want to overwrite the project") & "?" & WChr(13,10) & SaveD.FileName, "Ilwaco IDE", mtWarning, btYesNo)
 			Case mrYes:
 			Case mrNo: Return SaveProject(tnPr, bWithQuestion)
 			End Select
@@ -2374,7 +2374,7 @@ Sub AddFilesToProject
 	Dim OpenD As OpenFileDialog
 	OpenD.Options.Include ofOldStyleDialog
 	OpenD.MultiSelect = True
-	OpenD.Filter = ML("FreeBasic Files") & " (*.vfp, *.bas, *.frm, *.bi, *.inc; *.rc)|*.vfp;*.bas;*.frm;*.bi;*.inc;*.rc|" & ML("VisualFBEditor Project") & " (*.vfp)|*.vfp|" & ML("FreeBasic Module") & " (*.bas)|*.bas|" & ML("FreeBasic Include File") & " (*.bi)|*.bi|" & ML("Other Include File") & " (*.inc)|*.inc|" & ML("Form Module") & " (*.frm)|*.frm|" & ML("Resource File") & " (*.rc)|*.rc|" & ML("All Files") & "|*.*|"
+	OpenD.Filter = ML("FreeBasic Files") & " (*.vfp, *.bas, *.frm, *.bi, *.inc; *.rc)|*.vfp;*.bas;*.frm;*.bi;*.inc;*.rc|" & ML("Ilwaco IDE Project") & " (*.vfp)|*.vfp|" & ML("FreeBasic Module") & " (*.bas)|*.bas|" & ML("FreeBasic Include File") & " (*.bi)|*.bi|" & ML("Other Include File") & " (*.inc)|*.inc|" & ML("Form Module") & " (*.frm)|*.frm|" & ML("Resource File") & " (*.rc)|*.rc|" & ML("All Files") & "|*.*|"
 	If OpenD.Execute Then
 		Dim tn1 As TreeNode Ptr
 		For i As Integer = 0 To OpenD.FileNames.Count - 1
@@ -2718,7 +2718,7 @@ Function CloseProject(tn As TreeNode Ptr, WithoutMessage As Boolean = False) As 
 		End If
 	Next
 	'	If bProjectModified AndAlso Not WithoutMessage Then
-	'		Select Case MsgBox(ML("Want to save the project") & " """ & tn->Text & """?", "Visual FB Editor", mtWarning, btYesNoCancel)
+	'		Select Case MsgBox(ML("Want to save the project") & " """ & tn->Text & """?", "Ilwaco IDE", mtWarning, btYesNoCancel)
 	'		Case mrYES: If Not SaveProject(tn) Then Return False
 	'		Case mrNO:
 	'		Case mrCANCEL: Return False
@@ -7566,11 +7566,11 @@ Else
 	" Bind events using the Cast(Sub(ByRef Sender As Control), @ProcedureName) syntax.")
 End If
 
-If Dir(ExePath & "\Help\AI prompt\VisualFBEditor IDE Environment.md") <> "" Then
-	WAdd(AIPostDataPtr_2nd, *LoadFromFile(ExePath & "\Help\AI prompt\VisualFBEditor IDE Environment.md"))
+If Dir(ExePath & "\Help\AI prompt\Ilwaco IDE Environment.md") <> "" Then
+	WAdd(AIPostDataPtr_2nd, *LoadFromFile(ExePath & "\Help\AI prompt\Ilwaco IDE Environment.md"))
 Else
-	WAdd(AIPostDataPtr_2nd, "The VisualFBEditor (commonly abbreviated as `VFBE`) IDE's main window includes a title bar, menu bar, and toolbar at the top; Project Explorer, Toolbox, and AI agent panels on the left; a message output panels at the bottom; and Properties and Events panels on the right." & _
-	" **title bar** The title bar displays the current project name, application name, and working status. VisualFBEditor operates in three states:" & _
+	WAdd(AIPostDataPtr_2nd, "The Ilwaco IDE's main window includes a title bar, menu bar, and toolbar at the top; Project Explorer, Toolbox, and AI agent panels on the left; a message output panels at the bottom; and Properties and Events panels on the right." & _
+	" **title bar** The title bar displays the current project name, application name, and working status. Ilwaco IDE operates in three states:" & _
 	" * Operational: Activated by selecting ""Run"" or ""Debug"" menu. Displays the project's runtime results. Returns to the design state via the ""Stop Debugging"" button." & _
 	" * Interrupted: Indicates a program interruption. Returns to the design state via the ""Stop Debugging"" button." & _
 	" **Message Output panels** The Message Output panels provide access to key functionalities through TabControl with the following components: ""Output"", ""Problems"", ""Suggestions"", ""Find"", ""ToDo"", ""Change Log"", ""Immediate"", ""Locals"", ""Globals"", ""Procedures"", ""Threads"",  ""Watches"", ""Memory"" and ""Profiler""." & _
@@ -7589,7 +7589,7 @@ End If
 WLet(AISystem_PromoptPtr, "Please use " & App.CurLanguage & " for your responses unless otherwise instructed." & _
 "You are FreeBasic programming expert. Use the provided MyFbFramework (MFF) knowledge base (<context></context>)\n")
 AIContext.Add("MyFbFramework (MFF) GUI Form Interface Guidelines", *AIPostDataPtr_1st)
-AIContext.Add("VisualFBEditor (VFBE) IDE Environment", *AIPostDataPtr_2nd)
+AIContext.Add("Ilwaco IDE Environment", *AIPostDataPtr_2nd)
 
 AIPostDataInitStr  = _
 	"{""model"": """ & AIAgentModelName & """, " & _
@@ -10378,10 +10378,10 @@ rbBottom.Align = DockStyle.alBottom
 
 frmMain.Name = "frmMain"
 frmMain.KeyPreview = True
-	frmMain.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico")
+	frmMain.Icon.LoadFromFile(ExePath & "/Resources/ilwaco.ico")
 'frmMain.StartPosition = FormStartPosition.DefaultBounds
 frmMain.MainForm = True
-	frmMain.Text = "Visual FB Editor (x64)"
+	frmMain.Text = "Ilwaco IDE"
 frmMain.OnActiveControlChange = @frmMain_ActiveControlChanged
 frmMain.OnActivateApp = @frmMain_ActivateApp
 frmMain.OnKeyDown = @frmMain_KeyDown

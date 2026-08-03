@@ -1,6 +1,6 @@
 ﻿'#########################################################
 '#  frmFind.bas                                          #
-'#  This file is part of VisualFBEditor                  #
+'#  This file is part of Ilwaco IDE                      #
 '#  Authors: Xusinboy Bekchanov (bxusinboy@mail.ru)      #
 '#           Liu XiaLin (LiuZiQi.HK@hotmail.com)         #
 '#########################################################
@@ -18,7 +18,7 @@ pfFind = @fFind
 			.Opacity = 210
 			.Caption = ML("Find")
 			#ifdef __USE_GTK__
-				.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico")
+				.Icon.LoadFromFile(ExePath & "/Resources/ilwaco.ico")
 			#else
 				.BorderStyle = FormBorderStyle.FixedDialog
 				.Icon.LoadFromResourceID(1)
@@ -867,7 +867,7 @@ Private Sub frmFind.btnReplaceAll_Click(ByRef Sender As Control)
 		If Tn > 0 Then
 			Dim As ExplorerElement Ptr ee = Tn->Tag
 			If ee > 0 AndAlso *ee->FileName <> "" Then
-				Select Case MsgBox(ML("Are you sure you want to replace in the project?") + WChr(13, 10) + *Search + WChr(13, 10) + "  " + ML("To") &  ":" + WChr(13, 10) + *tReplace, "Visual FB Editor", mtWarning, btYesNo)
+				Select Case MsgBox(ML("Are you sure you want to replace in the project?") + WChr(13, 10) + *Search + WChr(13, 10) + "  " + ML("To") &  ":" + WChr(13, 10) + *tReplace, "Ilwaco IDE", mtWarning, btYesNo)
 				Case mrYes:
 				Case mrNo: Return
 				End Select

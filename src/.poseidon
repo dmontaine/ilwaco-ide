@@ -1,12 +1,12 @@
 ﻿[Project]
-ProjectName=Visual FB Editor
+ProjectName=Ilwaco IDE
 Type=1
-MainFile=VisualFBEditor
+MainFile=ilwaco
 PassOneFile=ON
-TargetName=../VisualFBEditor32
+TargetName=../ilwaco
 FocusOn=
 CompilerArgs=
-CompilerOption="VisualFBEditor.rc" -i "..\MyFbFramework"
+CompilerOption="ilwaco.rc" -i "..\MyFbFramework"
 Comment=
 CompilerPath=
 [IncludeDirs]
@@ -17,7 +17,7 @@ name=Designer.bas
 name=EditControl.bas
 name=Main.bas
 name=TabWindow.bas
-name=VisualFBEditor.bas
+name=ilwaco.bas
 [Includes]
 name=Debug.bi
 name=Designer.bi

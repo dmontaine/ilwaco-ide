@@ -1,6 +1,6 @@
 ﻿'#########################################################
 '#  Main.bi                                              #
-'#  This file is part of VisualFBEditor                  #
+'#  This file is part of Ilwaco IDE                      #
 '#  Authors: Xusinboy Bekchanov (bxusinboy@mail.ru)      #
 '#           Liu XiaLin (LiuZiQi.HK@hotmail.com)         #
 '#########################################################
@@ -21,7 +21,7 @@
 #include once "mff/IniFile.bi"
 #include once "mff/HTTP.bi"
 
-				#define SettingsPath ExePath & "/Settings/VisualFBEditorX64_gtk3.ini"
+				#define SettingsPath ExePath & "/Settings/ilwaco.ini"
 
 	#define Slash "/"
 	#define BackSlash "\"

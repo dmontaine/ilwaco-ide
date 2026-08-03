@@ -1,6 +1,6 @@
 ﻿'#########################################################
 '#  Debug.bas                                            #
-'#  This file is part of VisualFBEditor                  #
+'#  This file is part of Ilwaco IDE                      #
 '#  Authors: Laurent GRAS                                #
 '#           Xusinboy Bekchanov (bxusinboy@mail.ru)      #
 '#           Liu XiaLin (LiuZiQi.HK@hotmail.com)         #
@@ -6022,7 +6022,7 @@ Private Function debug_extract(exebase As UInteger, nfile As String, dllflag As 
 		If flagdwarf = 0 OrElse flagdwarf = -1 Then
 			If flagdll=NODLL Then
 				If flagattach = False Then
-					ThreadsEnter: MsgBox (ML("No information for Debugging. Compile with -gen gas/gas64 and -g. Killing the debuggee"), "VisualFBEditor: " & ML("Integrated IDE Debugger")): ThreadsLeave ', MB_TOPMOST) ' + Chr(13) + Chr(10) + ML("and -gen gas/gas64 or '-Wc -gstabs+' or '-Wc -gdwarf-2'"
+					ThreadsEnter: MsgBox (ML("No information for Debugging. Compile with -gen gas/gas64 and -g. Killing the debuggee"), "Ilwaco IDE: " & ML("Integrated IDE Debugger")): ThreadsLeave ', MB_TOPMOST) ' + Chr(13) + Chr(10) + ML("and -gen gas/gas64 or '-Wc -gstabs+' or '-Wc -gdwarf-2'"
 				Else
 					hard_closing("Attaching running program" + Chr(10) + "No information for Debugging")
 				End If
@@ -6039,7 +6039,7 @@ Private Function debug_extract(exebase As UInteger, nfile As String, dllflag As 
 				#ifdef fulldbg_prt
 						dbg_prt ("error reading memory")
 				#endif
-				ThreadsEnter: MsgBox (ML("Loading stabs: ERROR When reading memory"), "VisualFBEditor"): ThreadsLeave: Return -1
+				ThreadsEnter: MsgBox (ML("Loading stabs: ERROR When reading memory"), "Ilwaco IDE"): ThreadsLeave: Return -1
 			End If
 			
 			#ifdef fulldbg_prt
@@ -6059,7 +6059,7 @@ Private Function debug_extract(exebase As UInteger, nfile As String, dllflag As 
 					#ifdef fulldbg_prt
 							dbg_prt ("error reading memory")
 					#endif
-					ThreadsEnter: MsgBox (ML("Loading stabs: ERROR When reading memory") + Chr(10) + ML("Exit loading"), "VisualFBEditor"): ThreadsLeave: Return -1
+					ThreadsEnter: MsgBox (ML("Loading stabs: ERROR When reading memory") + Chr(10) + ML("Exit loading"), "Ilwaco IDE"): ThreadsLeave: Return -1
 				End If
 				
 				'?recup

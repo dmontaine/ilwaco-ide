@@ -8,7 +8,7 @@
 			.Name = "frmTrek"
 			.Text = ML("Trek")
 			#ifdef __USE_GTK__
-				.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico")
+				.Icon.LoadFromFile(ExePath & "/Resources/ilwaco.ico")
 			#else
 				.Icon.LoadFromResourceID(1)
 			#endif

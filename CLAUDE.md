@@ -45,8 +45,8 @@ The full recipe and its rationale are in PROJECT_STATUS. In short, using the in-
 `libtinfo.so.5` and the GTK `-dev` symlinks — no sudo needed):
 
 - Editor (whole-program; output path set by a `#cmdline` in the source):
-  `cd src && fbc VisualFBEditor.bas -i ../Controls/MyFbFramework -d __USE_GTK3__ -p <shim> -l tinfo`
-  → `VisualFBEditor64_gtk3` (~5 MB, needs only GLIBC_2.34).
+  `cd src && fbc ilwaco.bas -i ../Controls/MyFbFramework -d __USE_GTK3__ -p <shim> -l tinfo`
+  → `ilwaco` (~5 MB, needs only GLIBC_2.34).
 - Designer control library (or the toolbox errors at runtime):
   `cd Controls/MyFbFramework/mff && fbc -b mff.bi -dll -x ../libmff64_gtk3.so -d __USE_GTK3__ -p <shim> -l tinfo`
 

@@ -1,6 +1,6 @@
 ﻿'#########################################################
 '#  frmGoto.bas                                          #
-'#  This file is part of VisualFBEditor                  #
+'#  This file is part of Ilwaco IDE                      #
 '#  Authors: Xusinboy Bekchanov (2018-2019)              #
 '#########################################################
 
@@ -29,7 +29,7 @@ pfGoto = @fGoto
 			.Name = "frmGoto"
 			.Caption = ML("Goto")
 			#ifdef __USE_GTK__
-				.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico")
+				.Icon.LoadFromFile(ExePath & "/Resources/ilwaco.ico")
 			#else
 				.Icon.LoadFromResourceID(1)
 			#endif

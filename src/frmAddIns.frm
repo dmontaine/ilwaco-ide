@@ -1,6 +1,6 @@
 ﻿'#########################################################
 '#  frmAddIns.bas                                        #
-'#  This file is part of VisualFBEditor                  #
+'#  This file is part of Ilwaco IDE                      #
 '#  Authors: Xusinboy Bekchanov (2018-2019)              #
 '#########################################################
 

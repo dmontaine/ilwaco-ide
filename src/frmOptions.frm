@@ -1,6 +1,6 @@
 ﻿'#########################################################
 '#  frmOptions.bas                                       #
-'#  This file is part of VisualFBEditor                  #
+'#  This file is part of Ilwaco IDE                      #
 '#  Authors: Xusinboy Bekchanov (bxusinboy@mail.ru)      #
 '#           Liu XiaLin (LiuZiQi.HK@hotmail.com)         #
 '#########################################################
@@ -22,7 +22,7 @@ pfOptions = @fOptions
 		This.OnClose = @Form_Close
 		This.OnShow = @Form_Show
 		#ifdef __USE_GTK__
-			This.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico")
+			This.Icon.LoadFromFile(ExePath & "/Resources/ilwaco.ico")
 		#else
 			This.Icon.LoadFromResourceID(1)
 		#endif
@@ -1993,10 +1993,10 @@ pfOptions = @fOptions
 		' grbWhenVFBEStarts
 		With grbWhenVFBEStarts
 			.Name = "grbWhenVFBEStarts"
-			.Text = ML("When Visual FB Editor starts") & ":"
+			.Text = ML("When Ilwaco IDE starts") & ":"
 			.Align = DockStyle.alTop
 			.ExtraMargins.Top = 5
-			'.Caption = ML("When Visual FB Editor starts") & ":"
+			'.Caption = ML("When Ilwaco IDE starts") & ":"
 			.TabIndex = 168
 			.SetBounds 0, 97, 417, 120
 			.Parent = @vbxGeneral
@@ -5811,7 +5811,7 @@ Private Sub frmOptions.cmdUpdateLng_Click(ByRef Sender As Control)
 	End If
 	CloseFile_(Fn1)
 	Fn1 = FreeFile_
-	If Open(ExePath & "/VisualFBEditor.vfp" For Input Encoding "utf-8" As #Fn1) = 0 Then
+	If Open(ExePath & "/ilwaco.vfp" For Input Encoding "utf-8" As #Fn1) = 0 Then
 		IsComment = False
 		Do Until EOF(Fn1)
 			Line Input #Fn1, Buff
@@ -5878,7 +5878,7 @@ Private Sub frmOptions.cmdUpdateLng_Click(ByRef Sender As Control)
 			End If
 		Loop
 	Else
-		lblShowMsg.Text = ML("File not found") & "! " & ExePath & "/VisualFBEditor.vfp"
+		lblShowMsg.Text = ML("File not found") & "! " & ExePath & "/ilwaco.vfp"
 		mlKeysGeneral.Clear
 		mlKeysProperty.Clear
 		mlKeysCompiler.Clear

@@ -15,7 +15,34 @@ Ilwaco keeps GTK, so our GTK fixes apply upstream where Astoria's Win64-only one
 
 ---
 
-## Session handoff (2026-08-03, latest) — 64-bit-only strip COMPLETE (passes 1, 2a, 2b, 2c all DONE)
+## Session handoff (2026-08-03, latest) — rebrand VisualFBEditor → Ilwaco IDE
+
+**START HERE.** Owner directive: rebrand the product. **User-facing name is "Ilwaco IDE"; files, the
+executable, and build artifacts are "ilwaco" (lowercase).** Build- and runtime-verified.
+
+- **User-facing strings → "Ilwaco IDE":** `APP_TITLE`, the main-window title (dropped the now-redundant
+  `(x64)`), splash, About box, ~10 MsgBox captions, file-dialog filter labels (`Ilwaco IDE Project/Session/
+  Project Group` — these are `ML()` keys, English fallback shows the new text), "When Ilwaco IDE starts",
+  the `.rc` `ProductName`/`ApplicationTitle`/`FileDescription`, and the AI-prompt knowledge block prose.
+- **Files/executable → `ilwaco`:** `git mv` of `src/VisualFBEditor.bas`→`src/ilwaco.bas`,
+  `src/VisualFBEditor.rc`→`src/ilwaco.rc`, `VisualFBEditor.vfp`→`ilwaco.vfp`, `.vfs`, `.code-workspace`,
+  `_Change.log`, `Resources/VisualFBEditor.ico`→`Resources/ilwaco.ico`, `VisualFBEditor64.desktop`→
+  `ilwaco.desktop` (rewritten clean — the old one had the original author's `/mnt/media` paths),
+  `Settings/VisualFBEditorX64_gtk3.ini`→`Settings/ilwaco.ini`. The whole-program `#cmdline` output is now
+  `-x ../ilwaco`; `SettingsPath` is `Settings/ilwaco.ini`. Updated `build-linux.sh`, `makefile`, `.poseidon`,
+  and every internal file reference (icon path, `.vfp` refs). Renamed `Help/AI prompt/KnowledgeBase/…
+  VisualFBEditor IDE Environment.md`→`Ilwaco IDE Environment.md` + its two code refs.
+- **Deleted** the 3 dead-platform settings INIs (`VisualFBEditor32.ini`, `…64.ini`, `…X64_gtk2.ini` — 32-bit
+  and GTK2 are stripped platforms) and the old committed binary `VisualFBEditor64_gtk3` (rebuilt as `ilwaco`).
+- **Left intact (functional/invisible):** the FB `Namespace VisualFBEditor` + `VisualFBEditorApp` type/global,
+  the `WhenVisualFBEditorStarts` INI key + variable, `frmSplash`'s `This.Icon = "VisualFBEditor"` resource
+  name, the AI-agent's upstream GitHub URL / `site_name` / `InStr(filename, "VisualFBEditor")` request-detection
+  (these key off the original name deliberately), and historical/provenance mentions in docs. Also unchanged:
+  a few commented-out `gtk_window_set_icon_name("VisualFBEditor…")` dead lines (no-comment sweep).
+- **Caution (updated):** the old `pkill` note now applies to `ilwaco` — `pkill -f ilwaco` risks matching the
+  caller; use `pkill -x ilwaco` or kill by PID. `git checkout Settings/` after any launch (writes `ilwaco.ini`).
+
+## Session handoff (2026-08-03, earlier) — 64-bit-only strip COMPLETE (passes 1, 2a, 2b, 2c all DONE)
 
 **START HERE.** Owner directive: **Ilwaco is 64-bit only — strip all 32-bit code** (memory
 `project-64bit-only`). The whole 32-bit strip is now **done and build+runtime-verified**. Passes 1 and 2a
@@ -157,8 +184,9 @@ system is the hard-coded `BundledCompilerPath`.
   code — retiring the machinery is safe.
 
 **Build/run:** `./build-linux.sh` (committed `0b61d0c`) — `editor` | `lib` | `all`; run with
-`LD_LIBRARY_PATH="$(./build-linux.sh --print-shim)" DISPLAY=:0 ./VisualFBEditor64_gtk3`. `git checkout Settings/`
-after any IDE launch (it writes session state on exit).
+`LD_LIBRARY_PATH="$(./build-linux.sh --print-shim)" DISPLAY=:0 ./ilwaco`. `git checkout Settings/`
+after any IDE launch (it writes session state on exit). *(Source is `src/ilwaco.bas`, binary `./ilwaco`,
+settings `Settings/ilwaco.ini` since the 2026-08-03 rebrand.)*
 
 ---
 

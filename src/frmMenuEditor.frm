@@ -8,7 +8,7 @@
 			.Caption = ML("Menu Editor")
 			.Designer = @This
 			#ifdef __USE_GTK__
-				This.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico")
+				This.Icon.LoadFromFile(ExePath & "/Resources/ilwaco.ico")
 			#else
 				This.Icon.LoadFromResourceID(1)
 			#endif

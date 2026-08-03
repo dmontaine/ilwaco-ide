@@ -1,6 +1,6 @@
 ﻿'#########################################################
 '#  frmTools.bas                                         #
-'#  This file is part of VisualFBEditor                  #
+'#  This file is part of Ilwaco IDE                      #
 '#  Authors: Xusinboy Bekchanov (2020)                   #
 '#########################################################
 
@@ -17,7 +17,7 @@ pfTools = @fTools
 		This.Name = "frmTools"
 		This.Text = ML("Tools")
 		#ifdef __USE_GTK__
-			This.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico")
+			This.Icon.LoadFromFile(ExePath & "/Resources/ilwaco.ico")
 		#else
 			This.BorderStyle = FormBorderStyle.FixedDialog
 			This.Icon.LoadFromResourceID(1)

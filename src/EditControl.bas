@@ -1,6 +1,6 @@
 ﻿'#########################################################
 '#  EditControl.bas                                      #
-'#  This file is part of VisualFBEditor                  #
+'#  This file is part of Ilwaco IDE                      #
 '#  Authors: Xusinboy Bekchanov (bxusinboy@mail.ru)      #
 '#           Liu XiaLin (LiuZiQi.HK@hotmail.com)         #
 '#########################################################
@@ -140,7 +140,7 @@ Namespace My.Sys.Forms
 		FECLine = Content.Lines.Items[FSelEndLine]
 		If CInt(Trim(*FECLine->Text, Any !"\t ") = "") OrElse CInt(StartsWith(LTrim(*FECLine->Text, Any !"\t "), "'")) OrElse _
 			CInt(StartsWith(LTrim(LCase(*FECLine->Text), Any !"\t ") & " ", "rem ")) Then
-			MsgBox ML("Don't set breakpoint to this line"), "VisualFBEditor", mtWarning
+			MsgBox ML("Don't set breakpoint to this line"), "Ilwaco IDE", mtWarning
 			This.SetFocus
 		Else
 			FECLine->Breakpoint = Not FECLine->Breakpoint

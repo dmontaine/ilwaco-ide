@@ -1,6 +1,6 @@
 ﻿'#########################################################
 '#  frmFindInFiles.bas                                   #
-'#  This file is part of VisualFBEditor                  #
+'#  This file is part of Ilwaco IDE                      #
 '#  Authors: Xusinboy Bekchanov (2018-2019)              #
 '#           Liu XiaLin (LiuZiQi.HK@hotmail.com)         #
 '#########################################################
@@ -33,7 +33,7 @@ pfFindFile = @fFindFile
 		This.Name = "frmFindInFiles"
 		This.StartPosition = FormStartPosition.CenterParent
 		#ifdef __USE_GTK__
-			This.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico")
+			This.Icon.LoadFromFile(ExePath & "/Resources/ilwaco.ico")
 		#else
 			This.Icon.LoadFromResourceID(1)
 		#endif

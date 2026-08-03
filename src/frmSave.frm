@@ -5,11 +5,11 @@
 		' frmSave
 		With This
 			.Name = "frmSave"
-			.Text = "Visual FB Editor"
-			'.Caption = "Visual FB Editor"
+			.Text = "Ilwaco IDE"
+			'.Caption = "Ilwaco IDE"
 			.BorderStyle = FormBorderStyle.FixedDialog
 			#ifdef __USE_GTK__
-				This.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico")
+				This.Icon.LoadFromFile(ExePath & "/Resources/ilwaco.ico")
 			#else
 				This.Icon.LoadFromResourceID(1)
 			#endif
@@ -144,7 +144,7 @@ Private Sub frmSave.TimerComponent1_Timer(ByRef Sender As TimerComponent)
 		cmdYes_Click(cmdYes)
 		SaveTime = Timer
 	Else
-		This.Text = "Visual FB Editor - Count down" & Str(10 - Timer + SaveTime) 
+		This.Text = "Ilwaco IDE - Count down" & Str(10 - Timer + SaveTime) 
 	End If
 	
 End Sub

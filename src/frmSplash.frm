@@ -1,6 +1,6 @@
 ﻿'#########################################################
 '#  frmSplash.bas                                        #
-'#  This file is part of VisualFBEditor                  #
+'#  This file is part of Ilwaco IDE                      #
 '#  Authors: Xusinboy Bekchanov (2018-2020)              #
 '#########################################################
 
@@ -11,10 +11,10 @@ Using My.Sys.Forms
 
 '#Region "Form"
 	Constructor frmSplash
-		This.Text = "Visual FB Editor"
+		This.Text = "Ilwaco IDE"
 		This.Icon = "VisualFBEditor"
 		'#ifdef __USE_GTK__
-		'	This.Icon.LoadFromFile(ExePath & "/Resources/VisualFBEditor.ico")
+		'	This.Icon.LoadFromFile(ExePath & "/Resources/ilwaco.ico")
 		'#else
 		'	This.Icon.LoadFromResourceID(1)
 		'#endif
@@ -35,7 +35,7 @@ Using My.Sys.Forms
 		lblImage.Parent = @This
 		' lblSplash
 		lblSplash.SetBounds 8, 14, 398, 33
-		lblSplash.Text = "Visual FB Editor" & " " & pApp->GetVerInfo("ProductVersion")
+		lblSplash.Text = "Ilwaco IDE" & " " & pApp->GetVerInfo("ProductVersion")
 		#if defined(__USE_GTK__) AndAlso defined(__FB_WIN32__)
 			lblSplash.Font.Name = "Sans"
 		#else

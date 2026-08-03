@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Terminal=false
+Type=Application
+Name=Ilwaco IDE
+Comment=FreeBASIC IDE
+Exec=ilwaco
+Icon=ilwaco
+Categories=Development;IDE;

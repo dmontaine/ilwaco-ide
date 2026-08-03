@@ -1,6 +1,6 @@
 ﻿'#########################################################
 '#  TabWindow.bas                                        #
-'#  This file is part of VisualFBEditor                  #
+'#  This file is part of Ilwaco IDE                      #
 '#  Authors: Xusinboy Bekchanov (bxusinboy@mail.ru)      #
 '#           Liu XiaLin (LiuZiQi.HK@hotmail.com)         #
 '#########################################################
@@ -996,7 +996,7 @@ End Function
 
 Function TabWindow.CloseTab(WithoutMessage As Boolean = False) As Boolean
 	If txtCode.Modified AndAlso Not WithoutMessage Then
-		Select Case MsgBox(ML("Want to save the file") & " """ & Caption & """?", "Visual FB Editor", mtWarning, btYesNoCancel)
+		Select Case MsgBox(ML("Want to save the file") & " """ & Caption & """?", "Ilwaco IDE", mtWarning, btYesNoCancel)
 		Case mrYes: Save
 		Case mrNo:
 		Case mrCancel: Return False
@@ -2484,7 +2484,7 @@ Sub PropertyChanged(ByRef Sender As Control, ByRef Sender_Text As WString, IsCom
 		End If
 		If SenderText <> OldText OrElse Different Then
 			If CInt(PropertyName = "Name") AndAlso CInt(tb->cboClass.Items.Contains(SenderText)) Then
-				MsgBox ML("This name is exists!"), "VisualFBEditor", mtWarning
+				MsgBox ML("This name is exists!"), "Ilwaco IDE", mtWarning
 				Exit Sub
 			End If
 			pfrmMain->UpdateLock
@@ -10123,7 +10123,7 @@ Constructor TabPanel
 End Constructor
 
 Constructor TabWindow(ByRef wFileName As WString = "", bNew As Boolean = False, TreeN As TreeNode Ptr = 0)
-	WLet(FCaption, "Visual FB Editor")
+	WLet(FCaption, "Ilwaco IDE")
 	WLet(FFileName, "")
 	txtCode.Font.Name = *EditorFontName
 	txtCode.Font.Size = Max(8, EditorFontSize)
