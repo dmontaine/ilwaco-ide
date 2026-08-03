@@ -26,7 +26,6 @@ File=src/frmAbout.frm
 File=src/frmAddIns.frm
 File=src/frmAddProcedure.frm
 File=src/frmAdvancedOptions.frm
-File=src/frmAIAgent.frm
 File=src/frmCompilerOptions.frm
 File=src/frmComponents.frm
 File=src/frmFind.frm

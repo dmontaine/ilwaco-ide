@@ -59,12 +59,48 @@ Utf32BOM` + `WindowsCRLF/MacOSCR` are now unused enum values. What was done:
 - **Deferred (low value):** the `Open … Encoding "utf-16"/"utf-32"` fallback chains in `Main.bas` (~15 places;
   some open utf-32/16 *first*, not as fallback — don't blind-sed). Optional secondary cleanup.
 
-### TASK 2 (NEXT) — remove ALL AI elements (large; own session)
-Owner: remove the AI pane, model selection, and all AI support code — `tbAIAgent`/`frmAIAgent`, the AI-agent
-command cases (`AIAddComment`/`AIOptimizeCode`/`AIIntellicode`/`AITracepointError`/`AITranslate`), the AI knowledge
-prompt block in `Main.bas ~7560-7620` + the chunking/JSON-packet code `~7380-7980`, `AIContext`, all `AIAgent*`
-globals (`Main.bi`), the "AI Agent" panel/tab, `MD2RTF.bi` (AI markdown→RTF renderer) if AI-only, and the Options
-AI page (`cboAIAgent`/`grbAIAgent`/`pnlAIAgent`). Survey first — it is woven through Main.bas/ilwaco.bas/frmOptions.
+### TASK 2 (NEXT, IN PROGRESS) — remove ALL AI elements (large; own session)
+Owner: remove the AI pane, model selection, and all AI support code. **Surveyed 2026-08-03 — full map below.**
+The AI system is tightly interwoven; it is NOT cleanly separable into independently-building halves **except one
+slice**: the Options "AI Agent" page + `frmAIAgent.frm` (that form is `#include`d *only* by `frmOptions.frm:9`).
+MD2RTF and the main-window panel/backend must come out together (their symbols reference each other).
+
+**Confirmed facts (survey):**
+- `MD2RTF.bi` is **AI-only** — entry `MDtoRTF` is called only from AI paths (`Main.bas:8057`, `ilwaco.bas:130/181`),
+  and it uses the AI global `AIRTF_HEADER`. Delete with Slice B. Included by `TabWindow.bi:24`; `.vfp` line 23.
+- `frmAIAgent.frm` — whole form, referenced **only** by `frmOptions.frm:9` (`#include once`). `.vfp` line 29.
+
+**SLICE A — Options "AI Agent" page + `frmAIAgent.frm` — DONE (build+runtime-verified, uncommitted).**
+Removed from `frmOptions.frm`: the `#include once "frmAIAgent.frm"`, the `AI Agent` tree node (its `tnHelp` Var
+dropped as now-unused), the `pnlAIAgent.Visible` panel-switch, the `pnlAIAgent` panel + all AI designer blocks
+(`grbDefaultAIAgent`/`cboAIAgent`/`lvAIAgentTypes`/`hbxAIAgent`/`grbAIAgent` + 4 `cmd*AIAgent` buttons — interleaved
+with Help blocks, removed per-block), the Form_Create `lvAIAgentTypes.Columns` setup, the LoadSettings populate, the
+`cmdApply` rebuild + `[AIAgents]` INI write, and the 4 `cmd*AIAgent_Click` + `lvAIAgentTypes_ItemActivate` handlers.
+`.bi`: the 6 handler `Declare`s + all AI control decls. Deleted `src/frmAIAgent.frm` + its `.vfp` entry.
+⚠ **Trap hit & fixed:** the `cmdApply` `Dim i As Integer` sat *inside* the AI block but was shared by the MakeTools/
+Debuggers/etc. bare-`i` loops below — removing it stranded `i` (error 42). Re-added a bare `Dim i As Integer` where
+the block was. **Verified:** build exit 0; IDE launches; Options ▸ Help has no "AI Agent" child; dialog opens clean.
+Kept the `AIAgent*` **globals** (Main.bi) + `pAIAgents` dict + INI *load* (Main.bas) — the backend still uses
+  them; Slice A only removes the *editing UI*. Build-verify → intermediate state: AI still runs from INI, not
+  editable in Options.
+
+**SLICE B (the interdependent remainder) — main-window AI tab/panel/toolbar + backend + globals + MD2RTF:**
+- `Main.bas` (~191 refs): globals `txtAIRequest`(88)/`HTTPAIAgent`(96)/`AIMessages`+`AIContext`(98)/`pHTTPAIAgent`(128);
+  the AI tab/panel/toolbar creation (`tpAIAgent` 7183, `tbAIAgent` 7311-7331 buttons, `pnlAIAgent`, `txtAIAgent`
+  7344, `txtAIRequest` 8125, `splAIAgent` 8135); `AIContext.Add` population (5128-5168, inside the component-scan
+  sub); the knowledge-prompt block (~7514-7551); `EscapeJsonForPrompt`(7346)/`EscapeFromJson`(7429)/
+  `AIGetMaxChunkSize`(7565)/`AIPrintAnswer`(7583)/`AISplitText`(7595)/`HTTPAIAgent_Complete`(7674)/
+  `HTTPAIAgent_Receive`(7686)/`AIRequest`(7832)/`txtAIRequest_Activate`(7904); the `imgList.Add` AI images +
+  `pimgListAIProviders32`/`pimgListAIModels32` image lists.
+- `ilwaco.bas` (~16 refs): the AI dispatch cases (`AINewChat`/`AIAddComment`/`AIOptimizeCode`/`AIIntellicode`/
+  `AITracepointError`/`AIWebBrowserItem`/`AIConvertCtoFB`/`AITranslate`/`AIRelease`) + AI-model handlers + the
+  `MDtoRTF` renders (130/181).
+- `Main.bi` (~9 refs): `pimgListAIProviders32`/`pimgListAIModels32`(82), `pHTTPAIAgent`(92), `bAIAgentFirstRun`(107),
+  `AIAgentPort`/`AIAgentContentSize`(122), `AIAgentStream`(123), `AIAgentTop_P`/`AIAgentTemperature`(124),
+  `AIAgentHost`/`Address`/`APIKey`/`ModelName`/`Provider`/`Name`/`AIRTF_HEADER`/`AIEditorFontName`(125),
+  `DefaultAIAgent`/`CurrentAIAgent`(131), `pAIAgents`(196); plus the INI load/cleanup of these in `Main.bas`.
+- `TabWindow.bi:24`: remove `#include once "MD2RTF.bi"` + its 1 AI ref. Delete `src/MD2RTF.bi`.
+- `.vfp`: remove `File=src/MD2RTF.bi` (23) and `File=src/frmAIAgent.frm` (29).
 
 ## Session handoff (2026-08-03, earlier) — English-only (all other languages removed)
 
