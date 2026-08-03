@@ -130,7 +130,7 @@ Some Astoria *infrastructure* choices are independently already true in Ilwaco:
 | `56f6d180`,`b3633bc5`,`a7c7839d` | Dark mode (uxtheme/ntdll Win32) | REIMPLEMENT | Ilwaco needs GTK dark mode (settings already have `DarkMode=true`) |
 | `c494207f`,`7baebd1e`,`add4642a`,`76abaa5a` | Delete dead GTK/Linux/32-bit code | INVERT/SKIP | do **not** apply — this is Ilwaco's live platform |
 | `ae74b31c` | Rename "Service"→"Tools" menu, inner "Tools"→"External Tools" | PORT | **DONE** 2026-08-02 (caption-only, internal names unchanged; `Main.bas` `miXizmat`) |
-| `49ec5ccd`, §menu-taxonomy | UI approachability: per-menu **Advanced** submenus; menu reorg; caption cleanups; options-dialog simplification | PORT (big) | **deferred, and re-scoped — see "Menu taxonomy" section below** |
+| `49ec5ccd`, §menu-taxonomy | UI approachability: per-menu **Advanced** submenus; menu reorg; caption cleanups; options-dialog simplification; **debug-tab visibility** (`SetDebugTabsVisible` — show the 7 debug tabs only when the debugger is enabled) | PORT (big) | **deferred, and re-scoped — see "Menu taxonomy" section below.** ⚠ NB: the debug-tab *visibility* half is distinct from the *content-clearing* already done in `4cf72752`; helpers `AddBottomDebugTab`/`RemoveBottomDebugTab` land earlier in `b9735e8e` |
 
 ## Done 2026-08-03 — bottom-panel/debug tab clearing (Astoria `4cf72752`, partial)
 
@@ -161,6 +161,12 @@ Verified: control types confirmed (`ListView`→`.ListItems`, `TreeListView`/`Tr
 `CloseSession` as intent, but `CloseProject` runs during session close and the commit wired nothing else).
 The end-to-end clear (open → populate → close → panes empty) was not independently UI-driven here; it is a
 faithful port of Astoria's owner-verified code.
+
+**⚠ This is *not* the "debug tabs only show when a session is active" behavior.** That is a **distinct,
+later** change — Astoria's `SetDebugTabsVisible(bVisible)` (introduced in `49ec5ccd`; add/remove helpers
+`AddBottomDebugTab`/`RemoveBottomDebugTab` in `b9735e8e`), which *hides/shows* the 7 debug tabs from the
+bottom bar based on `UseDebugger` (hidden on startup via `SetDebugTabsVisible False`). It is orthogonal to
+this content-clearing and still to be ported — tracked in the `49ec5ccd` menu-taxonomy row above.
 
 ## Done 2026-08-03 — compile-warnings port (Astoria `53d8e473`, partial)
 
