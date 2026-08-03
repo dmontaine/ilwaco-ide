@@ -1,17 +1,11 @@
 # Astoria → Ilwaco parity tracking
 
-## ⇢ NEXT ACTION (fully scoped, ready to apply) — remove Help ▸ GitHub menu (Astoria `d275dc93`)
+## ⇢ NEXT ACTION — continue the walk (Help ▸ GitHub removal DONE 2026-08-02, ↓)
 
-Owner-approved 2026-08-02; **delegate execution to a Sonnet worker**. Self-contained, ~18 lines, no
-`.bi` decls / enable-lines / HotKeys.txt entries. Exact set:
-- **`src/Main.bas` 7776–7785** — the whole `Var miGitHub = miHelp->Add(ML("GitHub"))` submenu (8 items:
-  FreeBasic/VisualFBEditor/MyFbFramework Repository/WiKi/Discussions + 2 separators). **Keep** 7774–7775
-  (FreeBasic WiKi/Forums) and 7786+ (separator, Tip of the Day, About).
-- **`src/VisualFBEditor.bas` 1171–1178** — the 8 `Case` handlers (`GitHubWebSite` [orphan],
-  `FreeBasicRepository`, `VisualFBEditorRepository/WiKi/Discussions`, `MyFbFrameworkRepository/WiKi/
-  Discussions`). **Keep `OpenUrl`** (used by ~10 other Help commands).
-- No other files. Build with the recipe in PROJECT_STATUS / memory `reference-linux-build`; expect clean.
-- Then continue the walk (e.g. Direct2D strip — see Menu-taxonomy / strip-windows notes).
+The GitHub submenu removal (Astoria `d275dc93`) is landed and build-verified — see the "Done" section
+below. **Candidate next PORT:** the Direct2D strip (Astoria `DIRECT2D_REMOVAL.md`; `UseDirect2D=true`
+in Ilwaco settings, Windows-only) — a clear early GTK-side item. See the Menu-taxonomy / strip-windows
+notes for context.
 
 ---
 
@@ -126,6 +120,24 @@ True and `UseDefine` retired — a build/parse-logic refinement, separate from t
 **Delegation note:** the Sonnet worker's *edits* were correct, but its *build* kept getting SIGTERM'd
 (never a real error) and it didn't report a final status — I ran the confirming build myself. Next time,
 tell the worker to run the build via a mechanism that survives (background job) and to report the log.
+**Superseded rule (2026-08-02):** don't have workers build at all — a worker does the edits and hands
+back to Opus for compilation, so it never has to load the toolchain shim (memory
+`feedback-worker-returns-for-compilation`).
+
+## Done 2026-08-02 — removed the Help ▸ GitHub submenu (Astoria `d275dc93`)
+
+Astoria dropped the Help ▸ GitHub submenu (repo/wiki/discussions links for FreeBasic, VisualFBEditor,
+MyFbFramework). Removed the same from Ilwaco, build-verified clean. Scope was exactly as pre-scoped —
+an all-files grep of the command strings found them only in the two edited locations (no `.lang`,
+HotKeys.txt, `.bi` decls, or enable-lines):
+- **`src/Main.bas`** — the whole `Var miGitHub = miHelp->Add(ML("GitHub"))` block (the submenu + its 8
+  items + 2 separators). Kept the two FreeBasic WiKi/Forums items above it and the separator / Tip of
+  the Day / About below.
+- **`src/VisualFBEditor.bas`** — the 8 `Case` handlers, including the orphan `GitHubWebSite`. **Kept
+  `OpenUrl`** (still used by FreeBasicForums/FreeBasicWiKi and other Help commands).
+
+Done directly by Opus (edit is trivial once scoped); no worker needed. `HK(...)` calls for removed
+commands just returned empty and had no HotKeys.txt entries, so removing the callers was safe.
 
 ## Menu taxonomy — the surface of feature-parity, not a standalone task
 

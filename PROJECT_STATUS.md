@@ -15,7 +15,36 @@ Ilwaco keeps GTK, so our GTK fixes apply upstream where Astoria's Win64-only one
 
 ---
 
-## Session handoff (2026-08-02, later) — parity walk begun: 5 changes landed, all build-clean
+## Session handoff (2026-08-02, latest) — Help ▸ GitHub menu removed; build shim vendored into repo
+
+**START HERE.** Continued the parity walk and closed a standing infra gap.
+
+**Landed this session:**
+- **Removed the Help ▸ GitHub submenu** (Astoria `d275dc93`) — `src/Main.bas` (the `miGitHub` block,
+  8 items + 2 separators) and `src/VisualFBEditor.bas` (8 `Case` handlers incl. orphan `GitHubWebSite`).
+  Kept `OpenUrl` (used by other Help commands) and the FreeBasic WiKi/Forums items. All-files grep
+  confirmed no stragglers. **Build-verified** with the recipe below. Details in AstoriaParity.md.
+
+**Infra fixed — the build shim no longer lives only in scratchpad:**
+- `libtinfo.so.5` (the one piece `fbc` needs that Debian 13 dropped) is now **vendored in-repo at
+  `Compilers/shim/libtinfo.so.5`** (183 KB, extracted from the Debian 11 `libtinfo5` .deb, owner-approved).
+  Survives across sessions — no more re-downloading it.
+- The GTK `-dev` `.so` symlinks are still recreated per session into a scratchpad shim dir
+  (`$SHIM = <scratchpad>/fbclibs`) but now point `libtinfo.so.5` at the vendored copy. **Owner rule:
+  retain the shim, do not delete it.** A `build-linux.sh` that farms the symlinks + references the
+  vendored lib is the remaining infra step (memory `reference-linux-build`).
+- **Delegation rule updated:** Sonnet workers do edits and **hand back to Opus for compilation** — a
+  worker never rebuilds/loads the shim (memory `feedback-worker-returns-for-compilation`).
+
+**Build recipe (this session, working):**
+`cd src && LD_LIBRARY_PATH=$SHIM ../Compilers/FreeBASIC-1.10.1-linux-x86_64/bin/fbc VisualFBEditor.bas -i ../Controls/MyFbFramework -d __USE_GTK3__ -p $SHIM -l tinfo`
+
+**NEXT:** continue the walk — candidate is the **Direct2D strip** (`UseDirect2D=true` in settings,
+Windows-only; Astoria has `DIRECT2D_REMOVAL.md`). See AstoriaParity.md.
+
+---
+
+## Session handoff (2026-08-02, earlier) — parity walk begun: 5 changes landed, all build-clean
 
 **START HERE.** Build baseline was established earlier (section below). This session began the actual
 **Astoria→Ilwaco parity walk**. Method and full backlog: [Documentation/AstoriaParity.md](Documentation/AstoriaParity.md).
