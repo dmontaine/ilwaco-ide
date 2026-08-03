@@ -5962,7 +5962,6 @@ Sub CreateMenusAndToolBars
 	imgList.Add "OptimizeCode", "OptimizeCode"
 	imgList.Add "ConvertC", "ConvertC"
 	imgList.Add "Translate", "Translate"
-	imgList.Add "TranslateE", "TranslateE"
 	imgList.Add "WebBrowserItem", "WebBrowserItem"
 	imgList.Add "AlignLefts", "AlignLefts"
 	imgList.Add "AlignCenters", "AlignCenters"
@@ -7361,8 +7360,7 @@ tbAIAgent.Buttons.Add , "Intellicode", , @mClick, "AIIntellicode", , ML("Generat
 tbAIAgent.Buttons.Add , "TracepointError", , @mClick, "AITracepointError", , ML("Explain the selected compiler error message"), True
 tbAIAgent.Buttons.Add , "WebBrowserItem", , @mClick, "AIWebBrowserItem", , ML("Ignore the constraints of the provided references and perform regular search and analysis. Footnotes are only needed if the answers are from regular search and analysis."), True
 tbAIAgent.Buttons.Add , "ConvertC", , @mClick, "AIConvertCtoFB", , ML("Convert the given C source code into equivalent FreeBasic source code."), True
-tbAIAgent.Buttons.Add , "Translate", , @mClick, "AITranslate", , ML("Output with MARKDOWN source code, translate the selected message to") & " " &  ML(App.CurLanguage), True
-tbAIAgent.Buttons.Add , "TranslateE", , @mClick, "AITranslateE", , ML("Output with MARKDOWN source code, translate the selected message to") & " " & ML("English"), True
+tbAIAgent.Buttons.Add , "Translate", , @mClick, "AITranslate", , ML("Output with MARKDOWN source code, translate the selected message to") & " " & ML("English"), True
 tbAIAgent.Buttons.Add , "Close", , @mClick, "AIRelease", , ML("Release the AI Agent"), True
 tbAIAgent.Buttons.Add tbsSeparator
 Var tbAIModels = tbAIAgent.Buttons.Add(tbsCustom)

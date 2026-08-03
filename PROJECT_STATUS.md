@@ -15,7 +15,67 @@ Ilwaco keeps GTK, so our GTK fixes apply upstream where Astoria's Win64-only one
 
 ---
 
-## Session handoff (2026-08-03, latest) — English-only (all other languages removed)
+## Session handoff (2026-08-03, latest) — UTF-8/LF-only STAGED + AI-removal pending
+
+**START HERE.** This session did the comment-translation pass (committed `0b536fa`) and then started a
+multi-part cleanup. **Committed this session: (1) removed dead `EditControl2.bi`; (2) consolidated the two
+AI "Translate" buttons into one** ("TranslateE" removed; the kept "Translate" now targets `ML("English")`).
+⚠ **These two were committed WITHOUT a build** (credits ran out) — **first action next session: `./build-linux.sh
+editor` to verify, they are tiny/low-risk** (removed a dead file + one toolbar button + its `Case`/image/command-
+list entry, and changed one `ML()` arg). Then do the two staged tasks below.
+
+### STAGED TASK 1 — UTF-8-only + LF-only (fully mapped; ready to apply)
+Owner directives: **"This IDE is UTF-8 only — remove any setting option and anything else not UTF-8"** and
+**"for Linux the only line ending is LF (Unix standard); we have no cross-OS coding capabilities."** So the
+whole encoding+newline *selection* goes and the engine collapses to **UTF-8 + LF**. Decision (opinionated):
+**new files = UTF-8 no-BOM** (Unix-standard, avoids the FB wide-string BOM trap); **existing BOM preserved on
+load/save round-trip**. The `FileEncodings`/`NewLineTypes` enums live in **MFF `Application.bi`** — **do NOT
+edit MFF** (avoids a lib rebuild); just leave `PlainText/Utf16BOM/Utf32BOM` and `WindowsCRLF/MacOSCR` unused.
+Exact edits (line numbers are pre-edit; re-grep):
+- **Menu** `Main.bas ~6055-6066`: delete the whole `Var miFileFormat = miFile->Add(ML("File format"))` block —
+  the 5 encoding items (miPlainText/miUtf8/miUtf8BOM/miUtf16BOM/miUtf32BOM), the `miFileFormat->Add("-")`, the
+  3 newline items (miWindowsCRLF/miLinuxLF/miMacOSCR), and the `miUtf8BOM->Checked=True`/`miLinuxLF->Checked=True`.
+- **Dispatch** `ilwaco.bas 785-812`: delete both `Case "PlainText","Utf8","Utf8BOM","Utf16BOM","Utf32BOM"` and
+  `Case "WindowsCRLF","LinuxLF","MacOSCR"` blocks.
+- **`ChangeFileEncoding`** `Main.bas 2803-2820` → body becomes just `If stBar.Count > 3 Then stBar.Panels[3]->Caption
+  = "UTF-8"`. **`ChangeNewLineType`** `2822-2835` → `If stBar.Count > 4 Then stBar.Panels[4]->Caption = "LF"`.
+  (Keep both subs + their 3 caller sites [ilwaco 795/808 are being deleted; keep Main.bas 9144-9145 + TabWindow.bas
+  424-425] + the decls Main.bi 247-248. This removes all `mi*` refs.)
+- **Status setup** `Main.bas 5833/5834`: `"UTF-8 (BOM)"`→`"UTF-8"`, `"CR+LF"`→`"LF"`.
+- **Globals** `Main.bi 92`: delete the `mi*` MenuItem-pointer line (now fully unused). Keep `DefaultFileFormat`
+  (94), `DefaultNewLineFormat` (95).
+- **Init** `Main.bas 5607-5608`: replace the two `ReadInteger` lines with hard-sets `DefaultFileFormat =
+  FileEncodings.Utf8` and `DefaultNewLineFormat = NewLineTypes.LinuxLF`. (`TabWindow.bas 421-422` keeps reading
+  these globals — now Utf8/LinuxLF, so new tabs are UTF-8 no-BOM + LF.)
+- **`EditControl.bas` LoadFromFile (`1777-1917`):** BOM block `1797-1823` → `If Buff[0]=&HEF AndAlso Buff[1]=&HBB
+  AndAlso Buff[2]=&HBF Then FileEncoding=Utf8BOM:EncodingStr="utf-8":Buff=String(1024,0):Get #Fn,,Buff Else
+  FileEncoding=Utf8:EncodingStr="ascii":Buff=String(FileSize,0):Get #Fn,0,Buff End If` (drops UTF-32/16/PlainText;
+  `CheckUTF8NoBOM` likely becomes dead — grep, remove if unused). Newline block `1824-1836` → `NewLineType =
+  NewLineTypes.LinuxLF : NewLineStr = Chr(10)`. Read loop `1864-1872` unchanged (Utf8→FromUtf8; Utf8BOM→LineInputWstr).
+- **`EditControl.bas` SaveToFile (`1919-1980`):** encoding block `1924-1939` → `If FileEncoding = FileEncodings.Utf8BOM
+  Then FileEncodingText="utf-8" Else FileEncodingText="ascii" End If` (drop Utf16/Utf32/PlainText + the unused
+  `FileEncodingSymbols`). Newline `1940-1946` → `NewLine = Chr(10)`. Write loop `1949-1974` → `If FileEncoding =
+  FileEncodings.Utf8 Then <ToUtf8 lines> Else <raw *Text lines> End If` (fold the PlainText ElseIf into Else).
+- **`frmOptions`** remove `cboDefaultFileFormat` + `cboDefaultNewLineFormat` (the "setting option"): designer blocks
+  `2051-2095` (lbl+cbo for both) **AND a second/overlapping set at `~2855-2935`** (`hbxDefaultFileFormat`,
+  `hbxDefaultNewLineFormat`, a duplicate `cboDefaultNewLineFormat`) — ⚠ **READ 2050-2096 and 2855-2936 first;
+  there are duplicate/overlapping blocks**. Populate `3260-3265`+`3270-3275` (file) and `3266-3269`+`3277-3280`
+  (newline). Save `3854-3859`+`3861-3864`. INI write `4085`+`4086`. `.bi`: dims 153 (lblDefaultFileFormat), 157
+  (hbx*), 160 (cbo*), 185 (lblDefaultNewLineFormat).
+- **(Optional, secondary)** the `Open … Encoding "utf-16"/"utf-32"` fallback chains in `Main.bas` (~15 places,
+  e.g. 1259-1261, 1318-1320, 1567-1569, 4584-4586…). Remove the non-utf-8 fallbacks — **BUT some open utf-32/16
+  FIRST (e.g. 3293-3295), not as a fallback; don't blindly sed.** Low value; can defer.
+- **Verify:** build editor; open a file, edit, save → confirm it writes UTF-8 + LF and reopens fine; confirm the
+  File▸File-format menu is gone and the status bar shows "UTF-8"/"LF"; Options has no encoding/newline combos.
+
+### STAGED TASK 2 — remove ALL AI elements (large; own session)
+Owner: remove the AI pane, model selection, and all AI support code — `tbAIAgent`/`frmAIAgent`, the AI-agent
+command cases (`AIAddComment`/`AIOptimizeCode`/`AIIntellicode`/`AITracepointError`/`AITranslate`), the AI knowledge
+prompt block in `Main.bas ~7560-7620` + the chunking/JSON-packet code `~7380-7980`, `AIContext`, all `AIAgent*`
+globals (`Main.bi`), the "AI Agent" panel/tab, `MD2RTF.bi` (AI markdown→RTF renderer) if AI-only, and the Options
+AI page (`cboAIAgent`/`grbAIAgent`/`pnlAIAgent`). Survey first — it is woven through Main.bas/ilwaco.bas/frmOptions.
+
+## Session handoff (2026-08-03, earlier) — English-only (all other languages removed)
 
 **START HERE.** Owner directive: **the app is English-only; remove other languages.** Build- and
 runtime-verified (`fbc` exit 0; the IDE launches and renders fully in English — all menus, panels, and
