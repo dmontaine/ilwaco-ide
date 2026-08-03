@@ -1,8 +1,4 @@
-﻿#ifdef __USE_GTK3__
-	#inclib "webkitgtk-3.0"
-#else
-	#inclib "webkitgtk-1.0"
-#endif
+﻿	#inclib "webkitgtk-3.0"
 Extern "C"
 	Declare Function webkit_web_view_new() As GtkWidget Ptr
 	Declare Sub webkit_web_view_load_uri(web_view As Any Ptr, uri As gchar Ptr)

@@ -163,64 +163,11 @@ Private Property OpenFileDialog.Filter(ByRef Value As WString)
 	*FFilter = Value
 End Property
 
-#ifndef __USE_GTK__
-	Private Function OpenFileDialog.Hook(FWindow As HWND, Msg As UINT, wParam As WPARAM, lParam As LPARAM) As UInteger
-		Static As OpenFileDialog Ptr OpenDial
-		Select Case Msg
-		Case WM_INITDIALOG
-			OpenDial = Cast(OpenFileDialog Ptr, Cast(LPOPENFILENAME, lParam)->lCustData)
-			OpenDial->Handle = FWindow
-			SetWindowLongPtr(FWindow, GWLP_USERDATA, CInt(OpenDial))
-		Case WM_NOTIFY
-			Dim As OFNOTIFY Ptr POF
-			Dim As OpenFileDialog Ptr OpenDial = Cast(OpenFileDialog Ptr, GetWindowLongPtr(FWindow, GWLP_USERDATA))
-			POF = Cast(OFNOTIFY Ptr, lParam)
-			Select Case POF->hdr.code
-'			Case FILEOKSTRING
-'				Return 2
-			Case CDN_FILEOK
-				Return 2
-				SetWindowLongPtr GetParent(FWindow), DWLP_MSGRESULT, 1
-				Return 2
-			Case CDN_SELCHANGE
-				If OpenDial Then If OpenDial->OnSelectionChange Then OpenDial->OnSelectionChange(*OpenDial->Designer, *OpenDial)
-			Case CDN_FOLDERCHANGE
-				If OpenDial Then If OpenDial->OnFolderChange Then OpenDial->OnFolderChange(*OpenDial->Designer, *OpenDial)
-			Case CDN_TYPECHANGE
-				Dim As Integer Index
-				Index = Cast(OPENFILENAME Ptr, POF->lpOFN)->nFilterIndex
-				If OpenDial Then
-					OpenDial->FilterIndex = Index
-					If OpenDial->OnTypeChange Then
-						OpenDial->OnTypeChange(*OpenDial->Designer, *OpenDial, Index)
-					End If
-				End If
-			Case CDN_INITDONE
-				If OpenDial Then
-					If OpenDial->Center Then
-						Dim As ..Rect R
-						Dim As Integer L,T,W,H
-						GetWindowRect(GetParent(FWindow),@R)
-						L = R.Left
-						T = R.Top
-						W = R.Right - R.Left
-						H = R.Bottom - R.Top
-						L = (GetSystemMetrics(SM_CXSCREEN) - W)\2
-						T = (GetSystemMetrics(SM_CYSCREEN) - H)\2
-						SetWindowPos GetParent(FWindow),0,L,T,0,0,SWP_NOACTIVATE Or SWP_NOSIZE Or SWP_NOZORDER
-					End If
-				End If
-			End Select
-		End Select
-		Return False
-	End Function
-#endif
 
 Private Function OpenFileDialog.Execute As Boolean
 	On Error Goto ErrorHandler
 	Dim bResult As Boolean
 	FileNames.Clear
-	#ifdef __USE_GTK__
 		Dim As GtkWindow Ptr win
 		Dim As GtkFileFilter Ptr filefilter()
 		If pApp AndAlso pApp->MainForm Then
@@ -268,77 +215,7 @@ Private Function OpenFileDialog.Execute As Boolean
 			Wend
 			g_slist_free(l)
 		End If
-		#ifdef __USE_GTK4__
-			g_object_unref(widget)
-		#else
 			gtk_widget_destroy( GTK_WIDGET(widget) )
-		#endif
-	#else
-		Dim cwsFile As WString  * (MAX_PATH +1) * 100
-		Dim dwFlags As DWORD = Cast(Integer, Options)
-		Dim dwBufLen As DWORD
-		Dim wMarkers As WString * 4 = "||"
-		If Right(*FFilter, 1) <> "|" Then wMarkers += "|"
-		Dim wFilter As WString Ptr '* 260 = ""
-		WLet(wFilter, *FFilter & wMarkers)
-		Dim dwFilterStrSize As DWORD = Len(wFilter)
-		Dim pchar As WCHAR Ptr = wFilter
-		For i As Long = 0 To Len(*wFilter) - 1
-			If pchar[i] = Asc("|") Then pchar[i] = 0
-		Next
-		If WGet(FInitialDir) = "" Then WLet(FInitialDir, CurDir)
-		If dwBufLen = 0 Then
-			If (dwFlags And OFN_ALLOWMULTISELECT = OFN_ALLOWMULTISELECT) Then dwBufLen = 32768  ' // 64 Kb buffer
-		End If
-		If dwBufLen < 260 Then dwBufLen = 260
-		'WReAllocate cwsFile, Len(*FFileName & "|")
-		WLet(FFileTitle, Space(dwBufLen))
-		cwsFile = *FFileName & "|"
-		Dim cbPos As Long = Len(cwsFile) - 1
-		'IF LEN(*cwsFile) < dwBufLen THEN cwsFile = ReAllocate(cwsFile, (dwBufLen + 1) * SizeOf(WString)): *cwsFile += SPACE(dwBufLen - LEN(*cwsFile))
-		Dim dwFileStrSize As Integer = Len(cwsFile)
-		pchar = @cwsFile
-		pchar[cbPos] = 0
-		cbPos = Len(*FFileTitle) - 1
-		pchar = FFileTitle
-		pchar[cbPos] = 0
-		Dim ofn As OPENFILENAME
-		ZeroMemory(@ofn, SizeOf(ofn))
-		ofn.lStructSize     = SizeOf(ofn)
-		If pApp->MainForm Then ofn.hwndOwner       = pApp->MainForm->Handle
-		ofn.lpstrFilter     = wFilter
-		ofn.nFilterIndex    = 1
-		ofn.lpstrFile       = @cwsFile
-		ofn.lpstrFileTitle       = FFileTitle
-		ofn.nMaxFileTitle       = 256
-		'ofn.lpstrFile[0] = 0
-		ofn.nMaxFile        = (MAX_PATH + 1) * 100
-		ofn.lpstrInitialDir = FInitialDir
-		If Len(*FCaption) Then ofn.lpstrTitle = FCaption
-		ofn.Flags = dwFlags
-		ofn.lpfnHook           = Cast(LPOFNHOOKPROC, @Hook)
-		ofn.lCustData          = Cast(LPARAM, @This)
-		If FDefaultExt Then ofn.lpstrDefExt = FDefaultExt
-		bResult = GetOpenFileName(@ofn)
-		If bResult Then
-			FileName = cwsFile
-			Dim buff As WString Ptr = @cwsFile
-			For i As Integer = 0 To MAX_PATH * 100
-				If i <> 0 AndAlso buff[i] = 0 Then
-					If buff[i - 1] = 0 Then
-						Exit For
-					End If
-				ElseIf i = 0 Then
-					FileNames.Add buff[i] & ""
-				ElseIf buff[i - 1] = 0 Then
-					FileNames.Add buff[0] & "\" & buff[i]
-				End If
-			Next
-			If FileNames.Count > 1 Then FileNames.Remove 0
-		End If
-		'Deallocate cwsFile
-		WDeAllocate(wFilter)
-	#endif
 	Return bResult
 	Exit Function
 	ErrorHandler:
@@ -349,15 +226,7 @@ Private Function OpenFileDialog.Execute As Boolean
 End Function
 
 Private Constructor OpenFileDialog
-	#ifdef __USE_GTK__
 		
-	#else
-		Options.Include OFN_PATHMUSTEXIST
-		Options.Include OFN_FILEMUSTEXIST
-		Options.Include OFN_EXPLORER
-		'Options.Include OFN_HIDEREADONLY
-		'Options.Include OFN_ENABLEHOOK
-	#endif
 	WLet(FCaption, "Open ...")
 	WLet(FFilter, "")
 	WLet(FFileName, "")
@@ -453,59 +322,9 @@ Private Property SaveFileDialog.Filter(ByRef Value As WString)
 	*FFilter = Value
 End Property
 
-#ifndef __USE_GTK__
-	Private Function SaveFileDialog.Hook(FWindow As HWND, Msg As UINT, wParam As WPARAM, lParam As LPARAM) As UInteger
-		Static As My.Sys.Forms.Control Ptr Ctrl
-		Static As SaveFileDialog Ptr SaveDial
-		Select Case Msg
-		Case WM_INITDIALOG
-			'Ctrl = Message.Captured
-			'SaveDial = Ctrl->Child
-			'SaveDial->Handle = FWindow
-		Case WM_NOTIFY
-			Dim As OFNOTIFY Ptr POF
-			POF = Cast(OFNOTIFY Ptr,lParam)
-			Select Case POF->hdr.code
-			Case CDN_FILEOK
-				SetWindowLongPtr GetParent(FWindow),DWLP_MSGRESULT,1
-				Exit Function
-			Case CDN_SELCHANGE
-				If SaveDial Then If SaveDial->OnSelectionChange Then SaveDial->OnSelectionChange(*Ctrl->Designer, *Ctrl)
-			Case CDN_FOLDERCHANGE
-				If SaveDial Then If SaveDial->OnFolderChange Then SaveDial->OnFolderChange(*Ctrl->Designer, *Ctrl)
-			Case CDN_TYPECHANGE
-				Dim As Integer Index
-				Index = Cast(OPENFILENAME Ptr, POF->lpOFN)->nFilterIndex
-				If SaveDial Then
-					SaveDial->FilterIndex = Index
-					If SaveDial->OnTypeChange Then
-						SaveDial->OnTypeChange(*Ctrl->Designer, *Ctrl, Index)
-					End If
-				End If
-			Case CDN_INITDONE
-				If SaveDial Then
-					If SaveDial->Center Then
-						Dim As ..Rect R
-						Dim As Integer L,T,W,H
-						GetWindowRect(GetParent(FWindow), @R)
-						L = R.Left
-						T = R.Top
-						W = R.Right - R.Left
-						H = R.Bottom - R.Top
-						L = (GetSystemMetrics(SM_CXSCREEN) - W)\2
-						T = (GetSystemMetrics(SM_CYSCREEN) - H)\2:Print L,T
-						SetWindowPos GetParent(FWindow),0,L,T,0,0,SWP_NOACTIVATE Or SWP_NOSIZE Or SWP_NOZORDER
-					End If
-				End If
-			End Select
-		End Select
-		Return False
-	End Function
-#endif
 
 Private Function SaveFileDialog.Execute As Boolean
 	Dim bResult As Boolean
-	#ifdef __USE_GTK__
 		Dim As GtkWindow Ptr win
 		Dim As GtkFileFilter Ptr filefilter(), curfilefilter
 		If pApp->MainForm Then
@@ -562,69 +381,7 @@ Private Function SaveFileDialog.Execute As Boolean
 				FileName = *cwsFile
 			End If
 		End If
-		#ifdef __USE_GTK4__
-			g_object_unref(widget)
-		#else
 			gtk_widget_destroy( GTK_WIDGET(widget) )
-		#endif
-	#else
-		Dim dwFlags As DWORD = Cast(Integer, Options)
-		Dim dwBufLen As DWORD
-		Dim wMarkers As WString * 4 = "||"
-		If Right(*FFilter, 1) <> "|" Then wMarkers += "|"
-		Dim wFilter As WString Ptr
-		WLet(wFilter, *FFilter & wMarkers)
-		Dim dwFilterStrSize As DWORD = Len(*wFilter)
-		Dim pchar As WCHAR Ptr = wFilter
-		For i As Long = 0 To Len(*wFilter) - 1
-			If pchar[i] = Asc("|") Then pchar[i] = 0
-		Next
-		If WGet(FInitialDir) = "" Then WLet(FInitialDir, CurDir)
-		If dwBufLen = 0 Then
-			If (dwFlags And OFN_ALLOWMULTISELECT = OFN_ALLOWMULTISELECT) Then dwBufLen = 32768  ' // 64 Kb buffer
-		End If
-		If dwBufLen < 260 Then dwBufLen = 260
-		Dim cwsFile As WString Ptr = _Allocate((Len(*FFileName & "|") + 1) * SizeOf(WString))
-		*cwsFile = *FFileName & "|"
-		Dim cbPos As Long = Len(*cwsFile) - 1
-		If Len(*cwsFile) < dwBufLen Then cwsFile = _Reallocate(cwsFile, (dwBufLen + 1) * SizeOf(WString)): *cwsFile += Space(dwBufLen - Len(*cwsFile))
-		Dim dwFileStrSize As Integer = Len(*cwsFile)
-		pchar = cwsFile
-		pchar[cbPos] = 0
-		Dim ofn As OPENFILENAME
-		ofn.lStructSize     = SizeOf(ofn)
-		If pApp->MainForm Then ofn.hwndOwner       = pApp->MainForm->Handle
-		ofn.lpstrFilter     = wFilter
-		ofn.nFilterIndex    = FilterIndex
-		ofn.lpstrFile       = cwsFile
-		'ofn.lpstrFile[0] = 0
-		ofn.nMaxFile        = dwFileStrSize
-		ofn.lpstrInitialDir = FInitialDir
-		If Len(*FCaption) Then ofn.lpstrTitle = FCaption
-		ofn.Flags = dwFlags
-		'If FDefaultExt Then ofn.lpstrDefExt = FDefaultExt
-		ofn.lpstrDefExt = NULL
-		If GetSaveFileName(@ofn) Then
-			If ofn.nFileExtension = 0 Then
-				FilterIndex = ofn.nFilterIndex
-				Dim As UString res()
-				Split(*FFilter, "|", res())
-				Var Index = FilterIndex * 2 - 1
-				If res(Index) = "*.*" Then
-					FileName = *cwsFile
-				Else
-					FileName = *cwsFile & Replace(res(Index), "*", "")
-				End If
-			Else
-				FileName = *cwsFile
-			End If
-			bResult = True
-		Else
-			bResult = False
-		End If
-		_Deallocate( cwsFile)
-		_Deallocate( wFilter)
-	#endif
 	Return bResult
 End Function
 
@@ -644,12 +401,6 @@ Private Constructor SaveFileDialog
 	WLet(FClassName, "SaveFileDialog")
 	Center        = True
 	'Control.Child = @This
-	#ifndef __USE_GTK__
-		Options.Include OFN_FILEMUSTEXIST
-		Options.Include OFN_PATHMUSTEXIST
-		Options.Include OFN_EXPLORER
-		'Options.Include OFN_ENABLEHOOK
-	#endif
 End Constructor
 
 Private Destructor SaveFileDialog
@@ -686,23 +437,16 @@ End Destructor
 
 Private Function FontDialog.Execute As Boolean
 	Static As Integer FWidth(2) = {400,700}
-	#ifdef __USE_GTK__
 		Dim As Boolean bResult
-		#ifdef __USE_GTK3__
 			Dim As GtkWindow Ptr win
 			If pApp->MainForm Then
 				win = GTK_WINDOW(pApp->MainForm->widget)
 			End If
 			widget =  gtk_font_chooser_dialog_new (ToUtf8("Choose Font"), win)
 			gtk_font_chooser_set_font(GTK_FONT_CHOOSER (widget), ToUtf8(Font.Name & " " & WStr(Font.Size)))
-		#else
-			widget =  gtk_font_selection_dialog_new(ToUtf8("Choose Font"))
-			gtk_font_selection_dialog_set_font_name(GTK_FONT_SELECTION_DIALOG(widget), ToUtf8(Font.Name & " " & WStr(Font.Size)))
-		#endif
 		Dim As Integer res = gtk_dialog_run (GTK_DIALOG (widget))
 		bResult = res = GTK_RESPONSE_OK
 		If bResult Then
-			#ifdef __USE_GTK3__
 				Dim As PangoFontDescription Ptr desc = gtk_font_chooser_get_font_desc (GTK_FONT_CHOOSER (widget))
 				Font.Name        = WStr(*pango_font_description_get_family(desc))
 				Font.Italic      = pango_font_description_get_style(desc) = PANGO_STYLE_ITALIC
@@ -711,55 +455,9 @@ Private Function FontDialog.Execute As Boolean
 				Font.Color       = 0
 				Font.Size        = gtk_font_chooser_get_font_size(GTK_FONT_CHOOSER (widget)) / PANGO_SCALE
 				Font.Bold        = pango_font_description_get_weight(desc) <> PANGO_WEIGHT_THIN
-			#else
-				Dim As GtkWidget Ptr sel = gtk_font_selection_dialog_get_font_selection(GTK_FONT_SELECTION_DIALOG(widget))
-				Dim As PangoFontFamily Ptr pff = gtk_font_selection_get_family(GTK_FONT_SELECTION(sel))
-				Font.Name        = WStr(*pango_font_family_get_name(pff))
-				Font.Italic      = False
-				Font.Underline   = False
-				Font.StrikeOut   = False
-				Font.Color       = 0
-				Font.Size        = gtk_font_selection_get_size(GTK_FONT_SELECTION(sel)) / PANGO_SCALE
-				Font.Bold        = False
-			#endif
 		End If
-		#ifdef __USE_GTK4__
-			g_object_unref(widget)
-		#else
 			gtk_widget_destroy( GTK_WIDGET(widget) )
-		#endif
 		Return bResult
-	#else
-		Dim As CHOOSEFONT CF
-		Dim As LOGFONT LGF
-		Dim As HDC Dc
-		Dc = GetDC(HWND_DESKTOP)
-		LGF.lfItalic      = Font.Italic
-		LGF.lfUnderline   = Font.Underline
-		LGF.lfStrikeOut   = Font.StrikeOut
-		LGF.lfHeight      = -MulDiv(Font.Size, GetDeviceCaps(Dc, LOGPIXELSY), 72)
-		LGF.lfWeight      = FWidth(abs_(Font.Bold))
-		LGF.lfFaceName    = Font.Name
-		CF.lStructSize    = SizeOf(CHOOSEFONT)
-		CF.hwndOwner      = MainHandle
-		CF.hDC            = Dc
-		CF.Flags          = CF_BOTH Or CF_EFFECTS Or CF_INITTOLOGFONTSTRUCT
-		CF.rgbColors      = Font.Color
-		CF.lpLogFont      = @LGF
-		ReleaseDC HWND_DESKTOP,Dc
-		If CHOOSEFONT(@CF) <> 0 Then
-			Font.Name        = LGF.lfFaceName
-			Font.Italic      = LGF.lfItalic
-			Font.Underline   = LGF.lfUnderline
-			Font.StrikeOut   = LGF.lfStrikeOut
-			Font.Color       = CF.rgbColors
-			Font.Size        = CF.iPointSize / 10
-			Font.Bold        = IIf(LGF.lfWeight = 700,True,False)
-			Return True
-		Else
-			Return False
-		End If
-	#endif
 End Function
 
 Private Constructor FontDialog
@@ -835,35 +533,9 @@ Private Property FolderBrowserDialog.Directory(ByRef Value As WString)
 	*FDirectory = Value
 End Property
 
-#ifndef __USE_GTK__
-	Private Function FolderBrowserDialog.Hook(FWindow As HWND, uMsg As UINT, lParam As LPARAM, lpData As LPARAM) As Long
-		Dim As FolderBrowserDialog Ptr BrowseDial
-		Dim As My.Sys.Forms.Control Ptr Ctrl
-		Dim R As Rect
-		If uMsg = BFFM_INITIALIZED Then
-			'Ctrl = Message.Captured
-			'BrowseDial = Ctrl->Child
-			'BrowseDial->Handle = FWindow
-			'GetWindowRect(FWindow, @R)
-			'If BrowseDial->Center Then
-			'    MoveWindow(FWindow,_
-			'               (GetSystemMetrics(SM_CXSCREEN)-(R.Right-R.Left))/2,_
-			'               (GetSystemMetrics(SM_CYSCREEN)-(R.Bottom-R.Top))/2,_
-			'               (R.Right-R.Left),(R.Bottom-R.Top),_
-			'               1)
-			'End If
-			SendMessage(FWindow, BFFM_SETSELECTION, 1, CUInt(lpData))
-			'If Len(BrowseDial->Caption) then
-			'   SetWindowText(FWindow, BrowseDial->FCaption)
-			'End If
-		End If
-		Return False
-	End Function
-#endif
 
 Private Function FolderBrowserDialog.Execute As Boolean
 	Dim As Boolean bResult
-	#ifdef __USE_GTK__
 		Dim As GtkWindow Ptr win
 		If pApp->MainForm Then
 			win = GTK_WINDOW(pApp->MainForm->widget)
@@ -882,49 +554,8 @@ Private Function FolderBrowserDialog.Execute As Boolean
 		If bResult Then
 			Directory = WStr(*gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (widget)))
 		End If
-		#ifdef __USE_GTK4__
-			g_object_unref(widget)
-		#else
 			gtk_widget_destroy( GTK_WIDGET(widget) )
-		#endif
 		Return bResult
-	#else
-		Dim BI    As BROWSEINFO
-		Dim pidl  As Any Ptr
-		Dim sPath As WString Ptr = _CAllocate(MAX_PATH * SizeOf(WString))
-		Dim xPath As WString Ptr = _CAllocate(MAX_PATH * SizeOf(WString))
-		FDirectory = _CAllocate(MAX_PATH * SizeOf(WString))
-		
-		*sPath = WString(MAX_PATH,0)
-		*xPath = WString(MAX_PATH,0)                             '
-		InitialDir        = InitialDir + Chr(0)
-		BI.hwndOwner      = MainHandle
-		BI.pszDisplayName = xPath
-		BI.lpszTitle      = FTitle
-		BI.ulFlags        = BIF_USENEWUI 
-		BI.lpfn           = @FolderBrowserDialog.Hook
-		BI.lParam         = Cast(LPARAM, FInitialDir)
-		'Message.Captured = Control
-		pidl = SHBrowseForFolder(@BI)
-		If pidl Then
-			*FDirectory = ""
-			If SHGetPathFromIDList(pidl, sPath) Then
-				'For i As Integer = 0 To Len(*sPath)
-				'    If sPath[i] <> 0 Then *FDirectory += WChr(sPath[i])
-				'Next i
-				*FDirectory = RTrim(*sPath)
-			Else
-				'For i As Integer = 0 To Len(sPath)
-				'    If xPath[i] <> 0 Then *FDirectory += WChr(xPath[i])
-				'Next i
-				*FDirectory = RTrim(*xPath)
-			End If
-			CoTaskMemFree pidl
-			Return 1
-		Else
-			Return 0
-		End If
-	#endif
 End Function
 
 Private Constructor FolderBrowserDialog
@@ -971,52 +602,6 @@ End Destructor
 	End Function
 #endif
 
-#ifndef __USE_GTK__
-	Private Function ColorDialog.Hook(FWindow As HWND,Msg As UINT,wParam As WPARAM,lParam As LPARAM) As UInteger
-		Static As HBRUSH Brush
-		Select Case Msg
-		Case WM_INITDIALOG
-			Dim As ColorDialog Ptr CommonDialog = Cast(ColorDialog Ptr, Cast(LPCHOOSECOLOR, lParam)->lCustData)
-			If CommonDialog Then
-				CommonDialog->Handle = FWindow
-				SetWindowLongPtr(FWindow,DWLP_MSGRESULT,CInt(CommonDialog))
-				SetWindowText(FWindow, CommonDialog->_Caption)
-				If CommonDialog->Center Then
-					Dim As ..Rect R,Wr
-					GetWindowRect(FWindow, @Wr)
-					SystemParametersInfo(SPI_GETWORKAREA,0,@R,0)
-					MoveWindow(FWindow,(R.Right  - (Wr.Right - Wr.Left))/2,(R.Bottom - (Wr.Bottom - Wr.Top))/2,Wr.Right - Wr.Left,Wr.Bottom - Wr.Top,1)
-				End If
-				Brush = CreateSolidBrush(CommonDialog->BackColor)
-			End If
-			Return True
-		Case WM_CTLCOLORDLG To WM_CTLCOLORSTATIC
-			Dim As ColorDialog Ptr CommonDialog = Cast(ColorDialog Ptr,GetWindowLongPtr(FWindow,DWLP_MSGRESULT))
-			If CommonDialog Then
-				With *CommonDialog
-					SetBkMode(Cast(HDC,wParam),TRANSPARENT)
-					SetBkColor(Cast(HDC,wParam),.BackColor)
-					SetBkMode(Cast(HDC,wParam),OPAQUE)
-					Return CInt(Brush)
-				End With
-			End If
-		Case WM_ERASEBKGND
-			Dim As ColorDialog Ptr CommonDialog = Cast(ColorDialog Ptr,GetWindowLongPtr(FWindow,DWLP_MSGRESULT))
-			If CommonDialog Then
-				With *CommonDialog
-					Dim As HDC Dc = Cast(HDC,wParam)
-					Dim As ..Rect R
-					GetClientRect(FWindow, @R)
-					FillRect(Dc,@R,Brush)
-					Return True
-				End With
-			End If
-		Case Else
-			Return False
-		End Select
-		Return True
-	End Function
-#endif
 
 Private Property ColorDialog.Caption ByRef As WString
 	Return *_Caption
@@ -1027,63 +612,25 @@ Private Property ColorDialog.Caption(ByRef Value As WString)
 End Property
 
 Private Function ColorDialog.Execute As Boolean
-	#ifdef __USE_GTK__
 		Dim As Boolean bResult
 		Dim As GtkWindow Ptr win
 		If pApp->MainForm Then
 			win = GTK_WINDOW(pApp->MainForm->widget)
 		End If
-		#ifdef __USE_GTK3__
 			widget = gtk_color_chooser_dialog_new (ToUtf8(*_Caption), win)
-		#else
-			widget = gtk_color_selection_dialog_new(ToUtf8(*_Caption))
-		#endif
 		Dim As Integer res = gtk_dialog_run (GTK_DIALOG (widget))
 		bResult = res = GTK_RESPONSE_OK
 		If bResult Then
 			Dim As UString RGBString
-			#ifdef __USE_GTK3__
 				Dim As GdkRGBA RGBAColor
 				gtk_color_chooser_get_rgba(GTK_COLOR_CHOOSER (widget), @RGBAColor)
 				RGBString = WStr(*gdk_rgba_to_string(@RGBAColor))
-			#else
-				Dim As GdkColor gColor
-				Dim As GtkWidget Ptr cs = gtk_color_selection_dialog_get_color_selection(GTK_COLOR_SELECTION_DIALOG(widget))
-				gtk_color_selection_get_current_color(GTK_COLOR_SELECTION (cs), @gColor)
-				RGBString = WStr(*gdk_color_to_string(@gColor))
-			#endif
 			Dim As UString res()
 			Split(Mid(RGBString, 5, Len(RGBString) - 5), ",", res())
 			If UBound(res) >= 2 Then This.Color = BGR(Val(res(0)), Val(res(1)), Val(res(2)))
 		End If
-		#ifdef __USE_GTK4__
-			g_object_unref(widget)
-		#else
 			gtk_widget_destroy( GTK_WIDGET(widget) )
-		#endif
 		Return bResult
-	#else
-		Dim As CHOOSECOLOR CC
-		CC.lStructSize  = SizeOf(CC)
-		CC.lpCustColors = @Colors(0)
-		CC.hwndOwner    = MainHandle 'IIf(Parent,Parent->Handle, 0)
-		CC.rgbResult    = This.Color
-		CC.Flags        = CC_RGBINIT
-		CC.Flags        = CC.Flags Or CC_ENABLEHOOK
-		Select Case Style
-		Case 0
-			CC.Flags    = CC.Flags Or CC_FULLOPEN
-		Case 1
-			CC.Flags    = CC.Flags Or CC_PREVENTFULLOPEN
-		End Select
-		CC.lpfnHook     = @Hook
-		CC.lCustData    = Cast(LPARAM,@This)
-		If CHOOSECOLOR(@CC) Then
-			This.Color = CC.rgbResult
-			Return True
-		End If
-		Return False
-	#endif
 End Function
 
 Private Operator ColorDialog.Cast As Any Ptr
@@ -1093,9 +640,6 @@ End Operator
 Private Constructor ColorDialog
 	WLet(_Caption, "Choose Color...")
 	WLet(FClassName, "ColorDialog")
-	#ifndef __USE_GTK__
-		BackColor = GetSysColor(COLOR_BTNFACE)
-	#endif
 End Constructor
 
 Private Destructor ColorDialog

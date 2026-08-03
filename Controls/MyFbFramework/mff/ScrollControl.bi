@@ -17,12 +17,7 @@ Namespace My.Sys.Forms
 		OldMaxHeight As Integer
 		OldMaxWidth As Integer
 		InRecalculate As Boolean
-		#ifndef __USE_GTK__
-			Declare Static Sub WNDPROC(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-		#else
 			
-		#endif
 	Protected:
 		Dim As Integer FHorizontalArrowChangeSize
 		Dim As Integer FVerticalArrowChangeSize

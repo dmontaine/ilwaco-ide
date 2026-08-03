@@ -103,171 +103,12 @@ Namespace My.Sys.Forms
 		Invalidate
 	End Property
 	
-	#ifdef __USE_WINAPI__
-		Private Sub Panel.HandleIsAllocated(ByRef Sender As Control)
-			If Sender.Child Then
-				With QPanel(Sender.Child)
-				End With
-			End If
-		End Sub
-		
-		Private Sub Panel.WNDPROC(ByRef Message As Message)
-		End Sub
-	#endif
 	
-	#ifdef __USE_WASM__
-		Private Function Panel.GetContent() As UString
-			Return ""
-		End Function
-	#endif
 	
 	Private Sub Panel.ProcessMessage(ByRef Message As Message)
-		#ifdef __USE_WINAPI__
-			Select Case Message.Msg
-			Case CM_CTLCOLOR
-				Static As HDC Dc
-				Dc = Cast(HDC,Message.wParam)
-				SetBkMode Dc, Transparent
-				SetTextColor Dc, Font.Color
-				If Not FTransparent OrElse FDesignMode Then
-					SetBkColor Dc, FBackColor
-					SetBkMode Dc, OPAQUE
-				Else
-					Message.Result = Cast(LRESULT, GetStockObject(NULL_BRUSH))
-				End If
-			Case WM_PAINT
-				Dim As HDC Dc, memDC
-				Dim As HBITMAP MemBmp, hOldBmp
-				Dim As PAINTSTRUCT Ps
-				Dim As ..Rect R
-				GetClientRect Handle, @R
-				Dc = BeginPaint(Handle, @Ps)
-				If Dc = 0 Then
-					EndPaint This.Handle, @Ps
-					Message.Result = 0
-					Return
-				End If
-				If g_darkModeSupported AndAlso g_darkModeEnabled Then
-					If Not FDarkMode Then SetDark True
-				Else
-					If FDarkMode Then SetDark False
-				End If
-				If DoubleBuffered Then
-					memDC = CreateCompatibleDC(Dc)
-					MemBmp = CreateCompatibleBitmap(Dc, R.Right - R.Left, R.Bottom - R.Top)
-					hOldBmp = SelectObject(memDC, MemBmp)
-					FillRect memDC, @R, Brush.Handle
-					Canvas.SetHandle memDC
-				Else
-					FillRect Dc, @R, Brush.Handle
-					Canvas.SetHandle Dc
-				End If
-				With Graphic
-					If .Visible AndAlso .Bitmap.Handle > 0 Then
-						Select Case Graphic.StretchImage
-						Case StretchMode.smNone
-							Canvas.DrawAlpha .StartX, .StartY, , , .Bitmap
-						Case StretchMode.smStretch
-							Canvas.DrawAlpha .StartX, .StartY, ScaleX(This.Width) * .ScaleFactor, ScaleY(This.Height) * .ScaleFactor, .Bitmap
-						Case Else 'StretchMode.smStretchProportional
-							Dim As Double imgWidth = .Bitmap.Width
-							Dim As Double imgHeight = .Bitmap.Height
-							Dim As Double PicBoxWidth = ScaleX(This.Width) * .ScaleFactor
-							Dim As Double PicBoxHeight = ScaleY(This.Height) * .ScaleFactor
-							Dim As Double img_ratio = imgWidth / imgHeight
-							Dim As Double PicBox_ratio =  PicBoxWidth / PicBoxHeight
-							If (PicBox_ratio >= img_ratio) Then
-								imgHeight = PicBoxHeight
-								imgWidth = imgHeight *img_ratio
-							Else
-								imgWidth = PicBoxWidth
-								imgHeight = imgWidth / img_ratio
-							End If
-							If .CenterImage Then
-								Canvas.DrawAlpha Max((PicBoxWidth - imgWidth * .ScaleFactor) / 2, .StartX), Max((PicBoxHeight - imgHeight * .ScaleFactor) / 2, Graphic.StartY), imgWidth * Graphic.ScaleFactor, imgHeight * .ScaleFactor, .Bitmap
-							Else
-								Canvas.DrawAlpha .StartX, .StartY, imgWidth, imgHeight, .Bitmap
-							End If
-						End Select
-					End If
-				End With
-				If ShowCaption Then
-					Canvas.TextOut(Current.X, Current.Y, FText, Canvas.Font.Color, FBackColor)
-				End If
-				If OnPaint Then OnPaint(*Designer, This, Canvas)
-				Canvas.UnSetHandle
-				If DoubleBuffered Then
-					BitBlt(Dc, 0, 0, R.Right - R.left, R.Bottom - R.top, memDC, 0, 0, SRCCOPY)
-					SelectObject memDC, hOldBmp
-					DeleteObject(MemBmp)
-					DeleteDC(memDC)
-				End If
-				If FBevelInner <> bvNone Then
-					AdjustColors(FBevelInner)
-					Frame3D(*Cast(My.Sys.Drawing.Rect Ptr, @R), FBevelWidth)
-				End If
-				Frame3D(*Cast(My.Sys.Drawing.Rect Ptr, @R), FBorderWidth)
-				If FBevelOuter <> bvNone Then
-					AdjustColors(FBevelOuter)
-					Frame3D(*Cast(My.Sys.Drawing.Rect Ptr, @R), FBevelWidth)
-				End If
-				EndPaint Handle, @Ps
-				ReleaseDC Handle, Dc
-				Message.Result = 0
-				Return
-			Case CM_COMMAND
-				If Message.wParamHi = STN_CLICKED Then
-					If OnClick Then OnClick(*Designer, This)
-				End If
-				If Message.wParamHi = STN_DBLCLK Then
-					If OnDblClick Then OnDblClick(*Designer, This)
-				End If
-			Case WM_SIZE
-				InvalidateRect(Handle, NULL, True)
-			Case CM_DRAWITEM
-				
-			End Select
-		#endif
 		Base.ProcessMessage(Message)
 	End Sub
 	
-	#ifdef __USE_WINAPI__
-		Private Sub Panel.AdjustColors(FBevel As Integer)
-			If g_darkModeSupported AndAlso g_darkModeEnabled Then
-				FTopColor = 12632256 'Could be changed
-				If FBevel = bvLowered Then FTopColor = 8421504 'Could be changed
-				FBottomColor = 8421504 'Could be changed
-				If FBevel = bvLowered Then FBottomColor = 8421504 'Could be changed
-			Else
-				FTopColor = GetSysColor(COLOR_BTNHIGHLIGHT)
-				If FBevel = bvLowered Then FTopColor = GetSysColor(COLOR_BTNSHADOW)
-				FBottomColor = GetSysColor(COLOR_BTNSHADOW)
-				If FBevel = bvLowered Then FBottomColor = GetSysColor(COLOR_BTNHIGHLIGHT)
-			End If
-		End Sub
-		
-		Private Sub Panel.DoRect(R As My.Sys.Drawing.Rect, tTopColor As Integer = GetSysColor(COLOR_BTNSHADOW), tBottomColor As Integer = GetSysColor(COLOR_BTNSHADOW))
-			Canvas.Pen.Color = FTopColor
-			Canvas.Line(R.Left, R.Top, R.Right, R.Top)
-			Canvas.Line(R.Left, R.Top, R.Left, R.Bottom)
-			Canvas.Pen.Color = FBottomColor
-			Canvas.Line(R.Right, R.Top, R.Right, R.Bottom)
-			Canvas.Line(R.Left, R.Bottom, R.Right, R.Bottom)
-		End Sub
-		
-		Private Sub Panel.Frame3D(R As My.Sys.Drawing.Rect, AWidth As Integer)
-			Canvas.Pen.Size = 1
-			R.Bottom -= 1
-			R.Right  -= 1
-			While AWidth > 0
-				AWidth -= 1
-				DoRect(R)
-				InflateRect(Cast(..Rect Ptr, @R), -1, -1)
-			Wend
-			R.Bottom += 1
-			R.Right  += 1
-		End Sub
-	#endif
 	
 	Property Panel.Visible As Boolean
 		Return Base.Visible
@@ -291,15 +132,11 @@ Namespace My.Sys.Forms
 	
 	Private Sub Panel.CreateWnd
 		Base.CreateWnd
-		#ifdef __USE_JNI__
-			layoutview = FHandle
-		#endif
 	End Sub
 	
 	Private Sub Panel.GraphicChange(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Drawing.GraphicType, Image As Any Ptr, ImageType As Integer)
 		With Sender
 			If .Ctrl->Child Then
-				#ifdef __USE_GTK__
 					'If GTK_IS_IMAGE(QForm(.Ctrl->Child).ImageWidget) Then
 					'	Select Case ImageType
 					'	Case 0
@@ -308,30 +145,12 @@ Namespace My.Sys.Forms
 					'		gtk_image_set_from_pixbuf(GTK_IMAGE(QForm(.Ctrl->Child).ImageWidget), .Icon.Handle)
 					'	End Select
 					'End If
-				#else
-					'					Select Case ImageType
-					'					Case 0
-					'QForm(.Ctrl->Child).ChangeStyle SS_BITMAP, True
-					'QForm(.Ctrl->Child).Perform(BM_SETIMAGE, ImageType, CInt(Sender.Bitmap.Handle))
-					'					Case 1
-					'QForm(.Ctrl->Child).ChangeStyle SS_ICON, True
-					'QForm(.Ctrl->Child).Perform(BM_SETIMAGE, ImageType, CInt(Sender.Icon.Handle))
-					'					Case 2
-					'QForm(.Ctrl->Child).ChangeStyle SS_ICON, True
-					'QForm(.Ctrl->Child).Perform(BM_SETIMAGE, ImageType, CInt(Sender.Icon.Handle))
-					'					Case 3
-					'QForm(.Ctrl->Child).ChangeStyle SS_ENHMETAFILE, True
-					'QForm(.Ctrl->Child).Perform(BM_SETIMAGE, ImageType, CInt(0))
-					'					End Select
-					.Ctrl->Repaint
-				#endif
 			End If
 		End With
 	End Sub
 	
 	Private Constructor Panel
 		With This
-			#ifdef __USE_GTK__
 				'widget = gtk_scrolled_window_new(null, null)
 				'widget = gtk_layout_new(null, null)
 				'widget = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0)
@@ -358,7 +177,6 @@ Namespace My.Sys.Forms
 				'gtk_scrolled_window_set_propagate_natural_width(gtk_scrolled_window(widget), true)
 				'widget = gtk_fixed_new()
 				.RegisterClass "Panel", @This
-			#endif
 			FBorderWidth = 0
 			'FBevelWidth=2
 			'PopupMenu.Ctrl = This
@@ -366,19 +184,6 @@ Namespace My.Sys.Forms
 			.Canvas.Ctrl    = @This
 			.Graphic.Ctrl   = @This
 			.Graphic.OnChange = @GraphicChange
-			#ifdef __USE_WINAPI__
-				.RegisterClass "Panel"
-				.ChildProc   = @WNDPROC
-				.ExStyle     = 0
-				.Style       = WS_CHILD
-				.BackColor       = GetSysColor(COLOR_BTNFACE)
-				FDefaultBackColor = GetSysColor(COLOR_BTNFACE)
-				.OnHandleIsAllocated = @HandleIsAllocated
-			#elseif defined(__USE_JNI__)
-				WLet(FClassAncestor, "android/widget/AbsoluteLayout")
-			#elseif defined(__USE_WASM__)
-				WLet(FClassAncestor, "div")
-			#endif
 			FTabIndex          = -1
 			WLet(FClassName, "Panel")
 			.Width       = 121
@@ -388,8 +193,5 @@ Namespace My.Sys.Forms
 	End Constructor
 	
 	Private Destructor Panel
-		#ifdef __USE_WINAPI__
-			UnregisterClass "Panel", GetModuleHandle(NULL)
-		#endif
 	End Destructor
 End Namespace

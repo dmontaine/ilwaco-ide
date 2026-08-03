@@ -19,18 +19,9 @@ Namespace My.Sys.Forms
 	Private Type CheckedListBox Extends ListControl
 	Private:
 		FRadioCheck As Boolean
-		#ifndef __USE_GTK__
-			Declare Static Sub WNDPROC(ByRef Message As Message)
-			Declare Virtual Sub ProcessMessage(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-			fTheme  As HTHEME
-		#else
 			As GtkCellRenderer Ptr rendertoggle
-		#endif
 	Protected:
-		#ifdef __USE_GTK__
 			Declare Static Sub Check(cell As GtkCellRendererToggle Ptr, path As gchar Ptr, model As GtkListStore Ptr)
-		#endif
 	Public:
 		#ifndef ReadProperty_Off
 			'Loads persisted check states

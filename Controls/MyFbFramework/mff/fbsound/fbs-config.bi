@@ -34,19 +34,8 @@
 	
 	'#define DEBUG
 	
-	#ifdef __FB_WIN32__
-		' windows
-		'#define NO_PLUG_MM
-		'#define NO_PLUG_DS
-	#endif
 	' linux
-	#ifdef __FB_LINUX__
-		#ifndef __FB_64BIT__
-			#define NO_PLUG_DSP
-			#define NO_PLUG_ARTS
-		#endif
 		'#define NO_PLUG_ALSA
-	#endif
 	
 	#ifndef DEBUG_SOUND
 		#if __FB_DEBUG__ ' -g has priority

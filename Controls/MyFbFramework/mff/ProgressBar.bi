@@ -37,18 +37,10 @@ Namespace My.Sys.Forms
 		AMarquee(2)  As Integer
 		FMarqueeInterval As Integer
 		AOrientation(2) As Integer
-		#ifndef __USE_GTK__
-			Declare Static Sub WndProc(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-		#else
 			Declare Static Function progress_cb(ByVal user_data As gpointer) As gboolean
 			Dim progress_bar_timer_id As UInteger
-		#endif
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
 		Declare Sub SetRange(AMin As Integer, AMax As Integer)
-		#ifdef __USE_WINAPI__
-			Declare Virtual Sub SetDark(Value As Boolean)
-		#endif
 	Public:
 		#ifndef ReadProperty_Off
 			'Loads configuration from persistence stream

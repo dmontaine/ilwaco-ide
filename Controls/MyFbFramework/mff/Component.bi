@@ -35,20 +35,12 @@ Namespace My.Sys.ComponentModel
 		FParent             As Component Ptr
 		FComponents         As List
 		FTempString         As String
-		#ifdef __USE_GTK__
 			box 			As GtkWidget Ptr
 			fixedwidget		As GtkWidget Ptr
 			scrolledwidget	As GtkWidget Ptr
 			eventboxwidget  As GtkWidget Ptr
 			overlaywidget   As GtkWidget Ptr
 			containerwidget As GtkWidget Ptr
-		#elseif defined(__USE_JNI__)
-			FHandle         As jobject
-		#elseif defined(__USE_WINAPI__)
-			FHandle         As HWND
-		#elseif defined(__USE_WASM__)
-			FHandle         As Any Ptr
-		#endif
 		Declare Sub FreeWidget()
 		Declare Virtual Sub Move(cLeft As Integer, cTop As Integer, cWidth As Integer, cHeight As Integer)
 	Public:
@@ -58,31 +50,11 @@ Namespace My.Sys.ComponentModel
 		Margins             As MarginsType
 		'Returns/sets the extra space between controls (Windows, Linux, Android, Web).
 		ExtraMargins        As MarginsType
-		#ifdef __USE_GTK__
 			'Gets the window handle that the control is bound to (Windows, Linux, Android, Web).
 			Declare Property Handle As GtkWidget Ptr
 			Declare Property Handle(Value As GtkWidget Ptr)
 			Declare Property LayoutHandle As GtkWidget Ptr
 			Declare Property LayoutHandle(Value As GtkWidget Ptr)
-		#elseif defined(__USE_JNI__)
-			'Gets the window handle that the control is bound to (Windows, Linux, Android, Web).
-			Declare Property Handle As jobject
-			Declare Property Handle(Value As jobject)
-			Declare Property LayoutHandle As jobject
-			Declare Property LayoutHandle(Value As jobject)
-		#elseif defined(__USE_WINAPI__)
-			'Gets the window handle that the control is bound to (Windows, Linux, Android, Web).
-			Declare Property Handle As HWND
-			Declare Property Handle(Value As HWND)
-			Declare Property LayoutHandle As HWND
-			Declare Property LayoutHandle(Value As HWND)
-		#elseif defined(__USE_WASM__)
-			'Gets the window handle that the control is bound to (Windows, Linux, Android, Web).
-			Declare Property Handle As Any Ptr
-			Declare Property Handle(Value As Any Ptr)
-			Declare Property LayoutHandle As Any Ptr
-			Declare Property LayoutHandle(Value As Any Ptr)
-		#endif
 		#ifndef ReadProperty_Off
 			'Reads value from the name of property (Windows, Linux, Android, Web).
 			Declare Virtual Function ReadProperty(ByRef PropertyName As String) As Any Ptr
@@ -129,114 +101,14 @@ End Namespace
 
 Private Type Message
 	Sender   As Any Ptr
-	#ifdef __USE_GTK__
 		widget As GtkWidget Ptr
 		Event As GdkEvent Ptr
 		Result   As Boolean
-	#elseif defined(__USE_WINAPI__)
-		hWnd     As HWND
-		Msg      As UINT
-		wParam   As WPARAM
-		lParam   As LPARAM
-		Result   As LRESULT
-		wParamLo As Integer
-		wParamHi As Integer
-		lParamLo As Integer
-		lParamHi As Integer
-		Captured As Any Ptr
-	#endif
 	Handled As Boolean
 End Type
 
-#ifdef __USE_GTK__
-	#ifdef __USE_GTK2__
-		Const GDK_KEY_Escape = &hff1b
-		Const GDK_KEY_Left = &hff51
-		Const GDK_KEY_Right = &hff53
-		Const GDK_KEY_Up = &hff52
-		Const GDK_KEY_Down = &hff54
-		Const GDK_KEY_Home = &hff50
-		Const GDK_KEY_End = &hff57
-		Const GDK_KEY_Delete = &hffff
-		Const GDK_KEY_Cut = &h1008ff58
-		Const GDK_KEY_Copy = &h1008ff57
-		Const GDK_KEY_KP_Enter = &hff8d
-		Const GDK_KEY_Paste = &h1008ff6d
-		Const GDK_KEY_Redo = &hff66
-		Const GDK_KEY_Undo = &hff65
-		Const GDK_KEY_Page_Up = &hff55
-		Const GDK_KEY_Page_Down = &hff56
-		Const GDK_KEY_Insert = &hff63
-		Const GDK_KEY_F1 = &hffbe
-		Const GDK_KEY_F2 = &hffbf
-		Const GDK_KEY_F3 = &hffc0
-		Const GDK_KEY_F4 = &hffc1
-		Const GDK_KEY_F5 = &hffc2
-		Const GDK_KEY_F6 = &hffc3
-		Const GDK_KEY_F7 = &hffc4
-		Const GDK_KEY_F8 = &hffc5
-		Const GDK_KEY_F9 = &hffc6
-		Const GDK_KEY_F10 = &hffc7
-		Const GDK_KEY_F11 = &hffc8
-		Const GDK_KEY_F12 = &hffc9
-		Const GDK_KEY_Tab = &hff09
-		Const GDK_KEY_ISO_Left_Tab = &hfe20
-		Const GDK_KEY_SPACE = &h020
-		Const GDK_KEY_BACKSPACE = &hff08
-		Const GDK_KEY_Return = &hff0d
-		Const GDK_KEY_1 = &h31
-		Const GDK_KEY_2 = &h32
-		Const GDK_KEY_3 = &h33
-		Const GDK_KEY_4 = &h34
-		Const GDK_KEY_5 = &h35
-		Const GDK_KEY_6 = &h36
-		Const GDK_KEY_7 = &h37
-		Const GDK_KEY_8 = &h38
-		Const GDK_KEY_9 = &h39
-		Const GDK_KEY_0 = &h30
-		Const GDK_KEY_a = &h61
-		Const GDK_KEY_b = &h62
-		Const GDK_KEY_c = &h63
-		Const GDK_KEY_d = &h64
-		Const GDK_KEY_e = &h65
-		Const GDK_KEY_f = &h66
-		Const GDK_KEY_g = &h67
-		Const GDK_KEY_h = &h68
-		Const GDK_KEY_i = &h69
-		Const GDK_KEY_j = &h6a
-		Const GDK_KEY_k = &h6b
-		Const GDK_KEY_l = &h6c
-		Const GDK_KEY_m = &h6d
-		Const GDK_KEY_n = &h6e
-		Const GDK_KEY_o = &h6f
-		Const GDK_KEY_p = &h70
-		Const GDK_KEY_q = &h71
-		Const GDK_KEY_r = &h72
-		Const GDK_KEY_s = &h73
-		Const GDK_KEY_t = &h74
-		Const GDK_KEY_u = &h75
-		Const GDK_KEY_v = &h76
-		Const GDK_KEY_w = &h77
-		Const GDK_KEY_x = &h78
-		Const GDK_KEY_y = &h79
-		Const GDK_KEY_z = &h7a
-		Const GDK_KEY_F13 = &hffca
-		Const GDK_KEY_F14 = &hffcb
-		Const GDK_KEY_F15 = &hffcc
-		Const GDK_KEY_F16 = &hffcd
-		Const GDK_KEY_F17 = &hffce
-		Const GDK_KEY_F18 = &hffcf
-		Const GDK_KEY_F19 = &hffd0
-		Const GDK_KEY_F20 = &hffd1
-		Const GDK_KEY_F21 = &hffd2
-		Const GDK_KEY_F22 = &hffd3
-		Const GDK_KEY_F23 = &hffd4
-		Const GDK_KEY_F24 = &hffd5
-	#endif
-#endif
 
 Private Enum Keys
-	#ifdef __USE_GTK__
 		Key_Esc = GDK_KEY_Escape
 		Key_Left = GDK_KEY_Left
 		Key_Right = GDK_KEY_Right
@@ -310,85 +182,6 @@ Private Enum Keys
 		F22 = GDK_KEY_F22
 		F23 = GDK_KEY_F23
 		F24 = GDK_KEY_F24
-	#elseif defined(__USE_JNI__)
-		Key_Esc = 0
-	#elseif defined(__USE_WINAPI__)
-		Key_Esc = VK_ESCAPE
-		Key_Left = VK_LEFT
-		Key_Right = VK_RIGHT
-		Key_Up = VK_UP
-		Key_Down = VK_DOWN
-		Key_Home = VK_HOME
-		Key_End = VK_END
-		Key_Delete = VK_DELETE
-		Key_Enter = VK_RETURN
-		ShiftMask = 1 'VK_SHIFT
-		LockMask = 2 'VK_SCROLL
-		CtrlMask = 4 'VK_CONTROL
-		AltMask = 8 'VK_MENU
-		Key_1 = VK_1
-		Key_2 = VK_2
-		Key_3 = VK_3
-		Key_4 = VK_4
-		Key_5 = VK_5
-		Key_6 = VK_6
-		Key_7 = VK_7
-		Key_8 = VK_8
-		Key_9 = VK_9
-		Key_0 = VK_0
-		Key_A = VK_A
-		Key_B = VK_B
-		Key_C = VK_C
-		Key_D = VK_D
-		Key_E = VK_E
-		Key_F = VK_F
-		Key_G = VK_G
-		Key_H = VK_H
-		Key_I = VK_I
-		Key_J = VK_J
-		Key_K = VK_K
-		Key_L = VK_L
-		Key_M = VK_M
-		Key_N = VK_N
-		Key_O = VK_O
-		Key_P = VK_P
-		Key_Q = VK_Q
-		Key_R = VK_R
-		Key_S = VK_S
-		Key_T = VK_T
-		Key_U = VK_U
-		Key_V = VK_V
-		Key_W = VK_W
-		Key_X = VK_X
-		Key_Y = VK_Y
-		Key_Z = VK_Z
-		F1 = VK_F1
-		F2 = VK_F2
-		F3 = VK_F3
-		F4 = VK_F4
-		F5 = VK_F5
-		F6 = VK_F6
-		F7 = VK_F7
-		F8 = VK_F8
-		F9 = VK_F9
-		F10 = VK_F10
-		F11 = VK_F11
-		F12 = VK_F12
-		F13 = VK_F13
-		F14 = VK_F14
-		F15 = VK_F15
-		F16 = VK_F16
-		F17 = VK_F17
-		F18 = VK_F18
-		F19 = VK_F19
-		F20 = VK_F20
-		F21 = VK_F21
-		F22 = VK_F22
-		F23 = VK_F23
-		F24 = VK_F24
-	#else
-		Key_Esc = 0
-	#endif
 End Enum
 
 Declare Sub ThreadsEnter

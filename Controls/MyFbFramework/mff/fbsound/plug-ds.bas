@@ -204,11 +204,6 @@ type DS
   as zstring * 128   LastError
   as any ptr         FillThreadID
   as boolean         FillEnd
-#if 0
-  as any ptr         FillCondition,FillMutex
-  as any ptr         WriteThreadID,WriteCondition,WriteMutex
-  as integer         FillEnd,WriteEnd
-#endif
   as DS_DEVICE_LIST      DeviceList
   as LPDIRECTSOUND       pDirectSound
 

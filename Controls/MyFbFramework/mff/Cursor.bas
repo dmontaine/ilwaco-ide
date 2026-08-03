@@ -82,21 +82,6 @@ Namespace My.Sys.Drawing
 	
 	#ifndef Cursor_LoadFromFile_Off
 		Private Function Cursor.LoadFromFile(ByRef File As WString, cx As Integer = 0, cy As Integer = 0) As Boolean
-			#ifdef __USE_WINAPI__
-				Dim As ICONINFO ICIF
-				Dim As BITMAP BMP
-				If Handle Then DestroyCursor(Handle)
-				Handle = LoadImage(0, File, IMAGE_CURSOR, cx, cy, LR_LOADFROMFILE)
-				If Handle = 0 Then Return False
-				GetIconInfo(Handle, @ICIF)
-				GetObject(ICIF.hbmColor, SizeOf(BMP), @BMP)
-				FWidth  = BMP.bmWidth
-				FHeight = BMP.bmHeight
-				FHotSpotX = ICIF.xHotspot
-				FHotSpotY = ICIF.yHotspot
-				DeleteObject(ICIF.hbmColor)
-				DeleteObject(ICIF.hbmMask)
-			#endif
 			If Changed Then Changed(*Designer, This)
 			Return True
 		End Function
@@ -110,22 +95,6 @@ Namespace My.Sys.Drawing
 	
 	#ifndef Cursor_LoadFromResourceName_Off
 		Private Function Cursor.LoadFromResourceName(ByRef ResName As WString, ModuleHandle As Any Ptr = 0, cxDesired As Integer = 0, cyDesired As Integer = 0) As Boolean
-			#ifdef __USE_WINAPI__
-				Dim As ICONINFO ICIF
-				Dim As BITMAP BMP
-				Dim As Any Ptr ModuleHandle_ = ModuleHandle: If ModuleHandle = 0 Then ModuleHandle_ = GetModuleHandle(NULL)
-				If Handle Then DestroyCursor(Handle)
-				Handle = LoadImage(ModuleHandle_, ResName, IMAGE_CURSOR, cxDesired, cyDesired, LR_COPYFROMRESOURCE)
-				If Handle = 0 Then Return False
-	'			GetIconInfo(Handle, @ICIF)
-	'			GetObject(ICIF.hbmColor,SizeOf(BMP), @BMP)
-	'			FWidth  = BMP.bmWidth
-	'			FHeight = BMP.bmHeight
-	'			FHotSpotX = ICIF.xHotSpot
-	'			FHotSpotY = ICIF.yHotSpot
-	'			?DeleteObject(ICIF.hbmColor)
-	'			?DeleteObject(ICIF.hbmMask)
-			#endif
 			If Changed Then Changed(*Designer, This)
 			Return True
 		End Function
@@ -133,22 +102,6 @@ Namespace My.Sys.Drawing
 	
 	#ifndef Cursor_LoadFromResourceID_Off
 		Private Function Cursor.LoadFromResourceID(ResID As Integer, ModuleHandle As Any Ptr = 0, cxDesired As Integer = 0, cyDesired As Integer = 0) As Boolean
-			#ifdef __USE_WINAPI__
-				Dim As ICONINFO ICIF
-				Dim As BITMAP BMP
-				Dim As Any Ptr ModuleHandle_ = ModuleHandle: If ModuleHandle = 0 Then ModuleHandle_ = GetModuleHandle(NULL)
-				If Handle Then DestroyCursor(Handle)
-				Handle = LoadImage(ModuleHandle_, MAKEINTRESOURCE(ResID), IMAGE_CURSOR, cxDesired, cyDesired, LR_COPYFROMRESOURCE)
-				If Handle = 0 Then Return False
-				GetIconInfo(Handle,@ICIF)
-				GetObject(ICIF.hbmColor,SizeOf(BMP), @BMP)
-				FWidth  = BMP.bmWidth
-				FHeight = BMP.bmHeight
-				FHotSpotX = ICIF.xHotspot
-				FHotSpotY = ICIF.yHotspot
-				DeleteObject(ICIF.hbmColor)
-				DeleteObject(ICIF.hbmMask)
-			#endif
 			If Changed Then Changed(*Designer, This)
 			Return True
 		End Function
@@ -163,50 +116,27 @@ Namespace My.Sys.Drawing
 	
 	Private Operator Cursor.Let(ByRef Value As WString)
 		WLet(FResName, Value)
-		#ifndef __USE_GTK__
-			If (Not LoadFromResourceName(Value)) AndAlso (Not LoadFromResourceID(Val(Value))) Then
-				LoadFromFile(Value)
-			End If
-		#else
 			If Ctrl AndAlso Ctrl->Handle Then
 				Dim As GdkDisplay Ptr pdisplay = gtk_widget_get_display(Ctrl->Handle)
 				Handle = gdk_cursor_new_from_name(pdisplay, Value)
 				Dim As GdkWindow Ptr win
-				#ifdef __USE_GTK4__
-					win = gtk_widget_get_parent_window(Ctrl->Handle)
-				#else
 					If GTK_IS_LAYOUT(Ctrl->Handle) Then
 						win = gtk_layout_get_bin_window(GTK_LAYOUT(Ctrl->Handle))
 					Else
 						win = gtk_widget_get_parent_window(Ctrl->Handle)
 					End If
-				#endif
 				If win Then gdk_window_set_cursor(win, Handle)
 			End If
-		#endif
 	End Operator
 	
 	Private Function Cursor.ToString() ByRef As WString
 		If FResName > 0 Then Return *FResName Else Return ""
 	End Function
 	
-	#ifdef __USE_WINAPI__
-		Private Function Cursor.ToBitmap() As HBITMAP
-			Dim As BitmapType bmpType
-			bmpType = Handle
-			Return bmpType.Handle
-		End Function
-	#endif
 	
 	Private Operator Cursor.Let(Value As Integer)
-		#ifdef __USE_WINAPI__
-			If Handle Then DestroyCursor(Handle)
-			Handle = Cast(HCURSOR, Value)
-			If Ctrl AndAlso Ctrl->Handle Then SendMessage(Ctrl->Handle, WM_SETCURSOR, Cast(WPARAM, Ctrl->Handle), Cast(LPARAM, 1))
-		#endif
 	End Operator
 	
-	#ifdef __USE_GTK__
 		Private Operator Cursor.Let(Value As GdkCursorType)
 			If Ctrl AndAlso Ctrl->Handle Then
 				Dim As GdkDisplay Ptr pdisplay = gtk_widget_get_display(Ctrl->Handle)
@@ -214,22 +144,9 @@ Namespace My.Sys.Drawing
 			End If
 		End Operator
 		
-	#elseif defined(__USE_WINAPI__)
-		Private Operator Cursor.Let(Value As HCURSOR)
-			If Handle Then DestroyCursor(Handle)
-			Handle = Value
-			If Ctrl AndAlso Ctrl->Handle Then SendMessage(Ctrl->Handle, WM_SETCURSOR, Cast(WPARAM, Ctrl->Handle), Cast(LPARAM, 1))
-		End Operator
-	#endif
 	
 	Private Operator Cursor.Let(Value As Cursor)
-		#ifdef __USE_WINAPI__
-			If Handle Then DestroyCursor(Handle)
-		#endif
 		Handle = Value.Handle
-		#ifdef __USE_WINAPI__
-			If Ctrl AndAlso Ctrl->Handle Then SendMessage(Ctrl->Handle, WM_SETCURSOR, Cast(WPARAM, Ctrl->Handle), Cast(LPARAM, 1))
-		#endif
 	End Operator
 	
 	Private Constructor Cursor
@@ -241,11 +158,6 @@ Namespace My.Sys.Drawing
 	End Constructor
 	
 	Private Destructor Cursor
-		#ifdef __USE_WINAPI__
-			If Handle <> 0 Then 
-				DestroyCursor Handle
-			End If
-		#endif
 		If FResName Then _Deallocate(FResName)
 	End Destructor
 End Namespace

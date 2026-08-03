@@ -27,30 +27,7 @@
 '' plug_XX.required are referenced to pull in the needed
 '' modules, even if they exist in a static library.
 
-#ifdef __FB_WIN32__
-#ifndef NO_PLUG_MM
-	Namespace fbsound.plug_mm
-		Extern "c"
-			Extern required As Long
-		End Extern
-		Private Sub ctor cdecl () Constructor
-			required = 1
-		End Sub
-	End Namespace
-#endif ' NO_PLUG_MM
-#ifndef NO_PLUG_DS
-	Namespace fbsound.plug_ds
-		Extern "c"
-			Extern required As Long
-		End Extern
-		Private Sub ctor cdecl () Constructor
-			required = 1
-		end sub
-	end namespace
-#endif ' NO_PLUG_DS
-#endif ' __FB_WIN32__
 
-#ifdef __FB_LINUX__
 #ifndef NO_PLUG_ALSO
 	namespace fbsound.plug_also
 		extern "c"
@@ -71,7 +48,6 @@
 		end sub
 	end namespace
 #endif ' NO_PLUG_ARTS
-#endif
 
 #endif ' __FB_OUT_DLL__ = 0
 

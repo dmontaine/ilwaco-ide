@@ -10,48 +10,10 @@
 '################################################################################
 
 #include once "SysUtils.bi"
-#ifdef __USE_GTK__
 	#define FHandle Widget
-	#if defined(__USE_GTK3__) Or defined(__USE_GTK4__)
-	#elseif Not defined(__USE_GTK2__)
-		#define __USE_GTK2__
-	#endif
-	#ifdef __USE_GTK4__
-		#include once "cairo/cairo.bi"
-		#include once "gir_headers/Gir/PangoCairo-1.0.bi"
-		#include once "gir_headers/Gir/Gtk-4.0.bi"
-		#include once "gir_headers/Gir/_GObjectMacros-2.0.bi"
-	#else
 		#include once "gtk/gtk.bi"
-		#ifdef __USE_GTK3__
 			#include once "glib-object.bi"
-		#endif
-	#endif
-#endif
 
-#ifdef __USE_WINAPI__
-	#ifndef MainHandle_Off
-		Private Function EnumThreadWindowsProc(FWindow As HWND, LData As LPARAM) As BOOL
-			Type WindowType
-				As HWND Handle
-			End Type
-			Dim As WindowType Ptr Wnd = Cast(WindowType Ptr, LData)
-			If (GetWindowLong(FWindow, GWL_EXSTYLE) And WS_EX_APPWINDOW) = WS_EX_APPWINDOW Then
-				Wnd->Handle = FWindow
-			End If
-			Return True
-		End Function
-		
-		Private Function MainHandle As HWND
-			Type WindowType
-				As HWND Handle
-			End Type
-			Dim As WindowType Wnd
-			EnumThreadWindows GetCurrentThreadId,Cast(WNDENUMPROC,@EnumThreadWindowsProc),Cast(LPARAM,@Wnd)
-			Return Wnd.Handle
-		End Function
-	#endif
-#endif
 
 Private Function GetErrorString(ByVal Code As UInteger, ByVal MaxLen  As UShort = 1024, WithCode As Boolean = False) As UString
 	#ifdef UNICODE
@@ -63,19 +25,6 @@ Private Function GetErrorString(ByVal Code As UInteger, ByVal MaxLen  As UShort 
 	If Code = 0 AndAlso WithCode Then 
 		GetErrorString = "e: " & Str(Code)
 	Else
-		#ifdef __USE_WINAPI__
-			FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER Or FORMAT_MESSAGE_FROM_SYSTEM Or FORMAT_MESSAGE_IGNORE_INSERTS, NULL, Code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), Cast(LPWSTR, @ErrorString), 0, NULL)
-			If (ErrorString <> 0) Then
-				If WithCode Then
-					GetErrorString = WStr(Code) & " - " & *ErrorString
-				Else
-					GetErrorString = *ErrorString
-				End If
-				LocalFree(ErrorString)
-			ElseIf WithCode Then
-				GetErrorString = "e: " & WStr(Code)
-			End If
-		#endif
 	End If
 End Function
 
@@ -128,62 +77,8 @@ Namespace ClassContainer
 		Return 0
 	End Function
 	
-	#ifdef __USE_WINAPI__
-		Private Function GetClassProc(FWindow As HWND) As Any Ptr
-			Dim As WString * 255 c
-			Dim As Integer L
-			L = GetClassName(FWindow, c, 255)
-			Return GetClassProc(Left(c, L))
-		End Function
-		
-		Private Function GetClassNameOf(FWindow As HWND) As String
-			Dim As WString * 255 c
-			Dim As Integer L
-			L = GetClassName(FWindow, c, 255)
-			Return Left(c, L)
-		End Function
-		
-		Private Sub Finalization Destructor
-			For i As Integer = 0 To UBound(Classes)
-				UnregisterClass Classes(i).ClassName, GetModuleHandle(NULL)
-			Next i
-		End Sub
-	#endif
 End Namespace
 
-#if defined(__USE_WINAPI__) OrElse defined(__USE_JNI__)
-	#include once "PointerList.bi"
-	Dim Shared As PointerList Handles
-#endif
-#ifdef __USE_JNI__
-	Handles.Add 0
-	
-	#define AddToPackage(Package, EventName) __FB_QUOTE__(Java_##Package##_##EventName)
-	
-	Function FindJNIClass(className As String) As jclass
-		Return (*env)->FindClass(env, className)
-	End Function
-	
-	Function GetMethodID(className As String, methodName As String, typeName As String) As jmethodID
-		Return (*env)->GetMethodID(env, FindJNIClass(className), methodName, typeName)
-	End Function
-	
-	Function GetFieldID(className As String, fieldName As String, typeName As String) As jfieldID
-		Return (*env)->GetFieldID(env, FindJNIClass(className), fieldName, typeName)
-	End Function
-	
-	Function CallObjectMethod(obj As jobject, className As String, methodName As String, typeName As String) As jobject
-		Return (*env)->CallObjectMethod(env, obj, GetMethodID(className, methodName, typeName))
-	End Function
-	
-	Function GetIntField(obj As jobject, className As String, fieldName As String, typeName As String) As Integer
-		Return (*env)->GetIntField(env, obj, GetFieldID(className, fieldName, typeName))
-	End Function
-	
-	Function CallIntMethod(obj As jobject, className As String, methodName As String, typeName As String) As Integer
-		Return (*env)->CallIntMethod(env, obj, GetMethodID(className, methodName, typeName))
-	End Function
-#endif
 
 '#ifdef GetMN
 Private Function GetMessageName(Message As Integer) As String

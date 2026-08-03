@@ -18,20 +18,13 @@ Namespace My.Sys
 		FFormatCount As Integer
 		FFormat      As WString Ptr
 		FText        As WString Ptr
-		#ifdef __USE_GTK__
 			FClipboard As GtkClipboard Ptr
-		#endif
 	Public:
 		Declare Sub Open
 		Declare Sub Clear
 		Declare Sub Close
 		Declare Sub SetAsText(ByRef Value As WString)
 		Declare Function GetAsText ByRef As WString
-		#ifndef __USE_GTK__
-			Declare Sub SetAsHandle(FFormat As WORD, Value As HANDLE)
-			Declare Function GetAsHandle(FFormat As WORD) As HANDLE
-			Declare Function HasFormat(FFormat As WORD) As Boolean
-		#endif
 		Declare Property FormatCount As Integer
 		Declare Property FormatCount(Value As Integer)
 		Declare Property Format ByRef As WString

@@ -55,13 +55,8 @@ Namespace My.Sys.Forms
 		FBackColor         As Integer = -1
 		FState             As Integer
 		FIndent            As Integer
-		#ifdef __USE_WINAPI__
-			Dim lvi        As LVITEM
-		#endif
 	Public:
-		#ifdef __USE_GTK__
 			TreeIter As GtkTreeIter
-		#endif
 		Parent  As Control Ptr
 		Tag As Any Ptr
 		Declare Sub SelectItem
@@ -117,9 +112,7 @@ Namespace My.Sys.Forms
 		FForeColor     As Integer = -1
 		FBackColor     As Integer = -1
 	Public:
-		#ifdef __USE_GTK__
 			Dim As GtkTreeViewColumn Ptr Column
-		#endif
 		'Ordinal position within parent grid columns
 		Index As Integer
 		'Reference to containing grid control
@@ -171,9 +164,7 @@ Namespace My.Sys.Forms
 		FItems As List
 		PItem As GridRow Ptr
 	Public:
-		#ifdef __USE_GTK__
 			Declare Function FindByIterUser_Data(User_Data As Any Ptr) As GridRow Ptr
-		#endif
 		'Reference to containing grid control
 		Parent          As Control Ptr
 		Declare Property Count As Integer
@@ -197,10 +188,8 @@ Namespace My.Sys.Forms
 	Private Type GridColumns Extends My.Sys.Object
 	Private:
 		FColumns As List
-		#ifdef __USE_GTK__
 			Declare Static Sub Cell_Edited(renderer As GtkCellRendererText Ptr, path As gchar Ptr, new_text As gchar Ptr, user_data As Any Ptr)
 			Declare Static Sub Check(cell As GtkCellRendererToggle Ptr, path As gchar Ptr, user_data As Any Ptr)
-		#endif
 	Public:
 		'Reference to containing grid control
 		Parent  As Control Ptr
@@ -242,23 +231,9 @@ Namespace My.Sys.Forms
 		FSorting            As Boolean
 		FAllowEdit          As Boolean = True
 		FOwnerData          As Boolean = True
-		#ifdef __USE_WINAPI__
-			FClientRect         As Rect
-		#endif
 		'GRID PROPERTY
 		'FGridLineDrawMode       As Integer = 1
 		
-		#ifdef __USE_WINAPI__
-			FGridColorLine          As Integer = -1 'BGR(166, 166, 166) 'clSilver
-			FGridColorLineHeader    As Integer = clWhite 'BGR(166, 166, 166)'clSilver
-			FGridColorSelected      As Integer = BGR(68, 155, 235) ' &HFFFFE6 '&HFFFFDE ' &HFEE8FFFF 'BGR(210, 238, 245)'BGR(178, 214, 255)
-			FGridColorHover         As Integer = BGR(110, 228, 255)
-			FGridColorBack          As Integer = clWhite
-			FGridColorFore          As Integer = clBlack
-			FGridColorEditBack      As Integer = clHighlight 'BGR(24, 255, 255) ' &H9AFA00'clWhite
-			FGridColorEditFore      As Integer = clHighlightText 'clBlack ' &H9AFA00'clWhite
-			FGridLineWidth          As Integer = 1
-		#else
 			FGridColorLine          As Integer
 			FGridColorLineHeader    As Integer
 			FGridColorSelected      As Integer
@@ -268,25 +243,10 @@ Namespace My.Sys.Forms
 			FGridColorEditBack      As Integer
 			FGridColorEditFore      As Integer
 			FGridLineWidth          As Integer
-		#endif
 		
-		#ifdef __USE_WINAPI__
-			FGridLinePenMode        As Integer = PS_SOLID
-		#else
 			FGridLinePenMode        As Integer
-		#endif
 		Declare Sub ChangeLVExStyle(iStyle As Integer, Value As Boolean)
-		#ifndef __USE_GTK__
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-		#endif
-		#ifdef __USE_WINAPI__
-			Declare Static Sub WndProc(ByRef Message As Message)
-			Declare Static Sub HandleIsDestroyed(ByRef Sender As Control)
-			Declare Sub EditControlShow(ByVal tRow As Integer, ByVal tCol As Integer)
-			Declare Sub DrawRect(tDc As HDC, R As Rect, FillColor As Integer = -1, tSelctionRow As Integer = -1, tSelctionCol As Integer = -1)
-		#endif
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
-		#ifdef __USE_GTK__
 			Declare Static Sub Grid_RowActivated(tree_view As GtkTreeView Ptr, path As GtkTreePath Ptr, column As GtkTreeViewColumn Ptr, user_data As Any Ptr)
 			Declare Static Sub Grid_SelectionChanged(selection As GtkTreeSelection Ptr, user_data As Any Ptr)
 			Declare Static Sub Grid_Map(widget As GtkWidget Ptr, user_data As Any Ptr)
@@ -295,15 +255,7 @@ Namespace My.Sys.Forms
 			TreeSelection As GtkTreeSelection Ptr
 			ColumnTypes As GType Ptr
 			PrevIndex As Integer
-		#elseif defined(__USE_WINAPI__)
-			Declare Virtual Sub SetDark(Value As Boolean)
-			hHeader As HWND
-			headerTextColor As COLORREF
-		#endif
 	Protected:
-		#ifdef __USE_WASM__
-			Declare Virtual Function GetContent() As UString
-		#endif
 	Public:
 		'Removes all rows and columns.
 		Declare Sub Clear()
@@ -440,64 +392,6 @@ Namespace My.Sys.Forms
 End Namespace
 
 'TODO:
-#ifdef __USE_WINAPI__
-	'const LVS_ICON = &h0
-	'const LVS_REPORT = &h1
-	'const LVS_SMALLICON = &h2
-	'const LVS_LIST = &h3
-	'const LVS_TYPEMASK = &h3
-	'const LVS_SINGLESEL = &h4
-	'const LVS_SHOWSELALWAYS = &h8
-	'const LVS_SORTASCENDING = &h10
-	'const LVS_SORTDESCENDING = &h20
-	'const LVS_SHAREIMAGELISTS = &h40
-	'const LVS_NOLABELWRAP = &h80
-	'const LVS_AUTOARRANGE = &h100
-	'const LVS_EDITLABELS = &h200
-	'const LVS_OWNERDATA = &h1000
-	'const LVS_NOSCROLL = &h2000
-	'const LVS_TYPESTYLEMASK = &hfc00
-	'const LVS_ALIGNTOP = &h0
-	'const LVS_ALIGNLEFT = &h800
-	'const LVS_ALIGNMASK = &hc00
-	'const LVS_OWNERDRAWFIXED = &h400
-	'const LVS_NOCOLUMNHEADER = &h4000
-	'const LVS_NOSORTHEADER = &h8000
-	
-	Const LVS_EX_GridLINES = &h1
-	Const LVS_EX_SUBITEMIMAGES = &h2
-	Const LVS_EX_CHECKBOXES = &h4
-	Const LVS_EX_TRACKSELECT = &h8
-	Const LVS_EX_HEADERDRAGDROP = &h10
-	Const LVS_EX_FULLROWSELECT = &h20
-	Const LVS_EX_ONECLICKACTIVATE = &h40
-	Const LVS_EX_TWOCLICKACTIVATE = &h80
-	Const LVS_EX_FLATSB = &h100
-	Const LVS_EX_REGIONAL = &h200
-	Const LVS_EX_INFOTIP = &h400
-	Const LVS_EX_UNDERLINEHOT = &h800
-	Const LVS_EX_UNDERLINECOLD = &h1000
-	Const LVS_EX_MULTIWORKAREAS = &h2000
-	Const LVS_EX_LABELTIP = &h4000
-	Const LVS_EX_BORDERSELECT = &h8000
-	Const LVS_EX_DOUBLEBUFFER = &h10000
-	Const LVS_EX_HIDELABELS = &h20000
-	Const LVS_EX_SINGLEROW = &h40000
-	Const LVS_EX_SNAPTOGrid = &h80000
-	Const LVS_EX_SIMPLESELECT = &h100000
-	
-	#if _WIN32_WINNT = &h0602
-		Const LVS_EX_JUSTIFYCOLUMNS = &h200000
-		Const LVS_EX_TRANSPARENTBKGND = &h400000
-		Const LVS_EX_TRANSPARENTSHADOWTEXT = &h800000
-		Const LVS_EX_AUTOAUTOARRANGE = &h1000000
-		Const LVS_EX_HEADERINALLVIEWS = &h2000000
-		Const LVS_EX_AUTOCHECKSELECT = &h8000000
-		Const LVS_EX_AUTOSIZECOLUMNS = &h10000000
-		Const LVS_EX_COLUMNSNAPPOINTS = &h40000000
-		Const LVS_EX_COLUMNOVERFLOW = &h80000000
-	#endif
-#endif
 
 #ifndef __USE_MAKE__
 	#include once "Grid.bas"

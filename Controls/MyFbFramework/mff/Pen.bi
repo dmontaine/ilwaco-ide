@@ -13,36 +13,6 @@
 #include once "Object.bi"
 
 Namespace My.Sys.Drawing
-	#ifdef __USE_WINAPI__
-		Private Enum PenStyle
-			psSolid       = PS_SOLID
-			psDash        = PS_DASH
-			psDot         = PS_DOT
-			psDashDot     = PS_DASHDOT
-			psDashDotDot  = PS_DASHDOTDOT
-			psClear       = PS_NULL
-			psInsideFrame = PS_INSIDEFRAME
-		End Enum
-		
-		Private Enum PenMode
-			pmBlack       = R2_BLACK
-			pmWhite       = R2_WHITE
-			pmNop         = R2_NOP
-			pmNot         = R2_NOT
-			pmCopy        = R2_COPYPEN
-			pmNotCopy     = R2_NOTCOPYPEN
-			pmMergePenNot = R2_MERGEPENNOT
-			pmMaskPenNot  = R2_MASKPENNOT
-			pmMergeNotPen = R2_MERGENOTPEN
-			pmMaskNotPen  = R2_MASKNOTPEN
-			pmMerge       = R2_MERGEPEN
-			pmNotMerge    = R2_NOTMERGEPEN
-			pmMask        = R2_MASKPEN
-			pmNotMask     = R2_NOTMASKPEN
-			pmXor         = R2_XORPEN
-			pmNotXor      = R2_NOTXORPEN
-		End Enum
-	#else
 		Private Enum PenStyle
 			psSolid
 			psDash
@@ -71,7 +41,6 @@ Namespace My.Sys.Drawing
 			pmXor
 			pmNotXor
 		End Enum
-	#endif
 	
 	'Defines an object used to draw lines and curves (Windows only).
 	Private Type Pen Extends My.Sys.Object
@@ -82,9 +51,6 @@ Namespace My.Sys.Drawing
 		FSize   As Integer
 		Declare Sub Create
 	Public:
-		#ifdef __USE_WINAPI__
-			Handle  As HPEN
-		#endif
 		Parent As My.Sys.Object Ptr
 		#ifndef ReadProperty_Off
 			Declare Virtual Function ReadProperty(ByRef PropertyName As String) As Any Ptr

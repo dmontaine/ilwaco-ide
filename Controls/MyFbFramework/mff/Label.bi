@@ -42,10 +42,6 @@ Namespace My.Sys.Forms
 		AWordWraps(2)     As Integer
 		FWordWraps        As Boolean
 		FTransparent      As Boolean
-		#ifndef __USE_GTK__
-			Declare Static Sub WndProc(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-		#endif
 		Declare Static Sub GraphicChange(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Drawing.GraphicType, Image As Any Ptr, ImageType As Integer)
 	Protected:
 		Declare Virtual Sub ChangeLabelStyle
@@ -104,9 +100,6 @@ Namespace My.Sys.Forms
 		Declare Destructor
 		'OnClick    As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Label)
 		'OnDblClick As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Label)
-		#ifdef __USE_WINAPI__
-			OnDraw     As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Label, ByRef R As Rect, DC As HDC = 0)
-		#endif
 	End Type
 End Namespace
 

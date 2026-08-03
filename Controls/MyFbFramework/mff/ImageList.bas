@@ -72,9 +72,6 @@ Namespace My.Sys.Forms
 	Private Property ImageList.ImageWidth(Value As Integer)
 		If FImageWidth <> Value Then
 			FImageWidth = Value
-			#ifdef __USE_WINAPI__
-				ImageList_SetIconSize(Handle, ScaleX(FImageWidth), ScaleY(FImageHeight))
-			#endif
 			NotifyWindow
 		End If
 	End Property
@@ -86,9 +83,6 @@ Namespace My.Sys.Forms
 	Private Property ImageList.ImageHeight(Value As Integer)
 		If FImageHeight <> Value Then
 			FImageHeight = Value
-			#ifdef __USE_WINAPI__
-				ImageList_SetIconSize(Handle, ScaleX(FImageWidth), ScaleY(FImageHeight))
-			#endif
 			NotifyWindow
 		End If
 	End Property
@@ -99,36 +93,15 @@ Namespace My.Sys.Forms
 			FImageHeight = imgHeight
 			xdpi = imgxdpi
 			ydpi = imgydpi
-			#ifdef __USE_WINAPI__
-				If FList.Count <> ImageList_GetImageCount(Handle) Then
-					For i As Integer = 0 To FList.Count - 1
-						DestroyIcon FList.Item(i)
-					Next i
-					FList.Clear
-					For i As Integer = 0 To ImageList_GetImageCount(Handle) - 1
-						FList.Add ImageList_GetIcon(Handle, i, DrawingStyle Or ImageType)
-					Next i
-				End If
-				ImageList_SetIconSize(Handle, ScaleX(FImageWidth), ScaleY(FImageHeight))
-				For i As Integer = 0 To FList.Count - 1
-					ImageList_AddIcon(Handle, FList.Item(i))
-				Next i
-			#endif
 		End If
 	End Sub
 	
 	Private Property ImageList.BackColor As Integer
-		#ifdef __USE_WINAPI__
-			FBackColor = ImageList_GetBkColor(Handle)
-		#endif
 		Return FBackColor
 	End Property
 	
 	Private Property ImageList.BackColor(Value As Integer)
 		FBackColor = Value
-		#ifdef __USE_WINAPI__
-			ImageList_SetBkColor(Handle,FBackColor)
-		#endif
 		NotifyWindow
 	End Property
 	
@@ -142,17 +115,11 @@ Namespace My.Sys.Forms
 	End Property
 	
 	Private Property ImageList.Count As Integer
-		#ifdef __USE_WINAPI__
-			FCount = ImageList_GetImageCount(Handle)
-		#endif
 		Return FCount
 	End Property
 	
 	Private Property ImageList.Count(Value As Integer)
 		FCount = Value
-		#ifdef __USE_WINAPI__
-			FCount = ImageList_SetImageCount(Handle, Value)
-		#endif
 	End Property
 	
 	#ifndef ImageList_IndexOf_Off
@@ -163,98 +130,39 @@ Namespace My.Sys.Forms
 	
 	Private Sub ImageList.NotifyWindow
 		If ParentWindow Then
-			#ifdef __USE_WINAPI__
-				If ParentWindow->Handle Then RedrawWindow ParentWindow->Handle, 0, 0, RDW_ERASE Or RDW_INVALIDATE
-			#endif
 		End If
 	End Sub
 	
 	Private Sub ImageList.Create
-		#ifdef __USE_WINAPI__
-			If Handle Then ImageList_Destroy Handle
-			Handle = ImageList_Create(ScaleX(FImageWidth), ScaleY(FImageHeight), ILC_MASK Or ILC_COLOR32, InitialCount, GrowCount)
-		#endif
 	End Sub
 	
 	Private Sub ImageList.Add(Bmp As My.Sys.Drawing.BitmapType, Mask As My.Sys.Drawing.BitmapType, ByRef Key As WString = "")
-		#ifdef __USE_WINAPI__
-			If ImageList_Add(Handle, Bmp.Handle, Mask.Handle) <> -1 Then
-				FNotChange = True
-				If Not FNotAdd Then Items.Add(Key)
-				FNotChange = False
-			End If
-		#else
 			FNotChange = True
 			If Not FNotAdd Then Items.Add(Key)
 			FNotChange = False
-		#endif
 	End Sub
 	
 	Private Sub ImageList.Add(Icon As My.Sys.Drawing.Icon, ByRef Key As WString = "")
 		FNotChange = True
 		If Not FNotAdd Then Items.Add(Key)
 		FNotChange = False
-		#ifdef __USE_WINAPI__
-			ImageList_AddIcon(Handle, Icon.Handle)
-		#endif
 	End Sub
 	
 	Private Sub ImageList.Add(Cursor As My.Sys.Drawing.Cursor, ByRef Key As WString = "")
 		FNotChange = True
 		If Not FNotAdd Then Items.Add(Key)
 		FNotChange = False
-		#ifdef __USE_WINAPI__
-			ImageList_AddIcon(Handle, Cursor.Handle)
-		#endif
 	End Sub
 	
 	#ifndef ImageList_Add_WString_Off
 		Private Sub ImageList.Add(ByRef ResName As WString, ByRef Key As WString = "", ModuleHandle As Any Ptr = 0, iMaskColor As Integer = 255)
 			FNotChange = True
-			#ifdef __USE_GTK__
 				FNotAdd = True
 				Dim As My.Sys.Drawing.BitmapType Bitm
 				Bitm.LoadFromResourceName(ResName)
 				Items.Add Key, ResName, @Bitm
 				This.Add Bitm, Bitm, Key
 				FNotAdd = False
-			#elseif defined(__USE_WINAPI__)
-				Dim As Any Ptr ModuleHandle_ = ModuleHandle: If ModuleHandle = 0 Then ModuleHandle_ = GetModuleHandle(NULL)
-				FNotAdd = True
-				If FindResource(ModuleHandle_, ResName, RT_BITMAP) Then
-					Dim As My.Sys.Drawing.BitmapType Bitm
-					Bitm.LoadFromResourceName(ResName, ModuleHandle_, , , iMaskColor)
-					Items.Add Key, ResName, @Bitm
-					This.Add Bitm, Bitm, Key
-				ElseIf FindResource(ModuleHandle_, ResName, "PNG") OrElse FindResource(ModuleHandle_, ResName, RT_RCDATA) Then
-					'AddPng ResName, Key, ModuleHandle_
-					Dim As My.Sys.Drawing.BitmapType Bitm
-					Bitm.LoadFromResourceName(ResName, ModuleHandle_, , , iMaskColor)
-					Items.Add Key, ResName, @Bitm
-					This.AddMasked Bitm, iMaskColor, Key
-				ElseIf FindResource(ModuleHandle_, ResName, RT_ICON) OrElse FindResource(ModuleHandle_, ResName, RT_GROUP_ICON) Then
-					Dim As My.Sys.Drawing.Icon Ico
-					Ico.LoadFromResourceName(ResName, ModuleHandle_)
-					Items.Add Key, ResName, @Ico
-					This.Add Ico, Key
-				ElseIf FindResource(ModuleHandle_, ResName, RT_CURSOR) OrElse FindResource(ModuleHandle_, ResName, RT_GROUP_CURSOR)  Then
-					Dim As My.Sys.Drawing.Cursor Cur
-					Cur.LoadFromResourceName(ResName, ModuleHandle_)
-					Items.Add Key, ResName, @Cur
-					This.Add Cur, Key
-				Else
-					Dim As My.Sys.Drawing.BitmapType Bitm
-					If Bitm.LoadFromResourceName(ResName, ModuleHandle, , , iMaskColor) Then
-						Items.Add Key, ResName, @Bitm
-						If FImageWidth <> ScaleX(FImageWidth) Then
-							This.AddMasked Bitm, iMaskColor, Key
-						Else
-							ImageList_Add(Handle, Bitm.Handle, NULL)
-						End If
-					End If
-				End If
-				FNotAdd = False
-			#endif
 			FNotChange = False
 		End Sub
 	#endif
@@ -293,69 +201,10 @@ Namespace My.Sys.Forms
 		FNotChange = True
 		If Not FNotAdd Then Items.Add(Key)
 		FNotChange = False
-		#ifdef __USE_WINAPI__
-			If Bmp.Width <> ScaleX(FImageWidth) OrElse Bmp.Height <> ScaleY(FImageHeight) Then
-				Dim As HBITMAP HBitm
-				Dim As HWND desktop = GetDesktopWindow()
-				If (desktop <> NULL) Then
-					Dim As HDC screen_dev = GetDC(desktop)
-					If (screen_dev <> NULL) Then
-						' Create a compatible DC
-						Dim As HDC dst_hdc = CreateCompatibleDC(screen_dev)
-						If (dst_hdc = NULL) Then
-							ReleaseDC(desktop, screen_dev)
-						Else
-							' Create a new bitmap of icon size
-							HBitm = CreateCompatibleBitmap(screen_dev, ScaleX(FImageWidth), ScaleY(FImageHeight))
-							If (HBitm = NULL) Then
-								DeleteDC(dst_hdc)
-								ReleaseDC(desktop, screen_dev)
-							Else
-								'Select it into the compatible DC
-								Dim As HBITMAP old_dst_bmp = Cast(HBITMAP, SelectObject(dst_hdc, HBitm))
-								If (old_dst_bmp <> NULL) Then
-									' Draw the icon into the compatible DC
-									Dim As HDC MemDC
-									Dim As HBITMAP OldBitmap
-									Dim As BITMAP Bitmap01
-									MemDC = CreateCompatibleDC(screen_dev)
-									OldBitmap = SelectObject(MemDC, Bmp.Handle)
-									GetObject(Cast(HBITMAP, Bmp.Handle), SizeOf(Bitmap01), @Bitmap01)
-									StretchBlt(dst_hdc, 0, 0, ScaleX(FImageWidth), ScaleY(FImageHeight), MemDC, 0, 0, Bitmap01.bmWidth, Bitmap01.bmHeight, SRCCOPY)
-									' Restore settings
-									SelectObject(MemDC, OldBitmap)
-									SelectObject(dst_hdc, old_dst_bmp)
-									DeleteDC(MemDC)
-									DeleteDC(dst_hdc)
-									ReleaseDC(desktop, screen_dev)
-								End If
-								
-							End If
-						End If
-					End If
-				End If
-				ImageList_AddMasked(Handle, HBitm, iMaskColor)
-				DeleteObject(HBitm)
-			Else
-				ImageList_AddMasked(Handle, Bmp.Handle, iMaskColor)
-			End If
-		#endif
 		NotifyWindow
 	End Sub
 	
 	Private Sub ImageList.AddMasked(ByRef ResName As WString, iMaskColor As Integer, ByRef Key As WString = "", ModuleHandle As Any Ptr = 0)
-		#ifdef __USE_WINAPI__
-			Dim As My.Sys.Drawing.BitmapType Bitm
-			Dim As Any Ptr ModuleHandle_ = ModuleHandle: If ModuleHandle = 0 Then ModuleHandle_ = GetModuleHandle(NULL)
-			Bitm.LoadFromResourceName(ResName, ModuleHandle_)
-			If Bitm.Handle Then
-				FNotChange = True
-				If Not FNotAdd Then Items.Add(Key, ResName)
-				FNotChange = False
-				ImageList_AddMasked(Handle, Bitm.Handle, iMaskColor)
-				NotifyWindow
-			End If
-		#endif
 	End Sub
 	
 	'	Sub ImageList.AddPng(ByRef ResName As WString, ByRef Key As WString = "", ModuleHandle As Any Ptr = 0)
@@ -451,12 +300,6 @@ Namespace My.Sys.Forms
 	
 	#ifndef ImageList_Remove_Integer_Off
 		Private Sub ImageList.Remove(Index As Integer)
-			#ifdef __USE_WINAPI__
-				FNotChange = True
-				Items.Remove Index
-				FNotChange = False
-				ImageList_Remove(Handle, Index)
-			#endif
 		End Sub
 	#endif
 	
@@ -467,14 +310,7 @@ Namespace My.Sys.Forms
 	#ifndef ImageList_GetMask_Integer_Off
 		Private Function ImageList.GetBitmap(Index As Integer) As My.Sys.Drawing.BitmapType
 			'Dim As My.Sys.Drawing.BitmapType Ptr BMP
-			#ifdef __USE_WINAPI__
-				Dim IMIF As ImageInfo
-				'BMP = CAllocate_(SizeOf(My.Sys.Drawing.BitmapType))
-				ImageList_GetImageInfo(Handle,Index,@IMIF)
-				Return IMIF.hbmImage 'BMP->Handle =
-			#else
 				Return FBMP
-			#endif
 			'Return *BMP
 		End Function
 	#endif
@@ -482,14 +318,7 @@ Namespace My.Sys.Forms
 	#ifndef ImageList_GetMask_Integer_Off
 		Private Function ImageList.GetMask(Index As Integer) As My.Sys.Drawing.BitmapType
 			'Dim As My.Sys.Drawing.BitmapType Ptr BMP
-			#ifdef __USE_WINAPI__
-				Dim IMIF As ImageInfo
-				'BMP = CAllocate_(SizeOf(My.Sys.Drawing.BitmapType))
-				ImageList_GetImageInfo(Handle,Index,@IMIF)
-				Return IMIF.hbmMask 'BMP->Handle =
-			#else
 				Return FBMP
-			#endif
 			'Return *BMP
 		End Function
 	#endif
@@ -498,11 +327,7 @@ Namespace My.Sys.Forms
 		Private Function ImageList.GetIcon(Index As Integer) As My.Sys.Drawing.Icon
 			'Dim As My.Sys.Drawing.Icon Ptr ICO
 			'ICO = CAllocate_(SizeOf(My.Sys.Drawing.Icon))
-			#ifdef __USE_WINAPI__
-				Return ImageList_GetIcon(Handle, Index, DrawingStyle Or ImageType) 'ICO->Handle =
-			#else
 				Return 0
-			#endif
 			'Return *ICO
 		End Function
 	#endif
@@ -511,11 +336,7 @@ Namespace My.Sys.Forms
 		Private Function ImageList.GetCursor(Index As Integer) As My.Sys.Drawing.Cursor
 			'Dim As My.Sys.Drawing.Cursor Ptr CUR
 			'CUR = CAllocate_(SizeOf(My.Sys.Drawing.Cursor))
-			#ifdef __USE_WINAPI__
-				Return ImageList_GetIcon(Handle, Index, DrawingStyle Or ImageType) 'CUR->Handle =
-			#else
 				Return 0
-			#endif
 			'Return *CUR
 		End Function
 	#endif
@@ -538,13 +359,6 @@ Namespace My.Sys.Forms
 	End Function
 	
 	Private Sub ImageList.Draw(Index As Integer, ByRef Canvas As My.Sys.Drawing.Canvas, X As Integer, Y As Integer, iWidth As Integer = -1, iHeight As Integer = -1, FG As Integer = -1, BK As Integer = -1)
-		#if defined(__USE_WINAPI__) AndAlso Not defined(__USE_CAIRO__)
-			If iWidth = -1 Then
-				ImageList_Draw(Handle, Index, Canvas.Handle, X, Y, DrawingStyle Or ImageType)
-			Else
-				ImageList_DrawEx(Handle, Index, Canvas.Handle, X, Y, iWidth, iHeight, FG, BK, DrawingStyle Or ImageType)
-			End If
-		#endif
 	End Sub
 	
 	#ifndef ImageList_Clear_Off
@@ -552,9 +366,6 @@ Namespace My.Sys.Forms
 			FNotChange = True
 			Items.Clear
 			FNotChange = False
-			#ifdef __USE_WINAPI__
-				ImageList_Remove Handle, -1
-			#endif
 		End Sub
 	#endif
 	
@@ -563,23 +374,6 @@ Namespace My.Sys.Forms
 	End Operator
 	
 	Private Sub ImageList.ImageList_Change(ByRef Sender As Dictionary)
-		#ifdef __USE_WINAPI__
-			Dim As ImageList Ptr pimgList = Sender.Tag
-			If Not pimgList->FNotChange Then
-				Dim As Dictionary Items
-				Items.Text = Sender.Text
-				pimgList->Clear
-				With Items
-					For i As Integer = 0 To .Count - 1
-						If InStr(.Item(i)->Text, ".") > 0 Then
-							pimgList->AddFromFile(.Item(i)->Text, .Item(i)->Key)
-						Else
-							pimgList->Add(.Item(i)->Text, .Item(i)->Key)
-						End If
-					Next i
-				End With
-			End If
-		#endif
 	End Sub
 	
 	Private Constructor ImageList(ByVal iImageWidth As Integer = 16, ByVal iImageHeight As Integer = 16)
@@ -590,22 +384,10 @@ Namespace My.Sys.Forms
 		FImageHeight = iImageHeight
 		Items.Tag = @This
 		'Items.OnChange = @ImageList_Change
-		#ifdef __USE_GTK__
 			Handle = gtk_icon_theme_new()
-		#elseif defined(__USE_WINAPI__)
-			Handle = ImageList_Create(ScaleX(FImageWidth), ScaleY(FImageHeight), ILC_MASK Or ILC_COLOR32, InitialCount, GrowCount) 'ILC_MASK Or
-			'Create
-		#endif
 	End Constructor
 	
 	Private Destructor ImageList
-		#ifdef __USE_WINAPI__
-			If Handle Then ImageList_Destroy Handle
-			For i As Integer = 0 To FList.Count - 1
-				DestroyIcon FList.Item(i)
-			Next i
-			FList.Clear
-		#endif
 	End Destructor
 End Namespace
 

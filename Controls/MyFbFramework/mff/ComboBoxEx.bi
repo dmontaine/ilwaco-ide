@@ -32,10 +32,8 @@ Namespace My.Sys.Forms
 		FOverlayIndex   As Integer
 		FIndent   As Integer
 	Public:
-		#ifdef __USE_GTK__
 			'Native tree iterator handle (GTK+)
 			TreeIter As GtkTreeIter
-		#endif
 		'Reference to parent ComboBox
 		Parent   As Control Ptr
 		'Returns item's position in parent collection
@@ -73,9 +71,6 @@ Namespace My.Sys.Forms
 	Private:
 		FItems As List
 		PItem As ComboBoxItem Ptr
-		#ifndef __USE_GTK__
-			cbei As COMBOBOXEXITEM
-		#endif
 	Public:
 		'Reference to parent ComboBox
 		Parent   As Control Ptr
@@ -104,23 +99,12 @@ Namespace My.Sys.Forms
 	Private Type ComboBoxEx Extends ComboBoxEdit
 	Private:
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
-		#ifndef __USE_GTK__
-			Declare Static Sub WNDPROC(ByRef Message As Message)
-			Declare Static Function HookChildProc(hDlg As HWND, uMsg As UINT, wParam As WPARAM, lParam As LPARAM) As LRESULT
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-			FComboBoxDarkMode As Boolean
-		#endif
 	Protected:
 		Declare Sub UpdateListHeight
 		
 	Public:
-		#ifdef __USE_GTK__
 			'Pointer to native list storage structure.
 			ListStore As GtkListStore Ptr
-		#elseif defined(__USE_WINAPI__)
-			'Enables dark theme rendering.
-			Declare Virtual Sub SetDark(Value As Boolean)
-		#endif
 		'Collection of image-text list items.
 		Items             As ComboBoxExItems
 		'ImageList containing icons for list items.

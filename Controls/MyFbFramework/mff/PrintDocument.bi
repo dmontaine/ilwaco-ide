@@ -2,15 +2,9 @@
 #include once "Canvas.bi"
 #include once "Printer.bi"
 #include once "List.bi"
-#ifdef __USE_WINAPI__
-	#include once "win\wingdi.bi"
-#endif
 
 Namespace My.Sys.ComponentModel
 	Type PrintDocumentPage Extends Object
-		#ifdef __USE_WINAPI__
-			Handle As HENHMETAFILE
-		#endif
 		Canvas As My.Sys.Drawing.Canvas
 		Declare Constructor
 		Declare Destructor
@@ -36,9 +30,6 @@ Namespace My.Sys.ComponentModel
 	'Defines a reusable object that sends output to a printer (Windows only).
 	Type PrintDocument Extends Component
 	Private:
-		#ifdef __USE_WINAPI__
-			Declare Sub Paint(hwnd As HWND, hdcDestination As HDC, ByVal PageNumber As Integer)
-		#endif
 	Public:
 		#ifndef ReadProperty_Off
 			Declare Function ReadProperty(PropertyName As String) As Any Ptr

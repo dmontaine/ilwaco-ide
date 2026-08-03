@@ -13,10 +13,6 @@ Namespace My.Sys.Forms
 	'Provides an empty control that can be used to create other controls. A Control authored in VisualFBEditor (Windows, Linux).
 	Private Type UserControl Extends ContainerControl
 	Private:
-		#ifndef __USE_GTK__
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-			Declare Static Sub WndProc(ByRef Message As Message)
-		#endif
 	Public:
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
 		'Canvas        As My.Sys.Drawing.Canvas

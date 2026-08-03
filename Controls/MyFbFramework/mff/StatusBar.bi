@@ -18,7 +18,6 @@ Namespace My.Sys.Forms
 	#define QStatusBar(__Ptr__) (*Cast(StatusBar Ptr, __Ptr__))
 	#define QStatusPanel(__Ptr__) (*Cast(StatusPanel Ptr, __Ptr__))
 	
-	#ifdef __USE_GTK__
 		Private Enum BevelStyle
 			pbLowered
 			pbNone
@@ -27,16 +26,6 @@ Namespace My.Sys.Forms
 			pbRtlReading
 			pbNoTabParsing
 		End Enum
-	#else
-		Private Enum BevelStyle
-			pbLowered    = 0
-			pbNone       = SBT_NOBORDERS
-			pbRaised     = SBT_POPOUT
-			pbOwnerDraw  = SBT_OWNERDRAW
-			pbRtlReading = SBT_RTLREADING
-			pbNoTabParsing = SBT_NOTABPARSING
-		End Enum
-	#endif
 	
 	'`StatusPanel` - Represents an individual panel within a StatusBar control for displaying status information (Windows, Linux).
 	Private Type StatusPanel Extends My.Sys.Object
@@ -62,12 +51,10 @@ Namespace My.Sys.Forms
 		StatusBarControl As My.Sys.Forms.Control Ptr
 		'Returns panel's position in collection (zero-based)
 		Index      As Integer
-		#ifdef __USE_GTK__
 			'Custom message ID for event handling
 			message_id As guint
 			'Internal identifier for localization support
 			label As GtkWidget Ptr
-		#endif
 		'Gets/sets icon displayed alongside text
 		Icon As My.Sys.Drawing.Icon
 		Declare Property Alignment As Integer
@@ -106,13 +93,7 @@ Namespace My.Sys.Forms
 		FSimplePanel  As Boolean
 		FSizeGrip     As Boolean
 		AStyle(2)     As Integer
-		#ifdef __USE_GTK__
 			Dim As guint context_id
-		#else
-			Declare Static Sub WndProc(ByRef Message As Message)
-			Declare Virtual Sub ProcessMessage(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As My.Sys.Forms.Control)
-		#endif
 	Public:
 		#ifndef ReadProperty_Off
 			'Loads properties from persistence stream

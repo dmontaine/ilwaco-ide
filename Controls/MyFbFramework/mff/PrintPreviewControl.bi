@@ -15,12 +15,7 @@ Namespace My.Sys.Forms
 	'`PrintPreviewControl` - Displays document pages with zoom/scroll capabilities and print layout visualization (Windows only).
 	Private Type PrintPreviewControl Extends Control
 	Private:
-		#ifndef __USE_GTK__
-			Declare Static Sub WNDPROC(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-		#else
 			
-		#endif
 	Protected:
 		FZoom As Integer
 		Dim As Integer FPageWidth, FPageLength, FPageSize

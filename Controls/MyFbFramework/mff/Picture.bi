@@ -34,17 +34,9 @@ Namespace My.Sys.Forms
 		ARealSizeImage(2)   As Integer
 		ARealSizeControl(2) As Integer
 		ACenterImage(2)     As Integer
-		#ifdef __USE_GTK__
 			ImageWidget        As GtkWidget Ptr
-		#else
-			Declare Static Sub WndProc(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-		#endif
 		Declare Static Sub GraphicChange(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Drawing.GraphicType, Image As Any Ptr, ImageType As Integer)
 	Protected:
-		#ifdef __USE_WASM__
-			Declare Virtual Function GetContent() As UString
-		#endif
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
 	Public:
 		Graphic As My.Sys.Drawing.GraphicType
@@ -75,9 +67,6 @@ Namespace My.Sys.Forms
 		Declare Destructor
 		'OnClick    As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Picture)
 		'OnDblClick As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Picture)
-		#ifdef __USE_WINAPI__
-			OnDraw As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Picture, ByRef R As My.Sys.Drawing.Rect, DC As HDC)
-		#endif
 	End Type
 End Namespace
 #ifndef __USE_MAKE__

@@ -847,42 +847,11 @@ Function _InitPlugout(ByVal filename As String, _
 End Function
 
 pluglist:
-#ifdef __FB_WIN32__
- #ifndef __FB_64BIT__
-  #ifndef NO_PLUG_MM  
-Data "fbsound-mm-32.dll"
-  #endif  
-  #ifndef NO_PLUG_DS 
-Data "fbsound-ds-32.dll"
-  #endif
- #else
-  #ifndef NO_PLUG_MM  
-Data "fbsound-mm-64.dll"
-  #endif
-  #ifndef NO_PLUG_DS 
-Data "fbsound-ds-64.dll"
-  #endif 
- #endif 
- 
-#else
 
- #ifndef __FB_64BIT__
-  #ifndef NO_PLUG_ALSA
-Data "libfbsound-alsa-32.so"
-  #endif  
-  #ifndef NO_PLUG_DSP
-Data "libfbsound-dsp-32.so"
-  #endif
-  #ifndef NO_PLUG_ARTS  
-Data "libfbsound-arts-32.so"
-  #endif
- #else
   ' linux 64-bit 
   #ifndef NO_PLUG_ALSA
 Data "libfbsound-alsa-64.so"
   #endif  
- #endif 
-#endif
 
 Data "" ' end of list
   

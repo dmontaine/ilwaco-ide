@@ -27,9 +27,7 @@ Namespace My.Sys.Forms
 	Private Type ToolGroupButtons Extends Object
 	Private:
 		FButtons As List
-		#ifdef __USE_GTK__
 			Declare Static Sub ToolButtonClicked(gtoolbutton As GtkToolButton Ptr, user_data As Any Ptr)
-		#endif
 	Public:
 		Parent   As My.Sys.Object Ptr
 		Declare Property Count As Integer
@@ -56,9 +54,7 @@ Namespace My.Sys.Forms
 	Protected:
 		FName           As WString Ptr
 	Public:
-		#ifdef __USE_GTK__
 			Widget As GtkWidget Ptr
-		#endif
 		Tag           As Any Ptr
 		Ctrl       As Control Ptr
 		Buttons		As ToolGroupButtons
@@ -131,9 +127,6 @@ Namespace My.Sys.Forms
 		Declare Static Sub HandleIsDestroyed(ByRef Sender As Control)
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
 		Declare Sub GetDropDownMenuItems
-		#ifdef __USE_WINAPI__
-			Declare Virtual Sub SetDark(Value As Boolean)
-		#endif
 	Public:
 		'Collection of tool category groups
 		Groups          As ToolGroups

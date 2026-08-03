@@ -15,23 +15,11 @@
 #include once "Dictionary.bi"
 #include once "Form.bi"
 Dim Shared As Dictionary mlKeys
-#ifdef __USE_GTK__
 	'#ifndef __FB_WIN32__
 	'	#include once "crt/linux/unistd.bi"
 	'#endif
-	#ifdef __USE_GTK4__
-		#include once "gir_headers/Gir/GModule-2.0.bi"
-	#else
 		#include once "gmodule.bi"
-	#endif
-#elseif defined(__USE_WINAPI__)
-	#include once "win/winver.bi"
-#endif
-#ifdef __USE_GTK4__
-	#define generic_gtk_init() gtk_init()
-#else
 	#define generic_gtk_init() gtk_init(0, 0)
-#endif
 #ifndef APP_TITLE
 	#define APP_TITLE ""
 #endif
@@ -131,17 +119,9 @@ Namespace My
 		FMainForm       As My.Sys.Forms.Form Ptr
 		Declare Sub GetControls
 		Declare Sub EnumControls(Control As My.Sys.Forms.Control)
-		#ifdef __USE_WINAPI__
-			Declare Static Function EnumThreadWindowsProc(FWindow As HWND,LData As LPARAM) As BOOL
-			Declare Static Function EnumFontsProc(LOGFONT As LOGFONT Ptr, TEXTMETRIC As TEXTMETRIC Ptr, FontStyle As DWORD, hData As LPARAM) As Integer
-		#endif
 		Declare Sub GetFonts
 		Declare Sub GetForms
 		As Byte initialized
-		#ifdef __USE_WINAPI__
-			Dim m_hMutex As HANDLE
-			Dim As Any Ptr hLibUser32
-		#endif
 		As Any Ptr _vinfo
 		As String TranslationString
 	Public:
@@ -155,11 +135,6 @@ Namespace My
 		MouseX              As Integer
 		MouseY              As Integer
 		HelpFile            As String
-		#ifdef __USE_WINAPI__
-			Instance        As HINSTANCE
-		#elseif defined(__USE_JNI__)
-			Instance        As jobject
-		#endif
 		Declare Property ActiveForm As My.Sys.Forms.Form Ptr
 		Declare Property ActiveForm(Value As My.Sys.Forms.Form Ptr)
 		Declare Property ActiveMDIChild As My.Sys.Forms.Form Ptr
@@ -207,9 +182,6 @@ Namespace My
 		Declare Sub HelpContext(ContextID As Long)
 		Declare Sub HelpJump(TopicID As String)
 		Declare Function IndexOfForm(Form As My.Sys.Forms.Form Ptr) As Integer
-		#ifdef __USE_WINAPI__
-			Declare Function FindControl Overload(ControlHandle As HWND) As My.Sys.Forms.Control Ptr
-		#endif
 		Declare Function FindControl(ControlName As String) As My.Sys.Forms.Control Ptr
 		Declare Function IndexOfControl(Control As My.Sys.Forms.Control Ptr) As Integer
 		Declare Constructor

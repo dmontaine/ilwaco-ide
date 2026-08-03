@@ -1,10 +1,6 @@
 ﻿#include once "UString.bi"
 
-#ifdef __USE_WASM__
-	#define GrowLength 2
-#else
 	#define GrowLength 1
-#endif
 
 Private Constructor UString()
 	m_Length = 0
@@ -204,12 +200,7 @@ End Function
 #else
 	Private Sub WReAllocate(ByRef subject As WString Ptr, lLen As Integer)
 		If subject <> 0 Then
-			#ifdef __USE_GTK__
 				subject = _Reallocate(subject, (lLen + 1) * SizeOf(WString) * GrowLength)
-			#else
-				_Deallocate(subject)
-				subject = _CAllocate((lLen + 1) * SizeOf(WString) * GrowLength)
-			#endif
 		Else
 			subject = _CAllocate((lLen + 1) * SizeOf(WString) * GrowLength)
 		End If
@@ -400,11 +391,7 @@ Private Function UString.AppendBuffer(ByVal addrMemory As Any Ptr, ByVal NumByte
 	Else
 		m_Capacity -= NumBytes
 	End If
-	#ifdef __USE_WINAPI__
-		memcpy(m_Data + m_BufferLen, addrMemory, NumBytes)
-	#else
 		Fb_MemCopy(* (m_Data + m_BufferLen), addrMemory, NumBytes)
-	#endif
 	(*m_Data)[newLen] = 0
 	m_BufferLen += NumBytes
 	Return True
@@ -1765,40 +1752,18 @@ End Function
 	End Function
 #endif
 
-#if (Not defined(__USE_JNI__)) AndAlso (Not defined(__USE_WASM__))
 	Private Function FileExists (ByRef FileName As UString) As Boolean
-		#ifdef __USE_GTK__
 			If *FileName.vptr <> "" AndAlso g_file_test(ToUtf8(*FileName.vptr), G_FILE_TEST_EXISTS) Then
 				Return True
 			Else
 				Return False
 			End If
-		#elseif __USE_JNI__
-			Return 0
-		#else
-			If PathFileExistsW(FileName.vptr) Then
-				Return True
-			Else
-				Return False
-			End If
-		#endif
 	End Function
 	
 	Private Function FileExists Overload(ByRef FileName As WString) As Boolean
-		#ifdef __USE_GTK__
 			If FileName <> "" AndAlso g_file_test(ToUtf8(FileName), G_FILE_TEST_EXISTS) Then
 				Return True
 			Else
 				Return False
 			End If
-		#elseif __USE_JNI__
-			Return 0
-		#else
-			If PathFileExistsW(FileName) Then
-				Return True
-			Else
-				Return False
-			End If
-		#endif
 	End Function
-#endif

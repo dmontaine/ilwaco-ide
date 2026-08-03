@@ -56,9 +56,6 @@ Namespace My
 	
 	Private Property Application.DarkMode(Value As Boolean)
 		FDarkMode = Value
-		#ifdef __USE_WINAPI__
-			If g_buildNumber = 0 Then InitDarkMode
-		#endif
 		SetDarkMode Value, False
 	End Property
 	
@@ -89,13 +86,6 @@ Namespace My
 	Private Property Application.Icon(value As My.Sys.Drawing.Icon)
 		Dim As Integer i
 		FIcon = value
-		#ifdef __USE_WINAPI__
-			If FIcon.Handle Then
-				For i = 0 To FormCount -1
-					SendMessage Forms[i]->Handle,WM_SETICON,ICON_BIG,CInt(FIcon.Handle)
-				Next i
-			End If
-		#endif
 	End Property
 	
 	Private Property Application.CurLanguagePath ByRef As WString
@@ -157,20 +147,7 @@ Namespace My
 			If FTitle = 0 Then
 				WLet(FTitle, GetVerInfo("ApplicationTitle"))
 				If *FTitle = "" Then
-					#ifdef __USE_GTK__
 						WLet(FTitle, APP_TITLE)
-					#elseif defined(__USE_WINAPI__)
-						For i As Integer = 0 To FormCount -1
-							If (GetWindowLong(Forms[i]->Handle, GWL_EXSTYLE) And WS_EX_APPWINDOW) = WS_EX_APPWINDOW Then
-								WLet(FTitle, Forms[i]->Text)
-								Exit For
-							End If
-						Next i
-					#elseif defined(__USE_WASM__)
-						If MainForm Then
-							WLet(FTitle, MainForm->Text)
-						End If
-					#endif
 				End If
 			End If
 			Return *FTitle
@@ -182,19 +159,7 @@ Namespace My
 	End Property
 	
 	Private Function Application.PrevInstance As Boolean
-		#ifdef __USE_WINAPI__
-			m_hMutex = CreateMutex(NULL, True, ExeName)
-			If GetLastError = ERROR_ALREADY_EXISTS Then
-				'ReleaseMutex m_hMutex
-				CloseHandle(m_hMutex)
-				Debug.Print ML("There is an instance of this program already running!")
-				Return True
-			Else
-				Return False
-			End If
-		#else
 			Return False
-		#endif
 	End Function
 	
 	Private Function Application.Path ByRef As WString
@@ -202,12 +167,8 @@ Namespace My
 		Dim As WString * 256 Tx
 		Dim As WString * 256 s, En
 		Dim As Integer L, i, k
-		#if defined(__FB_WIN32__) AndAlso Not defined(__USE_GTK4__)
-			L = GetModuleFileName(GetModuleHandle(NULL), Tx, 255)
-		#else
 			Tx = Command(0)
 			L = Len(Tx)
-		#endif
 		s = .Left(Tx, L)
 		WLet(FFileName, s)
 		k = InStrRev(s, Any ":/\")
@@ -229,12 +190,8 @@ Namespace My
 		Dim As WString * 256 Tx
 		Dim As WString * 256 s, En
 		Dim As Integer L, i, k
-		#if defined(__FB_WIN32__) AndAlso Not defined(__USE_GTK4__)
-			L = GetModuleFileName(GetModuleHandle(NULL), Tx, 255)
-		#else
 			Tx = Command(0)
 			L = Len(Tx)
-		#endif
 		s = .Left(Tx, L)
 		WLet(FFileName, s)
 		k = InStrRev(s, Any ":/\")
@@ -255,12 +212,8 @@ Namespace My
 		Dim As WString * 256 Tx
 		Dim As WString * 256 s, En
 		Dim As Integer L, i, k
-		#if defined(__FB_WIN32__) AndAlso Not defined(__USE_GTK4__)
-			L = GetModuleFileName(GetModuleHandle(NULL), Tx, 255)
-		#else
 			Tx = Command(0)
 			L = Len(Tx)
-		#endif
 		s = .Left(Tx, L)
 		WLet(FFileName, s)
 		k = InStrRev(s, Any ":/\")
@@ -310,11 +263,7 @@ Namespace My
 	
 	Private Property Application.MainForm(Value As My.Sys.Forms.Form Ptr)
 		FMainForm = Value
-		#ifdef __USE_GTK__
 			If FMainForm AndAlso FMainForm->Handle Then g_signal_connect(FMainForm->Handle, "delete-event", G_CALLBACK(@gtk_main_quit), NULL)
-		#elseif defined(__USE_JNI__)
-			My.Sys.Forms.AppMainForm = FMainForm
-		#endif
 	End Property
 	
 	#ifndef Application_ControlCount_Get_Off
@@ -409,126 +358,33 @@ Namespace My
 	'	End Property
 	
 	Private Sub Application.HelpCommand(CommandID As Integer,FData As Long)
-		#ifdef __USE_WINAPI__
-			If MainForm Then WinHelp(MainForm->Handle, HelpFile, CommandID, FData)
-		#endif
 	End Sub
 	
 	Private Sub Application.HelpContext(ContextID As Long)
-		#ifdef __USE_WINAPI__
-			If MainForm Then WinHelp(MainForm->Handle,HelpFile,HELP_CONTEXT,ContextID)
-		#endif
 	End Sub
 	
 	Private Sub Application.HelpJump(TopicID As String)
 		Dim StrFmt As String
 		StrFmt = "JumpID(" + Chr(34) + Chr(34) + ","+ Chr(34) + TopicID + Chr(34) + ")"+ Chr(0)
 		If MainForm Then
-			#ifdef __USE_WINAPI__
-				If WinHelp(MainForm->Handle,HelpFile,HELP_COMMAND,CInt(StrPtr(StrFmt))) = 0 Then
-					WinHelp(MainForm->Handle,HelpFile,HELP_CONTENTS,NULL)
-				End If
-			#endif
 		End If
 	End Sub
 	
 	Private Sub Application.Run
-		#ifdef __USE_GTK__
 			'gdk_threads_enter()
 			gtk_main()
 			'gdk_threads_leave()
-		#elseif defined(__USE_WINAPI__)
-			Dim As MSG msg
-			If FormCount = 0 Then
-				End 10
-			End If
-			Dim mess As Message
-			Dim TranslateAndDispatch As Boolean
-			While GetMessage(@msg, NULL, 0, 0)
-				TranslateAndDispatch = True
-				If FActiveForm <> 0 Then
-					If FActiveForm->Accelerator Then TranslateAndDispatch = TranslateAccelerator(FActiveForm->Handle, FActiveForm->Accelerator, @msg) = 0
-					'If FActiveForm->Parent AndAlso FActiveForm->Parent->Accelerator Then TranslateAndDispatch = TranslateAccelerator(FActiveForm->Parent->Handle, FActiveForm->Parent->Accelerator, @msg) = 0
-					If TranslateAndDispatch Then
-						Select Case msg.message
-						Case WM_KEYDOWN
-							Select Case msg.wParam
-							Case VK_TAB ', VK_LEFT, VK_UP, VK_DOWN, VK_RIGHT, VK_PRIOR, VK_NEXT
-								'If Not GetFocus() = FActiveForm->Handle Then
-								FActiveForm->SelectNextControl(GetKeyState(VK_SHIFT) And 8000)
-								'TranslateAndDispatch = False
-								'ElseIf IsDialogMessage(FActiveForm->Handle, @Msg) Then
-								'	TranslateAndDispatch = False
-								'End If
-								'								Dim KeyStateArray(256) As Byte
-								'								Dim As Integer OldState
-								'								Dim As Boolean bSet
-								'								If Not GetFocus() = FActiveForm->Handle Then
-								'									bSet = True
-								'									GetKeyboardState(ByVal VarPtr(keyStateArray(0)))
-								'									OldState = KeyStateArray(VK_SHIFT)
-								'									KeyStateArray(VK_SHIFT) = IIf(GetKeyState(VK_SHIFT) And 8000, 0, -127)
-								'									SetKeyboardState(ByVal VarPtr(keyStateArray(0)))
-								'								End If
-								'								If IsDialogMessage(FActiveForm->Handle, @Msg) Then
-								'									TranslateAndDispatch = False
-								'								End If
-								'								If bSet Then
-								'									KeyStateArray(VK_SHIFT) = OldState
-								'									SetKeyboardState(ByVal VarPtr(keyStateArray(0)))
-								'								End If
-							End Select
-						End Select
-					End If
-				End If
-				If OnMessage Then
-					mess = Type(@This, msg.hwnd, msg.message, msg.wParam, msg.lParam, 0, LoWord(msg.wParam), HiWord(msg.wParam), LoWord(msg.lParam), HiWord(msg.lParam), 0)
-					OnMessage(mess)
-					If mess.Result Then TranslateAndDispatch = False
-				End If
-				If FActiveForm <> 0 AndAlso FActiveForm->KeyPreview Then
-					Select Case msg.message
-					Case WM_KEYDOWN, WM_KEYUP, WM_CHAR
-						mess = Type(@This, msg.hwnd, msg.message, msg.wParam, msg.lParam, 0, LoWord(msg.wParam), HiWord(msg.wParam), LoWord(msg.lParam), HiWord(msg.lParam), 0)
-						FActiveForm->ProcessMessage(mess)
-						If mess.Result Then TranslateAndDispatch = False
-					End Select
-				End If
-				If TranslateAndDispatch Then
-					TranslateMessage @msg
-					DispatchMessage @msg
-				End If
-				MouseX = msg.pt.X
-				MouseY = msg.pt.Y
-				If OnMouseMove Then OnMouseMove(MouseX, MouseY)
-			Wend
-		#endif
 	End Sub
 	
 	Private Sub Application.Terminate
-		#ifdef __USE_WINAPI__
-			PostQuitMessage(0)
-		#endif
 		End 1
 	End Sub
 	
 	#ifndef Application_DoEvents_Off
 		Private Sub Application.DoEvents
-			#ifdef __USE_GTK__
 				While gtk_events_pending()
 					gtk_main_iteration
 				Wend
-			#elseif defined(__USE_WINAPI__)
-				Dim As MSG M
-				While PeekMessage(@M, NULL, 0, 0, PM_REMOVE)
-					If M.message <> WM_QUIT Then
-						TranslateMessage @M
-						DispatchMessage @M
-					Else
-						If (GetWindowLong(M.hwnd,GWL_EXSTYLE) And WS_EX_APPWINDOW) = WS_EX_APPWINDOW Then End -1
-					End If
-				Wend
-			#endif
 		End Sub
 	#endif
 	
@@ -540,17 +396,6 @@ Namespace My
 		Return -1
 	End Function
 	
-	#ifdef __USE_WINAPI__
-		Private Function Application.FindControl(ControlHandle As HWND) As My.Sys.Forms.Control Ptr
-			Dim As Integer i
-			If Controls Then
-				For i = 0 To ControlCount -1
-					If Controls[i]->Handle = ControlHandle Then Return Controls[i]
-				Next i
-			End If
-			Return NULL
-		End Function
-	#endif
 	
 	Private Function Application.FindControl(ControlName As String) As My.Sys.Forms.Control Ptr
 		Dim As Integer i
@@ -572,30 +417,9 @@ Namespace My
 		Return -1
 	End Function
 	
-	#ifdef __USE_WINAPI__
-		Private Function Application.EnumThreadWindowsProc(FWindow As HWND, LData As LPARAM) As BOOL
-			Dim As My.Sys.Forms.Form Ptr AForm
-			Dim As Application Ptr Appl
-			Appl = Cast(Application Ptr, LData)
-			AForm = Cast(My.Sys.Forms.Form Ptr, GetWindowLongPtr(FWindow, GWLP_USERDATA))
-			If Appl Then
-				If AForm Then
-					With QApplication(Appl)
-						.FFormCount += 1
-						.FForms = _Reallocate(.FForms, SizeOf(My.Sys.Forms.Form Ptr) * .FFormCount)
-						.FForms[.FFormCount - 1] = AForm
-					End With
-				End If
-			End If
-			Return True
-		End Function
-	#endif
 	
 	Private Sub Application.GetForms
 		FFormCount = 0
-		#ifdef __USE_WINAPI__
-			EnumThreadWindows GetCurrentThreadId, Cast(WNDENUMPROC,@EnumThreadWindowsProc),Cast(LPARAM,@This)
-		#endif
 	End Sub
 	
 	#ifndef Application_GetControls_Off
@@ -618,27 +442,12 @@ Namespace My
 		End Sub
 	#endif
 	
-	#ifdef __USE_WINAPI__
-		Private Function Application.EnumFontsProc(LogFont As LOGFONT Ptr, TextMetric As TEXTMETRIC Ptr, FontStyle As DWORD, hData As LPARAM) As Integer
-			Cast(WStringList Ptr, hData)->Add(LogFont->lfFaceName)
-			Return True
-		End Function
-	#endif
 	
 	Private Sub Application.GetFonts
-		#ifdef __USE_WINAPI__
-			Dim DC    As HDC
-			Dim LFont As LOGFONTA
-			DC = GetDC(HWND_DESKTOP)
-			LFont.lfCharSet = DEFAULT_CHARSET
-		#endif
 		Fonts.Clear
 		'       EnumFontFamilies(DC,NULL,@EnumFontsProc,Cint(@Fonts)) 'OR
 		'EnumFontFamiliesEx(DC,@LFont,@EnumFontsProc,CInt(@s), 0)
 		'EnumFonts(DC,NULL,@EnumFontsProc,CInt(NULL))
-		#ifdef __USE_WINAPI__
-			ReleaseDC(HWND_DESKTOP,DC)
-		#endif
 	End Sub
 	
 	Private Operator Application.Cast As Any Ptr
@@ -647,38 +456,18 @@ Namespace My
 	
 	#ifndef Application_GetVerInfo_Off
 		Private Function Application.GetVerInfo(ByRef InfoName As String) As String
-			#if defined(__FB_WIN32__) AndAlso Not defined(__USE_GTK4__)
-				Dim As ULong iret
-				If TranslationString = "" Then Return ""
-				Dim As WString Ptr value = 0
-				Dim As String FullInfoName = $"\StringFileInfo\" & TranslationString & "\" & InfoName
-				If VerQueryValue(_vinfo, FullInfoName, @value, @iret) Then
-					''~ value = cast( zstring ptr, vqinfo )
-				End If
-				Return WGet(value)
-			#else
 				If InfoName = "ProductVersion" Then
 					Return VER_MAJOR & "." & VER_MINOR & "." & VER_PATCH
 				ElseIf InfoName = "FileVersion" Then
 					Return VER_MAJOR & "." & VER_MINOR & "." & VER_PATCH & "." & VER_BUILD
 				End If
-			#endif
 		End Function
 	#endif
 	
 	Private Constructor Application
 		If pApp = 0 Then pApp = @This
-		#ifdef __USE_GTK__
 			'g_thread_init(NULL)
-			#ifdef __USE_GTK4__
-				gdk_threads_init()
-			#else
-				#ifdef __FB_WIN32__
-					g_thread_init(NULL)
-				#else
 					gdk_threads_init()
-				#endif
-			#endif
 			generic_gtk_init()
 			
 			gtk_icon_theme_append_search_path(gtk_icon_theme_get_default(), ToUtf8(ExePath & "/resources"))
@@ -694,46 +483,6 @@ Namespace My
 			'	End If
 			'	l = l->Next
 			'Wend
-		#elseif defined(__USE_JNI__)
-			
-		#elseif defined(__USE_WINAPI__)
-			Const ICC_ALL =  _
-			ICC_ANIMATE_CLASS      Or _
-			ICC_BAR_CLASSES        Or _
-			ICC_COOL_CLASSES       Or _
-			ICC_DATE_CLASSES       Or _
-			ICC_HOTKEY_CLASS       Or _
-			ICC_INTERNET_CLASSES   Or _
-			ICC_LINK_CLASS         Or _
-			ICC_LISTVIEW_CLASSES   Or _
-			ICC_NATIVEFNTCTL_CLASS Or _
-			ICC_PAGESCROLLER_CLASS Or _
-			ICC_PROGRESS_CLASS     Or _
-			ICC_STANDARD_CLASSES   Or _
-			ICC_TAB_CLASSES        Or _
-			ICC_TREEVIEW_CLASSES   Or _
-			ICC_UPDOWN_CLASS       Or _
-			ICC_USEREX_CLASSES
-			Dim As INITCOMMONCONTROLSEX ccx
-			With ccx
-				.dwSize = SizeOf(INITCOMMONCONTROLSEX)
-				.dwICC  = ICC_ALL ' ICC_STANDARD_CLASSES
-			End With
-			INITCOMMONCONTROLSEX(@ccx)
-			'InitCommonControls
-			Instance = GetModuleHandle(NULL)
-			OleInitialize(NULL)
-			hLibUser32 = DyLibLoad("user32.dll")
-			If hLibUser32 <> 0 Then
-				#if Not _WIN32_WINNT >= &h0602
-					GetPointerInfo = DyLibSymbol(hLibUser32, "GetPointerInfo")
-				#endif
-				#if Not _WIN32_WINNT >= &h0601
-					GetGestureInfo = DyLibSymbol(hLibUser32, "GetGestureInfo")
-					CloseGestureInfoHandle = DyLibSymbol(hLibUser32, "CloseGestureInfoHandle")
-				#endif
-			End If
-		#endif
 		WLet(FCurLanguagePath, ExePath & "/Languages/")
 		WLet(FLanguage, "English")
 		WLet(FCurLanguage, "English")
@@ -741,26 +490,6 @@ Namespace My
 		This.initialized = False
 		This._vinfo = 0
 		ExeName
-		#if defined(__FB_WIN32__) AndAlso Not defined(__USE_GTK4__)
-			Dim As DWORD ret, discard
-			ret = GetFileVersionInfoSize(FFileName, @discard)
-			If ret <> 0 Then
-				This._vinfo = _Allocate(ret)
-				If This._vinfo Then
-					If GetFileVersionInfo(FFileName, 0, ret, This._vinfo) Then
-						Dim As Unsigned Short Ptr ulTranslation
-						Dim As ULong iret
-						If VerQueryValue(_vinfo, $"\VarFileInfo\Translation", @ulTranslation, @iret) Then
-							Dim As WString * LOCALE_NAME_MAX_LENGTH AppLanguage
-							GetLocaleInfo(ulTranslation[0], LOCALE_SENGLANGUAGE, @AppLanguage, LOCALE_NAME_MAX_LENGTH)
-							WLet(FLanguage, AppLanguage)
-							TranslationString = Hex(ulTranslation[0], 4) & Hex(ulTranslation[1], 4)
-						End If
-						This.initialized = True
-					End If
-				End If
-			End If
-		#endif
 	End Constructor
 	
 	Private Destructor Application
@@ -775,21 +504,6 @@ Namespace My
 		If FCurLanguagePath Then _Deallocate( FCurLanguagePath)
 		If FLanguage Then _Deallocate( FLanguage)
 		If This._vinfo <> 0 Then _Deallocate((This._vinfo)) : This._vinfo = 0
-		#ifdef __USE_WINAPI__
-			If m_hMutex <> NULL Then
-				ReleaseMutex(m_hMutex)
-				CloseHandle(m_hMutex)
-			End If
-			If hLibUser32 <> 0 Then DyLibFree(hLibUser32)
-			DeleteObject hbrBkgnd
-			DeleteObject hbrHlBkgnd
-			DeleteObject hbrBkgndMenu
-			DeleteObject g_brItemBackground
-			DeleteObject g_brItemBackgroundHot
-			DeleteObject g_brItemBackgroundSelected
-			UnloadD2D1
-			OleUninitialize()
-		#endif
 	End Destructor
 End Namespace
 
@@ -816,11 +530,7 @@ Namespace Debug
 	
 	#ifndef Debug_Clear_Off
 		Private Sub Clear
-			#ifdef __USE_WINAPI__
-				If IsWindow(DebugWindowHandle) Then SendMessage(DebugWindowHandle, WM_SETTEXT, Cast(WPARAM, 0), Cast(LPARAM, @""))
-			#elseif defined(__USE_GTK__)
 				If GTK_IS_TEXT_VIEW(DebugWindowHandle) Then gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(DebugWindowHandle)), !"\0", -1)
-			#endif
 		End Sub
 	#endif
 	
@@ -856,42 +566,9 @@ Namespace Debug
 				End If
 				CloseFile_(Fn)
 			End If
-			#ifdef __USE_GTK__
 				If bPrintMsg OrElse bPrintToDebugWindow Then .Print Msg
-			#else
-				If bPrintMsg Then .Print Msg
-			#endif
 			If bShowMsg Then MsgBox Msg, "Visual FB Editor"
 			If bPrintToDebugWindow Then
-				#ifdef __USE_WINAPI__
-					If IsWindow(DebugWindowHandle) Then
-						Dim As HWND TabPageHandle = GetParent(DebugWindowHandle)
-						Dim As HWND TabControlHandle = GetParent(TabPageHandle)
-						Dim As Integer Index = Cast(Integer, GetProp(TabPageHandle, "@@@Index"))
-						If SendMessage(TabControlHandle, TCM_GETCURSEL, 0, 0) <> Index Then
-							SendMessage(TabControlHandle, TCM_SETCURSEL, Index, 0)
-							ShowWindow(TabPageHandle, SW_SHOW)
-							BringWindowToTop(TabPageHandle)
-						End If
-						Dim As WString Ptr SelText
-						WLet(SelText, Msg & Chr(13) & Chr(10))
-						Dim As Integer AddingTextLength = Len(*SelText)
-						Dim As Integer TextLength = SendMessage(DebugWindowHandle, WM_GETTEXTLENGTH, 0, 0)
-						If TextLength + AddingTextLength > 64000 Then
-							Dim As WString Ptr Text
-							WReAllocate(Text, TextLength)
-							GetWindowText(DebugWindowHandle, Text, TextLength + 1)
-							Dim As Integer LineFromCharIndex = SendMessage(DebugWindowHandle, EM_LINEFROMCHAR, AddingTextLength, 0)
-							Dim As Integer CharIndexFromLine = SendMessage(DebugWindowHandle, EM_LINEINDEX, LineFromCharIndex + 1, 0)
-							WAdd(Text, Mid(*Text, CharIndexFromLine) & *SelText)
-							SetWindowText(DebugWindowHandle, Text)
-							WDeAllocate(Text)
-						Else
-							SendMessage(DebugWindowHandle, EM_REPLACESEL, 0, CInt(SelText))
-						End If
-						WDeAllocate(SelText)
-					End If
-				#elseif defined(__USE_GTK__)
 					If 1 = 0 AndAlso GTK_IS_TEXT_VIEW(DebugWindowHandle) Then
 						Dim As GtkWidget Ptr TabPageHandle = gtk_widget_get_parent(DebugWindowHandle)
 						Dim As GtkWidget Ptr TabControlHandle = gtk_widget_get_parent(TabPageHandle)
@@ -908,18 +585,11 @@ Namespace Debug
 							gtk_main_iteration()
 						Wend
 					End If
-				#endif
 			End If
 		End Sub
 	#endif
 End Namespace
 
-#ifdef __USE_GTK4__
-	Dim Shared DialogResult As gint
-	Sub gtk_dialog_response_sub(dialog As GtkDialog Ptr, response_id As gint)
-		DialogResult = response_id
-	End Sub
-#endif
 
 Public Function ML(ByRef V As WString) ByRef As WString
 	If App.CurLanguage = App.Language Then Return V
@@ -943,9 +613,6 @@ Public Function MsgBox Alias "MsgBox" (ByRef MsgStr As WString, ByRef Caption As
 	'        If GetActiveWindow = App.Forms[i]->Handle Then ActiveForm = App.Forms[i]
 	'        If App.Forms[i]->Handle Then App.Forms[i]->Enabled = False
 	'    Next i
-	#ifdef __USE_WINAPI__
-		Dim As HWND Wnd
-	#endif
 	'    If ActiveForm Then
 	'       If ActiveForm->Handle Then
 	'          Wnd = ActiveForm->Handle
@@ -953,7 +620,6 @@ Public Function MsgBox Alias "MsgBox" (ByRef MsgStr As WString, ByRef Caption As
 	'          Wnd = MainHandle
 	'       End If
 	'    End If
-	#ifdef __USE_GTK__
 		Dim As GtkWidget Ptr dialog
 		Dim As GtkWindow Ptr win
 		If pApp AndAlso pApp->MainForm Then
@@ -982,87 +648,19 @@ Public Function MsgBox Alias "MsgBox" (ByRef MsgStr As WString, ByRef Caption As
 		gtk_window_set_transient_for(GTK_WINDOW(dialog), win)
 		gtk_window_set_title(GTK_WINDOW(dialog), ToUtf8(*FCaption))
 		If ButtonsType = btYesNoCancel Then
-			#ifdef __USE_GTK4__
-				gtk_dialog_add_button(GTK_DIALOG(dialog), "gtk-cancel", GTK_RESPONSE_CANCEL)
-				gtk_dialog_add_button(GTK_DIALOG(dialog), "gtk-no", GTK_RESPONSE_NO)
-				gtk_dialog_add_button(GTK_DIALOG(dialog), "gtk-yes", GTK_RESPONSE_YES)
-			#else
-				#ifndef __USE_GTK2__
 					gtk_dialog_add_button(GTK_DIALOG(dialog), ToUtf8(*Cast(WString Ptr, GTK_STOCK_CANCEL)), GTK_RESPONSE_CANCEL)
 					gtk_dialog_add_button(GTK_DIALOG(dialog), ToUtf8(*Cast(WString Ptr, GTK_STOCK_NO)), GTK_RESPONSE_NO)
 					gtk_dialog_add_button(GTK_DIALOG(dialog), ToUtf8(*Cast(WString Ptr, GTK_STOCK_YES)), GTK_RESPONSE_YES)
-				#else
-					gtk_dialog_add_button(GTK_DIALOG(dialog), GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL)
-					gtk_dialog_add_button(GTK_DIALOG(dialog), GTK_STOCK_NO, GTK_RESPONSE_NO)
-					gtk_dialog_add_button(GTK_DIALOG(dialog), GTK_STOCK_YES, GTK_RESPONSE_YES)
-				#endif
-			#endif
 			gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_YES)
 		End If
-		#ifdef __USE_GTK4__
-			g_signal_connect_swapped (dialog, "response", G_CALLBACK(@gtk_dialog_response_sub), dialog)
-			gtk_widget_set_visible(dialog, True)
-			Result = DialogResult
-		#else
 			Result = gtk_dialog_run (GTK_DIALOG (dialog))
-		#endif
 		Select Case Result
 		Case GTK_RESPONSE_CANCEL: Result = mrCancel
 		Case GTK_RESPONSE_NO: Result = mrNo
 		Case GTK_RESPONSE_OK: Result = mrOK
 		Case GTK_RESPONSE_YES: Result = mrYes
 		End Select
-		#ifdef __USE_GTK4__
-			g_object_unref(dialog)
-		#else
 			gtk_widget_destroy(dialog)
-		#endif
-	#elseif defined(__USE_WINAPI__)
-		'		Wnd = GetActiveWindow()
-		'		If App.MainForm <> 0 Then
-		'			Wnd = App.MainForm->Handle
-		'		End If
-		Select Case MsgType
-		Case mtInfo: MsgTypeIn = MB_ICONINFORMATION
-		Case mtWarning: MsgTypeIn = MB_ICONEXCLAMATION
-		Case mtQuestion: MsgTypeIn = MB_ICONQUESTION
-		Case mtError: MsgTypeIn = MB_ICONERROR
-		Case mtOther: MsgTypeIn = 0
-		End Select
-		Select Case ButtonsType
-		Case btNone: ButtonsTypeIn = 0
-		Case btOK: ButtonsTypeIn = MB_OK
-		Case btYesNo: ButtonsTypeIn = MB_YESNO
-		Case btYesNoCancel: ButtonsTypeIn = MB_YESNOCANCEL
-		Case btOkCancel: ButtonsTypeIn = MB_OKCANCEL
-		End Select
-		Result = MessageBox(0, @MsgStr, FCaption, MsgTypeIn Or ButtonsTypeIn Or MB_TOPMOST Or MB_TASKMODAL)
-		Select Case Result
-		Case IDABORT: Result = mrAbort
-		Case IDCANCEL: Result = mrCancel
-		Case IDIGNORE: Result = mrIgnore
-		Case IDNO: Result = mrNo
-		Case IDOK: Result = mrOK
-		Case IDRETRY: Result = mrRetry
-		Case IDYES: Result = mrYes
-		End Select
-	#elseif defined(__USE_WASM__)
-		Select Case MsgType
-		Case mtInfo: MsgTypeIn = 1
-		Case mtWarning: MsgTypeIn = 2
-		Case mtQuestion: MsgTypeIn = 3
-		Case mtError: MsgTypeIn = 4
-		Case mtOther: MsgTypeIn = 0
-		End Select
-		Select Case ButtonsType
-		Case btNone: ButtonsTypeIn = 0
-		Case btOK: ButtonsTypeIn = 1
-		Case btYesNo: ButtonsTypeIn = 0
-		Case btYesNoCancel: ButtonsTypeIn = 0
-		Case btOkCancel: ButtonsTypeIn = 2
-		End Select
-		MessageBox(MsgStr, *FCaption, 0, 0)
-	#endif
 	'Do
 	'    App.DoEvents
 	'Loop Until Result <> -1
@@ -1074,15 +672,6 @@ Public Function MsgBox Alias "MsgBox" (ByRef MsgStr As WString, ByRef Caption As
 End Function
 
 Type TInputBox
-	#ifdef __USE_WINAPI__
-		As MSG msg
-		As HWND hWnd, hwnd1, hwnd2, hwnd3
-		As WString * 1024 mess
-		As BOOL flag
-		As DEVMODE dm(0)
-		As HFONT font,font1
-		As Integer size
-	#elseif defined(__USE_GTK__)
 		dialog As GtkWidget Ptr
 		
 		entry As GtkWidget Ptr
@@ -1090,21 +679,13 @@ Type TInputBox
 		sText As ZString*1024
 		
 		iFlag As Long
-	#else
-		iFlag As Long
-	#endif
 End Type
 
-#ifdef __USE_GTK__
 	Sub EventbuttonInputBoxSub cdecl(Gwindow As GtkWidget Ptr,  data_ As gpointer) Export
 		
 		Dim As TInputBox Ptr tib = data_
 		
-		#ifdef __USE_GTK4__
-			tib->sText = *gtk_entry_buffer_get_text(gtk_entry_get_buffer(Cast(Any Ptr, tib->entry)))
-		#else
 			tib->sText = *gtk_entry_get_text(Cast(Any Ptr, tib->entry))
-		#endif
 		
 		gtk_dialog_response(Cast(Any Ptr, tib->dialog) , GTK_RESPONSE_OK)
 		
@@ -1116,11 +697,7 @@ End Type
 		
 		If tib->iFlag = 0 AndAlso Cast(GdkEventButton Ptr,gEvent)->type = GDK_BUTTON_PRESS Then
 			
-			#ifdef __USE_GTK4__
-				gtk_entry_buffer_set_text(gtk_entry_get_buffer(Cast(Any Ptr, tib->entry)), "", -1)
-			#else
 				gtk_entry_set_text(Cast(Any Ptr, tib->entry), "")
-			#endif
 			
 			tib->iFlag = 1
 			
@@ -1129,57 +706,8 @@ End Type
 		Return False
 		
 	End Function
-#endif
 
 Function InputBox(ByRef sCaption As WString  = "" , ByRef sMessageText As WString = "Enter text:" , ByRef sDefaultText As WString = "" , iFlag As Long = 0 , iFlag2 As Long = 0, hParentWin As Any Ptr = 0) As UString __EXPORT__
-	#ifdef __USE_WINAPI__
-		Dim As HWND hwFocus = GetFocus()
-		Dim InputBox_ As TInputBox
-		InputBox_.dm(0).dmSize = SizeOf(DEVMODE)
-		EnumDisplaySettings( 0, ENUM_CURRENT_SETTINGS, @InputBox_.dm(0))
-		InputBox_.hWnd  = CreateWindowEx(WS_EX_CONTROLPARENT, "#32770", @sCaption, WS_TILED Or WS_VISIBLE, InputBox_.dm(0).dmPelsWidth / 2 - 155, InputBox_.dm(0).dmPelsHeight / 2 - 70, 310, 130, hParentWin, 0, 0, 0 )
-		InputBox_.hwnd1 = CreateWindowEx(WS_EX_CLIENTEDGE, "Edit", @sDefaultText, WS_CHILD Or WS_VISIBLE Or WS_TABSTOP Or iFlag, 10, 33, 275, 25, InputBox_.hWnd, 0, 0, 0)
-		InputBox_.hwnd2 = CreateWindowEx(0, "Button", "OK", WS_CHILD Or WS_VISIBLE Or WS_TABSTOP, 106, 65, 80, 25, InputBox_.hWnd, 0, 0, 0)
-		InputBox_.hwnd3 = CreateWindowEx(0, "Static", @sMessageText, WS_CHILD Or WS_VISIBLE, 10, 10, 275, 20, InputBox_.hWnd, 0, 0, 0)
-		
-		InputBox_.size  = -MulDiv(10, GetDeviceCaps(CreateDC("DISPLAY",0,0,0), LOGPIXELSY), 72)
-		InputBox_.font  = CreateFont(InputBox_.size,0,0,0,0,1,0,0,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH Or FF_DONTCARE,"Times New Roman")
-		SendMessage(InputBox_.hwnd3,WM_SETFONT,Cast(WPARAM,InputBox_.font),0)
-		InputBox_.font1 = CreateFont(InputBox_.size,0,0,0,0,0,0,0,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH Or FF_DONTCARE,"Times New Roman")
-		SendMessage(InputBox_.hwnd2,WM_SETFONT,Cast(WPARAM,InputBox_.font1),0)
-		SendMessage(InputBox_.hwnd1,WM_SETFONT,Cast(WPARAM,InputBox_.font1),0)
-		SetFocus InputBox_.hwnd1
-		
-		While GetMessage(@InputBox_.msg, 0, 0, 0 )
-			If IsDialogMessage(InputBox_.hWnd ,@InputBox_.msg)  = 0 Then
-				TranslateMessage(@InputBox_.msg )
-				DispatchMessage(@InputBox_.msg )
-			End If
-			Select Case InputBox_.msg.hwnd
-			Case InputBox_.hwnd2
-				Dim As Integer iMsg = InputBox_.msg.message
-				If (iMsg = WM_LBUTTONDOWN) OrElse (iMsg = WM_KEYUP AndAlso (InputBox_.msg.wParam = 32 OrElse InputBox_.msg.wParam = 13)) Then
-					SendMessage(InputBox_.hwnd1,WM_GETTEXT,1024,Cast(LPARAM ,@InputBox_.mess))
-					Dim As UString sRet = InputBox_.mess
-					Function = sRet
-					DestroyWindow(InputBox_.hWnd)
-					InputBox_.flag=0
-					SetFocus(hwFocus)
-					Exit Function
-				End If
-			Case InputBox_.hwnd1
-				If InputBox_.msg.message=WM_LBUTTONDOWN Then
-					If iFlag2 <> 0 Then
-						If InputBox_.flag=0 Then
-							InputBox_.flag=1
-							SetWindowText(InputBox_.hwnd1 , "")
-						End If
-					End If
-				End If
-			End Select
-		Wend
-		SetFocus(hwFocus)
-	#elseif defined(__USE_GTK__) AndAlso Not defined(__USE_GTK4__)
 		Dim As GtkWidget  Ptr dialog
 		
 		Dim As GtkWidget  Ptr label
@@ -1238,11 +766,7 @@ Function InputBox(ByRef sCaption As WString  = "" , ByRef sMessageText As WStrin
 		
 		If Len(sDefaultText) Then
 			
-			#ifdef __USE_GTK4__
-				gtk_entry_buffer_set_text (gtk_entry_get_buffer(Cast(Any Ptr, entry)), sDefaultText, -1)
-			#else
 				gtk_entry_set_text (Cast(Any Ptr, entry) , sDefaultText)
-			#endif
 			
 		End If
 		
@@ -1274,14 +798,7 @@ Function InputBox(ByRef sCaption As WString  = "" , ByRef sMessageText As WStrin
 		
 		_Delete(tib)
 		
-		#ifdef __USE_GTK4__
-			g_object_unref(dialog)
-		#else
 			gtk_widget_destroy(dialog)
-		#endif
-	#else
-		Function = ""
-	#endif
 End Function
 
 #ifndef LoadFromFile_Off
@@ -1415,23 +932,9 @@ End Function
 					CloseFile_(Fn)
 				End If
 				If Trim(Buff) = "" Then Return 0
-				#ifdef __USE_WINAPI__
-					If FileEncoding = FileEncodings.PlainText Then
-						Dim CodePage As Integer = IIf(nCodePage = -1, GetACP(), nCodePage)
-						If CodePage= 936 AndAlso nCodePage = -1 Then CodePage = 54936 'The default value is set to Chinese character GB18030 (ANSI and GB2312 compatible).
-						FileSize = MultiByteToWideChar(CodePage, 0, StrPtr(Buff), -1, NULL, 0) - 1
-						pBuff = _CAllocate(FileSize * 2 + 2)
-						MultiByteToWideChar(CodePage, 0, StrPtr(Buff), -1, pBuff, FileSize)
-					Else
-						WReAllocate(pBuff, FileSize)
-						*pBuff = String(FileSize, 0)
-						UTFToWChar(1, StrPtr(Buff), pBuff, @FileSize)
-					End If
-				#else
 					WReAllocate(pBuff, FileSize)
 					*pBuff = String(FileSize, 0)
 					UTFToWChar(1, StrPtr(Buff), pBuff, @FileSize)
-				#endif
 			Else
 				WLet(pBuff, WInput(FileSize, #Fn))
 				CloseFile_(Fn)
@@ -1498,24 +1001,11 @@ End Function
 					Put #Fn, , ToUtf8(wData)
 				End If
 			ElseIf FileEncoding = FileEncodings.PlainText Then
-				#ifdef __USE_WINAPI__
-					Dim CodePage As Integer = IIf(nCodePage= -1, GetACP(), nCodePage)
-					If CodePage= 936 AndAlso nCodePage = -1 Then CodePage = 54936 'The default value is set to Chinese character GB18030 (ANSI and GB2312 compatible).
-					If NewLineStr <> OldLineStr Then
-						wData = Replace(wData, OldLineStr, NewLineStr)
-					End If
-					Dim As Integer m_BufferLen = WideCharToMultiByte(CodePage, 0, StrPtr(wData), -1, NULL, 0, NULL, NULL) - 1
-					Dim As ZString Ptr pBuff = _CAllocate(m_BufferLen * 2 + 2)
-					WideCharToMultiByte(CodePage, 0, StrPtr(wData), m_BufferLen, pBuff, m_BufferLen, NULL, NULL)
-					Put #Fn, , *pBuff
-					_Deallocate((pBuff))
-				#else
 					If NewLineStr <> OldLineStr Then
 						Put #Fn, , ToUtf8(Replace(wData, OldLineStr, NewLineStr))
 					Else
 						Put #Fn, , ToUtf8(wData)
 					End If
-				#endif
 			Else
 				If NewLineStr <> OldLineStr Then
 					Print #Fn, Replace(wData, OldLineStr, NewLineStr);  'Automaticaly add a Cr LF to the ends of file for each time without ";"

@@ -11,14 +11,6 @@
 
 #include once "Graphics.bi"
 #include once "Component.bi"
-#if defined(__USE_CAIRO__) AndAlso Not defined(__USE_GTK__)
-	#include once "cairo/cairo-win32.bi"
-	#define G_PI 3.141593
-#endif
-#ifdef __USE_WINAPI__
-	#include once "D2D1/D2D1.bi"
-	#include once "crt/limits.bi"
-#endif
 
 Namespace My.Sys.Drawing
 	#define QCanvas(__Ptr__) (*Cast(Canvas Ptr, __Ptr__))
@@ -45,43 +37,6 @@ Namespace My.Sys.Drawing
 		Height As Long
 	End Type
 	
-	#ifdef __USE_WINAPI__
-		Private Type GpLineGradientParameter
-			PointFrom  As GpPointF
-			PointTo    As GpPointF
-			ColorStart As Long
-			ColorEnd   As Long
-			WrapModes  As WrapMode
-		End Type
-		
-		Private Enum FillStyle
-			fsSurface = FLOODFILLSURFACE
-			fsBorder  = FLOODFILLBORDER
-		End Enum
-		
-		Private Enum CopyMode
-			cmBlackness   = BLACKNESS
-			cmDestInvert  = DSTINVERT
-			cmMergeCopy   = MERGECOPY
-			cmMergePaint  = MERGEPAINT
-			cmNotSrcCopy  = NOTSRCCOPY
-			cmNotSrcErase = NOTSRCERASE
-			cmPatCopy     = PATCOPY
-			cmPatInvert   = PATINVERT
-			cmPatPaint    = PATPAINT
-			cmSecAnd      = SRCAND
-			cmSrcCopy     = SRCCOPY
-			cmSrcErase    = SRCERASE
-			cmSrcInvert   = SRCINVERT
-			cmSrcPaint    = SRCPAINT
-			cmWithness    = WHITENESS
-		End Enum
-		
-		Private Enum BrushFillMode
-			bmOpaque        = OPAQUE
-			bmTransparent   = TRANSPARENT
-		End Enum
-	#else
 		Private Enum FillStyle
 			fsSurface
 			fsBorder
@@ -109,7 +64,6 @@ Namespace My.Sys.Drawing
 			bmOpaque
 			bmTransparent
 		End Enum
-	#endif
 	
 	'Canvas is a class that allows you to create and draw graphics (Windows, Linux).
 	Private Type Canvas Extends My.Sys.Object
@@ -141,58 +95,14 @@ Namespace My.Sys.Drawing
 		FMoveToY        As Double
 		FUseDirect2D    As Boolean
 	Protected:
-		#ifdef __USE_GTK__
 			Dim As PangoContext Ptr pcontext
-			#ifdef __USE_GTK4__
-				Dim As cairo_region_t Ptr cairoRegion
-				Dim As GdkDrawingContext Ptr DrawingContext
-			#endif
-		#elseif defined(__USE_CAIRO__)
-			Dim As cairo_surface_t Ptr cairoSurface
-			Dim As HDC DeviceContextHandle
-		#elseif defined(__USE_WINAPI__)
-			#ifdef __FB_64BIT__
-				Dim FGdipStartupInput As GdiplusStartupInput  'GDI+ startup info
-			#else
-				Dim FGdipStartupInput As Gdiplus.GdiplusStartupInput  'GDI+ startup info
-			#endif
-			Dim PrevWidth As Integer = 0
-			Dim PrevHeight As Integer = 0
-			Dim pRenderTarget As ID2D1DeviceContext Ptr = 0
-			Dim pTargetBitmap As ID2D1Bitmap1 Ptr = 0
-			Dim pSwapChain As IDXGISwapChain1 Ptr = 0
-			Dim pSurface As IDXGISurface Ptr = 0
-			Dim pTexture As ID3D11Texture2D Ptr = 0
-			Dim pFormat As IDWriteTextFormat Ptr = 0
-			Dim pForegroundBrush As ID2D1Brush Ptr = 0
-			Dim pBackgroundBrush As ID2D1Brush Ptr = 0
-			Declare Sub ReleaseDirect2D
-		#endif
 	Public:
 		HandleSetted As Boolean
 		FillGradient As Boolean
 		FillOpacity As Long
 		BackColorOpacity As Long
-		#ifdef __USE_CAIRO__
 			Handle  As cairo_t Ptr
-			#ifdef __USE_GTK__
 				Dim As PangoLayout Ptr layout
-			#endif
-		#elseif defined(__USE_WINAPI__)
-			Declare Function CreateD2DBitmapFromHBITMAP(ByVal pRT As ID2D1DeviceContext Ptr, ByVal hBmp As HBITMAP, ByRef pOut As ID2D1Bitmap Ptr) As HRESULT
-			Handle  As HDC
-			GdipToken As ULONG_PTR
-			GdipGraphics As GpGraphics Ptr
-			GdipBrush As GpBrush Ptr
-			GdipPen As GpPen Ptr
-			GdipFont As GpFont Ptr
-			GdipHatchStyles As GpHatchStyle = HatchStyleCross
-			GpLineGradientPara As GpLineGradientParameter
-		#elseif defined(__USE_JNI__)
-			Handle  As jobject
-		#else
-			Handle  As Any Ptr
-		#endif
 		Pen         As My.Sys.Drawing.Pen
 		Brush       As My.Sys.Drawing.Brush
 		Font        As My.Sys.Drawing.Font
@@ -259,16 +169,7 @@ Namespace My.Sys.Drawing
 		Declare Function GetPixel(x As Double, y As Double) As Integer
 		Declare Function Get(x As Double, y As Double, nWidth As Integer, nHeight As Integer, ByRef ImageSource As My.Sys.Drawing.BitmapType) As Any Ptr
 		Declare Function Get(x As Double, y As Double, nWidth As Integer, nHeight As Integer, ByVal ImageSource As Any Ptr) As Any Ptr
-		#ifdef __USE_CAIRO__
 			Declare Sub SetHandle(CanvasHandle As cairo_t Ptr)
-		#endif
-		#ifdef __USE_WINAPI__
-			Declare Sub SetHandle(CanvasHandle As HDC)
-		#elseif defined(__USE_JNI__)
-			Declare Sub SetHandle(CanvasHandle As jobject)
-		#elseif Not defined(__USE_CAIRO__)
-			Declare Sub SetHandle(CanvasHandle As Any Ptr)
-		#endif
 		Declare Sub UnSetHandle()
 		Declare Sub TextOut(x As Double, y As Double, ByRef s As WString, FG As Integer = -1, BK As Integer = -1)
 		Declare Sub DrawTransparent(x As Double, y As Double, Image As Any Ptr, cTransparentColor As UInteger = 0)

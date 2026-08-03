@@ -18,15 +18,11 @@ Namespace My.Sys.ComponentModel
 			Case "designmode": Return @FDesignMode
 			Case "classancestor": Return FClassAncestor
 			Case "tag": Return Tag
-				#ifdef __USE_GTK__
 				Case "handle": Return widget
 				Case "widget": Return widget
 				Case "layoutwidget": Return layoutwidget
 				Case "overlaywidget": Return overlaywidget
 				Case "eventboxwidget": Return eventboxwidget
-				#elseif defined(__USE_WINAPI__)
-				Case "handle": Return @FHandle
-				#endif
 			Case "left": FLeft = This.Left: Return @FLeft
 			Case "top": FTop = This.Top: Return @FTop
 			Case "width": FWidth = This.Width: Return @FWidth
@@ -56,17 +52,11 @@ Namespace My.Sys.ComponentModel
 				Case "tag": This.Tag = Value
 				Case "name": This.Name = QWString(Value)
 				Case "designmode": This.DesignMode = QBoolean(Value)
-					#ifdef __USE_GTK__
 					Case "handle": This.Handle = Value
 					Case "widget": This.widget = Value
 					Case "layoutwidget": This.layoutwidget = Value
 					Case "overlaywidget": This.overlaywidget = Value
 					Case "eventboxwidget": This.eventboxwidget = Value
-					#elseif defined(__USE_JNI__)
-					Case "handle": This.Handle = *Cast(jobject Ptr, Value)
-					#elseif defined(__USE_WINAPI__)
-					Case "handle": This.Handle = *Cast(HWND Ptr, Value)
-					#endif
 				Case "left": This.Left = QInteger(Value)
 				Case "top": This.Top = QInteger(Value)
 				Case "width": This.Width = QInteger(Value)
@@ -106,7 +96,6 @@ Namespace My.Sys.ComponentModel
 			If FParent <> Value Then
 				FParent = Value
 				Value->FComponents.Add @This
-				#ifdef __USE_GTK__
 					If FDesignMode AndAlso widget <> 0 AndAlso GTK_IS_WIDGET(widget) AndAlso Value <> 0 AndAlso Value->layoutwidget <> 0 Then
 						If gtk_widget_get_parent(widget) <> Value->layoutwidget Then
 							If gtk_widget_get_parent(widget) <> 0 Then gtk_widget_unparent(widget)
@@ -115,13 +104,6 @@ Namespace My.Sys.ComponentModel
 							gtk_layout_move(GTK_LAYOUT(Value->layoutwidget), widget, ScaleX(FLeft), ScaleY(FTop))
 						End If
 					End If
-				#elseif defined(__USE_WINAPI__)
-					If FDesignMode AndAlso FHandle <> 0 AndAlso Value <> 0 AndAlso Value->Handle <> 0 Then
-						If GetParent(FHandle) <> Value->Handle Then
-							SetParent FHandle, Value->Handle
-						End If
-					End If
-				#endif
 			End If
 		End Property
 	#endif
@@ -144,13 +126,10 @@ Namespace My.Sys.ComponentModel
 	
 	Private Property Component.Name(ByRef Value As WString)
 		WLet(FName, Value)
-		#ifdef __USE_GTK__
 			If GTK_IS_WIDGET(widget) Then gtk_widget_set_name(widget, Value)
-		#endif
 	End Property
 	
 	#ifndef Handle_Off
-		#ifdef __USE_GTK__
 			Private Property Component.Handle As GtkWidget Ptr
 				Return widget
 			End Property
@@ -166,55 +145,6 @@ Namespace My.Sys.ComponentModel
 			Private Property Component.LayoutHandle(Value As GtkWidget Ptr)
 				layoutwidget = Value
 			End Property
-		#elseif defined(__USE_JNI__)
-			Private Property Component.Handle As jobject
-				Return FHandle
-			End Property
-			
-			Private Property Component.Handle(Value As jobject)
-				FHandle = Value
-			End Property
-			
-			Private Property Component.LayoutHandle As jobject
-				Return layoutview
-			End Property
-			
-			Private Property Component.LayoutHandle(Value As jobject)
-				layoutview = Value
-			End Property
-		#elseif defined(__USE_WINAPI__)
-			Private Property Component.Handle As HWND
-				Return FHandle
-			End Property
-			
-			Private Property Component.Handle(Value As HWND)
-				FHandle = Value
-			End Property
-			
-			Private Property Component.LayoutHandle As HWND
-				Return FHandle
-			End Property
-			
-			Private Property Component.LayoutHandle(Value As HWND)
-				FHandle = Value
-			End Property
-		#elseif defined(__USE_WASM__)
-			Private Property Component.Handle As Any Ptr
-				Return FHandle
-			End Property
-			
-			Private Property Component.Handle(Value As Any Ptr)
-				FHandle = Value
-			End Property
-			
-			Private Property Component.LayoutHandle As Any Ptr
-				Return FHandle
-			End Property
-			
-			Private Property Component.LayoutHandle(Value As Any Ptr)
-				FHandle = Value
-			End Property
-		#endif
 	#endif
 	
 	#ifndef Move_Off
@@ -227,13 +157,11 @@ Namespace My.Sys.ComponentModel
 			If FParent Then
 				Dim As Component Ptr cParent = FParent
 				If cParent Then
-					#ifdef __USE_GTK__
 						'If Not FDesignMode Then
 							If cParent->widget AndAlso GTK_IS_FRAME(cParent->widget) Then
 								iTop -= 20
 							End If
 						'End If
-					#endif
 '					iLeft = iLeft + cParent->Margins.Left
 '					iTop = iTop + cParent->Margins.Top
 					'iWidth = iWidth - cParent->Margins.Left - cParent->Margins.Right
@@ -242,7 +170,6 @@ Namespace My.Sys.ComponentModel
 					'iHeight = Min(iHeight, Max(0, cParent->Height - iTop - cParent->Margins.Bottom))
 				End If
 			End If
-			#ifdef __USE_GTK__
 '				Dim allocation As GtkAllocation
 '				allocation.x = iLeft
 '				allocation.y = iTop
@@ -289,23 +216,6 @@ Namespace My.Sys.ComponentModel
 						'Requests @This
 					End If
 				EndIf
-			#elseif defined(__USE_WINAPI__)
-				If FHandle Then
-					MoveWindow FHandle, ScaleX(iLeft), ScaleY(iTop), ScaleX(iWidth), ScaleY(iHeight), True
-				End If
-			#elseif defined(__USE_JNI__)
-				If env = 0 OrElse FHandle = 0 Then Exit Sub
-				Dim As jclass class_view = (*env)->FindClass(env, "android/view/View")
-				Dim As jmethodID setLayoutParams = (*env)->GetMethodID(env, class_view, "setLayoutParams", "(Landroid/view/ViewGroup$LayoutParams;)V")
-				Dim As jclass class_LayoutParams = (*env)->FindClass(env, "android/widget/AbsoluteLayout$LayoutParams")
-				Dim As jmethodID ConstructorMethod = (*env)->GetMethodID(env, class_LayoutParams, "<init>", "(IIII)V")
-				Dim As jobject LayoutParams = (*env)->NewObject(env, class_LayoutParams, ConstructorMethod, ScaleX(FWidth), ScaleY(FHeight), ScaleX(FLeft), ScaleY(FTop))
-				'Dim As jfieldID LeftField = (*env)->GetFieldID(env, class_MarginLayoutParams, "leftMargin", "I")
-				'CallVoidMethod(FHandle, "android/widget/Button", "setText", "(Ljava/lang/CharSequence;)V", (*env)->NewStringUTF(env, ToUTF8(Str((*env)->GetIntField(env, MarginLayoutParams, LeftField)))))
-'				Dim As jfieldID TopField = (*env)->GetFieldID(env, class_MarginLayoutParams, "topMargin", "I")
-'				(*env)->SetIntField(env, MarginLayoutParams, TopField, FTop)
-				(*env)->CallVoidMethod(env, FHandle, setLayoutParams, LayoutParams)
-			#endif
 		End Sub
 	#endif
 	
@@ -329,7 +239,6 @@ Namespace My.Sys.ComponentModel
 	#ifndef Left_Off
 		Private Property Component.Left As Integer
 			If Not (FDesignMode AndAlso (Designer = @This)) Then
-				#ifdef __USE_GTK__
 					If GTK_IS_WINDOW(widget) Then
 						Dim As gint iLeft, iTop
 						gtk_window_get_position(GTK_WINDOW(widget), @iLeft, @iTop)
@@ -344,32 +253,6 @@ Namespace My.Sys.ComponentModel
 							'If FParent Then FLeft -= FParent->Margins.Left
 						End If
 					End If
-				#elseif defined(__USE_WINAPI__)
-					If FHandle Then
-						If FParent AndAlso UCase(FParent->ClassName) = "TABCONTROL" Then
-						Else
-							Dim As RECT R
-							GetWindowRect Handle, @R
-							MapWindowPoints 0, GetParent(Handle), Cast(Point Ptr, @R), 2
-							FLeft = UnScaleX(R.left)
-							'If FParent Then FLeft -= FParent->Margins.Left
-						End If
-					End If
-				#elseif defined(__USE_JNI__)
-					If ClassName = "Form" Then
-						FLeft = 0
-					Else
-						If FHandle Then
-							Dim As jclass class_view = (*env)->FindClass(env, "android/view/View")
-							Dim As jmethodID getLayoutParamsMethod = (*env)->GetMethodID(env, class_view, "getLayoutParams", "()Landroid/view/ViewGroup$LayoutParams;")
-							Dim As jobject MarginLayoutParams = (*env)->CallObjectMethod(env, FHandle, getLayoutParamsMethod)
-							Dim As jclass class_MarginLayoutParams = (*env)->FindClass(env, "android/widget/AbsoluteLayout$LayoutParams")
-							Dim As jfieldID xField = (*env)->GetFieldID(env, class_MarginLayoutParams, "x", "I")
-							FLeft = UnScaleX((*env)->GetIntField(env, MarginLayoutParams, xField))
-							'If FParent Then FLeft -= FParent->Margins.Left
-						End If
-					End If
-				#endif
 			End If
 			Return FLeft
 		End Property
@@ -385,7 +268,6 @@ Namespace My.Sys.ComponentModel
 	#ifndef Top_Off
 		Private Property Component.Top As Integer
 			If Not (FDesignMode AndAlso (Designer = @This)) Then
-				#ifdef __USE_GTK__
 					Dim ControlChanged As Boolean
 					If GTK_IS_WINDOW(widget) Then
 						Dim As gint iLeft, iTop
@@ -405,28 +287,6 @@ Namespace My.Sys.ComponentModel
 					If CInt(ControlChanged) AndAlso CInt(Parent) AndAlso CInt(Parent->ClassName = "GroupBox") Then
 						FTop + = 20
 					End If
-				#elseif defined(__USE_WINAPI__)
-					If FHandle Then
-						If FParent AndAlso UCase(FParent->ClassName) = "SYSTABCONTROL32" Or UCase(FParent->ClassName) = "TABCONTROL" Then
-						Else
-							Dim As RECT R
-							GetWindowRect Handle,@R
-							MapWindowPoints 0, GetParent(Handle), Cast(Point Ptr, @R), 2
-							FTop = UnScaleY(R.top)
-							'If FParent Then FTop -= FParent->Margins.Top
-						End If
-					End If
-				#elseif defined(__USE_JNI__)
-					If ClassName = "Form" Then
-						FLeft = 0
-					Else
-						If FHandle Then
-							Dim As jobject MarginLayoutParams = CallObjectMethod(FHandle, "android/view/View", "getLayoutParams", "()Landroid/view/ViewGroup$LayoutParams;")
-							FTop = UnScaleY(GetIntField(MarginLayoutParams, "android/widget/AbsoluteLayout$LayoutParams", "y", "I"))
-							'If FParent Then FTop -= FParent->Margins.Top
-						End If
-					End If
-				#endif
 			End If
 			Return FTop
 		End Property
@@ -441,7 +301,6 @@ Namespace My.Sys.ComponentModel
 	
 	#ifndef Width_Off
 		Private Property Component.Width As Integer
-			#ifdef __USE_GTK__
 				If GTK_IS_WIDGET(widget) AndAlso gtk_widget_get_realized(widget) Then
 					If GTK_IS_WINDOW(widget) Then
 						Dim As gint iWidth, iHeight
@@ -450,18 +309,10 @@ Namespace My.Sys.ComponentModel
 					Else
 						Dim As GtkWidget Ptr CtrlWidget = IIf(containerwidget, containerwidget, IIf(scrolledwidget, scrolledwidget, IIf(layoutwidget AndAlso gtk_widget_get_parent(layoutwidget) <> widget, layoutwidget, widget)))
 						If layoutwidget AndAlso gtk_widget_is_toplevel(widget) Then
-							#ifndef __USE_GTK2__
 								FWidth = gtk_widget_get_allocated_width(widget)
-							#else
-								FWidth = widget->allocation.width
-							#endif
 							FWidth = UnScaleX(FWidth)
 						ElseIf CtrlWidget Then
-							#ifndef __USE_GTK2__
 								If gtk_widget_get_allocated_width(CtrlWidget) > 1 Then FWidth = gtk_widget_get_allocated_width(CtrlWidget)
-							#else
-								If CtrlWidget->allocation.width > 1 Then FWidth = CtrlWidget->allocation.width
-							#endif
 							FWidth = UnScaleX(FWidth)
 							'Dim As GtkAllocation alloc
 							'gtk_widget_get_allocation (widget, @alloc)
@@ -471,26 +322,6 @@ Namespace My.Sys.ComponentModel
 						End If
 					End If
 				End If
-			#elseif defined(__USE_WINAPI__)
-				If FHandle Then
-					Dim As RECT R
-					GetWindowRect Handle, @R
-					MapWindowPoints 0, GetParent(FHandle), Cast(Point Ptr, @R), 2
-					FWidth = UnScaleX(R.right - R.left)
-					'#endif
-				End If
-			#elseif defined(__USE_JNI__)
-				If FHandle Then
-					If ClassName = "Form" Then
-						Dim As jobject iWindow = CallObjectMethod(FHandle, "android/app/Activity", "getWindow", "()Landroid/view/Window;")
-						Dim As jobject decorView = CallObjectMethod(iWindow, "android/view/Window", "getDecorView", "()Landroid/view/View;")
-						FWidth = UnScaleX(CallIntMethod(decorView, "android/view/View", "getWidth", "()I"))
-					Else
-						Dim As jobject LayoutParams = CallObjectMethod(FHandle, "android/view/View", "getLayoutParams", "()Landroid/view/ViewGroup$LayoutParams;")
-						FWidth = UnScaleX(GetIntField(LayoutParams, "android/widget/AbsoluteLayout$LayoutParams", "width", "I"))
-					End If
-				End If
-			#endif
 			Return FWidth
 		End Property
 		
@@ -502,7 +333,6 @@ Namespace My.Sys.ComponentModel
 	
 	#ifndef Height_Off
 		Private Property Component.Height As Integer
-			#ifdef __USE_GTK__
 				If GTK_IS_WIDGET(widget) AndAlso gtk_widget_get_realized(widget) Then
 					If GTK_IS_WINDOW(widget) Then
 						Dim As gint iWidth, iHeight
@@ -511,41 +341,14 @@ Namespace My.Sys.ComponentModel
 					Else
 						Dim As GtkWidget Ptr CtrlWidget = IIf(containerwidget, containerwidget, IIf(scrolledwidget, scrolledwidget, IIf(layoutwidget AndAlso gtk_widget_get_parent(layoutwidget) <> widget, layoutwidget, widget)))
 						If layoutwidget AndAlso gtk_widget_is_toplevel(widget) Then
-							#ifndef __USE_GTK2__
 								FHeight = gtk_widget_get_allocated_height(widget)
-							#else
-								FHeight = widget->allocation.height
-							#endif
 							FHeight = UnScaleY(FHeight)
 						ElseIf CtrlWidget Then
-							#ifndef __USE_GTK2__
 								If gtk_widget_get_allocated_height(CtrlWidget) > 1 Then FHeight = gtk_widget_get_allocated_height(CtrlWidget)
-							#else
-								If CtrlWidget->allocation.height > 1 Then FHeight = CtrlWidget->allocation.height
-							#endif
 							FHeight = UnScaleY(FHeight)
 						End If
 					End If
 				End If
-			#elseif defined(__USE_WINAPI__)
-				If FHandle Then
-					Dim As RECT R
-					GetWindowRect Handle, @R
-					MapWindowPoints 0, GetParent(FHandle), Cast(Point Ptr, @R), 2
-					FHeight = UnScaleY(R.bottom - R.top)
-				End If
-			#elseif defined(__USE_JNI__)
-				If FHandle Then
-					If ClassName = "Form" Then
-						Dim As jobject iWindow = CallObjectMethod(FHandle, "android/app/Activity", "getWindow", "()Landroid/view/Window;")
-						Dim As jobject decorView = CallObjectMethod(iWindow, "android/view/Window", "getDecorView", "()Landroid/view/View;")
-						FHeight = UnScaleY(CallIntMethod(decorView, "android/view/View", "getHeight", "()I"))
-					Else
-						Dim As jobject LayoutParams = CallObjectMethod(FHandle, "android/view/View", "getLayoutParams", "()Landroid/view/ViewGroup$LayoutParams;")
-						FHeight = UnScaleY(GetIntField(LayoutParams, "android/widget/AbsoluteLayout$LayoutParams", "height", "I"))
-					End If
-				End If
-			#endif
 			Return FHeight
 		End Property
 		
@@ -560,21 +363,10 @@ Namespace My.Sys.ComponentModel
 	End Function
 	
 	Private Sub Component.FreeWidget()
-		#ifndef __FB_WIN32__
 			If widget <> 0 AndAlso GTK_IS_WIDGET(widget) Then
 				Dim As GtkWidget Ptr TempWidget = widget
 				widget = 0
-				#ifdef __USE_GTK4__
-					g_object_unref(TempWidget)
-				#else
-					#ifdef __USE_GTK3__
 						gtk_widget_destroy(TempWidget)
-					#else
-						If GTK_IS_MENU_SHELL(TempWidget) = 0 Then
-							gtk_widget_destroy(TempWidget)
-						End If
-					#endif
-				#endif
 				
 				If TempWidget = overlaywidget Then overlaywidget = 0
 				If TempWidget = scrolledwidget Then scrolledwidget = 0
@@ -586,101 +378,52 @@ Namespace My.Sys.ComponentModel
 				widget = 0
 			End If
 			If overlaywidget <> 0 AndAlso GTK_IS_WIDGET(overlaywidget) Then
-				#ifdef __USE_GTK4__
-					g_object_unref(overlaywidget)
-				#else
 					gtk_widget_destroy(overlaywidget)
-				#endif
 				overlaywidget = 0
 			End If
 			If scrolledwidget <> 0 AndAlso GTK_IS_WIDGET(scrolledwidget) Then
-				#ifdef __USE_GTK4__
-					g_object_unref(scrolledwidget)
-				#else
 					gtk_widget_destroy(scrolledwidget)
-				#endif
 				scrolledwidget = 0
 			End If
 			If eventboxwidget <> 0 AndAlso GTK_IS_WIDGET(eventboxwidget) Then
-				#ifdef __USE_GTK4__
-					g_object_unref(eventboxwidget)
-				#else
 					gtk_widget_destroy(eventboxwidget)
-				#endif
 				eventboxwidget = 0
 			End If
 			If fixedwidget <> 0 AndAlso GTK_IS_WIDGET(fixedwidget) Then
-				#ifdef __USE_GTK4__
-					g_object_unref(fixedwidget)
-				#else
 					gtk_widget_destroy(fixedwidget)
-				#endif
 				fixedwidget = 0
 			End If
 			If layoutwidget <> 0 AndAlso GTK_IS_WIDGET(layoutwidget) Then
-				#ifdef __USE_GTK4__
-					g_object_unref(layoutwidget)
-				#else
 					gtk_widget_destroy(layoutwidget)
-				#endif
 				layoutwidget = 0
 			End If
 			If box <> 0 AndAlso GTK_IS_WIDGET(box) Then
-				#ifdef __USE_GTK4__
-					g_object_unref(box)
-				#else
 					gtk_widget_destroy(box)
-				#endif
 				box = 0
 			End If
 			If containerwidget <> 0 AndAlso GTK_IS_WIDGET(containerwidget) Then
-				#ifdef __USE_GTK4__
-					g_object_unref(containerwidget)
-				#else
 					gtk_widget_destroy(containerwidget)
-				#endif
 				containerwidget = 0
 			End If
-		#endif
 	End Sub
 	
 	Destructor Component
 		If FName Then _Deallocate(FName)
 		If FClassAncestor Then _Deallocate(FClassAncestor)
-		#ifdef __USE_GTK__
 			FreeWidget()
-		#elseif defined(__USE_WINAPI__)
-			If FHandle Then
-				DestroyWindow FHandle
-				FHandle = 0
-			End If
-		#endif
 	End Destructor
 End Namespace
 
 Function ThreadCreate_(ByVal ProcPtr_ As Sub ( ByVal userdata As Any Ptr ), ByVal param As Any Ptr = 0, ByVal stack_size As Integer = 0) As Any Ptr
-	#if defined(__USE_GTK__) AndAlso defined(__FB_WIN32__)
-		ProcPtr_(param)
-		Return 0
-	#else
 		Return ThreadCreate(ProcPtr_, param, stack_size)
-	#endif
 End Function
 
 Private Sub ThreadsEnter
-	#if defined(__USE_GTK__) AndAlso Not defined(__FB_WIN32__)
 		gdk_threads_enter()
-	#endif
 End Sub
 
 Private Sub ThreadsLeave
-	#ifdef __USE_GTK__ 
-		#ifdef __FB_WIN32__
-			If gtk_events_pending() Then gtk_main_iteration()
-		#else
 			gdk_threads_leave()
-		#endif
-	#endif
 End Sub
 
 #ifdef __EXPORT_PROCS__

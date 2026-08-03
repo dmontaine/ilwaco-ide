@@ -57,9 +57,6 @@ Namespace My.Sys.Forms
 	
 	Private Property PageScroller.AutoScroll(Value As Boolean)
 		FAutoScroll = Value
-		#ifndef __USE_GTK__
-			ChangeStyle PGS_AUTOSCROLL, Value
-		#endif
 	End Property
 	
 	Private Property PageScroller.ChildDragDrop As Boolean
@@ -68,23 +65,14 @@ Namespace My.Sys.Forms
 	
 	Private Property PageScroller.ChildDragDrop(Value As Boolean)
 		FChildDragDrop = Value
-		#ifndef __USE_GTK__
-			ChangeStyle PGS_DRAGNDROP, Value
-		#endif
 	End Property
 	
 	Private Property PageScroller.Position As Integer
-		#ifndef __USE_GTK__
-			If FHandle Then
-				FPosition = SendMessage(FHandle, PGM_GETPOS, 0, 0)
-			End If
-		#endif
 		Return FPosition
 	End Property
 	
 	Private Property PageScroller.Position(Value As Integer)
 		FPosition = Max(0, Value)
-		#ifdef __USE_GTK__
 			If ChildControl AndAlso ChildControl->Handle Then
 				Select Case This.Style
 				Case psHorizontal
@@ -100,11 +88,6 @@ Namespace My.Sys.Forms
 				End Select
 				If OnScroll Then OnScroll(*Designer, This, FPosition)
 			End If
-		#else
-			If FHandle Then
-				SendMessage(FHandle, PGM_SETPOS, 0, Cast(LPARAM, FPosition))
-			End If
-		#endif
 	End Property
 	
 	Private Property PageScroller.Style As PageScrollerStyle
@@ -116,19 +99,9 @@ Namespace My.Sys.Forms
 		Dim As Integer iWidth, iHeight
 		OldStyle = FStyle
 		If Value <> FStyle Then
-			#ifndef __USE_GTK__
-				ChangeStyle PGS_HORZ, False
-				ChangeStyle PGS_VERT, False
-			#endif
 			Select Case Value
 			Case psHorizontal
-				#ifndef __USE_GTK__
-					ChangeStyle PGS_HORZ, True
-				#endif
 			Case psVertical
-				#ifndef __USE_GTK__
-					ChangeStyle PGS_VERT, True
-				#endif
 			End Select
 			FStyle = Value
 		End If
@@ -150,85 +123,23 @@ Namespace My.Sys.Forms
 		ChangeTabStop Value
 	End Property
 	
-	#ifndef __USE_GTK__
-		Private Sub PageScroller.HandleIsAllocated(ByRef Sender As My.Sys.Forms.Control)
-			If Sender.Child Then
-				With QPageScroller(Sender.Child)
-					If .ChildControl AndAlso .ChildControl->Handle Then SendMessage(.Handle, PGM_SETCHILD, 0, Cast(LPARAM, .ChildControl->Handle))
-				End With
-			End If
-		End Sub
-		
-		Private Sub PageScroller.WndProc(ByRef Message As Message)
-		End Sub
-	#endif
 	
 	Private Sub PageScroller.Add(Ctrl As Control Ptr, Index As Integer = -1)
 		If ChildControl = 0 Then
 			ChildControl = Ctrl
 			Base.Add(Ctrl)
-			#ifdef __USE_GTK__
 				g_object_ref(Layout1)
 				g_object_ref(Layout2)
 				gtk_container_remove(GTK_CONTAINER(widget), Layout1)
 				gtk_container_remove(GTK_CONTAINER(widget), Layout2)
 				gtk_layout_put(GTK_LAYOUT(widget), Layout1, 0, 0)
 				gtk_layout_put(GTK_LAYOUT(widget), Layout2, 0, 0)
-			#else
-				If FHandle AndAlso Ctrl->Handle Then
-					SendMessage(FHandle, PGM_SETCHILD, 0, Cast(LPARAM, Ctrl->Handle))
-				End If
-			#endif
 		Else
 			Print "MFF: Can't add second control to PageScroller"
 		End If
 	End Sub
 	
 	Private Sub PageScroller.ProcessMessage(ByRef Message As Message)
-		#ifndef __USE_GTK__
-			Select Case Message.Msg
-			Case WM_PAINT
-				Dim As HDC Dc
-				Dim As PAINTSTRUCT Ps
-				Dc = BeginPaint(FHandle, @Ps)
-				FillRect Dc, @Ps.rcPaint, Brush.Handle
-				EndPaint FHandle, @Ps
-				Message.Result = 0
-				Return
-			Case CM_NOTIFY
-				Dim As NMHDR Ptr nmhdr_ = Cast(NMHDR Ptr, Message.lParam)
-				If nmhdr_->code = PGN_CALCSIZE Then
-					Dim As NMPGCALCSIZE Ptr nmcal = Cast(NMPGCALCSIZE Ptr, Message.lParam)
-					If nmcal->dwFlag = PGF_CALCWIDTH Then
-						nmcal->iWidth = ChildControl->Width
-					ElseIf nmcal->dwFlag = PGF_CALCHEIGHT Then
-						nmcal->iHeight = ChildControl->Height
-					EndIf
-				ElseIf nmhdr_->code = PGN_SCROLL Then
-					Type NMPGSCROLL2 Field = 1
-						As NMHDR hdr
-						As Short fwKeys
-						As ..Rect rcParent
-						As Integer iDir
-						As Integer iXpos
-						As Integer iYpos
-						As Integer iScroll
-					End Type
-					Dim As NMPGSCROLL2 Ptr nmgs = Cast(NMPGSCROLL2 Ptr, Message.lParam)
-					Dim As Integer NewPos = nmgs->iXpos + nmgs->iYpos
-					Select Case nmgs->iDir
-					Case PGF_SCROLLDOWN
-						NewPos = Min(ChildControl->Height, NewPos + FArrowChangeSize)
-					Case PGF_SCROLLRIGHT
-						NewPos = Min(ChildControl->Width, NewPos + FArrowChangeSize)
-					Case PGF_SCROLLUP, PGF_SCROLLLEFT
-						NewPos = Max(0, NewPos - FArrowChangeSize)
-					End Select
-					nmgs->iScroll = FArrowChangeSize
-					If OnScroll Then OnScroll(*Designer, This, NewPos)
-				EndIf
-			End Select
-		#endif
 		Base.ProcessMessage(Message)
 	End Sub
 	
@@ -236,7 +147,6 @@ Namespace My.Sys.Forms
 		Return Cast(My.Sys.Forms.Control Ptr, @This)
 	End Operator
 	
-	#ifdef __USE_GTK__
 		Private Sub PageScroller.Layout_SizeAllocate(widget As GtkWidget Ptr, allocation As GdkRectangle Ptr, user_data As Any Ptr)
 			Dim As PageScroller Ptr psc = user_data
 			If allocation->width <> psc->AllocatedWidth OrElse allocation->height <> psc->AllocatedHeight Then
@@ -506,30 +416,21 @@ Namespace My.Sys.Forms
 			End Select
 			Return False
 		End Function
-	#endif
 	
 	Private Constructor PageScroller
 		With This
 			WLet(FClassName, "PageScroller")
 			WLet(FClassAncestor, "SysPager")
 			FArrowChangeSize = 40
-			#ifdef __USE_GTK__
 				widget = gtk_layout_new(NULL, NULL)
 				layoutwidget = widget
 				Layout1 = gtk_layout_new(NULL, NULL)
 				Layout2 = gtk_layout_new(NULL, NULL)
 				gtk_layout_put(gtk_layout(widget), Layout1, 0, 0)
 				gtk_layout_put(gtk_layout(widget), Layout2, 0, 0)
-				#ifdef __USE_GTK3__
 					g_signal_connect(widget, "draw", G_CALLBACK(@Layout_Draw), @This)
 					g_signal_connect(Layout1, "draw", G_CALLBACK(@Layout_Draw), @This)
 					g_signal_connect(Layout2, "draw", G_CALLBACK(@Layout_Draw), @This)
-				#else
-					g_signal_connect(widget, "expose-event", G_CALLBACK(@Layout_ExposeEvent), @This)
-					g_signal_connect(widget, "size-allocate", G_CALLBACK(@Layout_SizeAllocate), @This)
-					g_signal_connect(Layout1, "expose-event", G_CALLBACK(@Layout_ExposeEvent), @This)
-					g_signal_connect(Layout2, "expose-event", G_CALLBACK(@Layout_ExposeEvent), @This)
-				#endif
 				gtk_widget_set_events(Layout1, _
 				GDK_EXPOSURE_MASK Or _
 				GDK_SCROLL_MASK Or _
@@ -557,14 +458,6 @@ Namespace My.Sys.Forms
 				g_signal_connect(Layout1, "event", G_CALLBACK(@Layout_EventProc), @This)
 				g_signal_connect(Layout2, "event", G_CALLBACK(@Layout_EventProc), @This)
 				.RegisterClass "PageScroller", @This
-			#else
-				.RegisterClass "PageScroller", "SysPager"
-				Base.Style        = WS_CHILD Or PGS_HORZ
-				.ExStyle      = 0
-				.ChildProc    = @WndProc
-				.OnHandleIsAllocated = @HandleIsAllocated
-				.DoubleBuffered = True
-			#endif
 			FTabIndex          = -1
 			.Width        = 175
 			.Height       = 21
@@ -573,8 +466,5 @@ Namespace My.Sys.Forms
 	End Constructor
 	
 	Private Destructor PageScroller
-		#ifndef __USE_GTK__
-			UnregisterClass "PageScroller", GetModuleHandle(NULL)
-		#endif
 	End Destructor
 End Namespace

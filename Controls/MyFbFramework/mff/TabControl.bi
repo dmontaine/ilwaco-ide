@@ -14,9 +14,6 @@
 #include once "Panel.bi"
 #include once "Menus.bi"
 #include once "ImageList.bi"
-#ifdef __USE_WINAPI__
-	#include once "UpDown.bi"
-#endif
 
 Namespace My.Sys.Forms
 	#define QTabControl(__Ptr__) (*Cast(TabControl Ptr,__Ptr__))
@@ -39,9 +36,6 @@ Namespace My.Sys.Forms
 		FObject     As Any Ptr
 		FImageIndex As Integer
 		FImageKey   As WString Ptr
-		#ifndef __USE_GTK__
-			FTheme		As HTHEME
-		#endif
 	Public:
 		#ifndef ReadProperty_Off
 			'Reads a property value from a stream
@@ -53,14 +47,9 @@ Namespace My.Sys.Forms
 		#endif
 		'Processes Windows messages for the control
 		Declare Virtual Sub ProcessMessage(ByRef msg As Message)
-		#ifdef __USE_GTK__
 			_Box			As GtkWidget Ptr
 			_Icon			As GtkWidget Ptr
 			_Label			As GtkWidget Ptr
-		#else
-			'Checks if the window handle has been created
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-		#endif
 		'Determines if the control uses visual style colors for background
 		UseVisualStyleBackColor As Boolean
 		Declare Property Index As Integer
@@ -123,23 +112,12 @@ Namespace My.Sys.Forms
 		FMousePos           As Integer
 		DownTab             As TabPage Ptr
 		Declare Sub SetMargins()
-		#ifdef __USE_WINAPI__
-			Declare Static Sub WndProc(ByRef Message As Message)
-			Declare Static Function HookChildProc(hDlg As HWND, uMsg As UINT, wParam As WPARAM, lParam As LPARAM) As LRESULT
-			'Checks if the window handle has been created
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-			Declare Function GetChildTabControl(ParentHwnd As HWND, X As Integer, Y As Integer) As TabControl Ptr
-		#elseif defined(__USE_GTK__)
 			Declare Static Sub TabControl_SwitchPage(notebook As GtkNotebook Ptr, page As GtkWidget Ptr, page_num As UInteger, user_data As Any Ptr)
 			Declare Static Sub TabControl_PageAdded(notebook As GtkNotebook Ptr, page As GtkWidget Ptr, page_num As UInteger, user_data As Any Ptr)
 			Declare Static Sub TabControl_PageRemoved(notebook As GtkNotebook Ptr, page As GtkWidget Ptr, page_num As UInteger, user_data As Any Ptr)
 			Declare Static Sub TabControl_PageReordered(notebook As GtkNotebook Ptr, page As GtkWidget Ptr, page_num As UInteger, user_data As Any Ptr)
-		#endif
 		Declare Sub SetTabPageIndex(tp As TabPage Ptr, Index As Integer)
 	Protected:
-		#ifdef __USE_WINAPI__
-			UpDownControl As UpDown
-		#endif
 		'Processes Windows messages for the control
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
 	Public:

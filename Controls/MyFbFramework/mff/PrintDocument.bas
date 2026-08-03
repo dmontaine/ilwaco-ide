@@ -27,11 +27,6 @@ Namespace My.Sys.ComponentModel
 	End Constructor
 	
 	Private Destructor PrintDocumentPage
-		#ifdef __USE_WINAPI__
-			If Handle Then
-				DeleteEnhMetaFile(Handle)
-			End If
-		#endif
 	End Destructor
 	
 	Private Function PrintDocumentPages.Add(Index As Integer = -1) As PrintDocumentPage Ptr
@@ -89,30 +84,6 @@ Namespace My.Sys.ComponentModel
 		This.Clear
 	End Destructor
 	
-	#ifdef __USE_WINAPI__
-		Private Sub PrintDocument.Paint(HWND As HWND, hdcDestination As HDC, ByVal PageNumber As Integer)
-			If PageNumber < 0 OrElse PageNumber > Pages.Count Then
-				Return
-			End If
-			
-			Dim As ENHMETAHEADER emh
-			Dim As Double MillimetersPerPixelsX, MillimetersPerPixelsY
-			Dim As Rect rc
-			
-			MillimetersPerPixelsX = GetDeviceCaps(hdcDestination, HORZRES) / GetDeviceCaps(hdcDestination, HORZSIZE) / 100
-			MillimetersPerPixelsY = GetDeviceCaps(hdcDestination, VERTRES) / GetDeviceCaps(hdcDestination, VERTSIZE) / 100
-			
-			GetEnhMetaFileHeader(Pages.Item(PageNumber)->Handle, SizeOf(emh), @emh)
-			
-			rc.Left   = emh.rclFrame.Left * MillimetersPerPixelsX
-			rc.Right  = rc.Left + (emh.rclFrame.Right - emh.rclFrame.Left) * MillimetersPerPixelsX
-			rc.Top    = emh.rclFrame.Top * MillimetersPerPixelsX
-			rc.Bottom = rc.Top + (emh.rclFrame.Bottom - emh.rclFrame.Top) * MillimetersPerPixelsX
-			
-			PlayEnhMetaFile(hdcDestination, Pages.Item(PageNumber)->Handle, @rc )
-			
-		End Sub
-	#endif
 	
 	Private Sub PrintDocument.Print
 		If PrinterSettings.Name = "" Then
@@ -123,23 +94,6 @@ Namespace My.Sys.ComponentModel
 		
 		If PrinterSettings.Handle = 0 Then Return
 		
-		#ifdef __USE_WINAPI__
-			Dim As DOCINFO di
-			di.cbSize      = SizeOf(DOCINFO)
-			di.lpszDocName = DocumentName
-			
-			StartDoc(PrinterSettings.Handle, @di)
-			
-			For i As Integer = 0 To Pages.Count - 1
-				StartPage(PrinterSettings.Handle)
-				This.Paint(0, PrinterSettings.Handle, i)
-				EndPage(PrinterSettings.Handle)
-			Next
-			
-			EndDoc(PrinterSettings.Handle)
-			DeleteDC(PrinterSettings.Handle)
-			'PrinterSettings.Handle = 0
-		#endif
 	End Sub
 	
 	Private Sub PrintDocument.Repaint
@@ -149,13 +103,7 @@ Namespace My.Sys.ComponentModel
 			HasMorePages = False
 			Dim As PrintDocumentPage Ptr NewPage = Pages.Add
 			NewPage->Canvas.HandleSetted = True
-			#if defined(__USE_WINAPI__) AndAlso Not defined(__USE_CAIRO__)
-				NewPage->Canvas.Handle = CreateEnhMetaFile(NULL, NULL, NULL, NULL)
-			#endif
 			If OnPrintPage Then OnPrintPage(*Designer, This, NewPage->Canvas, HasMorePages)
-			#if defined(__USE_WINAPI__) AndAlso Not defined(__USE_CAIRO__)
-				NewPage->Handle = CloseEnhMetaFile(NewPage->Canvas.Handle)
-			#endif
 			NewPage->Canvas.Handle = 0
 			NewPage->Canvas.HandleSetted = False
 		Loop While HasMorePages
@@ -167,12 +115,5 @@ Namespace My.Sys.ComponentModel
 	End Constructor
 	
 	Destructor PrintDocument
-		#ifdef __USE_WINAPI__
-			For i As Integer = 0 To Pages.Count - 1
-				If Pages.Item(i)->Handle Then
-					DeleteEnhMetaFile(Pages.Item(i)->Handle)
-				End If
-			Next
-		#endif
 	End Destructor
 End Namespace

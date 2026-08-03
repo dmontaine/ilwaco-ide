@@ -33,18 +33,8 @@ Namespace My.Sys.Forms
 		FBevelWidth  As Integer
 		FTransparent As Boolean
 		FDownButton  As Integer
-		#ifdef __USE_WINAPI__
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-			Declare Static Sub WNDPROC(ByRef Message As Message)
-			Declare Sub AdjustColors(FBevel As Integer)
-			Declare Sub DoRect(R As My.Sys.Drawing.Rect, tTopColor As Integer = GetSysColor(COLOR_BTNSHADOW), tBottomColor As Integer = GetSysColor(COLOR_BTNSHADOW))
-			Declare Sub Frame3D(R As My.Sys.Drawing.Rect, AWidth As Integer)
-		#endif
 		Declare Static Sub GraphicChange(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Drawing.GraphicType, Image As Any Ptr, ImageType As Integer)
 	Protected:
-		#ifdef __USE_WASM__
-			Declare Virtual Function GetContent() As UString
-		#endif
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
 	Public:
 		#ifndef ReadProperty_Off

@@ -15,10 +15,8 @@ Namespace My.Sys.Forms
 	Protected:
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
 	Public:
-		#ifdef __USE_GTK__
 			'Function registers a window class for subsequent use in calls to the create window (Windows, Linux)
 			Declare Function RegisterClass(ByRef wClassName As WString, Obj As Any Ptr, WndProcAddr As Any Ptr = 0) As Boolean
-		#endif
 		#ifndef ReadProperty_Off
 			'Reads value from the name of property (Windows, Linux, Android, Web).
 			Declare Virtual Function ReadProperty(ByRef PropertyName As String) As Any Ptr

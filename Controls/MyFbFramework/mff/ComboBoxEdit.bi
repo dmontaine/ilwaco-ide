@@ -31,11 +31,6 @@ Namespace My.Sys.Forms
 		FSort             As Boolean
 		FItemText         As WString Ptr
 		FItemHeight       As Integer
-		#ifdef __USE_WINAPI__
-			FListHandle     As HWND
-			FEditHandle     As HWND
-			lpfnEditWndProc As Any Ptr
-		#endif
 		FSelColor         As Integer
 		ASortStyle(2)     As Integer
 		AIntegralHeight(2) As Integer
@@ -49,14 +44,6 @@ Namespace My.Sys.Forms
 		FNewIndex         As Integer
 		FSelected         As Boolean
 		Declare Virtual Sub UpdateListHeight
-		#if defined(__USE_WINAPI__) OrElse defined(__USE_WASM__)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-		#endif
-		#ifdef __USE_WINAPI__
-			Declare Static Function WindowProc(FWindow As HWND, msg As UINT, wParam As WPARAM, lParam As LPARAM) As LRESULT
-			Declare Static Function SubClassProc(FWindow As HWND, msg As UINT, wParam As WPARAM, lParam As LPARAM) As LRESULT
-			Declare Virtual Sub SetDark(Value As Boolean)
-		#elseif defined(__USE_GTK__)
 			Declare Static Sub ComboBoxEdit_Popup(widget As GtkComboBox Ptr, user_data As Any Ptr)
 			Declare Static Function ComboBoxEdit_Popdown(widget As GtkComboBox Ptr, user_data As Any Ptr) As Boolean
 			Declare Static Sub ComboBoxEdit_Changed(widget As GtkComboBox Ptr, user_data As Any Ptr)
@@ -64,9 +51,6 @@ Namespace My.Sys.Forms
 			Declare Static Sub Entry_Changed(entry As GtkEntry Ptr, user_data As Any Ptr)
 			DropDownWidget As GtkWidget Ptr
 			DropDownListWidget As GtkWidget Ptr
-		#elseif defined(__USE_WASM__)
-			Declare Virtual Function GetContent() As UString
-		#endif
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
 	Public:
 		'Collection of list items.
@@ -163,12 +147,6 @@ Namespace My.Sys.Forms
 		OnKeyDown           As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As ComboBoxEdit, Key As Integer, Shift As Integer)
 		'Triggered by keyboard key release.
 		OnKeyUp             As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As ComboBoxEdit, Key As Integer, Shift As Integer)
-		#ifdef __USE_WINAPI__
-			'Custom item sizing event.
-			OnMeasureItem       As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As ComboBoxEdit, ItemIndex As Integer, ByRef Height As UINT)
-			'Custom item rendering event.
-			OnDrawItem          As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As ComboBoxEdit, ItemIndex As Integer, State As Integer, ByRef R As Rect, DC As HDC = 0)
-		#endif
 		'Triggered after item selection.
 		OnSelected          As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As ComboBoxEdit, ItemIndex As Integer)
 		'Raised when selection aborted.

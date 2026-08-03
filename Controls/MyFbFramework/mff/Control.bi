@@ -18,149 +18,6 @@
 #include once "IntegerList.bi"
 #include once "NotifyIcon.bi"
 #include once "DarkMode/DarkMode.bi"
-#ifdef __USE_WINAPI__
-	#include once "win/commctrl.bi"
-	#include once "win/shellapi.bi"
-	#include once "win/shlobj.bi"
-	#include once "win/windowsx.bi"
-	#include once "CDropTarget/CDropTarget.bi"
-	#include once "CDropSource/CDropSource.bi"
-	#include once "CDataObject/CDataObject.bi"
-	Const WM_DPICHANGED = &h02E0
-	Const WM_DPICHANGED_BEFOREPARENT = &h02E2
-	Const WM_DPICHANGED_AFTERPARENT = &h02E3
-	Const WM_GETDPISCALEDSIZE = &h02E4
-	#if Not _WIN32_WINNT >= &h0601
-		Const WM_TOUCH = &h0240
-	#endif
-	#if Not _WIN32_WINNT >= &h0602
-		Const WM_POINTERDEVICECHANGE = &h238
-		Const WM_POINTERDEVICEINRANGE = &h239
-		Const WM_POINTERDEVICEOUTOFRANGE = &h23a
-		Const WM_NCPOINTERUPDATE = &h0241
-		Const WM_NCPOINTERDOWN = &h0242
-		Const WM_NCPOINTERUP = &h0243
-		Const WM_POINTERUPDATE = &h0245
-		Const WM_POINTERDOWN = &h0246
-		Const WM_POINTERUP = &h0247
-		Const WM_POINTERENTER = &h0249
-		Const WM_POINTERLEAVE = &h024a
-		Const WM_POINTERACTIVATE = &h024b
-		Const WM_POINTERCAPTURECHANGED = &h024c
-		Const WM_TOUCHHITTESTING = &h024d
-		Const WM_POINTERWHEEL = &h024e
-		Const WM_POINTERHWHEEL = &h024f
-	#endif
-	#if Not _WIN32_WINNT >= &h0601
-		Const WM_GESTURE = &h0119
-		Const WM_GESTURENOTIFY = &h011A
-	#endif
-	#if Not _WIN32_WINNT >= &h0602
-		Const POINTER_FLAG_NONE = &h00000000
-		Const POINTER_FLAG_NEW = &h00000001
-		Const POINTER_FLAG_INRANGE = &h00000002
-		Const POINTER_FLAG_INCONTACT = &h00000004
-		Const POINTER_FLAG_FIRSTBUTTON = &h00000010
-		Const POINTER_FLAG_SECONDBUTTON = &h00000020
-		Const POINTER_FLAG_THIRDBUTTON = &h00000040
-		Const POINTER_FLAG_FOURTHBUTTON = &h00000080
-		Const POINTER_FLAG_FIFTHBUTTON = &h00000100
-		Const POINTER_FLAG_PRIMARY = &h00002000
-		Const POINTER_FLAG_CONFIDENCE = &h00004000
-		Const POINTER_FLAG_CANCELED = &h00008000
-		Const POINTER_FLAG_DOWN = &h00010000
-		Const POINTER_FLAG_UPDATE = &h00020000
-		Const POINTER_FLAG_UP = &h00040000
-		Const POINTER_FLAG_WHEEL = &h00080000
-		Const POINTER_FLAG_HWHEEL = &h00100000
-		Const POINTER_FLAG_CAPTURECHANGED = &h00200000
-		Const POINTER_MOD_SHIFT = &h0004
-		Const POINTER_MOD_CTRL = &h0008
-		
-		Type POINTER_FLAGS As UINT32
-		Type TOUCH_FLAGS As UINT32
-		Type TOUCH_MASK As UINT32
-		Type PEN_FLAGS As UINT32
-		Type PEN_MASK As UINT32
-			
-		Type POINTER_INPUT_TYPE As Long
-		Enum
-			PT_POINTER = &h00000001
-			PT_TOUCH = &h00000002
-			PT_PEN = &h00000003
-			PT_MOUSE = &h00000004
-		End Enum
-		
-		Type POINTER_BUTTON_CHANGE_TYPE As Long
-		Enum
-			POINTER_CHANGE_NONE
-			POINTER_CHANGE_FIRSTBUTTON_DOWN
-			POINTER_CHANGE_FIRSTBUTTON_UP
-			POINTER_CHANGE_SECONDBUTTON_DOWN
-			POINTER_CHANGE_SECONDBUTTON_UP
-			POINTER_CHANGE_THIRDBUTTON_DOWN
-			POINTER_CHANGE_THIRDBUTTON_UP
-			POINTER_CHANGE_FOURTHBUTTON_DOWN
-			POINTER_CHANGE_FOURTHBUTTON_UP
-			POINTER_CHANGE_FIFTHBUTTON_DOWN
-			POINTER_CHANGE_FIFTHBUTTON_UP
-		End Enum
-			
-		Type POINTER_INFO
-			pointerType As POINTER_INPUT_TYPE
-			pointerId As UINT32
-			frameId As UINT32
-			pointerFlags As POINTER_FLAGS
-			sourceDevice As HANDLE
-			hwndTarget As HWND
-			ptPixelLocation As Point
-			ptHimetricLocation As Point
-			ptPixelLocationRaw As Point
-			ptHimetricLocationRaw As Point
-			dwTime As DWORD
-			historyCount As UINT32
-			InputData As INT32
-			dwKeyStates As DWORD
-			PerformanceCount As UINT64
-			ButtonChangeType As POINTER_BUTTON_CHANGE_TYPE
-		End Type
-	#endif
-	#if Not _WIN32_WINNT >= &h0601
-		Type HGESTUREINFO__
-			unused As Long
-		End Type
-		
-		Type HGESTUREINFO As HGESTUREINFO__ Ptr
-		
-		Type tagGESTUREINFO
-			cbSize As UINT
-			dwFlags As DWORD
-			dwID As DWORD
-			hwndTarget As HWND
-			ptsLocation As POINTS
-			dwInstanceID As DWORD
-			dwSequenceID As DWORD
-			ullArguments As ULONGLONG
-			cbExtraArgs As UINT
-		End Type
-		
-		Type GESTUREINFO As tagGESTUREINFO
-		Type PGESTUREINFO As tagGESTUREINFO Ptr
-		Type PCGESTUREINFO As Const GESTUREINFO Ptr
-		
-		Const GF_BEGIN = &h00000001
-		Const GF_INERTIA = &h00000002
-		Const GF_END = &h00000004
-		Const GID_BEGIN = 1
-		Const GID_END = 2
-		Const GID_ZOOM = 3
-		Const GID_PAN = 4
-		Const GID_ROTATE = 5
-		Const GID_TWOFINGERTAP = 6
-		Const GID_PRESSANDTAP = 7
-		Const GID_ROLLOVER = GID_PRESSANDTAP
-	#endif
-#endif
 
 Using My.Sys.ComponentModel
 
@@ -308,11 +165,7 @@ Namespace My.Sys.Forms
 		End Type
 
 		Type DataObject
-			#ifdef __USE_WINAPI__
-				Dim As IDataObject Ptr pDataObject
-			#else
 				Dim As Any Ptr pDataObject
-			#endif
 			Declare Function GetDataPresent(DataType As DataFormats) As Boolean
 			Declare Function GetData(DataType As DataFormats) As Any Ptr
 			Declare Sub GetFileDropList(filePaths() As UString)
@@ -324,35 +177,6 @@ Namespace My.Sys.Forms
 			smNone, smStretch, smStretchProportional
 		End Enum
 		
-		#ifdef __USE_WINAPI__
-			Private Enum ViewStyle
-				vsIcon = LV_VIEW_ICON
-				vsDetails = LV_VIEW_DETAILS
-				vsSmallIcon = LV_VIEW_SMALLICON
-				vsList = LV_VIEW_LIST
-				vsTile = LV_VIEW_TILE
-				vsMax = LV_VIEW_MAX
-			End Enum
-			
-			Private Enum ColumnFormat
-				cfLeft = LVCFMT_LEFT
-				cfRight = LVCFMT_RIGHT
-				cfCenter = LVCFMT_CENTER
-				cfJustifyMask = LVCFMT_JUSTIFYMASK
-				cfImage = LVCFMT_IMAGE
-				cfBitmapOnRight = LVCFMT_BITMAP_ON_RIGHT
-				cfColHasImages = LVCFMT_COL_HAS_IMAGES
-				'cfFixedWidth = LVCFMT_FIXED_WIDTH
-				'cfNoDpiScale = LVCFMT_NO_DPI_SCALE
-				'cfFixedRatio = LVCFMT_FIXED_RATIO
-				'cfLineBreak = LVCFMT_LINE_BREAK
-				cfFill = LVCFMT_FILL
-				'cfWrap = LVCFMT_WRAP
-				'cfNoTitle = LVCFMT_NO_TITLE
-				'cfSplitButton = LVCFMT_SPLITBUTTON
-				'cfTilePlacementMask = LVCFMT_TILE_PLACEMENTMASK
-			End Enum
-		#else
 			Private Enum ViewStyle
 				vsIcon
 				vsDetails
@@ -380,7 +204,6 @@ Namespace My.Sys.Forms
 				'cfSplitButton
 				'cfTilePlacementMask
 			End Enum
-		#endif
 		
 		Private Type SizeConstraints Extends My.Sys.Object
 			Declare Function ToString ByRef As WString
@@ -410,7 +233,6 @@ Namespace My.Sys.Forms
 			
 		End Type
 		
-		#ifdef __USE_GTK__
 			Private Type MouseHoverMessageType
 				Sender As PControl
 				X As Double
@@ -421,7 +243,6 @@ Namespace My.Sys.Forms
 			End Type
 			Dim Shared MouseHoverMessage As MouseHoverMessageType
 			Dim Shared hover_timer_id As UInteger
-		#endif
 		
 		'Defines the base class for controls, which are components with visual representation (Windows, Linux, Android, Web)
 		Private Type Control Extends Component
@@ -442,12 +263,10 @@ Namespace My.Sys.Forms
 			FHorizontalSpacing As Integer
 			FVerticalSpacing As Integer
 			FLastNotifyIcon As NotifyIcon Ptr
-			#ifdef __USE_GTK__
 				FParentWidget As GtkWidget Ptr
 				FClient As GtkWidget Ptr
 				AllocatedHeight As Integer
 				AllocatedWidth As Integer
-				#ifndef __USE_GTK2__
 					GestureDrag As GtkGesture Ptr
 					GestureLongPress As GtkGesture Ptr
 					GestureMultiPress As GtkGesture Ptr
@@ -460,26 +279,11 @@ Namespace My.Sys.Forms
 					Declare Static Sub GestureBegin(self As GtkGesture Ptr, sequence As GdkEventSequence Ptr, user_data As Any Ptr)
 					Declare Static Sub GestureUpdate(self As GtkGesture Ptr, sequence As GdkEventSequence Ptr, user_data As Any Ptr)
 					Declare Static Sub GestureEnd(self As GtkGesture Ptr, sequence As GdkEventSequence Ptr, user_data As Any Ptr)
-				#endif
 				Declare Static Sub Control_SizeAllocate(widget As GtkWidget Ptr, allocation As GdkRectangle Ptr, user_data As Any Ptr)
 				Declare Static Function Control_Draw(widget As GtkWidget Ptr, cr As cairo_t Ptr, data1 As Any Ptr) As Boolean
 				Declare Static Function Control_ExposeEvent(widget As GtkWidget Ptr, Event As GdkEventExpose Ptr, data1 As Any Ptr) As Boolean
 				Declare Static Sub DragDataReceived(self As GtkWidget Ptr, CONTEXT As GdkDragContext Ptr, x As gint, y As gint, Data As GtkSelectionData Ptr, info As guint, Time As guint, user_data As Any Ptr)
 				Declare Static Function ConfigureEventProc(widget As GtkWidget Ptr, Event As GdkEvent Ptr, user_data As Any Ptr) As Boolean
-			#elseif defined(__USE_WASM__)
-				FType As String
-				FElementStyle As String
-				FClass As String
-				Declare Virtual Function GetContent() As UString
-			#elseif defined(__USE_WINAPI__)
-				FParentHandle As HWND
-				FClient As HWND
-				As Integer FClientX, FClientY, FClientW, FClientH
-				FToolInfo          As TOOLINFO
-				FDarkMode          As Boolean
-				FDropTarget        As CDropTarget
-				FDropSource        As CDropSource
-			#endif
 			FBorderStyle       As Integer
 			FExStyle           As Integer
 			FAllowDrop         As Boolean
@@ -550,30 +354,13 @@ Namespace My.Sys.Forms
 			OnActiveControlChanged As Sub(ByRef Sender As Control)
 			OnHandleIsAllocated As Sub(ByRef Sender As Control)
 			OnHandleIsDestroyed As Sub(ByRef Sender As Control)
-			#ifdef __USE_GTK__
 				Declare Function RegisterClass(ByRef wClassName As WString, Obj As Any Ptr, WndProcAddr As Any Ptr = 0) As Boolean
 				Declare Static Function EventProc(widget As GtkWidget Ptr, Event As GdkEvent Ptr, user_data As Any Ptr) As Boolean
 				Declare Static Function EventAfterProc(widget As GtkWidget Ptr, Event As GdkEvent Ptr, user_data As Any Ptr) As Boolean
 				Declare Static Function hover_cb(ByVal user_data As gpointer) As gboolean
 				Declare Static Function Control_Scroll(self As GtkScrolledWindow Ptr, scroll As GtkScrollType Ptr, Horizontal As Boolean, user_data As Any Ptr) As Boolean
-			#elseif defined(__USE_WINAPI__)
-				Declare Static Function RegisterClass(ByRef wClassName As WString, ByRef wClassAncestor As WString = "", WndProcAddr As Any Ptr = 0) As Integer
-				Declare Static Function WindowProc(FWindow As HWND, MSG As UINT, WPARAM As WPARAM, LPARAM As LPARAM) As LRESULT
-				Declare Static Function DefWndProc(FWindow As HWND, MSG As UINT, WPARAM As WPARAM, LPARAM As LPARAM) As LRESULT
-				Declare Static Function CallWndProc(FWindow As HWND, MSG As UINT, WPARAM As WPARAM, LPARAM As LPARAM) As LRESULT
-				Declare Static Function SuperWndProc(FWindow As HWND, MSG As UINT, WPARAM As WPARAM, LPARAM As LPARAM) As LRESULT
-				Declare Function Perform(MSG As UINT, WPARAM As WPARAM, LPARAM As LPARAM) As LRESULT
-				Declare Virtual Sub SetDark(Value As Boolean)
-				Declare Sub AllocateHint
-			#endif
-			#ifdef __USE_GTK__
 				Declare Property ParentWidget As GtkWidget Ptr
 				Declare Property ParentWidget(Value As GtkWidget Ptr)
-			#elseif defined(__USE_WINAPI__)
-				Declare Property ParentHandle As HWND
-				Declare Property ParentHandle(Value As HWND)
-				ToolTipHandle       As HWND
-			#endif
 			Declare Sub GetMax(ByRef MaxWidth As Integer, ByRef MaxHeight As Integer)
 			Declare Virtual Sub ProcessMessageAfter(ByRef message As Message)
 		Public:
@@ -809,22 +596,8 @@ Namespace My.Sys.Forms
 		
 		Dim Shared CreationControl As Control Ptr
 	#endif
-	#ifdef __USE_JNI__
-		Dim Shared AppMainForm As Control Ptr
-	#endif
 End Namespace
 
-#ifdef __USE_WINAPI__
-	#include once "CDropTarget/CDropTarget.bas"
-	#include once "CDropSource/CDropSource.bas"
-	#if Not _WIN32_WINNT >= &h0602
-		Dim Shared GetPointerInfo As Function(ByVal pointerId As UINT32, ByVal pointerInfo As POINTER_INFO Ptr) As WINBOOL
-	#endif
-	#if Not _WIN32_WINNT >= &h0601
-		Dim Shared GetGestureInfo As Function(ByVal HGESTUREINFO As HGESTUREINFO, ByVal PGESTUREINFO As PGESTUREINFO) As WINBOOL
-		Dim Shared CloseGestureInfoHandle As Function(ByVal HGESTUREINFO As HGESTUREINFO) As WINBOOL
-	#endif
-#endif
 
 #ifdef __EXPORT_PROCS__
 	Declare Sub RemoveControl Alias "RemoveControl"(Parent As My.Sys.Forms.Control Ptr, Ctrl As My.Sys.Forms.Control Ptr)

@@ -34,14 +34,7 @@ Namespace My.Sys.Forms
 	'`ListControl` - Displays a list of items from which the user can select one or more (Windows, Linux, Web).
 	Private Type ListControl Extends Control
 	Private:
-		#ifdef __USE_WINAPI__
-			Declare Static Sub WndProc(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-		#elseif defined(__USE_GTK__)
 			Declare Static Sub SelectionChanged(selection As GtkTreeSelection Ptr, user_data As Any Ptr)
-		#elseif defined(__USE_WASM__)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-		#endif
 	Protected:
 		FNewIndex         As Integer
 		FStyle            As Integer
@@ -60,12 +53,8 @@ Namespace My.Sys.Forms
 		FCtl3D            As Boolean
 		FSelectionMode    As SelectionModes
 		AItems(Any)       As Integer 
-		#ifdef __USE_GTK__
 			ListStore As GtkListStore Ptr
 			TreeSelection As GtkTreeSelection Ptr
-		#elseif defined(__USE_WASM__)
-			Declare Virtual Function GetContent() As UString
-		#endif
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
 	Public:
 		'Collection of list items
@@ -169,12 +158,6 @@ Namespace My.Sys.Forms
 		Declare Destructor
 		'Raised when selection changes
 		OnChange      As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As ListControl)
-		#ifdef __USE_WINAPI__
-			'Custom item size measurement event
-			OnMeasureItem As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As ListControl, ItemIndex As Integer, ByRef Height As UINT)
-			'Custom item painting event
-			OnDrawItem    As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As ListControl, ItemIndex As Integer, State As Integer, ByRef R As My.Sys.Drawing.Rect, DC As HDC = 0)
-		#endif
 	End Type
 End Namespace
 

@@ -6,12 +6,6 @@
 
 #include once "Object.bi"
 #include once "Dictionary.bi"
-#ifdef __USE_WINAPI__
-	#include once "win/winsock2.bi"
-	#include once "windows.bi"
-	#include once "win/shellapi.bi"
-	#include once "fbthread.bi"
-#endif
 
 Using My.Sys.ComponentModel
 
@@ -31,9 +25,6 @@ Namespace My.Sys.Forms
 	End Type
 	
 	Type CLIENT
-		#ifdef __USE_WINAPI__
-			_socket     As SOCKET
-		#endif
 		ip          As Integer
 		port        As Integer
 		recvthread  As Any Ptr
@@ -46,9 +37,6 @@ Namespace My.Sys.Forms
 	Type HTTPServer Extends Component
 	Private:
 		#define BuffSize 16
-		#ifdef __USE_WINAPI__
-			_socket     As SOCKET
-		#endif
 		acceptthread    As Any Ptr
 		isrunning       As Integer
 		globmutex       As Any Ptr

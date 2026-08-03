@@ -15,7 +15,48 @@ Ilwaco keeps GTK, so our GTK fixes apply upstream where Astoria's Win64-only one
 
 ---
 
-## Session handoff (2026-08-02, latest) — EditControl fully stripped; compiler hard-coded (no picker dialog)
+## Session handoff (2026-08-02, latest) — MFF framework non-target strip (AstoriaParity task B) landed
+
+**START HERE.** The framework-wide non-target strip is done and **build- + runtime-verified**: both the
+editor (`VisualFBEditor64_gtk3`, 4.99 MB) and the designer control lib (`libmff64_gtk3.so`, 1.69 MB)
+rebuild **clean** (`fbc` exit 0, zero warnings), and the IDE **launches to a full editor window and idles
+stably ~80 s** — no error dialog, no crash, no `DebugInfo.log` (only the documented-harmless
+`AppAddin`/`AppConsole` resource warnings).
+
+**Scale:** ~**134,600 lines removed across 274 files, 91 files deleted**. Two parts: (a) MFF control-code
+strip — **198 files / ~41,250 lines** incl. 14 whole-file deletions; (b) `mff/gir_headers/` GTK4 binding
+tree — **77 files / 93,349 lines** (included only under `#ifdef __USE_GTK4__`, so pure non-target). WINAPI
+`#ifdef` occurrences in `mff/` went **954 → 0** outside the 3 excluded derivation files; the compiled
+surface now has **zero** real non-target directives.
+
+**How (durable tooling, reusable):** extended the task-A eliminator (`scratchpad/ppstrip.py`) into a full
+recursive-descent `#if`/`#elseif` parser handling `defined()`/`AndAlso`/`OrElse`/`Not`/comparisons. It is
+**conservative**: a chain collapses only if *every* branch condition is known (ground-truth symbol table
+probed from the compiler — notably `__USE_CAIRO__` is **defined** on our build); any **opaque** symbol
+(`pango_version`, `UNICODE`, `__USE_MAKE__`, `_WIN32_WINNT`, `GIFPlayOn`, …) leaves the chain intact but
+still recurses inside. It only deletes whole lines — every edited file verified a strict line-subsequence
+of the original. **Exclude list (they *define* the truth): `mff/mff.bi`, `mff/SysUtils.bi`, `inc/pipe.bi`.**
+Two traps fixed mid-run: a **BOM** on line 1 hiding a leading `#ifdef`, and a **trailing `'comment`** on an
+`#ifdef` line swallowed into the operand. Full method + symbol table + deleted-dir list in AstoriaParity
+"Done — MFF non-target strip (staged task B)".
+
+**Dark mode (REIMPLEMENT gap surfaced):** MFF already ships a real GTK3 `SetDarkMode`
+(`gtk-application-prefer-dark-theme`), so `DarkMode/` was **kept** (not stubbed). But `g_darkModeSupported`
+was only ever set by the deleted Win32 `InitDarkMode`, so on GTK it stays `False` and the
+`If g_darkModeSupported AndAlso …` styling branches never fire — a REIMPLEMENT item (track with Astoria's
+dark-mode commits). See AstoriaParity NEXT ACTION.
+
+**Deferred strip sub-items (non-blocking, off the compiled path):** `mff/win/` (Windows headers, now inert),
+`Controls/MyFbFramework/inc/` (not on the build path — incl. the WINAPI-forcing `pipe.bi`), a few
+commented-out `'#ifdef` cruft lines, and `#define nullptr 0` in `DarkMode.bi`. Listed in AstoriaParity.
+
+**Build note:** the shim (`$SHIM` GTK dev-symlink dir + vendored `Compilers/shim/libtinfo.so.5`) is
+recreated per session in scratchpad; the durable `build-linux.sh` is still the open infra task. Nothing
+committed yet this session — the strip is staged in the working tree for review.
+
+---
+
+## Session handoff (2026-08-02, earlier) — EditControl fully stripped; compiler hard-coded (no picker dialog)
 
 **START HERE.** Two substantive landings, both **build-verified clean** (fbc exit 0, zero warnings) and
 **runtime-verified** (the IDE launches to a fully-loaded editor — full menus/panels, "IntelliSense fully

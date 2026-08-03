@@ -11,15 +11,10 @@
 '###############################################################################
 
 #include once "Application.bi"
-#ifndef __USE_GTK__
-	#include once "Win/ShlObj.bi"
-#else
 	#include once "Graphics.bi"
-#endif
 
 Const OFN_ENABLEINCLUDENOTIFY = &H400000
 
-#ifdef __USE_GTK__
 	Private Enum OpenOption
 		ofReadOnly
 		ofOverwritePrompt
@@ -42,30 +37,6 @@ Const OFN_ENABLEINCLUDENOTIFY = &H400000
 		ofEnableIncludeNotify
 		ofEnableSizing
 	End Enum
-#else
-	Private Enum OpenOption
-		ofReadOnly            = OFN_READONLY
-		ofOverwritePrompt     = OFN_OVERWRITEPROMPT
-		ofHideReadOnly        = OFN_HIDEREADONLY
-		ofNoChangeDir         = OFN_NOCHANGEDIR
-		ofShowHelp            = OFN_SHOWHELP
-		ofNoValidate          = OFN_NOVALIDATE
-		ofAllowMultiSelect    = OFN_ALLOWMULTISELECT
-		ofExtensionDifferent  = OFN_EXTENSIONDIFFERENT
-		ofPathMustExist       = OFN_PATHMUSTEXIST
-		ofFileMustExist       = OFN_FILEMUSTEXIST
-		ofCreatePrompt        = OFN_CREATEPROMPT
-		ofShareAware          = OFN_SHAREAWARE
-		ofNoReadOnlyReturn    = OFN_NOREADONLYRETURN
-		ofNoTestFileCreate    = OFN_NOTESTFILECREATE
-		ofNoNetworkButton     = OFN_NONETWORKBUTTON
-		ofNoLongNames         = OFN_NOLONGNAMES
-		ofOldStyleDialog      = OFN_EXPLORER
-		ofNoDereferenceLinks  = OFN_NODEREFERENCELINKS
-		ofEnableIncludeNotify = OFN_ENABLEINCLUDENOTIFY
-		ofEnableSizing        = OFN_ENABLESIZING
-	End Enum
-#endif
 
 Private Type OpenFileOptions
 	Count   As Integer
@@ -90,9 +61,6 @@ End Type
 'Displays a standard dialog box that prompts the user to open a file.
 Private Type OpenFileDialog Extends Dialog
 Private:
-	#ifndef __USE_GTK__
-		Declare Static Function Hook(FWindow As HWND, Msg As UINT, wParam As WPARAM, lParam As LPARAM) As UInteger
-	#endif
 	Control     As My.Sys.Forms.Control
 	FInitialDir   As WString Ptr
 	FCaption      As WString Ptr
@@ -109,9 +77,6 @@ Public:
 		Declare Virtual Function WriteProperty(ByRef PropertyName As String, Value As Any Ptr) As Boolean
 	#endif
 	FileNames 	As WStringList
-	#ifndef __USE_GTK__
-		
-	#endif
 	FilterIndex  As Integer
 	Declare Property MultiSelect As Boolean
 	Declare Property MultiSelect(Value As Boolean)
@@ -140,9 +105,6 @@ End Type
 'Prompts the user to select a location for saving a file.
 Private Type SaveFileDialog Extends Dialog
 Private:
-	#ifndef __USE_GTK__
-		Declare Static Function Hook(FWindow As HWND, Msg As UINT, wParam As WPARAM, lParam As LPARAM) As UInteger
-	#endif
 	Control      As My.Sys.Forms.Control
 	FInitialDir   As WString Ptr
 	FCaption      As WString Ptr
@@ -198,9 +160,6 @@ End Type
 'Prompts the user to select a folder.
 Private Type FolderBrowserDialog Extends Dialog
 Private:
-	#ifndef __USE_GTK__
-		Declare Static Function Hook(hWnd As HWND, uMsg As UINT, lParam As LPARAM, lpData As LPARAM) As Long
-	#endif
 	Control     As My.Sys.Forms.Control
 	FCaption    As WString Ptr
 	FTitle      As WString Ptr
@@ -230,13 +189,7 @@ End Type
 'Represents a common dialog box that displays available colors along with controls that enable the user to define custom colors.
 Private Type ColorDialog Extends Dialog
 Private:
-	#ifndef __USE_GTK__
-		CC              As CHOOSECOLOR
-	#endif
 	_Caption        As WString Ptr
-	#ifndef __USE_GTK__
-		Declare Static Function Hook(FWindow As HWND,Msg As UINT,wParam As WPARAM,lParam As LPARAM) As UInteger
-	#endif
 Public:
 	#ifndef ReadProperty_Off
 		Declare Virtual Function ReadProperty(PropertyName As String) As Any Ptr
@@ -248,13 +201,6 @@ Public:
 	Center          As Integer
 	Color           As Integer
 	Style           As Integer
-	#ifndef __USE_GTK__
-		Colors(16)      As COLORREF => {&H0,&H808080,&H000080,&H008080,_
-		&H008000,&H808000,&H800000,&H800080,_
-		&HFFFFFF,&HC0C0C0,&H0000FF,&H00FFFF,_
-		&H00FF00,&HFFFF00,&HFF0000,&HFF00FF _
-		}
-	#endif
 	BackColor       As Integer
 	Declare Property Caption ByRef As WString
 	Declare Property Caption(ByRef Value As WString)

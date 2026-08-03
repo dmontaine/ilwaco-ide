@@ -414,21 +414,12 @@ end function
 Sub RuntimeLoad Constructor
   dprint("fbsound-1.2 RuntimeLoad Constructor")
   if hFBS<>0 then exit sub
-#ifndef __FB_64BIT__
-  dprint("DyLibLoad( '" + FBSOUND_DLL_PATH + "fbsound-32' )")
-  hFBS = DyLibLoad( FBSOUND_DLL_PATH + "fbsound-32" )
-  if hFBS=0 then
-    dprint("error: lib fbsound-32 not loaded !")
-    exit sub
-  end if  
-#else
   dprint("DyLibLoad( '" + FBSOUND_DLL_PATH + "fbsound-64' )") 
   hFBS = DyLibLoad( FBSOUND_DLL_PATH + "fbsound-64" )
   if hFBS=0 then
     dprint("error: lib fbsound-64 not loaded !")
     exit sub
   end if  
-#endif
 
   #define fbs_load(_NAME_) _NAME_ = DyLibSymbol(hFBS,ucase(#_NAME_)) : if _NAME_ = 0 then print "error: can't resolve " & #_NAME_  : beep : sleep : end 1 
   fbs_load(FBS_Init)

@@ -13,13 +13,8 @@ Namespace My.Sys.Forms
 	'`HotKey` - A hot key control is a window that enables the user to enter a combination of keystrokes to be used as a hot key (Windows, Linux).
 	Private Type HotKey Extends Control
 	Private:
-		#ifndef __USE_GTK__
-			Declare Static Sub WndProc(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As My.Sys.Forms.Control)
-		#else
 			Declare Static Sub Entry_Activate(entry As GtkEntry Ptr, user_data As Any Ptr)
 			Dim As Boolean bKeyPressed, bCtrl, bShift, bAlt, bMeta, bSuper, bHyper
-		#endif
 	Protected:
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
 	Public:

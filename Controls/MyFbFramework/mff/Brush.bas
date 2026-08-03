@@ -12,16 +12,6 @@
 
 #include once "Brush.bi"
 
-#ifdef __USE_WINAPI__
-	' ugly colors for illustration purposes
-	g_brItemBackground = CreateSolidBrush(BGR(&hC0, &hC0, &hFF))
-	g_brItemBackgroundHot = CreateSolidBrush(BGR(&hD0, &hD0, &hFF))
-	g_brItemBackgroundSelected = CreateSolidBrush(BGR(&hE0, &hE0, &hFF))
-	g_menuTheme = 0
-	hbrBkgnd = CreateSolidBrush(darkBkColor)
-	hbrHlBkgnd = CreateSolidBrush(darkHlBkColor)
-	hbrBkgndMenu = CreateSolidBrush(darkBkColorMenu)
-#endif
 
 Namespace My.Sys.Drawing
 	#ifndef ReadProperty_Off
@@ -78,40 +68,8 @@ Namespace My.Sys.Drawing
 	End Property
 	
 	Private Sub Brush.Create
-		#ifdef __USE_WINAPI__
-			Dim As LOGBRUSH LB
-			LB.lbColor = FColor
-			LB.lbHatch = FHatchStyle
-			Select Case FStyle
-			Case bsClear
-				LB.lbStyle = BS_NULL
-			Case bsSolid
-				LB.lbStyle = BS_SOLID
-			Case bsHatch
-				LB.lbStyle = BS_HATCHED
-				LB.lbHatch = FHatchStyle
-			End Select
-			If (FHandle <> 0) AndAlso (FHandle <> hbrBkgnd) Then DeleteObject(FHandle)
-			FHandle = CreateBrushIndirect(@LB)
-			If FHandle Then If OnCreate Then OnCreate(*Designer, This)
-		#endif
 	End Sub
 	
-	#ifdef __USE_WINAPI__
-		Private Operator Brush.Let(Value As HBRUSH)
-			If (FHandle <> 0) AndAlso (FHandle <> hbrBkgnd) Then DeleteObject(FHandle)
-			FHandle = Value
-		End Operator
-		
-		Private Property Brush.Handle As HBRUSH
-			Return FHandle
-		End Property
-		
-		Private Property Brush.Handle(Value As HBRUSH)
-			If (FHandle <> 0) AndAlso (FHandle <> hbrBkgnd) Then DeleteObject(FHandle)
-			FHandle = Value
-		End Property
-	#endif
 	
 	Private Operator Brush.Cast As Any Ptr
 		Return @This
@@ -125,8 +83,5 @@ Namespace My.Sys.Drawing
 	End Constructor
 	
 	Private Destructor Brush
-		#ifdef __USE_WINAPI__
-			If FHandle AndAlso FHandle <> hbrBkgnd Then DeleteObject FHandle
-		#endif
 	End Destructor
 End Namespace

@@ -19,22 +19,6 @@
 Using My.Sys.ComponentModel
 
 Namespace My.Sys.Forms
-	#ifdef __USE_WINAPI__
-		Private Enum DrawingStyles
-			dsFocus       = ILD_FOCUS
-			dsNormal      = ILD_NORMAL
-			dsSelected    = ILD_SELECTED
-			dsTransparent = ILD_TRANSPARENT
-			dsBlend       = ILD_BLEND
-			dsBlend25     = ILD_BLEND25
-			dsBlend50     = ILD_BLEND50
-		End Enum
-		
-		Private Enum ImageTypes
-			itImage = 0
-			itMask  = ILD_MASK
-		End Enum
-	#else
 		Private Enum DrawingStyles
 			dsFocus
 			dsNormal
@@ -49,7 +33,6 @@ Namespace My.Sys.Forms
 			itImage = 0
 			itMask
 		End Enum
-	#endif
 	
 	'An image list is a collection of images of the same size, each of which can be referred to by its index (Windows, Linux).
 	Private Type ImageList Extends Component
@@ -75,15 +58,7 @@ Namespace My.Sys.Forms
 		#ifndef WriteProperty_Off
 			Declare Virtual Function WriteProperty(PropertyName As String, Value As Any Ptr) As Boolean
 		#endif
-		#ifdef __USE_GTK__
 			Handle      As GtkIconTheme Ptr
-		#elseif defined(__USE_JNI__)
-			Handle      As jobject
-		#elseif defined(__USE_WINAPI__)
-			Handle      As HIMAGELIST
-		#else
-			Handle      As Any Ptr
-		#endif
 		InitialCount    As Integer
 		GrowCount       As Integer
 		ImageType       As ImageTypes

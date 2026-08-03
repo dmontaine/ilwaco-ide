@@ -39,19 +39,12 @@ Namespace My.Sys.Forms
 		FAlignment    As Integer
 		FThousands    As Boolean
 		FWrap         As Boolean
-		#ifndef __USE_GTK__
-			FUDAccel(1)   As UDACCEL
-		#endif
 		AStyle(2)     As Integer
 		AAlignment(2) As Integer
 		AWrap(2)      As Integer
 		AArrowKeys(2) As Integer
 		AAThousand(2) As Integer
 		FAssociate    As Control Ptr
-		#ifndef __USE_GTK__
-			Declare Static Sub WndProc(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-		#endif
 		Declare Sub SetRange(AMin As Integer, AMax As Integer)
 	Public:
 		#ifndef ReadProperty_Off

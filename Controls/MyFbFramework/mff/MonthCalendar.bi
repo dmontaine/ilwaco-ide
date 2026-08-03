@@ -14,12 +14,7 @@ Namespace My.Sys.Forms
 	'`MonthCalendar` - Represents a Windows control that enables the user to select a date using a visual monthly calendar display (Windows, Linux, Android).
 	Private Type MonthCalendar Extends Control
 	Private:
-		#ifdef __USE_WINAPI__
-			Declare Static Sub WndProc(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As My.Sys.Forms.Control)
-		#elseif defined(__USE_GTK__)
 			Declare Static Sub Calendar_DaySelected(calendar As GtkCalendar Ptr, user_data As Any Ptr)
-		#endif
 	Protected:
 		FSelectedDate    As Long
 		FWeekNumbers     As Boolean = False

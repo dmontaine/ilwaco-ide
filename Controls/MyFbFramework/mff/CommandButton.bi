@@ -31,12 +31,7 @@ Namespace My.Sys.Forms
 		FImageType  As Integer
 		AStyle(4)   As Integer
 		ADefault(2) As Integer
-		#ifndef __USE_GTK__
-			Declare Static Sub WndProc(ByRef message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-		#else
 			Declare Static Sub Clicked(widget As GtkButton Ptr, user_data As Any Ptr)
-		#endif
 		Declare Static Sub GraphicChange(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Drawing.GraphicType, Image As Any Ptr, ImageType As Integer)
 		Declare Function EnumMenuItems(Item As MenuItem, ByRef List As List) As Boolean
 	Protected:
@@ -76,10 +71,6 @@ Namespace My.Sys.Forms
 		Declare Operator Cast As Control Ptr
 		Declare Constructor
 		Declare Destructor
-		#ifdef __USE_WINAPI__
-			'Occurs when any part of a CommandButton is moved, enlarged, or exposed.
-			OnDraw  As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As CommandButton, ByRef R As Rect, DC As HDC = 0)
-		#endif
 	End Type
 End Namespace
 

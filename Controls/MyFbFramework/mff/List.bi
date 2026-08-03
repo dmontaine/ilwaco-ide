@@ -11,11 +11,7 @@
 '*  Modified by Xusinboy Bekchanov(2018-2019)  Liu XiaLin                     *
 '******************************************************************************
 
-#ifdef __FB_WIN32__
-	#include once "UString.bi"
-#else
 	#include once "SysUtils.bi"
-#endif
 
 #define QList(__Ptr__) (*Cast(List Ptr,__Ptr__))
 

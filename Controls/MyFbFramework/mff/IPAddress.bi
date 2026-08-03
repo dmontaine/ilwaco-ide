@@ -14,7 +14,6 @@ Namespace My.Sys.Forms
 	Private Type IPAddress Extends Control
 	Private:
 	Protected:
-		#ifdef __USE_GTK__
 			Dim As GtkWidget Ptr Layouts(3), Entries(3), CurrentEntry
 			Dim As PangoContext Ptr pcontext
 			Dim As PangoLayout Ptr layout
@@ -29,11 +28,6 @@ Namespace My.Sys.Forms
 			Declare Static Sub Entry_Activate(entry As GtkEntry Ptr, user_data As Any Ptr)
 			Declare Static Sub Entry_Changed(entry As GtkEntry Ptr, user_data As Any Ptr)
 			Declare Static Sub Entry_GrabFocus(widget As GtkWidget Ptr, user_data As Any Ptr)
-		#else
-			Declare Static Sub WndProc(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As My.Sys.Forms.Control)
-			Declare Static Function IPAddressWndProc(FWindow As HWND, Msg As UINT, wParam As WPARAM, lParam As LPARAM) As LRESULT
-		#endif
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
 	Public:
 		#ifndef ReadProperty_Off

@@ -15,33 +15,6 @@
 
 'Namespace My.Sys.Drawing
 Namespace Colors
-#ifdef __USE_WINAPI__
-	#define clScrollBar           GetSysColor(COLOR_SCROLLBAR)
-	#define clBackground          GetSysColor(COLOR_BACKGROUND)
-	#define clActiveCaption       GetSysColor(COLOR_ACTIVECAPTION)
-	#define clInactiveCaption     GetSysColor(COLOR_INACTIVECAPTION)
-	#define clMenu                GetSysColor(COLOR_MENU)
-	#define clWindow              GetSysColor(COLOR_WINDOW)
-	#define clWindowFrame         GetSysColor(COLOR_WINDOWFRAME)
-	#define clMenuText            GetSysColor(COLOR_MENUTEXT)
-	#define clWindowText          GetSysColor(COLOR_WINDOWTEXT)
-	#define clCaptionText         GetSysColor(COLOR_CAPTIONTEXT)
-	#define clActiveBorder        GetSysColor(COLOR_ACTIVEBORDER)
-	#define clInactiveBorder      GetSysColor(COLOR_INACTIVEBORDER)
-	#define clAppWorkSpace        GetSysColor(COLOR_APPWORKSPACE)
-	#define clHighlight           GetSysColor(COLOR_HIGHLIGHT)
-	#define clHighlightText       GetSysColor(COLOR_HIGHLIGHTTEXT)
-	#define clBtnFace             GetSysColor(COLOR_BTNFACE)
-	#define clBtnShadow           GetSysColor(COLOR_BTNSHADOW)
-	#define clGrayText            GetSysColor(COLOR_GRAYTEXT)
-	#define clBtnText             GetSysColor(COLOR_BTNTEXT)
-	#define clInactiveCaptionText GetSysColor(COLOR_INACTIVECAPTIONTEXT)
-	#define clBtnHighlight        GetSysColor(COLOR_BTNHIGHLIGHT)
-	#define cl3DDkShadow          GetSysColor(COLOR_3DDKSHADOW)
-	#define cl3DLight             GetSysColor(COLOR_3DLIGHT)
-	#define clInfoText            GetSysColor(COLOR_INFOTEXT)
-	#define clInfoBk              GetSysColor(COLOR_INFOBK)
-#else
 	#define clScrollBar           &H000000
 	#define clBackground          &H000000
 	#define clActiveCaption       &H000000
@@ -67,7 +40,6 @@ Namespace Colors
 	#define cl3DLight             &H000000
 	#define clInfoText            &H000000
 	#define clInfoBk              &H000000
-#endif
 
 #define clAliceBlue                &HFFF8F0   '   RGB(240, 248, 255)   '爱丽丝蓝
 #define clAntiqueWhite             &HD7EBFA   '   RGB(250, 235, 215)   '古董白
@@ -224,11 +196,9 @@ Declare Function BGRToRGBA(FColor As UInteger) As UInteger
 Declare Function GetRed(FColor As Long) As Integer
 Declare Function GetGreen(FColor As Long) As Integer
 Declare Function GetBlue(FColor As Long) As Integer
-#ifndef __USE_WINAPI__
 	#ifndef BGR
 		#define BGR(r, g, b) (Cast(UByte, (r)) Or (Cast(UShort, Cast(UByte, (g))) Shl 8)) Or (Cast(UShort, Cast(UByte, (b))) Shl 16)
 	#endif
-#endif
 #define RGBA_R( c ) ( CUInt( c ) Shr 16 And 255 )
 #define RGBA_G( c ) ( CUInt( c ) Shr  8 And 255 )
 #define RGBA_B( c ) ( CUInt( c )        And 255 )

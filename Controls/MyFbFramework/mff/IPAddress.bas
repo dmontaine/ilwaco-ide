@@ -50,37 +50,17 @@ Namespace My.Sys.Forms
 	End Property
 	
 	Private Sub IPAddress.Clear
-		#ifdef __USE_GTK__
 			For i As Integer = 0 To 3
-				#ifdef __USE_GTK4__
-					gtk_entry_buffer_set_text(gtk_entry_get_buffer(GTK_ENTRY(Entries(i))), !"\0", -1)
-				#else
 					gtk_entry_set_text(GTK_ENTRY(Entries(i)), !"\0")
-				#endif
 			Next
-		#else
-			SendMessage FHandle, IPM_CLEARADDRESS, 0, 0
-		#endif
 	End Sub
 	
 	Private Property IPAddress.Text ByRef As WString
-		#ifdef __USE_GTK__
-			#ifdef __USE_GTK4__
-				FText = Trim(WStr(*gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(Entries(0))))))
-			#else
 				FText = Trim(WStr(*gtk_entry_get_text(GTK_ENTRY(Entries(0)))))
-			#endif
 			For i As Integer = 1 To 3
-				#ifdef __USE_GTK4__
-					FText &= "." & Trim(Str(Val(*gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(Entries(i)))))))
-				#else
 					FText &= "." & Trim(Str(Val(*gtk_entry_get_text(GTK_ENTRY(Entries(i))))))
-				#endif
 			Next
 			Return *FText.vptr
-		#else
-			Return Base.Text
-		#endif
 	End Property
 	
 	Private Property IPAddress.Text(ByRef Value As WString)
@@ -94,63 +74,13 @@ Namespace My.Sys.Forms
 				If UBound(res) >= i Then
 					Addresses(i) = Max(0, Min(Val(res(i)), 255))
 				End If
-				#ifdef __USE_GTK__
-					#ifdef __USE_GTK4__
-						gtk_entry_buffer_set_text(gtk_entry_get_buffer(GTK_ENTRY(Entries(i))), Trim(Str(Addresses(i))), -1)
-					#else
 						gtk_entry_set_text(GTK_ENTRY(Entries(i)), Trim(Str(Addresses(i))))
-					#endif
-				#endif
 			Next
-			#ifndef __USE_GTK__
-				SendMessage FHandle, IPM_SETADDRESS, 0, MAKEIPADDRESS(Addresses(0), Addresses(1), Addresses(2), Addresses(3))
-			#endif
 		End If
 	End Property
 	
-	#ifndef __USE_GTK__
-		Private Sub IPAddress.HandleIsAllocated(ByRef Sender As My.Sys.Forms.Control)
-			With *Cast(IPAddress Ptr, @Sender)
-				.Text = .FText
-			End With
-		End Sub
-		
-		Private Sub IPAddress.WndProc(ByRef Message As Message)
-		End Sub
-		
-		Private Function IPAddress.IPAddressWndProc(FWindow As HWND, Msg As UINT, wParam As WPARAM, lParam As LPARAM) As LRESULT
-			Dim As IPAddress Ptr Ctrl
-			Dim Message As Message
-			Ctrl = GetProp(FWindow, "MFFControl")
-			Message = Type(Ctrl, FWindow, Msg, wParam, lParam, 0, LoWord(wParam), HiWord(wParam), LoWord(lParam), HiWord(lParam), Message.Captured)
-			If Ctrl Then
-				With *Ctrl
-					If Ctrl->ClassName <> "" Then
-						.ProcessMessage(Message)
-						If Message.Handled Then
-							Return Message.Result
-						ElseIf Message.Result = -1 Then
-							Return Message.Result
-						ElseIf Message.Result = -2 Then
-							Msg = Message.Msg
-							wParam = Message.wParam
-							lParam = Message.lParam
-						ElseIf Message.Result <> 0 Then
-							Return Message.Result
-						End If
-					End If
-				End With
-			End If
-			Dim As Any Ptr cp = GetClassProc(FWindow)
-			If cp <> 0 Then
-				Message.Result = CallWindowProc(cp, FWindow, Msg, wParam, lParam)
-			End If
-			Return Message.Result
-		End Function
-	#endif
 	
 	Private Sub IPAddress.ProcessMessage(ByRef Message As Message)
-		#ifdef __USE_GTK__
 			Dim As GdkEvent Ptr e = Message.Event
 			Select Case Message.Event->type
 			Case GDK_BUTTON_PRESS
@@ -159,26 +89,6 @@ Namespace My.Sys.Forms
 				'SelectRegion
 				'Return
 			End Select
-		#else
-			Select Case Message.Msg
-			Case CM_COMMAND
-				Select Case Message.wParamHi
-				Case EN_CHANGE
-					If OnChange Then OnChange(*Designer, This)
-				Case EN_KILLFOCUS
-					If OnLostFocus Then OnLostFocus(*Designer, This)
-				Case EN_SETFOCUS
-					If OnGotFocus Then OnGotFocus(*Designer, This)
-				End Select
-				Message.Result = 0
-			Case CM_NOTIFY
-				Dim lpnmipa As NMIPADDRESS Ptr = Cast(NMIPADDRESS Ptr, Message.lParam)
-				Select Case lpnmipa->hdr.code
-				Case IPN_FIELDCHANGED
-					If OnFieldChanged Then OnFieldChanged(*Designer, This, lpnmipa->iField, lpnmipa->iValue)
-				End Select
-			End Select
-		#endif
 		Base.ProcessMessage Message
 	End Sub
 	
@@ -186,7 +96,6 @@ Namespace My.Sys.Forms
 		Return Cast(My.Sys.Forms.Control Ptr, @This)
 	End Operator
 	
-	#ifdef __USE_GTK__
 		Private Sub IPAddress.Layout_SizeAllocate(widget As GtkWidget Ptr, allocation As GdkRectangle Ptr, user_data As Any Ptr)
 			Dim As IPAddress Ptr ipa = user_data
 			If allocation->width <> ipa->AllocatedWidth OrElse allocation->height <> ipa->AllocatedHeight Then
@@ -221,9 +130,7 @@ Namespace My.Sys.Forms
 				Dim As Integer LayoutWidth
 				If Not Ctrl->bCreated Then
 					Ctrl->pdisplay = gtk_widget_get_display(widget)
-					#ifdef __USE_GTK3__
 						Ctrl->win = gtk_layout_get_bin_window(GTK_LAYOUT(widget))
-					#endif
 					gdk_window_set_cursor(Ctrl->win, gdk_cursor_new_for_display(Ctrl->pdisplay, GDK_XTERM))
 				End If
 				sText = ToUtf8("55555.")
@@ -312,17 +219,9 @@ Namespace My.Sys.Forms
 					If Index > 0 Then
 						Length = gtk_entry_get_text_length(GTK_ENTRY(ipa->Entries(Index - 1)))
 						If Length = 1 Then
-							#ifdef __USE_GTK4__
-								gtk_entry_buffer_set_text(gtk_entry_get_buffer(GTK_ENTRY(ipa->Entries(Index - 1))), !"\0", -1)
-							#else
 								gtk_entry_set_text(GTK_ENTRY(ipa->Entries(Index - 1)), !"\0")
-							#endif
 						ElseIf Length > 1 Then
-							#ifdef __USE_GTK4__
-								gtk_entry_buffer_set_text(gtk_entry_get_buffer(GTK_ENTRY(ipa->Entries(Index - 1))), ..Left(*gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(ipa->Entries(Index - 1)))), Length - 1), -1)
-							#else
 								gtk_entry_set_text(GTK_ENTRY(ipa->Entries(Index - 1)), ..Left(*gtk_entry_get_text(GTK_ENTRY(ipa->Entries(Index - 1))), Length - 1))
-							#endif
 						End If
 						ipa->Position = Length
 						gtk_widget_grab_focus(ipa->Entries(Index - 1))
@@ -381,17 +280,9 @@ Namespace My.Sys.Forms
 				Case "0" To "9"
 					Dim As Integer Pos1 = gtk_editable_get_position(GTK_EDITABLE(widget)), Length = gtk_entry_get_text_length(GTK_ENTRY(widget))
 					If Length = 2 Then
-						#ifdef __USE_GTK4__
-							Dim EntryText As String = *gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(widget)))
-						#else
 							Dim EntryText As String = *gtk_entry_get_text(GTK_ENTRY(widget))
-						#endif
 						If Val(..Left(EntryText, Pos1) & *Event->key.string & Mid(EntryText, Pos1 + 1)) > 255 Then
-							#ifdef __USE_GTK4__
-								gtk_entry_buffer_set_text(gtk_entry_get_buffer(GTK_ENTRY(widget)), "255", -1)
-							#else
 								gtk_entry_set_text(GTK_ENTRY(widget), "255")
-							#endif
 						ElseIf Pos1 = 2 Then
 							Dim As Integer Index = 3
 							If widget = ipa->Entries(0) Then
@@ -402,11 +293,7 @@ Namespace My.Sys.Forms
 								Index = 2
 							End If
 							If Index < 3 Then
-								#ifdef __USE_GTK4__
-									gtk_entry_buffer_set_text(gtk_entry_get_buffer(GTK_ENTRY(widget)), *gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(widget))) & *Event->key.string, -1)
-								#else
 									gtk_entry_set_text(GTK_ENTRY(widget), *gtk_entry_get_text(GTK_ENTRY(widget)) & *Event->key.string)
-								#endif
 								ipa->Position = -1
 								gtk_widget_grab_focus(ipa->Entries(Index + 1))
 								'gtk_editable_select_region(gtk_editable(widget), 0, 0)
@@ -461,11 +348,7 @@ Namespace My.Sys.Forms
 				ElseIf ipa->CurrentEntry = ipa->Entries(3) Then
 					Index = 3
 				End If
-				#ifdef __USE_GTK4__
-					Dim As String sText = *gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(ipa->CurrentEntry)))
-				#else
 					Dim As String sText = *gtk_entry_get_text(GTK_ENTRY(ipa->CurrentEntry))
-				#endif
 				If sText = "" Then Value = -1 Else Value = Val(sText)
 				If ipa->OnFieldChanged Then ipa->OnFieldChanged(*ipa->Designer, *ipa, Index, Value)
 			End If
@@ -475,23 +358,13 @@ Namespace My.Sys.Forms
 				ipa->Position = -1
 			End If
 		End Sub
-	#endif
 	
 	Private Constructor IPAddress
-		#ifndef __USE_GTK__
-			Dim As INITCOMMONCONTROLSEX icex
-			
-			icex.dwSize = SizeOf(INITCOMMONCONTROLSEX)
-			icex.dwICC =  ICC_INTERNET_CLASSES
-			
-			InitCommonControlsEx(@icex)
-		#endif
 		
 		With This
 			WLet(FClassName, "IPAddress")
 			FTabIndex          = -1
 			FTabStop           = True
-			#ifdef __USE_GTK__
 				Widget = gtk_layout_new(NULL, NULL)
 				'scrolledwidget = gtk_scrolled_window_new(NULL, NULL)
 				'gtk_scrolled_window_set_policy(gtk_scrolled_window(scrolledwidget), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC)
@@ -517,20 +390,7 @@ Namespace My.Sys.Forms
 					gtk_layout_put(gtk_layout(Widget), Layouts(i), 0, 0)
 					gtk_widget_show_all(Layouts(i))
 				Next i
-				#ifdef __USE_GTK3__
 					g_signal_connect(widget, "draw", G_CALLBACK(@Layout_Draw), @This)
-				#else
-					g_signal_connect(widget, "expose-event", G_CALLBACK(@Layout_ExposeEvent), @This)
-					g_signal_connect(widget, "size-allocate", G_CALLBACK(@Layout_SizeAllocate), @This)
-				#endif
-			#else
-				.RegisterClass "IPAddress", WC_IPADDRESS, @IPAddressWndProc
-				WLet(FClassAncestor, WC_IPADDRESS)
-				.ExStyle      = 0
-				.Style        = WS_CHILD
-				.ChildProc    = @WndProc
-				.OnHandleIsAllocated = @HandleIsAllocated
-			#endif
 			.Width        = 150
 			.Height       = 20
 			.Child        = @This
@@ -538,9 +398,5 @@ Namespace My.Sys.Forms
 	End Constructor
 	
 	Private Destructor IPAddress
-		#ifndef __USE_GTK__
-			Handle = 0
-			UnregisterClass "IPAddress", GetModuleHandle(NULL)
-		#endif
 	End Destructor
 End Namespace

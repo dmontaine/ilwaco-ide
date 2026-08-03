@@ -168,24 +168,7 @@ Namespace My.Sys.Forms
 		Dim As Integer i
 		If  FCaption = 0 OrElse Value <> *FCaption Then
 			WLet(FCaption, Value)
-			#ifdef __USE_GTK__
 				gtk_tool_button_set_label(GTK_TOOL_BUTTON(Widget), ToUtf8(Value))
-			#else
-				Dim As TBBUTTON TB
-				If Ctrl Then
-					With QControl(Ctrl)
-						i = SendMessage(.Handle, TB_COMMANDTOINDEX, FCommandID, 0)
-						SendMessage(.Handle, TB_GETBUTTON, i, CInt(@TB))
-						If *FCaption <> "" Then
-							TB.iString = CInt(FCaption)
-						Else
-							TB.iString = 0
-						End If
-						SendMessage(.Handle, TB_INSERTBUTTON, i, CInt(@TB))
-						SendMessage(.Handle, TB_DELETEBUTTON, i + 1, 0)
-					End With
-				End If
-			#endif
 		End If
 	End Property
 	
@@ -195,24 +178,11 @@ Namespace My.Sys.Forms
 	
 	Private Property ToolButton.Child(Value As Control Ptr)
 		FChild = Value
-		#ifdef __USE_WINAPI__
-			If Ctrl Then
-				If Value->Parent <> Ctrl Then Value->Parent = Ctrl
-				If Ctrl->Handle AndAlso Value->Handle Then
-					Dim As Rect R
-					Var i = SendMessage(Ctrl->Handle, TB_COMMANDTOINDEX, FCommandID, 0)
-					SendMessage(Ctrl->Handle, TB_GETITEMRECT, i, CInt(@R))
-					MoveWindow Value->Handle, R.Left, R.Top, R.Right - R.Left, R.Bottom - R.Top, True
-					'Value->SetBounds UnScaleX(R.Left), UnScaleY(R.Top), UnScaleX(R.Right - R.Left), UnScaleY(R.Bottom - R.Top)
-				End If 
-			End If
-		#elseif defined(__USE_GTK__)
 			If GTK_IS_EVENT_BOX(gtk_widget_get_parent(Value->Handle)) Then
 				gtk_container_add(GTK_CONTAINER(Widget), gtk_widget_get_parent(Value->Handle))
 			Else
 				gtk_container_add(GTK_CONTAINER(Widget), Value->Handle)
 			End If
-		#endif
 	End Property
 	
 	Private Property ToolButton.Name ByRef As WString
@@ -263,9 +233,6 @@ Namespace My.Sys.Forms
 			FImageIndex = Value
 			If Ctrl Then
 				With QControl(Ctrl)
-					#ifndef __USE_GTK__
-						SendMessage(.Handle, TB_CHANGEBITMAP, FCommandID, MAKELONG(FImageIndex, 0))
-					#endif
 				End With
 			End If
 		End If
@@ -277,7 +244,6 @@ Namespace My.Sys.Forms
 	
 	Private Property ToolButton.ImageKey(ByRef Value As WString)
 		WLet(FImageKey, Value)
-		#ifdef __USE_GTK__
 			If GTK_IS_TOOL_BUTTON(Widget) Then
 				Dim As GtkWidget Ptr Icon
 				If Value = "" Then
@@ -290,11 +256,6 @@ Namespace My.Sys.Forms
 				gtk_image_set_pixel_size(GTK_IMAGE(Icon), ScaleX(BitmapSize))
 				gtk_tool_button_set_icon_widget(GTK_TOOL_BUTTON(Widget), Icon)
 			End If
-		#else
-			If Ctrl AndAlso QToolBar(Ctrl).ImagesList Then
-				ImageIndex = Cast(ToolBar Ptr, Ctrl)->ImagesList->IndexOf(Value)
-			End If
-		#endif
 	End Property
 	
 	Private Property ToolButton.Style As ToolButtonStyle
@@ -304,47 +265,17 @@ Namespace My.Sys.Forms
 	Private Property ToolButton.Style(Value As ToolButtonStyle)
 		If Value <> FStyle Then
 			FStyle = Value
-			#ifndef __USE_GTK__
-				If Ctrl AndAlso Ctrl->Handle Then
-					Dim As TBBUTTONINFO info
-					info.cbSize = SizeOf(info)
-					info.dwMask = TBIF_STYLE
-					info.idCommand = FCommandID
-					info.fsStyle = Value
-					SendMessage(Ctrl->Handle, TB_SETBUTTONINFO, FCommandID, Cast(LPARAM, @info))
-				End If
-			#endif
 			'If Ctrl AndAlso Ctrl->Handle Then QControl(Ctrl).RecreateWnd
 		End If
 	End Property
 	
 	Private Property ToolButton.State As ToolButtonState
-		#ifndef __USE_GTK__
-			If Ctrl AndAlso Ctrl->Handle Then
-				Dim As TBBUTTONINFO info
-				info.cbSize = SizeOf(info)
-				info.dwMask = TBIF_STATE
-				info.idCommand = FCommandID
-				SendMessage(Ctrl->Handle, TB_GETBUTTONINFO, FCommandID, Cast(LPARAM, @info))
-				FState = info.fsState
-			End If
-		#endif
 		Return FState
 	End Property
 	
 	Private Property ToolButton.State(Value As ToolButtonState)
 		If Value <> FState Then
 			FState = Value
-			#ifndef __USE_GTK__
-				If Ctrl AndAlso Ctrl->Handle Then
-					Dim As TBBUTTONINFO info
-					info.cbSize = SizeOf(info)
-					info.dwMask = TBIF_STATE
-					info.idCommand = FCommandID
-					info.fsState = Value
-					SendMessage(Ctrl->Handle, TB_SETBUTTONINFO, FCommandID, Cast(LPARAM, @info))
-				End If
-			#endif
 			'If Ctrl Then QControl(Ctrl).RecreateWnd
 		End If
 	End Property
@@ -359,29 +290,12 @@ Namespace My.Sys.Forms
 			FCommandID = Value
 			If Ctrl Then
 				With QControl(Ctrl)
-					#ifndef __USE_GTK__
-						i = SendMessage(.Handle, TB_COMMANDTOINDEX, FCommandID, 0)
-						SendMessage(.Handle, TB_SETCMDID, i, FCommandID)
-					#endif
 				End With
 			End If
 		End If
 	End Property
 	
 	Private Property ToolButton.Left As Integer
-		#ifndef __USE_GTK__
-			Dim As ..Rect R
-			Dim As Integer i
-			If Ctrl Then
-				With QControl(Ctrl)
-					If .Handle Then
-						i = SendMessage(.Handle, TB_COMMANDTOINDEX, FCommandID, 0)
-						SendMessage(.Handle, TB_GETITEMRECT, i, CInt(@R))
-						FButtonLeft = R.Left
-					End If
-				End With
-			End If
-		#endif
 		Return FButtonLeft
 	End Property
 	
@@ -392,14 +306,6 @@ Namespace My.Sys.Forms
 		Dim As Integer i
 		If Ctrl Then
 			With QControl(Ctrl)
-				#ifndef __USE_GTK__
-					Dim As ..Rect R
-					If .Handle Then
-						i = SendMessage(.Handle, TB_COMMANDTOINDEX, FCommandID, 0)
-						SendMessage(.Handle, TB_GETITEMRECT, i, CInt(@R))
-						FButtonTop = R.Top
-					End If
-				#endif
 			End With
 		End If
 		Return FButtonTop
@@ -409,94 +315,19 @@ Namespace My.Sys.Forms
 	End Property
 	
 	Private Property ToolButton.Width As Integer
-		#ifdef __USE_GTK__
-			#ifdef __USE_GTK3__
 				FButtonWidth = UnScaleX(gtk_widget_get_allocated_width(Widget))
-			#else
-				FButtonWidth = UnScaleX(Widget->allocation.width)
-			#endif
-		#else
-			Dim As Integer i
-			If Ctrl Then
-				With QControl(Ctrl)
-					Dim As ..Rect R
-					If .Handle Then
-						i = SendMessage(.Handle, TB_COMMANDTOINDEX, FCommandID, 0)
-						SendMessage(.Handle, TB_GETITEMRECT, i, CInt(@R))
-						FButtonWidth = UnScaleX(R.Right - R.Left)
-					End If
-				End With
-			End If
-		#endif
 		Return FButtonWidth
 	End Property
 	
 	Private Property ToolButton.Width(Value As Integer)
 		FButtonWidth = Value
-		#ifdef __USE_WINAPI__
-			If Ctrl AndAlso Ctrl->Handle Then
-				Var i = SendMessage(Ctrl->Handle, TB_COMMANDTOINDEX, FCommandID, 0)
-				Dim As TBBUTTONINFO tbbi
-				tbbi.cbSize = SizeOf(tbbi)
-				tbbi.dwMask = TBIF_SIZE Or TBIF_BYINDEX
-				tbbi.cx = ScaleX(Value)
-				SendMessage(Ctrl->Handle, TB_SETBUTTONINFO, i, Cast(LPARAM, @tbbi))
-				If FChild Then 
-					FChild->Width = Value
-					Dim As Rect R
-					SendMessage(Ctrl->Handle, TB_GETITEMRECT, i, CInt(@R))
-					MoveWindow FChild->Handle, R.Left, R.Top, R.Right - R.Left, R.Bottom - R.Top, True
-				End If
-			End If
-		#endif
 	End Property
 	
 	Private Sub ToolButton.Update()
-		#ifdef __USE_WINAPI__
-			If Ctrl AndAlso Ctrl->Handle Then
-				Var i = SendMessage(Ctrl->Handle, TB_COMMANDTOINDEX, FCommandID, 0)
-				If *FCaption <> "" Then
-					Dim As TBBUTTON TB
-					SendMessage(Ctrl->Handle, TB_GETBUTTON, i, CInt(@TB))
-					TB.iString = CInt(FCaption)
-					SendMessage(Ctrl->Handle, TB_INSERTBUTTON, i, CInt(@TB))
-					SendMessage(Ctrl->Handle, TB_DELETEBUTTON, i + 1, 0)
-				End If
-				Dim As TBBUTTONINFO tbbi
-				tbbi.cbSize = SizeOf(tbbi)
-				tbbi.dwMask = TBIF_SIZE Or TBIF_BYINDEX
-				tbbi.cx = ScaleX(FButtonWidth)
-				SendMessage(Ctrl->Handle, TB_SETBUTTONINFO, i, Cast(LPARAM, @tbbi))
-				If FChild Then
-					FChild->Width = FButtonWidth
-					Dim As Rect R
-					SendMessage(Ctrl->Handle, TB_GETITEMRECT, i, CInt(@R))
-					MoveWindow FChild->Handle, R.Left, R.Top, R.Right - R.Left, R.Bottom - R.Top, True
-				End If
-			End If
-		#endif
 	End Sub
 	
 	Private Property ToolButton.Height As Integer
-		#ifdef __USE_GTK__
-			#ifdef __USE_GTK3__
 				FButtonHeight = UnScaleY(gtk_widget_get_allocated_height(Widget))
-			#else
-				FButtonHeight = UnScaleY(Widget->allocation.height)
-			#endif
-		#else
-			Dim As ..Rect R
-			Dim As Integer i
-			If Ctrl Then
-				With QControl(Ctrl)
-					If .Handle Then
-						i = SendMessage(.Handle, TB_COMMANDTOINDEX, FCommandID, 0)
-						SendMessage(.Handle, TB_GETITEMRECT,i,CInt(@R))
-						FButtonHeight = UnScaleY(R.Bottom - R.Top)
-					End If
-				End With
-			End If
-		#endif
 		Return FButtonHeight
 	End Property
 	
@@ -512,30 +343,12 @@ Namespace My.Sys.Forms
 			FVisible = Value
 			If Ctrl Then
 				With QControl(Ctrl)
-					#ifdef __USE_GTK__
 						gtk_widget_set_visible(Widget, FVisible)
 '						If FVisible Then
 '							gtk_widget_show(Widget)
 '						Else
 '							gtk_widget_hide(Widget)
 '						End If
-					#else
-'						Dim As TBBUTTONINFO info
-'						info.cbSize = SizeOf(info)
-'						info.dwMask = TBIF_STATE
-'						info.idCommand = FCommandID
-'						SendMessage(Ctrl->Handle, TB_GETBUTTONINFO, FCommandID, Cast(LParam, @info))
-'						info.cbSize = SizeOf(info)
-'						info.dwMask = TBIF_STATE
-'						info.idCommand = FCommandID
-'						If Not Value Then
-'							If ((info.fsState And tstHidden) <> tstHidden) Then info.fsState = info.fsState Or tstHidden
-'						ElseIf ((info.fsState And tstHidden) = tstHidden) Then
-'							info.fsState = info.fsState And Not tstHidden
-'						End If
-'						SendMessage(Ctrl->Handle, TB_SETBUTTONINFO, FCommandID, Cast(LParam, @info))
-						SendMessage(.Handle, TB_HIDEBUTTON, FCommandID, MAKELONG(Not FVisible, 0))
-					#endif
 				End With
 			End If
 		End If
@@ -550,12 +363,7 @@ Namespace My.Sys.Forms
 			FEnabled = Value
 			If Ctrl Then
 				With QControl(Ctrl)
-					#ifdef __USE_GTK__
 						gtk_widget_set_sensitive(Widget, FEnabled)
-					#else
-						SendMessage(.Handle, TB_ENABLEBUTTON, FCommandID, MAKELONG(FEnabled, 0))
-						SendMessage(.Handle, TB_CHANGEBITMAP, FCommandID, MAKELONG(FImageIndex,0))
-					#endif
 				End With
 			End If
 		'End If
@@ -567,23 +375,17 @@ Namespace My.Sys.Forms
 	
 	Private Property ToolButton.Expand(Value As Boolean)
 		FExpand = Value
-		#ifdef __USE_GTK__
 			gtk_tool_item_set_expand(GTK_TOOL_ITEM(Widget), FEnabled)
-		#endif
 	End Property
 	
 	Private Property ToolButton.Checked As Boolean
 		If Ctrl Then
 			With QControl(Ctrl)
-				#ifdef __USE_GTK__
 					If GTK_IS_TOGGLE_TOOL_BUTTON(Widget) Then
 						FChecked = gtk_toggle_tool_button_get_active(GTK_TOGGLE_TOOL_BUTTON(Widget))
 					Else
 						FChecked = False
 					End If
-				#else
-					FChecked = SendMessage(.Handle, TB_ISBUTTONCHECKED, FCommandID, 0)
-				#endif
 			End With
 		End If
 		Return FChecked
@@ -594,17 +396,10 @@ Namespace My.Sys.Forms
 		FChecked = Value
 		If Ctrl Then
 			With QControl(Ctrl)
-				#ifdef __USE_GTK__
 					If GTK_IS_TOGGLE_TOOL_BUTTON(Widget) Then
 						gtk_toggle_tool_button_set_active(GTK_TOGGLE_TOOL_BUTTON(Widget), Value)
 						If OnClick Then OnClick(*Designer, This)
 					End If
-				#else
-					If .Handle Then
-						SendMessage(.Handle, TB_CHECKBUTTON, FCommandID, MAKELONG(FChecked, 0))
-						If OnClick Then OnClick(*Designer, This)
-					End If
-				#endif
 			End With
 		End If
 		If CInt(Value) AndAlso CInt((FState And tstChecked) <> tstChecked) Then
@@ -621,9 +416,7 @@ Namespace My.Sys.Forms
 		WLet(FName, "")
 		WLet(FImageKey, "")
 		WLet(FClassName, "ToolButton")
-		#ifdef __USE_GTK__
 			Widget = GTK_WIDGET(gtk_tool_button_new(NULL, ToUtf8("")))
-		#endif
 		FStyle      = tbsButton
 		FEnabled    = 1
 		FVisible    = 1
@@ -635,21 +428,9 @@ Namespace My.Sys.Forms
 	End Constructor
 	
 	Private Destructor ToolButton
-		#ifdef __USE_GTK__
-			#ifdef __USE_GTK3__
-				#ifndef __FB_WIN32__
 					If Widget <> 0 AndAlso GTK_IS_WIDGET(Widget) Then 
-						#ifdef __USE_GTK4__
-							g_object_unref(Widget)
-						#else
 							gtk_widget_destroy(Widget)
-						#endif
 					End If
-				#endif
-			#endif
-		#else
-			If DropDownMenu.Handle Then DestroyMenu DropDownMenu.Handle
-		#endif
 		WDeAllocate(FHint)
 		WDeAllocate(FCaption)
 		WDeAllocate(FImageKey)
@@ -676,7 +457,6 @@ Namespace My.Sys.Forms
 		'QToolButton(FButtons.Items[Index]) = Value
 	End Property
 	
-	#ifdef __USE_GTK__
 		Private Sub ToolButtons.ToolButtonClicked(gtoolbutton As GtkToolButton Ptr, user_data As Any Ptr)
 			Dim As ToolButton Ptr tbut = user_data
 			If tbut Then
@@ -703,7 +483,6 @@ Namespace My.Sys.Forms
 		Private Sub on_popup_menu(button As GtkWidget Ptr, Menu_ As GtkMenu Ptr)
 			gtk_menu_popup(Menu_, NULL, NULL, Cast(GtkMenuPositionFunc, @on_menu_position), button, 1, gtk_get_current_event_time())
 		End Sub
-	#endif
 	
 	Private Function ToolButtons.Add(FStyle As ToolButtonStyle = tbsAutosize, FImageIndex As Integer = -1, Index As Integer = -1, FClick As NotifyEvent = NULL, ByRef FKey As WString = "", ByRef FCaption As WString = "", ByRef FHint As WString = "", FShowHint As Boolean = False, FState As ToolButtonState = tstEnabled) As ToolButton Ptr
 		Dim As ToolButton Ptr PButton
@@ -712,13 +491,8 @@ Namespace My.Sys.Forms
 		FButtons.Add PButton
 		With *PButton
 			.Style          = FStyle
-			#ifdef __USE_GTK__
 				If GTK_IS_WIDGET(.Widget) Then 
-					#ifdef __USE_GTK4__
-						g_object_unref(widget)
-					#else
 						gtk_widget_destroy(.Widget)
-					#endif
 				End If
 				Select Case FStyle
 				Case tbsSeparator
@@ -767,7 +541,6 @@ Namespace My.Sys.Forms
 				End Select
 				
 				gtk_widget_show_all(.Widget)
-			#endif
 			.State        = FState
 			.ImageIndex     = FImageIndex
 			.Hint           = FHint
@@ -778,30 +551,9 @@ Namespace My.Sys.Forms
 			.OnClick        = FClick
 		End With
 		PButton->Ctrl = Parent
-		#ifdef __USE_GTK__
 			If Parent Then
 				gtk_toolbar_insert(GTK_TOOLBAR(Parent->Handle), GTK_TOOL_ITEM(PButton->Widget), Index)
 			End If
-		#else
-			Dim As TBBUTTON TB
-			TB.fsState   = FState
-			TB.fsStyle   = FStyle
-			TB.iBitmap   = PButton->ImageIndex
-			TB.idCommand = PButton->CommandID
-			If FCaption <> "" Then
-				TB.iString = CInt(@FCaption)
-			Else
-				TB.iString = 0
-			End If
-			TB.dwData = Cast(DWORD_PTR,@PButton->DropDownMenu)
-			If Parent Then
-				If Index <> -1 Then
-					SendMessage(Parent->Handle, TB_INSERTBUTTON, Index, CInt(@TB))
-				Else
-					SendMessage(Parent->Handle, TB_ADDBUTTONS, 1, CInt(@TB))
-				End If
-			End If
-		#endif
 		Return PButton
 	End Function
 	
@@ -824,39 +576,15 @@ Namespace My.Sys.Forms
 			.CommandID      = 10 + FButtons.Count
 		End With
 		PButton->Ctrl = Parent
-		#ifdef __USE_GTK__
 			If Parent Then
 				gtk_toolbar_insert(GTK_TOOLBAR(Parent->Handle), GTK_TOOL_ITEM(PButton->Widget), Index)
 			End If
-		#else
-			Dim As TBBUTTON TB
-			TB.fsState   = PButton->State
-			TB.fsStyle   = PButton->Style
-			TB.iBitmap   = PButton->ImageIndex
-			TB.idCommand = PButton->CommandID
-			If PButton->Caption <> "" Then
-				TB.iString = CInt(@PButton->Caption)
-			Else
-				TB.iString = 0
-			End If
-			TB.dwData = Cast(DWORD_PTR, @PButton->DropDownMenu)
-			If Parent Then
-				If Index <> -1 Then
-					SendMessage(Parent->Handle, TB_INSERTBUTTON, Index, CInt(@TB))
-				Else
-					SendMessage(Parent->Handle, TB_ADDBUTTONS, 1, CInt(@TB))
-				End If
-			End If
-		#endif
 		Return PButton
 	End Function
 	
 	Private Sub ToolButtons.Remove(Index As Integer)
 		FButtons.Remove Index
 		If Parent Then
-			#ifndef __USE_GTK__
-				SendMessage(Parent->Handle, TB_DELETEBUTTON,Index,0)
-			#endif
 		End If
 	End Sub
 	
@@ -891,77 +619,45 @@ Namespace My.Sys.Forms
 	End Destructor
 	
 	Private Property ToolBar.AutoSize As Boolean
-		#ifndef __USE_GTK__
-			FAutosize = StyleExists(TBSTYLE_AUTOSIZE)
-		#endif
 		Return FAutosize
 	End Property
 	
 	Private Property ToolBar.AutoSize(Value As Boolean)
 		FAutosize = Value
-		#ifndef __USE_GTK__
-			ChangeStyle TBSTYLE_AUTOSIZE, Value
-			If FHandle Then If FAutosize Then Perform(TB_AUTOSIZE, 0, 0)
-		#endif
 	End Property
 	
 	Private Property ToolBar.Flat As Boolean
-		#ifndef __USE_GTK__
-			FFlat = StyleExists(TBSTYLE_FLAT)
-		#endif
 		Return FFlat
 	End Property
 	
 	Private Property ToolBar.Flat(Value As Boolean)
 		FFlat = Value
-		#ifndef __USE_GTK__
-			ChangeStyle TBSTYLE_FLAT, Value
-		#endif
 	End Property
 	
 	Private Property ToolBar.List As Boolean
-		#ifndef __USE_GTK__
-			FList = StyleExists(TBSTYLE_LIST)
-		#endif
 		Return FList
 	End Property
 	
 	Private Property ToolBar.List(Value As Boolean)
 		FList = Value
-		#ifdef __USE_GTK__
 			gtk_toolbar_set_style(GTK_TOOLBAR(widget), IIf(Value, GTK_TOOLBAR_BOTH_HORIZ, GTK_TOOLBAR_BOTH))
-		#else
-			ChangeStyle TBSTYLE_LIST, Value
-		#endif
 	End Property
 	
 	
 	Private Property ToolBar.Divider As Boolean
-		#ifndef __USE_GTK__
-			FDivider = Not StyleExists(CCS_NODIVIDER)
-		#endif
 		Return FDivider
 	End Property
 	
 	Private Property ToolBar.Divider(Value As Boolean)
 		FDivider = Value
-		#ifndef __USE_GTK__
-			ChangeStyle CCS_NODIVIDER, Not Value
-		#endif
 	End Property
 	
 	Private Property ToolBar.Transparency As Boolean
-		#ifndef __USE_GTK__
-			FTransparent = StyleExists(TBSTYLE_TRANSPARENT)
-		#endif
 		Return FTransparent
 	End Property
 	
 	Private Property ToolBar.Transparency(Value As Boolean)
 		FTransparent = Value
-		#ifndef __USE_GTK__
-			ChangeStyle TBSTYLE_TRANSPARENT, Value
-		#endif
 	End Property
 	
 	Private Property ToolBar.BitmapWidth As Integer
@@ -970,9 +666,6 @@ Namespace My.Sys.Forms
 	
 	Private Property ToolBar.BitmapWidth(Value As Integer)
 		FBitmapWidth = Value
-		#ifndef __USE_GTK__
-			If Handle Then Perform(TB_SETBITMAPSIZE, 0, MAKELONG(FBitmapWidth, FBitmapHeight))
-		#endif
 	End Property
 	
 	Private Property ToolBar.BitmapHeight As Integer
@@ -981,57 +674,30 @@ Namespace My.Sys.Forms
 	
 	Private Property ToolBar.BitmapHeight(Value As Integer)
 		FBitmapHeight = Value
-		#ifndef __USE_GTK__
-			If Handle Then Perform(TB_SETBITMAPSIZE, 0, MAKELONG(FBitmapWidth, FBitmapHeight))
-		#endif
 	End Property
 	
 	Private Property ToolBar.ButtonWidth As Integer
-		#ifndef __USE_GTK__
-			If Handle Then
-				Var Size = Perform(TB_GETBUTTONSIZE, 0, 0)
-				FButtonWidth = UnScaleX(LoWord(Size))
-			End If
-		#endif
 		Return FButtonWidth
 	End Property
 	
 	Private Property ToolBar.ButtonWidth(Value As Integer)
 		FButtonWidth = Value
-		#ifndef __USE_GTK__
-			If Handle Then Perform(TB_SETBUTTONSIZE,0,MAKELONG(FButtonWidth,FButtonHeight))
-		#endif
 	End Property
 	
 	Private Property ToolBar.ButtonHeight As Integer
-		#ifndef __USE_GTK__
-			If Handle Then
-				Var Size = Perform(TB_GETBUTTONSIZE, 0, 0)
-				FButtonHeight = UnScaleY(HiWord(Size))
-			End If
-		#endif
 		Return FButtonHeight
 	End Property
 	
 	Private Property ToolBar.ButtonHeight(Value As Integer)
 		FButtonHeight = Value
-		#ifndef __USE_GTK__
-			If Handle Then Perform(TB_SETBUTTONSIZE,0,MAKELONG(FButtonWidth,FButtonHeight))
-		#endif
 	End Property
 	
 	Private Property ToolBar.Wrapable As Boolean
-		#ifndef __USE_GTK__
-			FWrapable = StyleExists(TBSTYLE_WRAPABLE)
-		#endif
 		Return FWrapable
 	End Property
 	
 	Private Property ToolBar.Wrapable(Value As Boolean)
 		FWrapable = Value
-		#ifndef __USE_GTK__
-			ChangeStyle TBSTYLE_WRAPABLE, Value
-		#endif
 	End Property
 	
 	Private Property ToolBar.Caption ByRef As WString
@@ -1045,210 +711,8 @@ Namespace My.Sys.Forms
 	Private Sub ToolBar.WndProc(ByRef Message As Message)
 	End Sub
 	
-	#ifdef __USE_WINAPI__
-		Private Sub ToolBar.SetDark(Value As Boolean)
-			Base.SetDark Value
-			If Value Then
-				SetWindowTheme(FHandle, "DarkMode_InfoPaneToolbar", nullptr) ' "DarkMode", "DarkMode_InfoPaneToolbar", "DarkMode_BBComposited", "DarkMode_InactiveBBComposited", "DarkMode_MaxBBComposited", "DarkMode_MaxInactiveBBComposited"
-				Brush.Handle = hbrBkgnd
-				Dim As HWND hwndTT = Cast(HWND, SendMessage(FHandle, TB_GETTOOLTIPS, 0, 0))
-				SetWindowTheme(hwndTT, "DarkMode_Explorer", nullptr)
-				'SendMessageW(FHandle, WM_THEMECHANGED, 0, 0)
-			Else
-				Dim As HWND hwndTT = Cast(HWND, SendMessage(FHandle, TB_GETTOOLTIPS, 0, 0))
-				SetWindowTheme(hwndTT, NULL, NULL)
-			End If
-			'SendMessage FHandle, WM_THEMECHANGED, 0, 0
-		End Sub
-		
-		Private Sub ToolBar.SetButtonSizes()
-			Dim As ..Rect R
-			GetWindowRect Handle, @R
-			If AutoSize Then
-				FHeight = R.Bottom - R.Top
-			End If
-			Dim As Integer ExpandCount, ButtonsWidth, SpaceWidth
-			For i As Integer = 0 To Buttons.Count - 1
-				If Buttons.Item(i)->Expand Then
-					ExpandCount += 1
-				Else
-					ButtonsWidth += Buttons.Item(i)->Width
-				End If
-			Next
-			If ExpandCount > 0 Then
-				SpaceWidth = UnScaleX(R.Right - R.Left) - ButtonsWidth
-				For i As Integer = 0 To Buttons.Count - 1
-					If Buttons.Item(i)->Expand Then
-						Buttons.Item(i)->Width = SpaceWidth / ExpandCount
-					End If
-				Next
-			End If
-		End Sub
-	#endif
 	
 	Private Sub ToolBar.ProcessMessage(ByRef Message As Message)
-		#ifndef __USE_GTK__
-			Select Case Message.Msg
-			Case WM_PAINT
-				If g_darkModeSupported AndAlso g_darkModeEnabled Then
-					If Not FDarkMode Then
-						SetDark True
-'						FDarkMode = True
-'						SetWindowTheme(FHandle, "DarkMode_InfoPaneToolbar", nullptr) ' "DarkMode", "DarkMode_InfoPaneToolbar", "DarkMode_BBComposited", "DarkMode_InactiveBBComposited", "DarkMode_MaxBBComposited", "DarkMode_MaxInactiveBBComposited"
-'						Brush.Handle = hbrBkgnd
-'						SendMessageW(FHandle, WM_THEMECHANGED, 0, 0)
-					End If
-				End If
-				Message.Result = 0
-			Case WM_SIZE
-				SetButtonSizes()
-			Case WM_DPICHANGED
-				Base.ProcessMessage(Message)
-				Perform(TB_SETBITMAPSIZE, 0, MAKELONG(ScaleX(FBitmapWidth), ScaleY(FBitmapHeight)))
-				If ImagesList Then ImagesList->SetImageSize FBitmapWidth, FBitmapHeight, xdpi, ydpi
-				If HotImagesList Then HotImagesList->SetImageSize FBitmapWidth, FBitmapHeight, xdpi, ydpi
-				If DisabledImagesList Then DisabledImagesList->SetImageSize FBitmapWidth, FBitmapHeight, xdpi, ydpi
-				If ImagesList AndAlso ImagesList->Handle Then Perform(TB_SETIMAGELIST, 0, CInt(ImagesList->Handle))
-				If HotImagesList AndAlso HotImagesList->Handle Then Perform(TB_SETHOTIMAGELIST, 0, CInt(HotImagesList->Handle))
-				If DisabledImagesList AndAlso DisabledImagesList->Handle Then Perform(TB_SETDISABLEDIMAGELIST, 0, CInt(DisabledImagesList->Handle))
-				If ImagesList AndAlso ImagesList->Handle Then SendMessage(FHandle, TB_SETIMAGELIST, 0, CInt(ImagesList->Handle))
-				For i As Integer = 0 To Buttons.Count - 1
-					Buttons.Item(i)->xdpi = xdpi
-					Buttons.Item(i)->ydpi = ydpi
-					Buttons.Item(i)->Update
-				Next
-				Dim As ..Size sz
-				SendMessage FHandle, TB_GETIDEALSIZE, False, Cast(LPARAM, @sz)
-				sz.cx = 10000
-				sz.cy = ScaleY(FHeight)
-				SendMessage FHandle, TB_GETIDEALSIZE, 1, Cast(LPARAM, @sz)
-				SetBounds FLeft, FTop, FWidth, UnScaleY(sz.cy)
-				If Parent Then Parent->RequestAlign
-				Return
-			Case WM_COMMAND
-				GetDropDownMenuItems
-				For i As Integer = 0 To FPopupMenuItems.Count -1
-					If QMenuItem(FPopupMenuItems.Items[i]).Command = Message.wParamLo Then
-						If QMenuItem(FPopupMenuItems.Items[i]).OnClick Then QMenuItem(FPopupMenuItems.Items[i]).OnClick(*QMenuItem(FPopupMenuItems.Items[i]).Designer, QMenuItem(FPopupMenuItems.Items[i]))
-						Exit For
-					End If
-				Next i
-			Case WM_DESTROY
-				If ImagesList Then Perform(TB_SETIMAGELIST, 0, 0)
-				If HotImagesList Then Perform(TB_SETHOTIMAGELIST, 0, 0)
-				If DisabledImagesList Then Perform(TB_SETDISABLEDIMAGELIST, 0, 0)
-			Case CM_COMMAND
-				Dim As Integer Index
-				Dim As TBBUTTON TB
-				If Message.wParam <> 0 Then
-					Index = Perform(TB_COMMANDTOINDEX, Message.wParam, 0)
-					If Perform(TB_GETBUTTON, Index, CInt(@TB)) Then
-						If Buttons.Item(Index)->OnClick Then (Buttons.Item(Index))->OnClick(*Buttons.Item(Index)->Designer, *Buttons.Item(Index))
-						If OnButtonClick Then OnButtonClick(*Designer, This, *Buttons.Item(Index))
-					End If
-				End If
-			Case CM_NOTIFY
-				Dim As TBNOTIFY Ptr Tbn
-				Dim As TBBUTTON TB
-				Dim As ..Rect R
-				Dim As Integer i
-				Tbn = Cast(TBNOTIFY Ptr,Message.lParam)
-				Select Case Tbn->hdr.code
-				Case TBN_DROPDOWN
-					If Tbn->iItem <> -1 Then
-						SendMessage(Tbn->hdr.hwndFrom, TB_GETRECT, Tbn->iItem, CInt(@R))
-						MapWindowPoints(Tbn->hdr.hwndFrom, 0, Cast(..Point Ptr, @R), 2)
-						i = SendMessage(Tbn->hdr.hwndFrom, TB_COMMANDTOINDEX, Tbn->iItem, 0)
-						If SendMessage(Tbn->hdr.hwndFrom, TB_GETBUTTON, i, CInt(@TB)) Then
-							bDropdownIndex = i
-							TrackPopupMenu(Buttons.Item(i)->DropDownMenu.Handle, 0, R.Left, R.Bottom, 0, Tbn->hdr.hwndFrom, NULL)
-							bDropdownIndex = -1
-						End If
-					End If
-				Case NM_CUSTOMDRAW
-					If g_darkModeSupported AndAlso g_darkModeEnabled AndAlso FDefaultBackColor = FBackColor Then
-						Dim As LPNMCUSTOMDRAW nmcd = Cast(LPNMCUSTOMDRAW, Message.lParam)
-						Select Case nmcd->dwDrawStage
-						Case CDDS_PREPAINT
-							FillRect nmcd->hdc, @nmcd->rc, hbrBkgnd
-							Message.Result = CDRF_NOTIFYPOSTPAINT
-							Return
-						Case CDDS_POSTPAINT
-							Dim As HPEN SeparatorPen = CreatePen(PS_SOLID, 1, darkHlBkColor) 'BGR(48, 48, 48))
-							Dim As HPEN DropDownPen = CreatePen(PS_SOLID, 1, BGR(215, 215, 215))
-							Dim As HPEN HotItemPen = CreatePen(PS_SOLID, 1, IIf(bDropdownIndex = -1, BGR(33, 33, 33), BGR(13, 13, 13)))
-							Dim As HPEN PrevPen = SelectObject(nmcd->hdc, SeparatorPen)
-							Dim As HBRUSH HotItemBrush = CreateSolidBrush(IIf(bDropdownIndex = -1, BGR(67, 67, 67), BGR(33, 33, 33)))
-							Dim As HBRUSH PrevBrush = SelectObject(nmcd->hdc, HotItemBrush)
-							Dim As Integer iHotItem, iLeft, iTop, iWidth, iDropDownWidth, iDropDownHeight
-							Dim As ..Rect rc, rcOffset
-							iHotItem = SendMessage(FHandle, TB_GETHOTITEM, 0, 0)
-							For i As Integer = 0 To Buttons.Count - 1
-								If Buttons.Item(i)->Style = ToolButtonStyle.tbsSeparator Then
-									SendMessage(FHandle, TB_GETITEMRECT, i, Cast(LPARAM, @rc))
-									FillRect nmcd->hdc, @rc, hbrBkgnd
-									If rc.Left <> 0 Then
-										SelectObject(nmcd->hdc, SeparatorPen)
-										MoveToEx nmcd->hdc, rc.Left + ScaleX(3), ScaleY(2), 0
-										LineTo nmcd->hdc, rc.Left + ScaleX(3), rc.Bottom - rc.Top - ScaleY(3)
-									End If
-								ElseIf Buttons.Item(i)->Style = ToolButtonStyle.tbsDropDown Then
-									SendMessage(FHandle, TB_GETITEMRECT, i, Cast(LPARAM, @rc))
-									rcOffset.Right = rc.Right
-									rcOffset.Top = rc.Top
-									rcOffset.Left = rc.Right - ScaleX(16)
-									rcOffset.Bottom = rc.Bottom
-									FillRect nmcd->hdc, @rcOffset, hbrBkgnd
-									If i = iHotItem OrElse i = bDropdownIndex Then
-										rcOffset.Left = rc.Right - ScaleX(16)
-										rcOffset.Bottom = rc.Bottom - ScaleY(1)
-										SelectObject(nmcd->hdc, HotItemPen)
-										Rectangle nmcd->hdc, rcOffset.Left, rcOffset.Top, rcOffset.Right, rcOffset.Bottom
-									End If
-									SelectObject(nmcd->hdc, DropDownPen)
-									iWidth = ScaleX(15)
-									iDropDownWidth = ScaleX(7)
-									If iDropDownWidth Mod 2 = 0 Then iDropDownWidth += 1
-									iDropDownHeight = Fix(iDropDownWidth / 2) + 1
-									iLeft = rc.Right - iWidth + Fix((iWidth - iDropDownWidth) / 2)
-									iTop = rc.Top + Fix((rc.Bottom - rc.Top - iDropDownHeight) / 2)
-									For j As Integer = 0 To iDropDownHeight - 1
-										MoveToEx nmcd->hdc, iLeft + j, iTop + j, 0
-										LineTo nmcd->hdc, iLeft + iDropDownWidth - j, iTop + j
-									Next j
-								End If
-							Next i
-							SelectObject(nmcd->hdc, PrevPen)
-							SelectObject(nmcd->hdc, PrevBrush)
-							DeleteObject SeparatorPen
-							DeleteObject DropDownPen
-							DeleteObject HotItemPen
-							DeleteObject HotItemBrush
-							Message.Result = CDRF_DODEFAULT
-							Return
-						End Select
-					End If
-				End Select
-			Case CM_NEEDTEXT
-				Dim As LPTOOLTIPTEXT TTX
-				TTX = Cast(LPTOOLTIPTEXT, Message.lParam)
-				TTX->hinst = GetModuleHandle(NULL)
-				If TTX->hdr.idFrom Then
-					Dim As TBBUTTON TB
-					Dim As Integer Index
-					Index = Perform(TB_COMMANDTOINDEX,TTX->hdr.idFrom,0)
-					If Perform(TB_GETBUTTON,Index,CInt(@TB)) Then
-						If Buttons.Item(Index)->ShowHint Then
-							If Buttons.Item(Index)->Hint <> "" Then
-								'Dim As UString s
-								's = Buttons.Button(Index).Hint
-								TTX->lpszText = @(Buttons.Item(Index)->Hint)
-							End If
-						End If
-					End If
-				End If
-			End Select
-		#endif
 		Base.ProcessMessage(Message)
 	End Sub
 	
@@ -1258,46 +722,6 @@ Namespace My.Sys.Forms
 	Private Sub ToolBar.HandleIsAllocated(ByRef Sender As Control)
 		If Sender.Child Then
 			With QToolBar(Sender.Child)
-				#ifndef __USE_GTK__
-					If .ImagesList Then .ImagesList->ParentWindow = @Sender: If .ImagesList->Handle Then .Perform(TB_SETIMAGELIST,0,CInt(.ImagesList->Handle))
-					If .HotImagesList Then .HotImagesList->ParentWindow = @Sender: If .HotImagesList->Handle Then .Perform(TB_SETHOTIMAGELIST, 0, CInt(.HotImagesList->Handle))
-					If .DisabledImagesList Then .DisabledImagesList->ParentWindow = @Sender: If .DisabledImagesList->Handle Then .Perform(TB_SETDISABLEDIMAGELIST,0,CInt(.DisabledImagesList->Handle))
-					.Perform(TB_BUTTONSTRUCTSIZE, SizeOf(TBBUTTON), 0)
-					.Perform(TB_SETEXTENDEDSTYLE, 0, .Perform(TB_GETEXTENDEDSTYLE, 0, 0) Or TBSTYLE_EX_DRAWDDARROWS)
-					.Perform(TB_SETBUTTONSIZE, 0, MAKELONG(.ScaleX(.FButtonWidth), .ScaleY(.FButtonHeight)))
-					If .ScaleX(.FBitmapWidth) <> 16 AndAlso .ScaleY(.FBitmapHeight) <> 16 Then .Perform(TB_SETBITMAPSIZE, 0, MAKELONG(.ScaleX(.FBitmapWidth), .ScaleY(.FBitmapHeight)))
-					Var FHandle = .FHandle
-					For i As Integer = 0 To .Buttons.Count - 1
-						.FHandle = 0
-						.Buttons.Item(i)->xdpi = .xdpi
-						.Buttons.Item(i)->ydpi = .ydpi
-						Dim As TBBUTTON TB
-						'Dim As WString Ptr s = .Buttons.Button(i)->Caption
-						TB.fsState   = .Buttons.Item(i)->State
-						TB.fsStyle   = .Buttons.Item(i)->Style
-						If .Buttons.Item(i)->ImageIndex = -1 AndAlso .ImagesList <> 0 AndAlso .Buttons.Item(i)->ImageKey <> "" Then
-							.Buttons.Item(i)->ImageIndex = .ImagesList->IndexOf(.Buttons.Item(i)->ImageKey)
-						End If
-						TB.iBitmap   = .Buttons.Item(i)->ImageIndex
-						TB.idCommand = .Buttons.Item(i)->CommandID
-						If .Buttons.Item(i)->Caption <> "" Then
-							TB.iString   = CInt(@.Buttons.Item(i)->Caption)
-						Else
-							TB.iString   = 0
-						End If
-						TB.dwData    = Cast(DWORD_PTR, @.Buttons.Item(i)->DropDownMenu)
-						SendMessage(FHandle, TB_ADDBUTTONS, 1, CInt(@TB))
-						Var iWidth = .Buttons.Item(i)->Width
-						.FHandle = FHandle
-						If iWidth > 0 Then
-							.Buttons.Item(i)->Width = iWidth
-						End If
-						If Not .Buttons.Item(i)->Visible Then .Perform(TB_HIDEBUTTON, .Buttons.Item(i)->CommandID, MAKELONG(True, 0))
-						If .Buttons.Item(i)->Visible AndAlso .Buttons.Item(i)->Child <> 0 Then .Buttons.Item(i)->Child = .Buttons.Item(i)->Child
-					Next i
-					If .AutoSize Then .Perform(TB_AUTOSIZE, 0, 0)
-					.SetButtonSizes()
-				#endif
 '				If .DesignMode Then
 '					.Buttons.Add
 '				End If
@@ -1311,31 +735,10 @@ Namespace My.Sys.Forms
 	
 	Private Constructor ToolBar
 		With This
-			#ifdef __USE_GTK__
 				widget = gtk_toolbar_new()
 				gtk_toolbar_set_style(GTK_TOOLBAR(widget), GTK_TOOLBAR_BOTH_HORIZ)
 				'gtk_toolbar_set_icon_size(GTK_TOOLBAR(widget), GTK_ICON_SIZE_LARGE_TOOLBAR)
 				.RegisterClass "ToolBar", @This
-			#else
-				AFlat(0)        = 0
-				AFlat(1)        = TBSTYLE_FLAT
-				ADivider(0)     = CCS_NODIVIDER
-				ADivider(1)     = 0
-				AAutosize(0)    = 0
-				AAutosize(1)    = TBSTYLE_AUTOSIZE
-				AList(0)        = 0
-				AList(1)        = TBSTYLE_LIST
-				AState(0)       = TBSTATE_INDETERMINATE
-				AState(1)       = TBSTATE_ENABLED
-				AState(2)       = TBSTATE_HIDDEN
-				AState(3)       = TBSTATE_CHECKED
-				AState(4)       = TBSTATE_PRESSED
-				AState(5)       = TBSTATE_WRAP
-				AWrap(0)        = 0
-				AWrap(1)        = TBSTYLE_WRAPABLE
-				ATransparent(0) = 0
-				ATransparent(1) = TBSTYLE_TRANSPARENT
-			#endif
 			FTransparent    = 1
 			FAutosize       = 1
 			FButtonWidth    = 16
@@ -1344,25 +747,11 @@ Namespace My.Sys.Forms
 			FBitmapHeight   = 16
 			Buttons.Parent  = This
 			FEnabled = True
-			#ifndef __USE_GTK__
-				.OnHandleIsAllocated = @HandleIsAllocated
-				.OnHandleIsDestroyed = @HandleIsDestroyed
-				.ChildProc         = @WndProc
-				.ExStyle           = 0
-				.Style             = WS_CHILD Or TBSTYLE_TOOLTIPS Or CCS_NOPARENTALIGN Or CCS_NOMOVEY Or AList(FList) Or AAutosize(_Abs(FAutosize)) Or AFlat(_Abs(FFlat)) Or ADivider(_Abs(FDivider)) Or AWrap(_Abs(FWrapable)) Or ATransparent(_Abs(FTransparent))
-				.RegisterClass "ToolBar", "ToolBarWindow32"
-			#endif
 			.Child             = @This
 			WLet(FClassName, "ToolBar")
 			WLet(FClassAncestor, "ToolBarWindow32")
-			#ifndef __USE_GTK2__
 				.Width             = 121
-				#ifdef __USE_GTK__
 					.Height            = 30
-				#else
-					.Height            = 26
-				#endif
-			#endif
 			'.Font              = @Font
 			'.Cursor            = @Cursor
 		End With
@@ -1372,9 +761,6 @@ Namespace My.Sys.Forms
 	
 	Private Destructor ToolBar
 		Buttons.Clear
-		#ifndef __USE_GTK__
-			'UnregisterClass "ToolBar", GetmoduleHandle(NULL)
-		#endif
 	End Destructor
 End Namespace
 

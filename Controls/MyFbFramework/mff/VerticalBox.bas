@@ -41,11 +41,7 @@ Namespace My.Sys.Forms
 	
 	Private Property VerticalBox.Spacing(Value As Integer)
 		FVerticalSpacing = Value
-		#ifdef __USE_GTK__
 			gtk_box_set_spacing(GTK_BOX(widget), FVerticalSpacing)
-		#else
-			RequestAlign
-		#endif
 	End Property
 	
 	Private Property VerticalBox.TabIndex As Integer
@@ -72,66 +68,7 @@ Namespace My.Sys.Forms
 		Base.Text = Value
 	End Property
 		
-	#ifdef __USE_WINAPI__
-		Private Sub VerticalBox.HandleIsAllocated(ByRef Sender As Control)
-			If Sender.Child Then
-				With QVerticalBox(Sender.Child)
-				End With
-			End If
-		End Sub
-		
-		Private Sub VerticalBox.WNDPROC(ByRef Message As Message)
-		End Sub
-	#endif
 	Private Sub VerticalBox.ProcessMessage(ByRef Message As Message)
-		#ifdef __USE_WINAPI__
-			Select Case Message.Msg
-			Case WM_PAINT, WM_CREATE, WM_ERASEBKGND
-				Dim As Integer W,H
-				Dim As HDC Dc, memDC
-				Dim As HBITMAP Bmp
-				Dim As ..Rect R, RFrame
-				GetClientRect Handle, @R
-				Dc = GetDC(Handle)
-				If g_darkModeSupported AndAlso g_darkModeEnabled Then
-					If Not FDarkMode Then
-						SetDark True
-					End If
-				Else
-					If FDarkMode Then
-						SetDark False
-					End If
-				End If
-				If DoubleBuffered Then
-					memDC = CreateCompatibleDC(Dc)
-					Bmp   = CreateCompatibleBitmap(Dc, R.Right, R.Bottom)
-					SelectObject(memDC, Bmp)
-					FillRect memDC, @R, This.Brush.Handle
-					SetBkMode(memDC, TRANSPARENT)
-					H = Canvas.TextHeight("Wg")
-					W = Canvas.TextWidth(Text)
-					SetBkColor(memDC, OPAQUE)
-					Canvas.SetHandle memDC
-					If OnPaint Then OnPaint(*Designer, This, Canvas)
-					BitBlt(Dc, 0, 0, R.Right, R.Bottom, memDC, 0, 0, SRCCOPY)
-					Canvas.UnSetHandle
-					DeleteObject(Bmp)
-					DeleteDC(memDC)
-				Else
-					SetBkMode Dc, TRANSPARENT
-					FillRect Dc, @R, This.Brush.Handle
-					SetBkColor Dc, OPAQUE
-					H = Canvas.TextHeight("Wg")
-					W = Canvas.TextWidth(Text)
-					Canvas.SetHandle Dc
-					If OnPaint Then OnPaint(*Designer, This, Canvas)
-					Canvas.UnSetHandle
-				End If
-				ReleaseDC Handle, Dc
-				Message.Result = 0
-				Exit Sub
-			End Select
-		#endif
 		Base.ProcessMessage(Message)
 	End Sub
 	
@@ -149,28 +86,11 @@ Namespace My.Sys.Forms
 	
 	Private Constructor VerticalBox
 		With This
-			#ifdef __USE_GTK__
-				#ifdef __USE_GTK2__
-					widget = gtk_vbox_new(False, 0)
-				#else
 					widget = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0)
-				#endif
 				.RegisterClass "VerticalBox", @This
-			#endif
 			FAutoSize = True
 			Canvas.Ctrl    = @This
 			.Child       = @This
-			#ifdef __USE_WINAPI__
-				.RegisterClass "VerticalBox"
-				.ChildProc   = @WNDPROC
-				.ExStyle     = 0
-				.Style       = WS_CHILD
-				.BackColor       = GetSysColor(COLOR_BTNFACE)
-				FDefaultBackColor = .BackColor
-				.OnHandleIsAllocated = @HandleIsAllocated
-			#elseif defined(__USE_JNI__)
-				WLet(FClassAncestor, "android/widget/AbsoluteLayout")
-			#endif
 			FTabIndex          = -1
 			WLet(FClassName, "VerticalBox")
 			.Width       = 121
@@ -179,8 +99,5 @@ Namespace My.Sys.Forms
 	End Constructor
 	
 	Private Destructor VerticalBox
-		#ifdef __USE_WINAPI__
-			UnregisterClass "VerticalBox", GetModuleHandle(NULL)
-		#endif
 	End Destructor
 End Namespace

@@ -1,30 +1,35 @@
 # Astoria → Ilwaco parity tracking
 
-## ⇢ NEXT ACTION (staged for a fresh session) — strip ALL non-target-platform code (task B) + finish compiler removal (stage 2)
+## ⇢ NEXT ACTION (staged for a fresh session) — finish compiler removal (stage 2); then resume the changelog walk
 
-**Target = x86_64 Linux / GTK3 only.** Owner direction (2026-08-02): don't strip *just* Windows — strip
-**every** non-target platform's code (Windows, Android/JNI, GTK4, GTK2, Darwin/macOS, WASM, 32-bit),
-deleting it (never comment/no-op). Astoria found this comprehensive strip made later changes much
-easier. Guard list + keep-list + survey numbers in memory [[project-strip-windows-code]]. Phase 1
-(Direct2D toggle) and **staged task A (full `EditControl.bas`/`.bi` strip) both landed + build-verified**
-— see the two "Done" sections below. Remaining strip work is **task B**:
+The big non-target strip is **done** for both `src/` (EditControl, staged task A) and the MFF framework
+(**staged task B — landed 2026-08-02**, see "Done — MFF non-target strip" below). The compiled surface
+(editor + `libmff64_gtk3.so`) is now clean of *real* non-target `#if`/`#ifdef` directives. Remaining:
 
-### Staged task B — MFF non-target strip (our fork — [[project-mff-is-our-fork]])
-Do after or independently of task A. **MFF is where the multi-platform bulk lives** (survey: WINAPI 945,
-GTK4 125, WASM 129, JNI 88, GTK2 35, Win32 37, Darwin 1) — so this is a full non-target strip of the
-framework, not only Direct2D. Rebuild `libmff64_gtk3.so` (designer control lib) as well as the editor.
-Direct2D portion specifically:
-- `Controls/MyFbFramework/mff/D2D1/D2D1.bi` (2,769 lines; `#include`'d only by `Canvas.bi:19`) — delete
-  outright once nothing includes it. Also `D2D1_MFF.bi`.
-- `Controls/MyFbFramework/mff/Canvas.bas` (~145 D2D branches) + `Canvas.bi` decls — delete the
-  `FUseDirect2D`/`pRenderTarget`-gated D2D branches in each drawing method, keep GTK. `RichTextBox.bas`
-  is NOT involved (0 real D2D refs).
-- `mff/Application.bas` D2D init, `MyFbFramework.vfp` manifest entry for `D2D1.bi`, the `examples/Canvas`
-  D2D demo option (Astoria removed `RadioD2D1`) if present — and, more broadly, the GTK4/GTK2/JNI/WASM/
-  Darwin branches throughout `mff/`.
-- Reference: Astoria's `DIRECT2D_REMOVAL.md` §"Scope of the removal" items 2–4 (for the D2D slice).
+1. **Compiler removal stage 2** — remove the picker UI (Options ▸ compilers list + "Find Compilers"
+   button), the per-project `CompilerPath` override, and the vestigial `[Compilers]` INI machinery
+   (fragile 10-section loop must be refactored, not just deleted). Full surface in "Done — compiler path
+   hard-coded" below.
+2. **Resume the changelog walk** — next candidates: `53d8e473` (compile-warning fixes — check Ilwaco's
+   shared files), then the menu-taxonomy feature ports.
 
-Then continue the changelog walk.
+**Deferred strip sub-items** (low-value / off the compiled path — do opportunistically, not blocking):
+- `mff/win/` (Windows headers dir) — now only reached via the excluded `SysUtils.bi` WINAPI includes
+  (unreachable on our build) and the opaque `#ifdef GIFPlayOn` block in `Animate.bi`; inert. Delete once
+  `SysUtils.bi`'s WINAPI includes are hand-stripped and `GIFPlayOn` is understood.
+- `Controls/MyFbFramework/inc/` (CopyArray/Thread/cJSON/mongoose/raylib/`pipe.bi`…) — **not on the build
+  path** (no include from `mff.bi` or `src/`), so not compiled; strip or drop wholesale later. Note
+  `inc/pipe.bi` *unconditionally* `#define __USE_WINAPI__` — excluded from the eliminator.
+- Commented-out `'#ifdef` cruft (`Graphics.bas:15`, `Form.bas:672`, `Application.bas:239/250`,
+  `Application.bi:18`) and the now-unused `#define nullptr 0` in `DarkMode/DarkMode.bi` — cosmetic sweep.
+
+**Dark-mode REIMPLEMENT gap surfaced by the strip:** MFF already has a *real GTK3* `SetDarkMode`
+(`gtk-application-prefer-dark-theme`; sets `g_darkModeEnabled`), so dark mode is NOT dead on GTK and the
+`DarkMode/` subsystem was kept. **But** `g_darkModeSupported` is only ever set `True` by the (now-deleted)
+Win32 `InitDarkMode`, so on GTK it stays `False` — every `If g_darkModeSupported AndAlso …` dark-styling
+branch in the controls and the editor (`src/Main.bas`, `MD2RTF.bi`, …) never fires. Making GTK dark mode
+*fully* effective (drive `g_darkModeSupported`/per-control theming from the GTK theme) is a REIMPLEMENT
+item — track with Astoria's dark-mode work (`56f6d180`/`b3633bc5`/`a7c7839d`).
 
 ---
 
@@ -176,6 +181,51 @@ was live-but-useless. Removed that toggle, **build-verified clean** (fbc exit 0,
 EditControl's whole Windows branch (23 `#ifdef __USE_WINAPI__` blocks + 137 `#ifdef __USE_GTK*…#else…
 #endif` pairs, ~2,135 lines, GDI+D2D interleaved) and is inseparable from it. Retargeted as **staged
 task A** at the top of this file (full EditControl WINAPI strip). MFF's Direct2D is **staged task B**.
+
+## Done 2026-08-02 — MFF non-target strip (staged task B) — build-verified
+
+The framework-wide non-target strip. **~134,600 lines removed across 274 files** (91 files deleted):
+the MFF control-code strip is **198 files / ~41,250 lines** (incl. 14 whole-file deletions); the
+`gir_headers/` GTK4 binding tree is another **77 files / 93,349 lines**. Both artifacts rebuild **clean**
+(`fbc` exit 0, zero warnings): the editor (`VisualFBEditor64_gtk3`) and the designer control lib
+(`libmff64_gtk3.so`). The compiled surface now has **zero** real non-target `#if`/`#ifdef` directives
+(WINAPI dropped 954 → 0 outside the 3 excluded derivation files); residual guard tokens are only in
+commented cruft or the derivation files.
+
+**Method (durable — a superset of the task-A eliminator).** Unlike EditControl, MFF has `#elseif`
+chains and `#if`-*expressions* (`defined()`, `AndAlso`/`OrElse`/`Not`, `_WIN32_WINNT` comparisons), so
+the eliminator (`scratchpad/ppstrip.py`) was extended to a full recursive-descent parser:
+- **Ground-truth symbol table, not guesses** — probed the compiler under `-d __USE_GTK3__` with MFF's
+  own `SysUtils.bi` preamble. **Defined:** `__USE_GTK__`, `__USE_GTK3__`, `__FB_LINUX__`, `__FB_UNIX__`,
+  `__FB_64BIT__`, **`__USE_CAIRO__`** (SysUtils.bi `#define`s it whenever `__USE_GTK__`). **Undefined:**
+  `__USE_GTK2/4__`, `__USE_WINAPI__`, `__FB_WIN32__`, `__USE_JNI__`, `__FB_ANDROID__`, `__FB_JS__`,
+  `__USE_WASM__`, `__FB_DARWIN__`, `__USE_WEBKITGTK__`, `__USE_GDIP__`, `__FB_ARM__`. **Opaque (never
+  evaluated, blocks left intact):** `pango_version`, `PANGO_VERSION`, `UNICODE`, `__USE_MAKE__`,
+  `_WIN32_WINNT`, and any unlisted symbol (e.g. the `GIFPlayOn` feature toggle).
+- **Conservative by construction:** a chain is collapsed only if *every* branch condition is known; any
+  opaque condition leaves the whole chain intact but still recurses into its branches (so nested known
+  blocks inside an opaque one are still stripped). It only ever *deletes* whole lines — verified each
+  edited file is a strict line-**subsequence** of the original (166/166, then the rest).
+- **Exclude list (must NOT strip — they *define* the truth):** `mff/mff.bi`, `mff/SysUtils.bi`,
+  `inc/pipe.bi` (`SysUtils.bas` turned out safe and was stripped). Stripping `SysUtils.bi` would delete
+  the very `#define __USE_GTK__`/`__USE_CAIRO__` the table depends on.
+- **Traps hit & fixed:** (a) UTF-8 **BOM** on line 1 hid a leading `#ifdef` (WebKitWebView.bi,
+  SystemInformation.bi) — parser made BOM-aware (preserve, don't add/remove). (b) A trailing `'comment`
+  on `#ifdef __USE_WINAPI__ '…` (TreeView.bi) got swallowed into the operand — now takes the first
+  identifier token only. Build-checkpointed in chunks (top-level → subdirs → SysUtils.bas/gir), `.so` +
+  editor rebuilt clean after each.
+
+**Whole dirs/files deleted (non-target, orphaned after the include-strip):** `mff/Android/`,
+`mff/D2D1/`, `mff/CDataObject/`, `mff/CDropSource/`, `mff/CDropTarget/` (COM drag-drop), `mff/Web/`
+(WASM/JS export shell), `mff/gir_headers/` (GTK4 bindings, 6.2 MB — included only under `#ifdef
+__USE_GTK4__`), and files `WebView/WebView2.bi`, `DarkMode/IatHook.bi`, `DarkMode/UAHMenuBar.bi`.
+**Kept:** `WebView/WebKitWebView.bi` (GTK), `DarkMode/DarkMode.bas`+`.bi` (live GTK `SetDarkMode`),
+`fbsound/` (cross-platform), the `gtk/gtk.bi`+`glib-object.bi` GTK3 includes in `SysUtils.bas`.
+**Manifest:** removed 16 dangling `File=` entries from `MyFbFramework.vfp` (the deletions + 6
+pre-existing dangling entries like `ColorDialog.bi`/`.gitignore`; it is a flat list, not index-keyed).
+
+Direct2D is fully retired from MFF too (the `D2D1/` tree + `Canvas` D2D branches went with the strip).
+Dark-mode REIMPLEMENT gap: see NEXT ACTION above.
 
 ## Done 2026-08-02 — full `EditControl.bas`/`.bi` non-target strip (staged task A)
 

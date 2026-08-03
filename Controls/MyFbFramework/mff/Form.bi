@@ -89,20 +89,10 @@ Namespace My.Sys.Forms
 		FShowInTaskbar As Boolean
 		FOnCreate      As Sub(ByRef Sender As Form)
 		Declare Static Sub ActiveControlChanged(ByRef Sender As Control)
-		#ifdef __USE_GTK__
 			ImageWidget As GtkWidget Ptr
 			Declare Static Function Client_Draw(widget As GtkWidget Ptr, cr As cairo_t Ptr, data1 As Any Ptr) As Boolean
 			Declare Static Function Client_ExposeEvent(widget As GtkWidget Ptr, Event As GdkEventExpose Ptr, data1 As Any Ptr) As Boolean
 			Declare Static Function deactivate_cb(ByVal user_data As gpointer) As gboolean
-		#else
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-			Declare Static Sub HandleIsDestroyed(ByRef Sender As Control)
-			Declare Static Sub WNDPROC(ByRef Message As Message)
-			#ifdef __USE_WINAPI__
-				Declare Static Function HookClientProc(hDlg As HWND, uMsg As UINT, wParam As WPARAM, lParam As LPARAM) As LRESULT
-				Declare Virtual Sub SetDark(Value As Boolean)
-			#endif
-		#endif
 		Declare Function EnumMenuItems(Item As MenuItem) As Boolean
 		Declare Sub GetMenuItems
 		Declare Sub ShowItems(Ctrl As Control Ptr)
@@ -117,14 +107,10 @@ Namespace My.Sys.Forms
 		FOpacity        As Integer
 		FTransparent    As Boolean
 		FTransparentColor As Integer
-		#ifdef __USE_GTK__
 			WindowWidget As GtkWidget Ptr
 			HeaderBarWidget As GtkWidget Ptr
 			Declare Property ParentWidget As GtkWidget Ptr
 			Declare Property ParentWidget(Value As GtkWidget Ptr)
-		#elseif defined(__USE_WASM__)
-			Declare Virtual Function GetContent() As UString
-		#endif
 	Public:
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
 		'Returns the icon displayed when a form is minimized at run time (Windows, Linux).

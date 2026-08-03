@@ -12,10 +12,6 @@ Namespace My.Sys.Forms
 	'The Vertical Box lays out its child controls verically and will not wrap onto a new line in any circumstances (Windows, Linux, Android)
 	Private Type VerticalBox Extends ContainerControl
 	Private:
-		#ifdef __USE_WINAPI__
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-			Declare Static Sub WNDPROC(ByRef Message As Message)
-		#endif
 	Protected:
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
 	Public:

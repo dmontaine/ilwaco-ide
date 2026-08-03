@@ -20,14 +20,7 @@ Namespace My.Sys.Forms
 	Private Type GroupBox Extends ContainerControl
 	Private:
 		FParentColor As Integer
-		#ifndef __USE_GTK__
-			Declare Static Sub WndProc(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-		#endif
 	Protected:
-		#ifdef __USE_WASM__
-			Declare Virtual Function GetContent() As UString
-		#endif
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
 	Public:
 		#ifndef ReadProperty_Off

@@ -160,18 +160,12 @@ Namespace My.Sys.Forms
 		FAutoSize As Boolean
 		FRowCount As Integer
 		Declare Static Sub GraphicChange(ByRef Sender As My.Sys.Drawing.GraphicType, Image As Any Ptr, ImageType As Integer)    ' Handle to the popup menu
-		#ifdef __USE_GTK__
 			Declare Static Sub Layout_SizeAllocate(widget As GtkWidget Ptr, allocation As GdkRectangle Ptr, user_data As Any Ptr)
 			Declare Static Function Layout_Draw(widget As GtkWidget Ptr, cr As cairo_t Ptr, data1 As Any Ptr) As Boolean
 			Declare Static Function Layout_ExposeEvent(widget As GtkWidget Ptr, Event As GdkEventExpose Ptr, data1 As Any Ptr) As Boolean
-		#else
-			Declare Static Sub WndProc(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As My.Sys.Forms.Control)
-		#endif
 		FReBarDarkMode As Boolean
 	Protected:
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
-		#ifdef __USE_GTK__
 			Dim As Boolean InRect
 			Dim As Boolean bPressed, bWithoutUpdate
 			Dim As Integer DraggedItem, OldX
@@ -181,7 +175,6 @@ Namespace My.Sys.Forms
 			Dim As GdkCursor Ptr gdkCursorDefault
 			Dim As GdkCursor Ptr gdkCursorWEResize
 			Dim As GdkCursor Ptr gdkCursorColResize
-		#endif
 	Public:
 		#ifndef ReadProperty_Off
 			Declare Function ReadProperty(ByRef PropertyName As String) As Any Ptr

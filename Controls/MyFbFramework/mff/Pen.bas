@@ -83,11 +83,6 @@ Namespace My.Sys.Drawing
 	
 	#ifndef Pen_Create_Off
 		Private Sub Pen.Create
-			#ifdef __USE_WINAPI__
-				If Handle Then DeleteObject Handle
-				Handle = CreatePen(FStyle, FSize, FColor)
-				If Handle Then If OnCreate Then OnCreate(*Designer, This)
-			#endif
 		End Sub
 	#endif
 	
@@ -105,8 +100,5 @@ Namespace My.Sys.Drawing
 	End Constructor
 	
 	Private Destructor Pen
-		#ifdef __USE_WINAPI__
-			If Handle Then DeleteObject Handle
-		#endif
 	End Destructor
 End Namespace

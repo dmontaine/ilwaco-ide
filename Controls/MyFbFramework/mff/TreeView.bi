@@ -36,11 +36,7 @@ Namespace My.Sys.Forms
 		Declare Function Contains(ByRef FNode As PTreeNode) As Boolean
 		Declare Function Contains(ByRef Text As WString) As Boolean
 		Declare Function ContainsKey(ByRef Key As WString) As Boolean
-		#ifdef __USE_GTK__
 			Declare Function FindByIterUser_Data(User_Data As Any Ptr) As PTreeNode
-		#elseif defined(__USE_WINAPI__)
-			Declare Function FindByHandle(hti As HTREEITEM) As PTreeNode
-		#endif
 		Declare Sub Clear
 		Declare Sub Sort
 		Declare Constructor
@@ -68,11 +64,7 @@ Namespace My.Sys.Forms
 		Tag As Any Ptr
 		Parent   As Control Ptr
 		Nodes As TreeNodeCollection
-		#ifdef __USE_GTK__
 			TreeIter As GtkTreeIter
-		#elseif defined(__USE_WINAPI__)
-			Handle As HTREEITEM
-		#endif
 		Declare Sub SelectItem
 		Declare Sub Collapse
 		Declare Sub Expand
@@ -121,7 +113,6 @@ Namespace My.Sys.Forms
 		FHideSelection As Boolean
 		FEditLabels As Boolean
 	Protected:
-		#ifdef __USE_GTK__
 			Dim As GtkCellRenderer Ptr rendertext
 			Dim As TreeNode Ptr PrevNode
 			TreeStore As GtkTreeStore Ptr
@@ -136,16 +127,6 @@ Namespace My.Sys.Forms
 			Declare Static Function TestExpandRow(tree_view As GtkTreeView Ptr, iter As GtkTreeIter Ptr, path As GtkTreePath Ptr, user_data As Any Ptr) As Boolean
 			Declare Static Function RowCollapsed(tree_view As GtkTreeView Ptr, iter As GtkTreeIter Ptr, path As GtkTreePath Ptr, user_data As Any Ptr) As Boolean
 			Declare Static Function RowExpanded(tree_view As GtkTreeView Ptr, iter As GtkTreeIter Ptr, path As GtkTreePath Ptr, user_data As Any Ptr) As Boolean
-		#elseif defined(__USE_WINAPI__)
-			Declare Static Sub WndProc(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-			Declare Static Sub HandleIsDestroyed(ByRef Sender As Control)
-			Declare Sub SendToAllChildItems(ByVal hNode As HTREEITEM, tvMessage As Long)
-			Declare Sub CreateNodes(PNode As TreeNode Ptr)
-		#elseif defined(__USE_WASM__)
-			Declare Virtual Function GetContent() As UString
-			Declare Function CreateNodes(PNodes As TreeNode Ptr) As UString
-		#endif
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
 	Public:
 		#ifndef ReadProperty_Off
@@ -236,18 +217,6 @@ End Namespace
 'const TVS_NOHSCROLL = &h8000
 'const TVS_EX_NOSINGLECOLLAPSE = &h1
 '
-#ifdef __USE_WINAPI__ '_WIN32_WINNT = &h0602
-	Const TVS_EX_MULTISELECT = &h2
-	Const TVS_EX_DOUBLEBUFFER = &h4
-	Const TVS_EX_NOINDENTSTATE = &h8
-	Const TVS_EX_RICHTOOLTIP = &h10
-	Const TVS_EX_AUTOHSCROLL = &h20
-	Const TVS_EX_FADEINOUTEXPANDOS = &h40
-	Const TVS_EX_PARTIALCHECKBOXES = &h80
-	Const TVS_EX_EXCLUSIONCHECKBOXES = &h100
-	Const TVS_EX_DIMMEDCHECKBOXES = &h200
-	Const TVS_EX_DRAWIMAGEASYNC = &h400
-#endif
 
 #ifndef __USE_MAKE__
 	#include once "TreeView.bas"

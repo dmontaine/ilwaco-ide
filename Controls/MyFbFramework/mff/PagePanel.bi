@@ -16,29 +16,14 @@ Namespace My.Sys.Forms
 	'Used to group collections of controls (Windows, Linux, Android, Web).
 	Private Type PagePanel Extends ContainerControl
 	Private:
-		#ifdef __USE_WINAPI__
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-			Declare Static Sub WNDPROC(ByRef Message As Message)
-		#endif
 		FSelectedPanelIndex As Integer
 		FTransparent As Boolean
 		Declare Static Sub GraphicChange(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Drawing.GraphicType, Image As Any Ptr, ImageType As Integer)
 	Protected:
-		#ifdef __USE_WASM__
-			Declare Virtual Function GetContent() As UString
-		#elseif defined(__USE_GTK__) AndAlso defined(__USE_GTK3__)
 			Declare Static Function Overlay_get_child_position(self As GtkOverlay Ptr, widget As GtkWidget Ptr, allocation As GdkRectangle Ptr, user_data As Any Ptr) As Boolean
-		#endif
 		NumericUpDownControl As NumericUpDown
-		#if defined(__USE_GTK__) AndAlso defined(__USE_GTK3__)
 			UpDownButton As CommandButton
 			Declare Sub UpDownButton_Click(ByRef Sender As Control)
-		#else
-			UpDownControl As UpDown
-			UpDownPanel As Panel
-			NeedBringToFront As Boolean
-			Declare Sub UpDownControl_Changing(ByRef Sender As UpDown, Value As Integer, Direction As Integer)
-		#endif
 		mnuContext As PopupMenu
 		mnuShowPanel As MenuItem
 		Declare Sub NumericUpDownControl_Change(ByRef Sender As NumericUpDown)

@@ -15,22 +15,10 @@
 
 #include once "Component.bi"
 #include once "ImageList.bi"
-#ifdef __USE_WINAPI__
-	#include once "win/uxtheme.bi"
-#endif
 
-#ifdef __USE_GTK__
 	Dim Shared As GdkPixbuf Ptr EmptyPixbuf
 	EmptyPixbuf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, True, 8, 16, 16)
 	gdk_pixbuf_fill(EmptyPixbuf, 0)
-#else
-	'	Type BP_PAINTPARAMS
-	'        cbSize As DWORD
-	'        dwFlags As DWORD
-	'        prcExclude As Const RECT Ptr
-	'        pBlendFunction As Const BLENDFUNCTION Ptr
-	'    End Type
-#endif
 
 Using My.Sys.ComponentModel
 
@@ -53,9 +41,6 @@ Namespace My.Sys.Forms
 	Private Type MenuItem Extends My.Sys.Object
 	Private:
 		Declare Static Sub BitmapChanged(ByRef Designer As My.Sys.Object, ByRef Sender As My.Sys.Drawing.BitmapType)
-		#ifdef __USE_WINAPI__
-			FInfo	    	As MENUITEMINFO
-		#endif
 		FCount		    	As Integer
 		FItems          	As PMenuItem Ptr
 		FCaption		    As WString Ptr
@@ -74,10 +59,6 @@ Namespace My.Sys.Forms
 		FImageKey		    As WString Ptr
 		FOwnerDraw		    As Integer
 	Protected:
-		#ifdef __USE_WINAPI__
-			FHandle		    As HMENU
-			'FMenu  	    As HMENU
-		#endif
 		FName			    As WString Ptr
 		FOwner			    As PMenu
 		FMenuItemChecked    As Boolean
@@ -95,16 +76,6 @@ Namespace My.Sys.Forms
 		Tag As Any Ptr
 		'Reference to nested menu structure
 		SubMenu As PPopupMenu
-		#ifdef __USE_WINAPI__
-			'declare property Menu as HMENU
-			'declare property Menu(value as HMENU)
-			Declare Property Handle As HMENU
-			Declare Property Handle(value As HMENU)
-			'Updates Windows MENUITEMINFO
-			Declare Sub SetInfo(ByRef value As MENUITEMINFO)
-			'Configures GTK+ menu attributes
-			Declare Sub SetItemInfo(ByRef value As MENUITEMINFO)
-		#elseif defined(__USE_GTK__)
 			'Keyboard key for shortcut (e.g., 'F5')
 			accelerator_key As guint
 			'Modifier keys (Ctrl/Alt/Shift) for shortcut
@@ -118,7 +89,6 @@ Namespace My.Sys.Forms
 			Declare Static Sub MenuItemActivate(MenuItem As GtkMenuItem Ptr, user_data As Any Ptr)
 			'GTK+ button press handler
 			Declare Static Function MenuItemButtonPressEvent(widget As GtkWidget Ptr, Event As GdkEvent Ptr, user_data As Any Ptr) As Boolean
-		#endif
 		Declare Property Owner As PMenu
 		'Parent form/control reference
 		Declare Property Owner(value As PMenu)
@@ -225,10 +195,6 @@ Namespace My.Sys.Forms
 		FCount   As Integer
 		FItems   As PMenuItem Ptr
 	Protected:
-		#ifdef __USE_WINAPI__
-			FInfo    As MENUINFO
-			FHandle  As HMENU
-		#endif
 		FStyle   As Integer
 		FColor   As Integer
 		FDisplayIcons As Boolean
@@ -240,9 +206,7 @@ Namespace My.Sys.Forms
 		Declare Sub GetMenuItems
 		Declare Virtual Sub ProcessMessage(ByRef mess As Message)
 	Public:
-		#ifdef __USE_GTK__
 			Widget As GtkWidget Ptr
-		#endif
 		#ifndef ReadProperty_Off
 			'Loads menu structure from stream
 			Declare Virtual Function ReadProperty(ByRef PropertyName As String) As Any Ptr
@@ -259,15 +223,9 @@ Namespace My.Sys.Forms
 		Declare Property ParentWindow As Component Ptr
 		'Owning form/window reference
 		Declare Property ParentWindow(value As Component Ptr)
-		#ifdef __USE_WINAPI__
-			Declare Property Handle As HMENU
-			'Native OS menu handle (HMENU)
-			Declare Property Handle(value As HMENU)
-		#else
 			Declare Property Handle As GtkWidget Ptr
 			'Native OS menu handle (HMENU)
 			Declare Property Handle(value As GtkWidget Ptr)
-		#endif
 		Declare Property Style As Integer
 		'Visual theme (Classic/Flat/Modern)
 		Declare Property Style(value As Integer)

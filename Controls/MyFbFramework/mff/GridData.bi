@@ -66,15 +66,8 @@ Namespace My.Sys.Forms
 		FItems As List
 		PItem As PGridDataItem
 		FParentItem As PGridDataItem
-		#ifndef __USE_GTK__
-			lviItems As LVITEM
-		#endif
 	Public:
-		#ifdef __USE_GTK__
 			Declare Function FindByIterUser_Data(User_Data As Any Ptr) As PGridDataItem
-		#else
-			Declare Function FindByHandle(Value As LPARAM) As PGridDataItem
-		#endif
 		Parent   As Control Ptr
 		Declare Property Count As Integer
 		Declare Property Count(Value As Integer)
@@ -117,24 +110,10 @@ Namespace My.Sys.Forms
 		mCellBackColor(Any)     As Integer
 		mCellForeColor(Any)     As Integer
 
-		#ifndef __USE_GTK__
-			Dim lviItem             As LVITEM
-
-		#endif
 	Protected:
-		#ifndef __USE_GTK__
-
-		#endif
 	Public:
-		#ifdef __USE_GTK__
 			'Native tree iterator handle (GTK+ integration)
 			TreeIter As GtkTreeIter
-		#else
-			'Native OS handle for the item element
-			HANDLE As LPARAM
-			'Returns position in parent collection
-			Declare Function GetItemIndex() As Integer
-		#endif
 		'Reference to parent grid control
 		Parent   As Control Ptr
 		'Collection of child items (for hierarchical data)
@@ -223,9 +202,7 @@ Namespace My.Sys.Forms
 		FGridEditComboItem As WString Ptr
 		FSortOrder    As SortStyle
 	Public:
-		#ifdef __USE_GTK__
 			Dim As GtkTreeViewColumn Ptr Column
-		#endif
 		'Ordinal position in grid columns
 		Index As Integer
 		'Reference to parent grid control
@@ -284,10 +261,8 @@ Namespace My.Sys.Forms
 	Private Type GridDataColumns
 	Private:
 		FColumns As List
-		#ifdef __USE_GTK__
 			Declare Static Sub Cell_Edited(renderer As GtkCellRendererText Ptr, path As gchar Ptr, new_text As gchar Ptr, user_data As Any Ptr)
 			Declare Static Sub Cell_Editing(cell As GtkCellRenderer Ptr, editable As GtkCellEditable Ptr, path As Const gchar Ptr, user_data As Any Ptr)
-		#endif
 	Public:
 		'Reference to parent grid control
 		Parent   As Control Ptr
@@ -322,11 +297,6 @@ Namespace My.Sys.Forms
 		mFEscapement           As Integer = 0
 		mFOrientation          As Integer = 0
 
-		#ifndef __USE_GTK__
-			mFontHandleBody        As HFONT
-			mFontHandleBodyUnderline As HFONT 'For Link Text
-			mFontHandleHeader     As HFONT
-		#endif
 		#define CHRCheck WChr(30)
 		#define CHRUnCheck WChr(31)
 		#define BLANKROW 999999999
@@ -358,19 +328,9 @@ Namespace My.Sys.Forms
 		GridEditDateTimePicker As DateTimePicker
 		ImgListGrid            As ImageList
 
-		#ifdef __USE_WINAPI__
-			FLvi                  As LVITEM
-			mHandleHeader             As HWND
-			mClientRect               As Rect
-			mClientRectHeader         As Rect
-		#endif
 		mRowHeightHeader          As Integer = -1
 		mRowHeight                As Integer = -1
 		mRowHeightShow(Any)       As Integer
-		#ifdef __USE_WINAPI__
-			mGridDC                   As HDC
-			mGridDCHeader             As HDC
-		#endif
 		mRow                      As Integer =0
 		mCol                      As Integer =1
 		mRowHover                 As Integer = 0
@@ -386,11 +346,7 @@ Namespace My.Sys.Forms
 		mGridColorFore           As Integer = clBlack
 		mGridColorEditBack       As Integer = BGR(190, 255, 255)' &H9AFA00'clWhite
 		mGridLineWidth           As Integer = 1
-		#ifdef __USE_WINAPI__
-			mGridLinePenMode         As Integer = PS_SOLID
-		#else
 			mGridLinePenMode         As Integer
-		#endif
 		mGridFocusRect           As FocusRectEnum = FocusRect_Row
 		mShowHoverBar            As Boolean = True
 		mShowSelection           As Boolean = True
@@ -403,37 +359,21 @@ Namespace My.Sys.Forms
 		mSysScrollWidth          As Integer = 20
 		mScrollMaxV              As Integer = 0
 
-		#ifdef __USE_WINAPI__
-			Declare Sub EditControlShow(ByRef tComboColOld As Integer, ByVal tRow As Integer, ByVal tCol As Integer)
-			Declare Sub DrawRect(tDc As HDC, R As Rect, FillColor As Integer = -1, tSelctionRow As Integer = -1, tSelctionCol As Integer = -1)
-			Declare Sub DrawLine(HDC As HDC, x1 As Integer, y1 As Integer, x2 As Integer, y2 As Integer, lColor As Integer, lWidth As Integer = 1, lLineType As Integer = PS_SOLID)
-			Declare Sub DrawSortArrow(DC As HDC, lX As Integer, lY As Integer, lWidth As Integer, lStep As Integer, nOrientation As SortStyle)
-			Declare Sub GridReDraw(RowShowStart As Integer, RowShowEnd As Integer, RowHover As Integer = -1, ColHover As Integer = -1, DrawHeadOnly As Boolean = False)
-			Declare Static Sub WNDPROC(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-			Declare Static Sub HandleIsDestroyed(ByRef Sender As Control)
-		#endif
 		Declare Sub ProcessMessage(ByRef Message As Message)
 		Declare Sub SortData(iCol As Integer,tSortStyle As SortStyle)
 
 	Protected:
-		#ifdef __USE_GTK__
 			Declare Static Function GridData_TestExpandRow(tree_view As GtkTreeView Ptr, iter As GtkTreeIter Ptr, path As GtkTreePath Ptr, user_data As Any Ptr) As Boolean
 			Declare Static Sub GridData_Map(widget As GtkWidget Ptr, user_data As Any Ptr)
 			Declare Static Sub GridData_RowActivated(tree_view As GtkTreeView Ptr, path As GtkTreePath Ptr, column As GtkTreeViewColumn Ptr, user_data As Any Ptr)
 			Declare Static Sub GridData_SelectionChanged(selection As GtkTreeSelection Ptr, user_data As Any Ptr)
-		#else
-			Declare Function GetGridDataItem(Item As Integer) As GridDataItem Ptr
-		#endif
 	Public:
-		#ifdef __USE_GTK__
 			'Pointer to native tree storage structure.
 			TreeStore As GtkTreeStore Ptr
 			'Hierarchical selection mode (Single/Multi).
 			TreeSelection As GtkTreeSelection Ptr
 			'Column data types (Text/Image/Checkbox).
 			ColumnTypes As GType Ptr
-		#endif
 		'Collection of grid data rows.
 		ListItems         As GridDataItems
 		'Collection of column definitions.
@@ -487,11 +427,6 @@ Namespace My.Sys.Forms
 		Declare Property SingleClickActivate As Boolean
 		'Activates rows with single click.
 		Declare Property SingleClickActivate(Value As Boolean)
-		#ifdef __USE_WINAPI__
-			Declare Property HandleHeader As HWND
-			'Native handle for header customization.
-			Declare Property HandleHeader(Value As HWND)
-		#endif
 		Declare Property RowHeightHeader As Integer
 		'Height of header rows in pixels.
 		Declare Property RowHeightHeader(Value As Integer)
@@ -523,12 +458,6 @@ Namespace My.Sys.Forms
 		OnHeadColWidthAdjust        As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As GridData, ColIndex As Integer)
 		'Triggered on row activation.
 		OnItemActivate              As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As GridData, ByRef Item As GridDataItem Ptr)
-		#ifdef __USE_WINAPI__
-			'Raised on row click.
-			OnItemClick             As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As GridData, RowIndex As Integer, ColIndex As Integer, tGridDCC As HDC)
-			'Raised on row double-click.
-			OnItemDblClick          As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As GridData, RowIndex As Integer, ColIndex As Integer, tGridDCC As HDC)
-		#endif
 		'Keyboard input on focused row.
 		OnItemKeyDown               As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As GridData, ByRef Item As GridDataItem Ptr)
 		'Triggered before hierarchical node expansion.
@@ -537,10 +466,6 @@ Namespace My.Sys.Forms
 		OnCellEditing               As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As GridData, ByRef Item As GridDataItem Ptr, SubItemIndex As Integer, CellEditor As Control Ptr)
 		'Triggered after cell edit completion.
 		OnCellEdited                As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As GridData, ByRef Item As GridDataItem Ptr, SubItemIndex As Integer, ByRef NewText As WString)
-		#ifdef __USE_WINAPI__
-			'Raised after selection changes.
-			OnSelectedItemChanged   As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As GridData, RowIndex As Integer, ColIndex As Integer, tGridDCC As HDC)
-		#endif
 		'Raised when scrolling starts.
 		OnBeginScroll               As Sub(ByRef Designer As My.Sys.Object, ByRef Sender As GridData)
 		'Raised when scrolling completes.

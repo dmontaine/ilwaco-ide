@@ -25,13 +25,7 @@ Namespace My.Sys.Forms
 		FPosition       As Integer
 		FArrowChangeSize     As Integer
 		FPageSize       As Integer
-		#ifndef __USE_GTK__
-			SIF             As SCROLLINFO
-			Declare Static Sub WndProc(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-		#else
 			Declare Static Sub Range_ValueChanged(range As GtkRange Ptr, user_data As Any Ptr)
-		#endif
 	Protected:
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
 	Public:

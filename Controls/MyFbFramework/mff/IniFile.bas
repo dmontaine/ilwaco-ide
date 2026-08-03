@@ -366,16 +366,7 @@ Private Constructor IniFile(ByRef FileName As WString = "")
 	If Trim(FileName) = "" Then
 		Dim As WString * 255 Tx
 		Dim As Integer L, i, k
-		#ifndef __USE_GTK__
-			L = GetModuleFileName(GetModuleHandle(NULL), Tx, 255)
-			Tx = Left(Tx, L)
-			For i = 0 To Len(Tx)
-				If Tx[i] = Asc(".") Then k = i +1
-			Next i
-			WLet(FFile, Mid(Tx, 1, k - 1) + ".ini")
-		#else
 			WLet(FFile, "Config.ini")
-		#endif
 	Else
 		WLet(FFile, FileName)
 		Load(*FFile)

@@ -21,26 +21,16 @@ Namespace My.Sys
 	'Supports all classes in the MyFbFramework class hierarchy and provides low-level services to derived classes (Windows, Linux, Android, Web).
 	Private Type Object Extends Object
 	Protected:
-		#ifdef __USE_GTK__
 			Accelerator     As GtkAccelGroup Ptr
 			widget          As GtkWidget Ptr
 			layoutwidget    As GtkWidget Ptr
-		#elseif defined(__USE_JNI__)
-			layoutview      As jobject
-		#elseif defined(__USE_WINAPI__)
-			Accelerator        As HACCEL
-		#endif
 		FTemp As WString Ptr
 		FClassName As WString Ptr
 		FDynamic As Boolean
 		oldxdpi As Single
 		oldydpi As Single
-		#ifdef __USE_GTK__
 			FActivated As Boolean
 			FDeactivated As Boolean
-		#elseif defined(__USE_WASM__)
-			FBody As WString Ptr
-		#endif
 	Public:
 		xdpi As Single
 		ydpi As Single
@@ -69,17 +59,10 @@ Namespace My.Sys
 			'Writes value to the name of property (Windows, Linux, Android, Web).
 			Declare Virtual Function WriteProperty(ByRef PropertyName As String, Value As Any Ptr) As Boolean
 		#endif
-		#ifdef __USE_JNI__
-			Declare Function ScaleX(ByVal cx As Single) As Integer
-			Declare Function ScaleY(ByVal cy As Single) As Integer
-			Declare Function UnScaleX(ByVal cx As Single) As Integer
-			Declare Function UnScaleY(ByVal cy As Single) As Integer
-		#else
 			Declare Function ScaleX(ByVal cx As Single) As Single
 			Declare Function ScaleY(ByVal cy As Single) As Single
 			Declare Function UnScaleX(ByVal cx As Single) As Single
 			Declare Function UnScaleY(ByVal cy As Single) As Single
-		#endif
 		Declare Destructor
 	End Type
 	

@@ -1,18 +1,7 @@
 ﻿#define UNICODE
 #include once "file.bi"
-#if (Not defined(__USE_JNI__)) AndAlso (Not defined(__USE_WASM__))
 	#undef FileExists
-	#ifdef __USE_GTK__
-		#ifdef __USE_GTK4__
-			#include once "gir_headers/Gir/GLib-2.0.bi"
-			#include once "gir_headers/Gir/_GLibMacros-2.0.bi"
-		#else
 			#include once "glib.bi"
-		#endif
-	#else
-		#include once "win\shlwapi.bi"
-	#endif
-#endif
 #ifndef MEMCHECK
 	#define MEMCHECK 0
 #endif
@@ -119,10 +108,8 @@ Declare Function StringSubStringAll(ByRef wszMainStr As WString, ByRef ParseStar
 'Example: Dim As WString * 20 mainStr = "Hello World" : Dim As WString * 100 result = SubString(mainStr, 7, 5, "FreeBasic" )(Expected: 'Hello FreeBasic')
 Declare Function SubString(ByRef wszMainStr As WString, ByVal start As Integer, ByVal n As Integer, ByRef expression As Const WString = "" ) As UString
 Declare Function FormatFileName(ByRef originalName As WString) As String
-#if (Not defined(__USE_JNI__)) AndAlso (Not defined(__USE_WASM__))
 	Declare Function FileExists Overload(ByRef FileName As UString) As Boolean
 	Declare Function FileExists Overload(ByRef FileName As WString) As Boolean
-#endif
 
 #ifndef __USE_MAKE__
 	#include once "UString.bas"

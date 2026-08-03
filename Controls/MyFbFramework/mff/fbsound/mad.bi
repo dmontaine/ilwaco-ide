@@ -9,16 +9,8 @@
 
 #ifndef NO_MP3
 
-#ifndef __FB_64BIT__
- #define SIZEOF_LONG 4
-#else
- #ifdef __FB_WIN32__
-  #define SIZEOF_LONG 4
- #else
    ' only linux 64-bit !
   #define SIZEOF_LONG 8
- #endif
-#endif
 
 #inclib "mad"
 
@@ -45,21 +37,6 @@ Type mad_sample_t    As mad_fixed_t
 #define MAD_F_MIN &H80000000L
 #define MAD_F_MAX &H7fffffffL
 
-#if 0
-private _
-function mad_f_mul( _
-  byval a as mad_fixed_t, _
-  byval b as mad_fixed_t) as mad_fixed_t
-  dim as mad_fixed_t ret=any
-  asm
-  mov eax,dword ptr [a]
-  imul dword    ptr [b]
-  shrd eax, edx, 28
-  mov dword ptr [ret],eax
-  end asm
-  return ret
-end function
-#endif
 
 
 declare function mad_f_abs (byval a as mad_fixed_t) as mad_fixed_t

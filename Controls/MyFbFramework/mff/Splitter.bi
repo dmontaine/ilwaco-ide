@@ -29,13 +29,8 @@ Namespace My.Sys.Forms
 	Private Type Splitter Extends Control
 	Private:
 		FOldParentProc  As Any Ptr
-		#ifndef __USE_GTK__
-			Declare Static Sub ParentWndProc(ByRef Message As Message)
-			Declare Static Sub WndProc(ByRef Message As Message)
-		#else
 			Declare Static Function OnDraw(widget As GtkWidget Ptr, cr As cairo_t Ptr, data1 As gpointer) As Boolean
 			Declare Static Function OnExposeEvent(widget As GtkWidget Ptr, Event As GdkEventExpose Ptr, data1 As gpointer) As Boolean
-		#endif
 	Protected:
 		Declare Sub DrawTrackSplit(x As Integer, y As Integer)
 		Declare Virtual Sub ProcessMessage(ByRef Message As Message)
@@ -48,9 +43,7 @@ Namespace My.Sys.Forms
 			'Serializes properties to persistence stream
 			Declare Function WriteProperty(PropertyName As String, Value As Any Ptr) As Boolean
 		#endif
-		#ifdef __USE_GTK__
 			Dim As Boolean bCursor
-		#endif
 		'Sets minimum space required on both sides of the splitter
 		MinExtra As Integer
 		Declare Operator Cast As Control Ptr

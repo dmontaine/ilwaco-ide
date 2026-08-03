@@ -70,11 +70,7 @@ Namespace Debug
 	
 	#ifndef Debug_Clear_Off
 		Private Sub Clear
-			#ifdef __USE_WINAPI__
-				If IsWindow(DebugWindowHandle) Then SendMessage(DebugWindowHandle, WM_SETTEXT, Cast(WPARAM, 0), Cast(LPARAM, @""))
-			#elseif defined(__USE_GTK__)
 				If GTK_IS_TEXT_VIEW(DebugWindowHandle) Then gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(DebugWindowHandle)), !"\0", -1)
-			#endif
 		End Sub
 	#endif
 	
@@ -134,22 +130,6 @@ Namespace Debug
 		If bPrintMsg Then .Print Msg
 		If bShowMsg Then MsgBox Msg, APP_TITLE
 		If bPrintToDebugWindow Then
-			#ifdef __USE_WINAPI__
-				If IsWindow(DebugWindowHandle) Then
-					Dim As HWND TabPageHandle = GetParent(DebugWindowHandle)
-					Dim As HWND TabControlHandle = GetParent(TabPageHandle)
-					Dim As Integer Index = Cast(Integer, GetProp(TabPageHandle, "@@@Index"))
-					If SendMessage(TabControlHandle, TCM_GETCURSEL, 0, 0) <> Index Then
-						SendMessage(TabControlHandle, TCM_SETCURSEL, Index, 0)
-						ShowWindow(TabPageHandle, SW_SHOW)
-						BringWindowToTop(TabPageHandle)
-					End If
-					Dim As WString Ptr SelText
-					WLet(SelText, Msg & Chr(13, 10))
-					SendMessage(DebugWindowHandle, EM_REPLACESEL, 0, CInt(SelText))
-					WDeAllocate(SelText)
-				End If
-			#elseif defined(__USE_GTK__)
 				If GTK_IS_TEXT_VIEW(DebugWindowHandle) Then
 					Dim As GtkWidget Ptr TabPageHandle = gtk_widget_get_parent(DebugWindowHandle)
 					Dim As GtkWidget Ptr TabControlHandle = gtk_widget_get_parent(TabPageHandle)
@@ -166,7 +146,6 @@ Namespace Debug
 						gtk_main_iteration()
 					Wend
 				End If
-			#endif
 		End If
 	End Sub
 End Namespace
@@ -329,28 +308,12 @@ End Function
 		If Result = 0 Then
 			If FileEncoding = FileEncodings.Utf8 OrElse FileEncoding = FileEncodings.PlainText Then
 				If FileLoaded Then
-					#ifdef __USE_GTK__
 						Return FromUtf8(StrPtr(Buff))
-					#else
-						Dim CodePage As Integer = IIf(nCodePage= -1, GetACP(), nCodePage)
-						Dim As Integer m_BufferLen = MultiByteToWideChar(CodePage, 0, StrPtr(Buff), -1, NULL, 0) - 1
-						Dim As WString Ptr pBuff = CAllocate(m_BufferLen * 2 + 2)
-						MultiByteToWideChar(CodePage, 0, StrPtr(Buff), -1, pBuff, m_BufferLen)
-						Return pBuff
-					#endif
 				Else
 					Buff = String(FileSize, 0)
 					Get #Fn, , Buff
 					CloseFile_(Fn)
-					#ifdef __USE_GTK__
 						Return FromUtf8(StrPtr(Buff))
-					#else
-						Dim CodePage As Integer = IIf(nCodePage= -1, GetACP(), nCodePage)
-						Dim As Integer m_BufferLen = MultiByteToWideChar(CodePage, 0, StrPtr(Buff), -1, NULL, 0) - 1
-						Dim As WString Ptr pBuff = CAllocate(m_BufferLen * 2 + 2)
-						MultiByteToWideChar(CodePage, 0, StrPtr(Buff), -1, pBuff, m_BufferLen)
-						Return pBuff
-					#endif
 				End If
 			Else
 				Dim As WString Ptr pBuff
@@ -413,23 +376,11 @@ End Function
 		End If
 		If  Result = 0 Then
 			If FileEncoding = FileEncodings.Utf8 OrElse FileEncoding = FileEncodings.PlainText Then
-				#ifdef __USE_GTK__
 					If NewLineStr <> OldLineStr Then
 						Put #Fn, , ToUtf8(Replace(wData, OldLineStr, NewLineStr))
 					Else
 						Put #Fn, , ToUtf8(wData)
 					End If
-				#else
-					Dim CodePage As Integer = IIf(nCodePage= -1, GetACP(), nCodePage)
-					If NewLineStr <> OldLineStr AndAlso NewLineStr <> Chr(13, 10) Then
-						wData = Replace(wData, OldLineStr, NewLineStr)
-					End If
-					Dim As Integer m_BufferLen = WideCharToMultiByte(CodePage, 0, StrPtr(wData), -1, NULL, 0, NULL, NULL) - 1
-					Dim As ZString Ptr pBuff = CAllocate(m_BufferLen * 2 + 2)
-					WideCharToMultiByte(CodePage, 0, StrPtr(wData), m_BufferLen, pBuff, m_BufferLen, NULL, NULL)
-					Put #Fn, , *pBuff
-					Deallocate(pBuff)
-				#endif
 			'ElseIf FileEncoding = FileEncodings.PlainText Then
 			'	'To prevent right truncation due to the differing lengths of String and WString. THis is ANSI only
 			'	Dim As String bufferOut

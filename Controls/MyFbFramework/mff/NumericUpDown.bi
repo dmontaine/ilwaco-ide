@@ -28,13 +28,7 @@ Namespace My.Sys.Forms
 		FDoubleTemp    As Integer
 		FBooleanTemp    As Integer
 		FHandleIsAllocated As Boolean
-		#ifndef __USE_GTK__
-			Declare Static Function HookChildProc(hDlg As HWND, uMsg As UINT, wParam As WPARAM, lParam As LPARAM) As LRESULT
-			Declare Static Sub WndProc(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-		#elseif defined(__USE_GTK__)
 			Declare Static Sub SpinButton_ValueChanged(self As GtkSpinButton Ptr, user_data As Any Ptr)
-		#endif
 	Protected:
 		As UpDown UpDownControl
 		Declare Sub MoveUpDownControl

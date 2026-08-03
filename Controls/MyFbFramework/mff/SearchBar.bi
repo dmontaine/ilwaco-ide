@@ -14,16 +14,6 @@ Namespace My.Sys.Forms
 	'`SearchBar` - The SearchBar is a control made to have a search entry.
 	Private Type SearchBar Extends TextBox
 	Private:
-		#ifdef __USE_WINAPI__
-			Declare Static Sub WndProc(ByRef message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-			Declare Sub imgSearch_Paint(ByRef Sender As Control, ByRef Canvas As My.Sys.Drawing.Canvas)
-			Declare Sub imgClear_Paint(ByRef Sender As Control, ByRef Canvas As My.Sys.Drawing.Canvas)
-			Declare Sub imgClear_Click(ByRef Sender As Control)
-			As Panel imgSearch
-			As Panel imgClear
-			Declare Sub MoveIcons
-		#endif
 	Protected:
 		Declare Virtual Sub ProcessMessage(ByRef message As Message)
 	Public:

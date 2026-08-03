@@ -15,29 +15,6 @@
 
 Using My.Sys.ComponentModel
 
-#ifdef __USE_WINAPI__
-	Private Enum FontCharset
-		Default     = DEFAULT_CHARSET
-		Ansi        = ANSI_CHARSET
-		Arabic      = ARABIC_CHARSET
-		Baltic      = BALTIC_CHARSET
-		ChineseBig5 = CHINESEBIG5_CHARSET
-		EastEurope  = EASTEUROPE_CHARSET
-		GB2312      = GB2312_CHARSET
-		Greek       = GREEK_CHARSET
-		Hangul      = HANGUL_CHARSET
-		Hebrew      = HEBREW_CHARSET
-		Johab       = JOHAB_CHARSET
-		Mac         = MAC_CHARSET
-		OEM         = OEM_CHARSET
-		Russian     = RUSSIAN_CHARSET
-		Shiftjis    = SHIFTJIS_CHARSET
-		Symbol      = SYMBOL_CHARSET
-		Thai        = THAI_CHARSET
-		Turkish     = TURKISH_CHARSET
-		Vietnamese  = VIETNAMESE_CHARSET
-	End Enum
-#else
 	Private Enum FontCharset
 		Default
 		Ansi
@@ -59,7 +36,6 @@ Using My.Sys.ComponentModel
 		Turkish
 		Vietnamese
 	End Enum
-#endif
 
 Namespace My.Sys.Drawing
 	#define QFont(__Ptr__) (*Cast(Font Ptr,__Ptr__))
@@ -84,19 +60,8 @@ Namespace My.Sys.Drawing
 		FOrientation As Integer = 0 '是字体的倾斜角。 David Change
 		Declare Sub Create
 	Public:
-		#ifdef __USE_GTK__
 			'Native HFONT handle reference
 			Handle As PangoFontDescription Ptr
-		#elseif defined(__USE_JNI__)
-			'Native HFONT handle reference
-			Handle As jobject
-		#elseif defined(__USE_WINAPI__)
-			'Native HFONT handle reference
-			Handle As HFONT
-		#else
-			'Native HFONT handle reference
-			Handle As Any Ptr
-		#endif
 		#ifndef ReadProperty_Off
 			'Loads font settings from persistence stream
 			Declare Virtual Function ReadProperty(PropertyName As String) As Any Ptr

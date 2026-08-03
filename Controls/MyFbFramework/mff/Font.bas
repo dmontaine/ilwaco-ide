@@ -63,40 +63,16 @@ Namespace My.Sys.Drawing
 		If FSize = 0 Then
 			FSize = DefaultFont.Size
 		End If
-		#ifdef __USE_WASM__
-			If QComponent(FParent).Handle Then
-				SetFont(QComponent(FParent).Handle, *FName & IIf(FBold, " Bold", "") & IIf(FItalic, " Italic", "") & " " & Str(FSize) & "px")
-			End If
-		#else
-			#ifdef __USE_GTK__
 				If Handle Then pango_font_description_free (Handle)
 				Handle = pango_font_description_from_string (*FName & IIf(FBold, " Bold", "") & IIf(FItalic, " Italic", "") & " " & Str(FSize))
-			#elseif defined(__USE_WINAPI__)
-				If Handle Then DeleteObject(Handle)
-				Handle = CreateFontW(-MulDiv(FSize, ydpi * 96, 72), 0, FOrientation * 10, FOrientation * 10, FBolds(Min(1, _Abs(FBold))), FItalic, FUnderline, FStrikeOut, FCharSet, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE, *FName)
-			#endif
 			If Handle Then
 				If FParent AndAlso *FParent Is My.Sys.ComponentModel.Component Then
-					#ifdef __USE_GTK__
 						If QComponent(FParent).Handle Then
-							#ifndef __USE_GTK2__
-								#ifndef __USE_GTK4__
 									gtk_widget_override_font(QComponent(FParent).Handle, Handle)
-								#endif
-							#else
-								gtk_widget_modify_font(QComponent(FParent).Handle, Handle)
-							#endif
 						End If
-					#elseif defined(__USE_WINAPI__)
-						If QComponent(FParent).Handle Then
-							SendMessage(QComponent(FParent).Handle, WM_SETFONT, CUInt(Handle), True)
-							InvalidateRect Cast(Component Ptr, FParent)->Handle, 0, True
-						End If
-					#endif
 				End If
 				If OnCreate Then OnCreate(*Designer, This)
 			End If
-		#endif
 	End Sub
 	
 	Private Property Font.Parent As My.Sys.Object Ptr
@@ -107,26 +83,12 @@ Namespace My.Sys.Drawing
 		FParent = Value
 		If FDefaultName AndAlso *FName <> DefaultFont.Name Then WLet(FName, DefaultFont.Name)
 		If FDefaultSize AndAlso FSize <> DefaultFont.Size Then FSize = DefaultFont.Size
-		#ifdef __USE_GTK__
 			If *FParent Is My.Sys.ComponentModel.Component Then
-				#ifndef __USE_GTK2__
 					Dim As GtkStyleContext Ptr WidgetStyle = gtk_widget_get_style_context(QComponent(FParent).Handle)
-					#ifdef __USE_GTK4__
-						Dim As PangoFontDescription Ptr pfd
-						gtk_style_context_get(WidgetStyle, GTK_STATE_FLAG_NORMAL, "font", @pfd, NULL)
-					#else
 						Var pfd = gtk_style_context_get_font(WidgetStyle, GTK_STATE_FLAG_NORMAL)
-					#endif
-				#else
-					Dim As GtkStyle Ptr WidgetStyle = gtk_widget_get_style(QComponent(FParent).Handle)
-					Var pfd = WidgetStyle->font_desc
-				#endif
 				WLet(FName, WStr(*pango_font_description_get_family(pfd)))
 				FSize = pango_font_description_get_size(pfd) / PANGO_SCALE
 			End If
-		#else
-			Create
-		#endif
 	End Property
 	
 	Private Property Font.Name ByRef As WString
@@ -250,47 +212,15 @@ Namespace My.Sys.Drawing
 		FCharSet  = FontCharset.Default
 		WLet(FName, DefaultFont.Name)
 		FSize     = DefaultFont.Size
-		#ifdef __FB_WIN32__
-			If *FName = "" Then WLet(FName, "Tahoma")
-			If FSize = 0 Then FSize = 8
-		#elseif defined(__USE_WASM__)
-		#else
 			If *FName = "" Then WLet(FName, "Ubuntu")
 			If FSize = 0 Then FSize = 11
-		#endif
-		#ifdef __USE_WINAPI__
-			If xdpi = 0 OrElse ydpi = 0 Then
-				Dim As HDC Dc
-				Dc = GetDC(NULL)
-				xdpi = GetDeviceCaps(Dc, LOGPIXELSX) / 96
-				ydpi = GetDeviceCaps(Dc, LOGPIXELSY) / 96
-				If xdpi = 0 Then xdpi = 1
-				If ydpi = 0 Then ydpi = 1
-				ReleaseDC(NULL, Dc)
-			End If
-			FBolds(0) = 400
-			FBolds(1) = 700
-			'Create
-		#endif
 	End Constructor
 	
 	Destructor Font
 		WDeAllocate(FName)
-		#ifdef __USE_GTK__
 			If Handle Then pango_font_description_free (Handle)
-		#elseif defined(__USE_WINAPI__)
-			If Handle Then DeleteObject(Handle)
-		#endif
 	End Destructor
 	
-	#ifdef __FB_WIN32__
-		DefaultFont.Name = "Tahoma"
-		DefaultFont.Size = 8
-	#elseif defined(__USE_WASM__)
-		DefaultFont.Name = ""
-		DefaultFont.Size = 0
-	#else
 		DefaultFont.Name = "Ubuntu"
 		DefaultFont.Size = 11
-	#endif
 End Namespace

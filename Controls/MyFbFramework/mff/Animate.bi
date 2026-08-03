@@ -12,16 +12,8 @@
 
 #include once "Control.bi"
 #ifdef GIFPlayOn
-	#ifdef __FB_64BIT__
 		#inclib "gdiplus"
 		#include "win/gdiplus-c.bi"
-	#else
-		#include "win/gdiplus.bi"
-		Using Gdiplus
-	#endif
-#endif
-#ifndef __USE_GTK__
-	#include once "win/dshow.bi"
 #endif
 
 Namespace My.Sys.Forms
@@ -90,28 +82,12 @@ Namespace My.Sys.Forms
 		FPlayTimePauseStart As Double
 		FPlayTimeFramStart  As Double
 		
-		#ifdef __USE_GTK__
 			Declare Static Sub Screen_Changed(widget As GtkWidget Ptr, old_screen As GdkScreen Ptr, userdata As gpointer)
 			Declare Static Function DesignDraw(widget As GtkWidget Ptr, cr As cairo_t Ptr, data1 As Any Ptr) As Boolean
 			Declare Static Function DesignExposeEvent(widget As GtkWidget Ptr, Event As GdkEventExpose Ptr, data1 As Any Ptr) As Boolean
 			Declare Static Function Timer_cb(ByVal user_data As gpointer) As gboolean
 			Dim As GdkPixbufAnimation Ptr pixbuf_animation
 			Dim As GdkPixbufAnimationIter Ptr iter
-		#else
-			Declare Static Sub WNDPROC(ByRef Message As Message)
-			Declare Static Sub HandleIsAllocated(ByRef Sender As Control)
-			Declare Function Error_HR(ByVal hr As Integer, ByRef Inter_face As WString) As Integer
-			#ifdef __USE_WINAPI__
-				As IGraphBuilder   Ptr pGraph
-				As IMediaControl   Ptr PControl
-				As IMediaEvent     Ptr pEvent
-				As IVideoWindow    Ptr VidWindow
-				As IMediaSeeking   Ptr MedSeek
-				As IMediaPosition  Ptr MedPosition
-				As IBasicVideo     Ptr BasVideo
-				As IBasicAudio     Ptr BasAudio
-			#endif
-		#endif
 	Protected:
 		FOpenMode          As Integer
 		FPlay           As Boolean
