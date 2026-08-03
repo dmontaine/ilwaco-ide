@@ -15,9 +15,26 @@ Ilwaco keeps GTK, so our GTK fixes apply upstream where Astoria's Win64-only one
 
 ---
 
-## Session handoff (2026-08-02, latest) — MFF framework non-target strip (AstoriaParity task B) landed
+## Session handoff (2026-08-02, latest) — whole-tree non-target strip complete (MFF + src + Controls + Examples)
 
-**START HERE.** The framework-wide non-target strip is done and **build- + runtime-verified**: both the
+**START HERE.** Following the MFF strip below, the non-target strip was **extended across the whole tree**
+per owner direction ("extend to all code in src, Controls and Examples"). Landed in these commits (on
+`main`): `172aa23` MFF strip · `0b61d0c` build-linux.sh · `a0919c5` src/ strip · `422e931` non-MFF
+Controls + cross-platform Examples strip · `d0b22a1` delete 16 Windows-only Examples demos · `b389866`
+docs. **`src/` is build- + runtime-verified** (editor rebuilds clean, IDE launches + idles stably ~60 s,
+no crash/`DebugInfo.log`). **`Controls/` (non-MFF) and `Examples/` are off the Ilwaco build path** so are
+not IDE-build-verified — stripped conservatively (builtin `__FB_WIN32__` safe anywhere; `__USE_*` under
+the GTK-target assumption) with every edit subsequence-checked. 16 Windows-only demos deleted (directshow,
+directsound, WMI, SAPI, WLan, MediaFoundation, Midi, gdipClock/gdipGoldFish, IFileDialog, Com_VBA,
+WellCOM, ChineseCalendar, MultipleDisplay, NTPClient, AndroidProject) — the Astoria mirror (Astoria, being
+the Windows build, kept its whole Examples/ tree). Full detail: AstoriaParity "Done — whole-tree
+non-target strip". **All committed; working tree clean.** Details of the MFF portion follow.
+
+---
+
+## Session handoff (2026-08-02, earlier) — MFF framework non-target strip (AstoriaParity task B) landed
+
+The framework-wide non-target strip is done and **build- + runtime-verified**: both the
 editor (`VisualFBEditor64_gtk3`, 4.99 MB) and the designer control lib (`libmff64_gtk3.so`, 1.69 MB)
 rebuild **clean** (`fbc` exit 0, zero warnings), and the IDE **launches to a full editor window and idles
 stably ~80 s** — no error dialog, no crash, no `DebugInfo.log` (only the documented-harmless
