@@ -125,11 +125,38 @@ Some Astoria *infrastructure* choices are independently already true in Ilwaco:
 | `bef92671` | Form Designer never activating (strip-tool root cause) | N/A | **verified does NOT reproduce** 2026-08-03 — Astoria's cause was its own `strip_gtk_preprocessor.ps1` deleting `#ifdef __EXPORT_PROCS__` blocks; Ilwaco's `ppstrip.py` preserved them, `libmff64_gtk3.so` exports all 36 Designer.bas dispatchers (`nm -D`). See ↓ |
 | `b5554063` | Bundle FBC + GDB toolchain in-repo | DONE | Ilwaco bundles Linux fbc (no gdb yet) |
 | `15e66cc5`,`e139c2cc` | Remove 32-bit compiler binaries | SKIP | Ilwaco is 64-bit; no Win32 toolchain to remove |
-| `53d8e473` | Fix all compile warnings (WStr wrapping etc.) | PORT | check if same warnings exist in Ilwaco's shared files |
+| `53d8e473` | Fix all compile warnings (WStr wrapping etc.) | PORT (partial) | **DONE** 2026-08-03 — ported the 2 still-applicable `@literal→WString Ptr` hunks (`Debug.bas` `brk_comp`/`list_all`); rest N/A (already-stripped / doesn't reproduce). Build-clean. See ↓ |
 | `56f6d180`,`b3633bc5`,`a7c7839d` | Dark mode (uxtheme/ntdll Win32) | REIMPLEMENT | Ilwaco needs GTK dark mode (settings already have `DarkMode=true`) |
 | `c494207f`,`7baebd1e`,`add4642a`,`76abaa5a` | Delete dead GTK/Linux/32-bit code | INVERT/SKIP | do **not** apply — this is Ilwaco's live platform |
 | `ae74b31c` | Rename "Service"→"Tools" menu, inner "Tools"→"External Tools" | PORT | **DONE** 2026-08-02 (caption-only, internal names unchanged; `Main.bas` `miXizmat`) |
 | `49ec5ccd`, §menu-taxonomy | UI approachability: per-menu **Advanced** submenus; menu reorg; caption cleanups; options-dialog simplification | PORT (big) | **deferred, and re-scoped — see "Menu taxonomy" section below** |
+
+## Done 2026-08-03 — compile-warnings port (Astoria `53d8e473`, partial)
+
+Astoria's `53d8e473` made its build warning-clean, fixing three kinds of thing:
+1. `@"literal"` passed where a `WString Ptr` is expected (FB types a bare literal as `ZString`, so the
+   pointer type mismatches — `warning 4: Suspicious pointer assignment`) — in `Canvas.bas` and `Debug.bas`.
+2. `SelectSearchResult`'s `SearchText As WString = ""` default (a decl/def-mismatch warning) — `Main.bas`
+   + `TabWindow.bi`.
+3. A `ptabBottom->TabPosition = tpBottom AndAlso …` chain flagged "mixed boolean and non-boolean operands"
+   — `Main.bas`, fixed by isolating the comparison into a `Boolean` local.
+
+**Ilwaco's production build was already warning-clean** (`build-linux.sh`, default `-w`, gas64 backend —
+a full editor compile emits zero fbc output). Applicability, item by item:
+- **(1) Canvas.bas `@"en-us"`** — inside the Direct2D block Ilwaco already deleted in the MFF strip. **N/A.**
+- **(1) Debug.bas `SetConsoleTitle(StrPtr(...))`** — Win32 console code, already gone. **N/A.**
+- **(1) Debug.bas `brk_comp` (6 `Return @"…"`) + `list_all` (6-element `@"…"` `WString Ptr` array)** —
+  platform-neutral shared code, still present. These are genuine `ZString→WString Ptr` mismatches (they
+  emit `warning 4` when the code is compiled in isolation). **PORTED** — wrapped each with `WStr(...)`.
+- **(2) `SelectSearchResult`** — Ilwaco's decl (`TabWindow.bi`) and def (`Main.bas`) already match, and the
+  `ByRef … As WString = ""` default does not warn here even at `-w pedantic`. **N/A (does not reproduce).**
+- **(3) `tabBottom` comparisons** — Ilwaco's older base uses `And` (integer), not Astoria's `AndAlso`
+  boolean chain, so the "mixed boolean/non-boolean" warning does not arise. **N/A (does not reproduce).**
+
+Net Ilwaco change: `src/Debug.bas` only (12 `Return` operands + 1 array literal). Build-verified clean
+(`fbc` exit 0, zero output; fresh `./ilwaco`). Not runtime-verified by launch: the change is type-only on
+the integrated debugger's internal label helpers (exercised only under gdb, which isn't installed here) and
+renders identical text — build-clean is adequate.
 
 ## N/A 2026-08-03 — Form Designer export table intact (Astoria `bef92671` does not reproduce)
 

@@ -337,17 +337,17 @@ End Sub
 Private Function brk_comp(tst As Integer) As WString Ptr
 	Select Case tst
 	Case 32
-		Return @"="
+		Return @WStr("=")
 	Case 16
-		Return @"<>"
+		Return @WStr("<>")
 	Case 8
-		Return @">"
+		Return @WStr(">")
 	Case 4
-		Return @"<"
+		Return @WStr("<")
 	Case 2
-		Return @">="
+		Return @WStr(">=")
 	Case 0
-		Return @"<="
+		Return @WStr("<=")
 	End Select
 End Function
 
@@ -6319,7 +6319,7 @@ End Function
 '' list all extracted data
 '===================================================
 Private Sub list_all()
-	Dim scopelabel(1 To ...) As Const WString Ptr = {@"local", @"global", @"static", @"byref param", @"byval param", @"common"}
+	Dim scopelabel(1 To ...) As Const WString Ptr = {@WStr("local"), @WStr("global"), @WStr("static"), @WStr("byref param"), @WStr("byval param"), @WStr("common")}
 	Print "sources ------------------------------------------------------- ";"total=";sourcenb+1
 	For isrc As Integer =0 To sourcenb
 		Print "isrc=";isrc;" ";source(isrc)

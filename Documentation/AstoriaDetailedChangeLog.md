@@ -39,6 +39,13 @@ the actionable PORT / REIMPLEMENT / REVIEW queue. Two deletion triggers:
 - **2026-08-03 (pass 2):** removed **481** non-actionable commits — NONCODE 426, INVERT 9, WIN32 20, AI 26.
   **888 → 401** actionable entries remain. (The classifier's exact regex criteria are the four classes
   above; re-derivable from this rule.)
+- **2026-08-03 (walk, `53d8e473`):** removed `53d8e473` (Fix all compile warnings) — **PORT (partial),
+  DONE.** Ilwaco's production build (`build-linux.sh`, default `-w`, gas64) was already warning-clean; two
+  of Astoria's fixes targeted code Ilwaco had already stripped (Canvas.bas Direct2D `@"en-us"`, Debug.bas
+  Win32 `SetConsoleTitle`), and its `SelectSearchResult`/`tabBottom` fixes don't reproduce here (decl/def
+  already match; Ilwaco uses `And`, not `AndAlso`). Ported the two still-applicable `@literal→WString Ptr`
+  type-correctness hunks in `src/Debug.bas` (`brk_comp`, `list_all` — wrapped with `WStr(...)`);
+  build-verified clean. See AstoriaParity "Done — compile-warnings port (`53d8e473`)". **398 → 397.**
 - **2026-08-03 (walk, oldest 3):** removed `bbfa3999` (the fork-import anchor — the base itself, not a
   port), `5a097399` (NONCODE: INI window-state + exe rebuild only), and `bef92671` (**N/A** — Astoria's
   Form-Designer-dead bug was caused by *Astoria's own* `strip_gtk_preprocessor.ps1` deleting the
@@ -82,9 +89,6 @@ Everything above the **Total: 888 commits, 2026-07-02 to 2026-08-02.**
   *Docs, IDE, Settings · 6 files* — **PARTIAL: collapse done; bottom-panel persistence deferred.**
 - **`ef3b43e9`** — Fix first-start collapsed bottom layout; update handoff status and gitignore docompile.bat.
   *Build/Tools, Docs, IDE · 3 files* — **PARTIAL: same panel-persistence cluster as `e212819d`.**
-- **`53d8e473`** — Fix all compile warnings.
-  - Canvas.bas, Debug.bas: wrap bare string literals passed as WString Ptr (@"...") with WStr(...) - FreeBASIC defaults untyped literals to ZString, so the pointer type didn't match the declared WString Ptr parameters. - Main.bas/TabWindow.bi: same fix for SelectSearchResult()'s SearchText default...
-  *Framework/Controls, IDE · 6 files*
 ## 2026-07-03
 
 - **`b221cf2a`** — Update PROJECT_STATUS.md with tonight's session; save INI/scratch state.

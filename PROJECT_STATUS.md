@@ -16,11 +16,19 @@ to VisualFBEditor upstream, where Astoria's Win64-only ones cannot apply).
 
 ---
 
-## Session handoff (2026-08-03, latest) — changelog walk resumed: 3 oldest entries resolved (no code change)
+## Session handoff (2026-08-03, latest) — changelog walk resumed: 4 entries resolved (`53d8e473` ported)
 
-**START HERE.** Began the Astoria→Ilwaco changelog walk from the 5 oldest entries in
-[AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md). Resolved 3, kept 2. **No source
-changed this session — all doc/backlog bookkeeping + one empirical verification.** Backlog **401 → 398**.
+**START HERE.** Continued the Astoria→Ilwaco changelog walk from the oldest entries in
+[AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md). Resolved 4, kept 2. Backlog
+**401 → 397**. Committed+pushed: the first three (doc-only) as [`72a741b`](Documentation/AstoriaParity.md);
+`53d8e473` (below) is a 1-file source fix, build-verified, **staged/uncommitted** at time of writing.
+
+- **`53d8e473`** (Fix all compile warnings) — **PORT (partial), DONE, build-clean.** Ilwaco's production
+  build was already warning-clean; most of Astoria's fixes targeted already-stripped code (Canvas Direct2D,
+  Debug `SetConsoleTitle`) or don't reproduce (`SelectSearchResult` decl/def already match; Ilwaco uses
+  `And`, not `AndAlso`). Ported the 2 still-applicable `@literal→WString Ptr` type-correctness hunks in
+  `src/Debug.bas` (`brk_comp`, `list_all` → `WStr(...)`). Full build clean (`fbc` exit 0). See AstoriaParity
+  "Done — compile-warnings port (`53d8e473`)".
 
 - **`bbfa3999`** (Initial Win64 fork import) — the fork anchor / base snapshot itself, not a port. Pruned.
 - **`5a097399`** (Update INI window-state + rebuild exe) — NONCODE (Settings + binary only). Pruned.
@@ -36,11 +44,9 @@ changed this session — all doc/backlog bookkeeping + one empirical verificatio
 **NEXT — continue the walk. The two persistence entries are the oldest remaining; after them:**
 1. `e212819d` / `ef3b43e9` — bottom-panel **persistence** (deferred infra: save/restore collapsed panel
    state across sessions; see AstoriaParity "Deferred, split out: bottom-panel persistence").
-2. `53d8e473` — "Fix all compile warnings" (PORT — check whether the same warnings exist in Ilwaco's
-   shared files; low-risk, may be a quick win).
-3. `4cf72752` — critical `_WIN32_WINNT` header bug blocking user-project compiles + bottom-panel tab
+2. `4cf72752` — critical `_WIN32_WINNT` header bug blocking user-project compiles + bottom-panel tab
    clearing (REVIEW — Win32 header guard likely N/A on GTK, but the tab-clearing half may port).
-4. `4bd02894` — add missing example `.vfp` files + "no unnecessary options" principle + Examples audit.
+3. `4bd02894` — add missing example `.vfp` files + "no unnecessary options" principle + Examples audit.
 Then the menu-taxonomy feature ports (`49ec5ccd` cluster). All owner directives (32-bit, UTF-8/LF, AI,
 English-only) remain cleared.
 
