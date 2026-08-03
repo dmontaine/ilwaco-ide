@@ -24,16 +24,23 @@ runtime-verified after each. The strip was then **extended across the whole tree
      remains — a packaging concern, not a code bug). Full surface in PROJECT_STATUS "Task 13 DONE" block.
    - **Net result:** the only compiler path in the system is the hard-coded `BundledCompilerPath`. "One
      compiler, no picker, no INI machinery" fully realized.
-2. **NEW — strip all 32-bit code (Ilwaco is 64-bit only).** Owner directive (2026-08-02): "we can remove
-   anything 32-bit related, ilwaco will be 64-bit only." A dedicated incremental strip like the Windows strip
-   — its own careful session, build after each pass. Rough surface (survey each first): `Bit32` +
-   `tbt32Bit` toolbar toggle (the 32/64 build-target buttons) — 4 `Dim As Boolean Bit32 = tbt32Bit->Checked`
-   sites (Main.bas:511, Debug.bas, TabWindow.bas x2); `Compiler32Path`/`Compiler32Arguments`;
-   `Debugger32`/`GDBDebugger32`/`CurrentDebugger32`/`DefaultDebugger32`/`CurrentDebuggerType32` +
-   `cboDebug32`/`txtDebug32` (~96+25+35 refs — the largest); `txtfbc32`/`lblfbc32`; collapse every
-   `IIf(Bit32, …32, …64)` to the 64 branch; and the `#ifdef __FB_64BIT__` guards (keep the 64 branch — a
-   handful in frmSplash/frmComponents/Debug.bas/frmOptions). **Trap:** `__FB_64BIT__` is *not* Windows-only —
-   read each guard. See assistant memory `project-64bit-only`.
+2. **Strip all 32-bit code (Ilwaco is 64-bit only) — STARTED 2026-08-02; pass 1 DONE.** Owner directive:
+   "we can remove anything 32-bit related, ilwaco will be 64-bit only." Incremental, build after each pass.
+   - **Pass 1 — DONE, build+runtime-verified, staged (uncommitted).** Removed the `tbt32Bit`/`tbt64Bit`
+     32/64 build-target toolbar toggle and collapsed every `Bit32`/`tbt32Bit->Checked` consumer to the 64
+     branch (compile path, debugger picks, `-gen gas64`, lib folder). Fixed a latent both-branches-32 bug in
+     the intellisense temp-compile. `Bit32`/`tbt32Bit`/`tbt64Bit` now zero refs. Files: Main.bas,
+     TabWindow.bas, Debug.bas, VisualFBEditor.bas.
+   - **Pass 2 — remove the now-dead 32-bit config (globals + forms) — NOT started, fully mapped in
+     PROJECT_STATUS "Pass 2" bullet.** `Compiler32Path`/`Compiler32Arguments`, the debugger-32 subsystem
+     (`Debugger32Path`/`GDBDebugger32Path`/`CurrentDebugger32`/`DefaultDebugger32`/`Current/DefaultDebuggerType32`),
+     `Debug32Arguments`, `LibX32Folder`, form controls `cboDebug32`/`txtDebug32`/`txtfbc32`/`lblfbc32`/
+     `cboDebugger32`, and the `CompilationArguments32Windows/Linux` project property (frmProjectProperties +
+     TabWindow.bi struct, ~54 refs). Atomic for the build (globals + form consumers together); task-11-scale
+     form surgery — use edit-form-safely. **Trap:** `lblCompilationArguments321` is a different control, keep it.
+   - **Still to check:** the `#ifdef __FB_64BIT__` guards (frmSplash/frmComponents/Debug.bas/frmOptions) —
+     keep the 64 branch, delete the else; `__FB_64BIT__` is *not* Windows-only, read each. See memory
+     `project-64bit-only`.
 3. **Resume the changelog walk** — next candidates: `53d8e473` (compile-warning fixes — check Ilwaco's
    shared files), then the menu-taxonomy feature ports.
 

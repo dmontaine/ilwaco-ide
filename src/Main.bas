@@ -73,7 +73,7 @@ Dim Shared As MenuItem Ptr miCode, miForm, miCodeAndForm, miGotoCodeForm, miColl
 Dim Shared As MenuItem Ptr miAlignLefts, miAlignCenters, miAlignRights, miAlignTops, miAlignMiddles, miAlignBottoms, miAlignToGrid, miMakeSameSizeWidth, miMakeSameSizeHeight, miMakeSameSizeBoth, miSizeToGrid, miHorizontalSpacingMakeEqual, miHorizontalSpacingIncrease, miHorizontalSpacingDecrease, miHorizontalSpacingRemove, miVerticalSpacingMakeEqual, miVerticalSpacingIncrease, miVerticalSpacingDecrease, miVerticalSpacingRemove, miCenterInParentHorizontally, miCenterInParentVertically, miOrderBringToFront, miOrderSendToBack, miLockControls
 Dim Shared As MenuItem Ptr miShowWithFolders, miShowWithoutFolders, miShowAsFolder
 Dim Shared As ToolButton Ptr tbtAlignLefts, tbtAlignCenters, tbtAlignRights, tbtAlignTops, tbtAlignMiddles, tbtAlignBottoms, tbtAlignToGrid, tbtMakeSameSizeWidth, tbtMakeSameSizeHeight, tbtMakeSameSizeBoth, tbtSizeToGrid, tbtHorizontalSpacingMakeEqual, tbtHorizontalSpacingIncrease, tbtHorizontalSpacingDecrease, tbtHorizontalSpacingRemove, tbtVerticalSpacingMakeEqual, tbtVerticalSpacingIncrease, tbtVerticalSpacingDecrease, tbtVerticalSpacingRemove, tbtCenterInParentHorizontally, tbtCenterInParentVertically, tbtOrderBringToFront, tbtOrderSendToBack, tbtLockControls
-Dim Shared As ToolButton Ptr tbtSave, tbtSaveAll, tbtSyntaxCheck, tbtSuggestions, tbtCompile, tbtUndo, tbtRedo, tbtCut, tbtCopy, tbtPaste, tbtBlockComment, tbtSingleComment, tbtUncommentBlock, tbtFormat, tbtUnformat, tbtCompleteWord, tbtParameterInfo, tbtFind, tbtRemoveFileFromProject, tbtStartWithCompile, tbtStart, tbtBreak, tbtEnd, tbt32Bit, tbt64Bit, tbtUseDebugger, tbtNotSetted, tbtConsole, tbtGUI, tbtStepInto, tbtStepOver, tbtStepOut, tbtRunToCursor, tbtToggleBreakpoint, tbtSetNextStatement, tbtShowNextStatement
+Dim Shared As ToolButton Ptr tbtSave, tbtSaveAll, tbtSyntaxCheck, tbtSuggestions, tbtCompile, tbtUndo, tbtRedo, tbtCut, tbtCopy, tbtPaste, tbtBlockComment, tbtSingleComment, tbtUncommentBlock, tbtFormat, tbtUnformat, tbtCompleteWord, tbtParameterInfo, tbtFind, tbtRemoveFileFromProject, tbtStartWithCompile, tbtStart, tbtBreak, tbtEnd, tbtUseDebugger, tbtNotSetted, tbtConsole, tbtGUI, tbtStepInto, tbtStepOver, tbtStepOut, tbtRunToCursor, tbtToggleBreakpoint, tbtSetNextStatement, tbtShowNextStatement
 Dim Shared As SaveFileDialog SaveD
 Dim Shared As ReBar MainReBar, rbLeft, rbRight, rbBottom
 Dim Shared As List Tools, TabPanels, ControlLibraries
@@ -508,7 +508,6 @@ Function Compile(Parameter As String = "", bAll As Boolean = False) As Integer
 	Dim As UString CompileLine
 	Dim As ProjectElement Ptr Project
 	Dim As TreeNode Ptr ProjectNode
-	Dim As Boolean Bit32 = tbt32Bit->Checked
 	Dim As WString Ptr FbcExe
 	ThreadsEnter()
 	ClearMessages
@@ -542,7 +541,7 @@ Function Compile(Parameter As String = "", bAll As Boolean = False) As Integer
 		Versioning *MainFile, *FirstLine & CompileLine, Project, ProjectNode
 		Dim FileOut As Integer
 		WLet(ExeName, GetExeFileName(*MainFile, CompileLine & " " & *FirstLine))
-		WLet(FbcExe, GetFullPath(IIf(Bit32, *Compiler32Path, *Compiler64Path)))
+		WLet(FbcExe, GetFullPath(*Compiler64Path))
 		If *FbcExe = "" Then
 			ThreadsEnter()
 			ShowMessages ML("Invalid defined compiler path.")
@@ -621,8 +620,8 @@ Function Compile(Parameter As String = "", bAll As Boolean = False) As Integer
 		'End If
 		If Project Then
 			Select Case Project->CompileTo
-			Case ByDefault: 'WAdd(CompileWith, " -gen gas" & IIf(Bit32, "32", "64"))
-			Case ToGAS: WAdd(CompileWith, " -gen gas" & IIf(Bit32, "", "64"))
+			Case ByDefault:
+			Case ToGAS: WAdd(CompileWith, " -gen gas64")
 			Case ToLLVM: WAdd(CompileWith, " -gen llvm" )
 			Case ToGCC: WAdd(CompileWith, " -gen gcc" )
 			Case ToCLANG: WAdd(CompileWith, " -gen clang" )
@@ -644,12 +643,7 @@ Function Compile(Parameter As String = "", bAll As Boolean = False) As Integer
 				Else
 					WAdd(CompileWith, " -i """ & CtlLibrary->IncludeFolder & """")
 				End If
-				Dim As UString LibFolder
-					If Bit32 Then
-						LibFolder = CtlLibrary->LibX32Folder
-					Else
-						LibFolder = CtlLibrary->LibX64Folder
-					End If
+				Dim As UString LibFolder = CtlLibrary->LibX64Folder
 				If LibFolder <> "" Then
 					If EndsWith(LibFolder, Slash) Then
 						WAdd(CompileWith, " -p """ & Left(LibFolder, Len(LibFolder) - 1) & """")
@@ -5958,8 +5952,6 @@ Sub CreateMenusAndToolBars
 	imgList.Add "Sub", "Sub"
 	imgList.Add "Bookmark", "Bookmark"
 	imgList.Add "Breakpoint", "Breakpoint"
-	imgList.Add "B32", "B32"
-	imgList.Add "B64", "B64"
 	imgList.Add "Opened", "Opened"
 	imgList.Add "Tools", "Tools"
 	imgList.Add "StandartTypes", "StandartTypes"
@@ -6618,11 +6610,6 @@ Sub CreateMenusAndToolBars
 	tbtNotSetted = tbProject.Buttons.Add(Cast(ToolButtonStyle, tbsAutosize Or tbsCheckGroup), "NotSetted", , @mClick, "NotSetted", , ML("Not Setted"), True)
 	tbtConsole = tbProject.Buttons.Add(Cast(ToolButtonStyle, tbsAutosize Or tbsCheckGroup), "Console", , @mClick, "Console", , ML("Console"), True)
 	tbtGUI = tbProject.Buttons.Add(Cast(ToolButtonStyle, tbsAutosize Or tbsCheckGroup), "Form", , @mClick, "GUI", , ML("GUI"), True)
-	tbProject.Buttons.Add tbsSeparator
-		tbt32Bit = tbProject.Buttons.Add(tbsCheckGroup, "B32", , @mClick, "B32", , ML("32-bit"), True)
-		tbt64Bit = tbProject.Buttons.Add(tbsCheckGroup, "B64", , @mClick, "B64", , ML("64-bit"), True)
-		tbt64Bit->Checked = True
-	tbProject.Buttons.Add tbsSeparator
 	tbProject.Buttons.Add tbsSeparator
 	Var tbButton = tbProject.Buttons.Add(tbsCustom)
 	tbButton->Width = 170
@@ -9220,11 +9207,7 @@ Sub txtImmediate_KeyDown(ByRef Designer As My.Sys.Object, ByRef Sender As Contro
 			End If
 			CloseFile_(Fn)
 			Dim As WString Ptr FbcExe, ExeName
-			If tbt32Bit->Checked Then
-				WLet(FbcExe, GetFullPath(*Compiler32Path))
-			Else
-				WLet(FbcExe, GetFullPath(*Compiler32Path))
-			End If
+			WLet(FbcExe, GetFullPath(*Compiler64Path))
 			PipeCmd "", """" & *FbcExe & """ -b """ & ExePath & "/Temp/FBTemp.bas"" -i """ & ExePath & "/" & *MFFPath & """ > """ & ExePath & "/Temp/Compile1.log"" 2> """ & ExePath & "/Temp/Compile2.log"""
 			Dim As WString Ptr LogText
 			Dim Buff As WString * 2048 ' for V1.07 Line Input not working fine

@@ -344,7 +344,7 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 		If SaveAllBeforeCompile Then
 			ChangeEnabledDebug False, True, True
 			'SaveAll '
-			Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
+			Dim As DebuggerTypes CurrentDebugger = CurrentDebuggerType64
 			If CurrentDebugger = IntegratedGDBDebugger Then
 					If iFlagStartDebug = 0 Then
 						If UseDebugger Then
@@ -398,7 +398,7 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 		End If
 	Case "Start"
 		ClearThreadsWindow
-		Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
+		Dim As DebuggerTypes CurrentDebugger = CurrentDebuggerType64
 		If CurrentDebugger = IntegratedGDBDebugger Then
 				If iFlagStartDebug = 0 Then
 					If UseDebugger Then
@@ -434,7 +434,7 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 	Case "Break":
 			ChangeEnabledDebug True, False, True
 	Case "End":
-		Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
+		Dim As DebuggerTypes CurrentDebugger = CurrentDebuggerType64
 		If CurrentDebugger = IntegratedGDBDebugger Then
 				If Running Then
 					kill_debug()
@@ -458,7 +458,7 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 		End If
 	Case "Restart"
 		ClearThreadsWindow
-		Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
+		Dim As DebuggerTypes CurrentDebugger = CurrentDebuggerType64
 		If CurrentDebugger = IntegratedGDBDebugger Then
 				command_debug("r")
 		Else
@@ -477,7 +477,7 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 	Case "StepInto":
 		ClearThreadsWindow
 		ptabBottom->TabIndex = 6 'David Changed
-		Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
+		Dim As DebuggerTypes CurrentDebugger = CurrentDebuggerType64
 		If CurrentDebugger = IntegratedGDBDebugger Then
 				If iFlagStartDebug = 0 Then
 					runtype = RTSTEP
@@ -512,7 +512,7 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 		End If
 	Case "StepOver":
 		ClearThreadsWindow
-		Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
+		Dim As DebuggerTypes CurrentDebugger = CurrentDebuggerType64
 		If CurrentDebugger = IntegratedGDBDebugger Then
 				If iFlagStartDebug = 0 Then
 					CurrentTimer = SetTimer(0, 0, 1, Cast(Any Ptr, @TimerProcGDB))
@@ -658,7 +658,7 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 			
 		Case "SetNextStatement":
 			ClearThreadsWindow
-			Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
+			Dim As DebuggerTypes CurrentDebugger = CurrentDebuggerType64
 			If CurrentDebugger = IntegratedGDBDebugger Then
 					Dim As Integer iStartLine, iEndLine, iStartChar, iEndChar
 					tb->txtCode.GetSelection iStartLine, iEndLine, iStartChar, iEndChar
@@ -671,7 +671,7 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 			'#endif
 		Case "StepOut":
 			ClearThreadsWindow
-			Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
+			Dim As DebuggerTypes CurrentDebugger = CurrentDebuggerType64
 			If CurrentDebugger = IntegratedGDBDebugger Then
 					If iFlagStartDebug = 0 Then
 						ThreadCounter(ThreadCreate_(@StartDebugging))
@@ -682,7 +682,7 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 			End If
 		Case "RunToCursor":
 			ClearThreadsWindow
-			Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
+			Dim As DebuggerTypes CurrentDebugger = CurrentDebuggerType64
 			If CurrentDebugger = IntegratedGDBDebugger Then
 					If iFlagStartDebug = 1 Then
 						ChangeEnabledDebug False, True, True
@@ -963,7 +963,7 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 				Case "Unformat":                    ec->UnformatCode
 				Case "AddSpaces":                   tb->AddSpaces
 				Case "Breakpoint":
-					Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
+					Dim As DebuggerTypes CurrentDebugger = CurrentDebuggerType64
 					If CurrentDebugger = IntegratedGDBDebugger Then
 							If iFlagStartDebug = 1 Then
 								set_bp

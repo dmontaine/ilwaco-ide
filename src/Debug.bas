@@ -10306,11 +10306,10 @@ Sub RunWithDebug(Debugger As String = "", ByRef ProjectFileName As WString, ByRe
 		Restarting = False
 	End If
 	ThreadsEnter()
-	Dim As Boolean Bit32 = tbt32Bit->Checked
-	Dim As DebuggerTypes CurrentDebuggerType = IIf(Bit32, CurrentDebuggerType32, CurrentDebuggerType64)
-	Dim As WString Ptr CurrentDebugger = IIf(Bit32, CurrentDebugger32, CurrentDebugger64)
-	Dim As WString Ptr DebuggerPath = IIf(Bit32, Debugger32Path, Debugger64Path)
-	Dim As WString Ptr GDBDebuggerPath = IIf(Bit32, GDBDebugger32Path, GDBDebugger64Path)
+	Dim As DebuggerTypes CurrentDebuggerType = CurrentDebuggerType64
+	Dim As WString Ptr CurrentDebugger = CurrentDebugger64
+	Dim As WString Ptr DebuggerPath = Debugger64Path
+	Dim As WString Ptr GDBDebuggerPath = GDBDebugger64Path
 	ThreadsLeave()
 	Dim As Integer Idx = -1
 	If WGet(DebuggerPath) <> "" Then

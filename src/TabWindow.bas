@@ -10759,8 +10759,7 @@ End Sub
 	Function build_create_shellscript(ByRef working_dir As WString, ByRef cmd As WString, autoclose As Boolean, bDebug As Boolean = False, ByRef Arguments As WString = "") As String
 		'?Replace(cmd, "\", "/")
 		'?!"#!/bin/sh\n\nrm $0\n\ncd " & Replace(working_dir, "\", "/") & !"\n\n" & Replace(cmd, "\", "/") & !"\n\necho ""\n\n------------------\n(program exited with code: $?)"" \n\n" & IIF(autoclose, "", !"\necho ""Press return to continue""\n#to be more compatible with shells like ""dash\ndummy_var=""""\nread dummy_var") & !"\n"
-		Dim As Boolean Bit32 = tbt32Bit->Checked
-		Dim As WString Ptr DebuggerPath = IIf(Bit32, Debugger32Path, Debugger64Path)
+		Dim As WString Ptr DebuggerPath = Debugger64Path
 		Dim As String ScriptPath
 		Dim As Integer Fn = FreeFile_
 		ScriptPath = *g_get_tmp_dir() & "/vfb_run_script.sh"
@@ -11488,7 +11487,7 @@ Function CheckCondition(ByRef sLine As WString, ForWindows As Boolean) As Boolea
 		Case "__fb_main__", "defined(__fb_main__)"
 			Return True
 		Case "__fb_64bit__", "defined(__fb_64bit__)"
-			Return tbt64Bit->Checked
+			Return True
 		Case "__use_winapi__", "defined(__use_winapi__)"
 			Return InStr(LCase(UseDefine), "__use_winapi__") > 0
 		Case "__use_gtk2__", "defined(__use_gtk2__)"
@@ -11537,15 +11536,14 @@ Function CheckExpression(ByRef sLine As WString, ForWindows As Boolean) As Boole
 End Function
 
 Function GetFirstCompileLine(ByRef FileName As WString, ByRef Project As ProjectElement Ptr, CompileLine As UString, ForWindows As Boolean = False) As UString
-	Dim As Boolean Bit32 = tbt32Bit->Checked
 	Dim As UString Result
 	CompileLine = ""
-	Result = IIf(Bit32, *Compiler32Arguments, *Compiler64Arguments)
+	Result = *Compiler64Arguments
 	If Project Then
 		If ForWindows Then
-			Result += " " & IIf(Bit32, *Project->CompilationArguments32Windows, WGet(Project->CompilationArguments64Windows))
+			Result += " " & WGet(Project->CompilationArguments64Windows)
 		Else
-				Result += " " & IIf(Bit32, *Project->CompilationArguments32Linux, WGet(Project->CompilationArguments64Linux))
+				Result += " " & WGet(Project->CompilationArguments64Linux)
 		End If
 		Select Case Project->ProjectType
 		Case 0
@@ -11574,7 +11572,7 @@ Function GetFirstCompileLine(ByRef FileName As WString, ByRef Project As Project
 			End Select
 		End If
 		If Project->CompileTo = ToGAS Then
-			Result += " -gen gas" & IIf(Not Bit32, "64", "")
+			Result += " -gen gas64"
 		ElseIf Project->CompileTo = ToLLVM Then
 			Result += " -gen llvm"
 		ElseIf Project->CompileTo = ToGCC Then
