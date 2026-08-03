@@ -20,7 +20,6 @@ File=src/frmTheme.bi
 File=src/frmTools.bi
 File=src/frmTrek.bi
 File=src/Main.bi
-File=src/MD2RTF.bi
 File=src/TabWindow.bi
 File=src/frmAbout.frm
 File=src/frmAddIns.frm

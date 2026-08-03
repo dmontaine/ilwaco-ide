@@ -15,12 +15,34 @@ Ilwaco keeps GTK, so our GTK fixes apply upstream where Astoria's Win64-only one
 
 ---
 
-## Session handoff (2026-08-03, latest) — UTF-8/LF-only DONE (build+runtime-verified); AI-removal is next
+## Session handoff (2026-08-03, latest) — UTF-8/LF-only DONE + ALL AI REMOVED (both build+runtime-verified)
 
-**START HERE.** Two things landed this session, both **build-verified (`fbc` exit 0) and runtime-verified**
-(IDE launches to a stable "Ilwaco IDE (64-bit)" window, full editor, "IntelliSense fully loaded", no error
-dialog, no `DebugInfo.log`). All uncommitted in the working tree (`git status`: `PROJECT_STATUS.md`, `ilwaco`,
-`src/EditControl.bas`, `src/Main.bas`, `src/Main.bi`, `src/frmOptions.bi`, `src/frmOptions.frm`).
+**START HERE.** This session landed, in order, all committed+pushed to `main`: (1) verified prior commit
+`1dc1650`; (2) **UTF-8/LF-only** (`d99b23c`); (3) **AI removal slice 1/2** — Options AI page + `frmAIAgent.frm`
+(`d7bf853`); (4) **AI removal slice 2/2** — the entire main-window AI subsystem (this commit, pending push at
+time of writing). All build-verified (`fbc` exit 0) and runtime-verified (IDE launches to a stable window, full
+editor, "IntelliSense fully loaded", status bar UTF-8/LF, no error dialog, no `DebugInfo.log`).
+
+**TASK 2 (remove ALL AI elements) — COMPLETE.** Slice 2/2 removed (~−1360 lines): from `Main.bas` the AI
+tab/panel/toolbar creation, the 13 AI subs (cboAIAgentModels_Change, EscapeJsonForPrompt/EscapeFromJson,
+AIGetMaxChunkSize/AIPrintAnswer/AISplitText, HTTPAIAgent_Complete/_Receive, AIRequest, txtAIRequest_Activate,
+AIChatPaste/AIRelease/AIResetContext, AddMRUAIChat), the knowledge-prompt block, the `mnuAIChat` menu, the
+LoadToolBox wiki/markdown→AIContext generation (kept the toolbox build + DyLibFree cleanup), the `[AIAgents]`
+INI load body (⚠ **kept the `AIAgents` KeyExists term in the fragile 10-section `Do Until` loop** per task-13
+precedent — removing a term would force restructuring `= -10`), the AIChat MRU save + exit save, the tpAIAgent
+INI write, the deallocs, and the AI toolbar `imgList.Add` icons; from `ilwaco.bas` the `mClickAIChat` sub +
+all AI dispatch cases; from `Main.bi` the AI declares/globals + the `ModelInfo` type; from `TabWindow.bi` the
+`MD2RTF.bi` include; deleted `src/MD2RTF.bi` + its `.vfp` entry. **Verified:** left panel is now Project|Toolbox
+(no "AI Agent" tab); clean build+launch. Slice 2 built green on the first try.
+**Follow-up (minor, deferred):** the `.rc` still registers now-unused AI toolbar icons (NewChat/AddComment/…);
+harmless. The kept `[AIAgents]` INI loop term is the only remaining "AI" token in `src/` (functional, not dead).
+
+**NEXT:** the two owner-directed strips (UTF-8/LF, AI) are done. Resume the Astoria→Ilwaco changelog walk
+(AstoriaParity) — the 32-bit strip and these two strips are the standing owner directives now cleared.
+
+---
+
+### Detail from earlier in this session (kept for reference)
 
 1. **Verified prior commit `1dc1650`** (removed dead `EditControl2.bi`; consolidated the two AI "Translate"
    buttons — "TranslateE" gone, kept "Translate" now targets `ML("English")`) which had been committed
