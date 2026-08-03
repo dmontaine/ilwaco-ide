@@ -5,10 +5,6 @@
 '#           Liu XiaLin (LiuZiQi.HK@hotmail.com)         #
 '#########################################################
 
-#ifdef __FB_WIN32__
-	#define UNICODE
-	#include once "windows.bi"
-#endif
 #include once "mff/WStringList.bi"
 #include once "mff/Dictionary.bi"
 #include once "mff/Form.bi"
@@ -24,67 +20,15 @@
 #include once "mff/StatusBar.bi" 'David Change
 #include once "mff/IniFile.bi"
 #include once "mff/HTTP.bi"
-#ifndef __USE_GTK__
-	#include once "mff/PageSetupDialog.bi"
-	#include once "mff/PrintDialog.bi"
-	#include once "mff/PrintPreviewDialog.bi"
-	#include once "mff/Printer.bi"
-#endif
 
-#ifndef __USE_GTK__
-	#ifdef __FB_64BIT__
-		#define SettingsPath ExePath & "/Settings/VisualFBEditor64.ini"
-	#else
-		#define SettingsPath ExePath & "/Settings/VisualFBEditor32.ini"
-	#endif
-#else
-	#ifdef __USE_GTK3__
-		#ifdef __FB_WIN32__
-			#ifdef __FB_64BIT__
-				#define SettingsPath ExePath & "/Settings/VisualFBEditor64_gtk3.ini"
-			#else
-				#define SettingsPath ExePath & "/Settings/VisualFBEditor32_gtk3.ini"
-			#endif
-		#else
-			#ifdef __FB_64BIT__
 				#define SettingsPath ExePath & "/Settings/VisualFBEditorX64_gtk3.ini"
-			#else
-				#define SettingsPath ExePath & "/Settings/VisualFBEditorX32_gtk3.ini"
-			#endif
-		#endif
-	#else
-		#ifdef __FB_WIN32__
-			#ifdef __FB_64BIT_
-				#define SettingsPath ExePath & "/Settings/VisualFBEditor64_gtk2.ini"
-			#else
-				#define SettingsPath ExePath & "/Settings/VisualFBEditor32_gtk2.ini"
-			#endif
-		#else
-			#ifdef __FB_64BIT__
-				#define SettingsPath ExePath & "/Settings/VisualFBEditorX64_gtk2.ini"
-			#else
-				#define SettingsPath ExePath & "/Settings/VisualFBEditorX32_gtk2.ini"
-			#endif
-		#endif
-	#endif
-#endif
 
-#ifdef __FB_WIN32__
-	#define Slash "\"
-	#define BackSlash "/"
-#else
 	#define Slash "/"
 	#define BackSlash "\"
 	#define MAX_PATH 260
-#endif
 
-#if 0
-	Type WStringOrStringList As StringList
-	Type WStringOrStringListItem As StringListItem
-#else
 	Type WStringOrStringList As WStringList
 	Type WStringOrStringListItem As WStringListItem
-#endif
 
 Extern "rtlib"
 	Declare Function LineInputWstr Alias "fb_FileLineInputWstr"(ByVal filenumber As Long, ByVal dst As WString Ptr, ByVal maxchars As Integer) As Long
@@ -304,13 +248,8 @@ Declare Sub ChangeLockControls(bLockControls As Boolean, ChangeObject As Integer
 Declare Sub ChangeUseDebugger(bUseDebugger As Boolean, ChangeObject As Integer = -1)
 Declare Sub ChangeFileEncoding(FileEncoding As FileEncodings)
 Declare Sub ChangeNewLineType(NewLineType As NewLineTypes)
-#ifdef __FB_WIN32__
-	Common Shared As UINT_PTR CurrentTimer, CurrentTimerData
-	Declare Sub TimerProc(hwnd As HWND, uMsg As UINT, idEvent As UINT_PTR, dwTime As DWORD)
-#else
 	Common Shared As Long CurrentTimer, CurrentTimerData
 	Declare Sub TimerProc()
-#endif
 Declare Function WithoutPointers(ByRef e As String) As String
 Declare Function WithoutQuotes(ByRef e As UString) As UString
 Declare Sub ChangeFolderType(Value As ProjectFolderTypes)
@@ -342,10 +281,6 @@ Declare Function GetFullPath(ByRef Path As WString, ByRef FromFile As WString = 
 Declare Function GetRelative(ByRef FileName As WString, ByRef FromFile As WString) As UString
 Declare Function GetRelativePath(ByRef Path As WString, ByRef FromFile As WString = "") As UString
 Declare Function GetXY(XorY As Integer) As Integer
-#ifndef __USE_GTK__
-	Declare Function FileTimeToVariantTime(ByRef FT As FILETIME) As DATE_
-	Declare Function GetFileLastWriteTime(ByRef FileName As WString) As FILETIME
-#endif
 Declare Function FolderExists(ByRef FolderName As WString) As Boolean
 Declare Function Compile(Parameter As String = "", bAll As Boolean = False) As Integer
 Declare Sub LoadFunctions(ByRef Path As WString, LoadParameter As LoadParam = FilePathAndIncludeFiles, ByRef Types As WStringOrStringList, ByRef Enums As WStringOrStringList, ByRef Functions As WStringOrStringList, ByRef Args As WStringOrStringList, ByRef TypeProcedures As WStringOrStringList, ec As Control Ptr = 0, CtlLibrary As Library Ptr = 0, CurFile As Any Ptr = 0, OldFile As Any Ptr = 0)

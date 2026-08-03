@@ -132,11 +132,6 @@ Namespace My.Sys.Forms
 		Dim As Boolean bFinded
 		Dim As String CurWord
 		Dim As Integer iTemp
-		#ifndef __USE_GTK__
-			Dim As DWORD dwTemp
-			Dim As Points psPoints
-			Dim As ..Point poPoint
-		#endif
 		Dim As Integer lParamLo, lParamHi
 		Dim FCurLine As Integer = 0
 		Dim FSelStartLine As Integer = 0
@@ -159,20 +154,8 @@ Namespace My.Sys.Forms
 		Dim OldChar As Integer
 		Dim As Integer dwLineHeight   ' высота строки
 		Dim As Integer HCaretPos, VCaretPos
-		#ifdef __USE_GTK__
 			Dim As GtkTooltip Ptr tooltip
-		#else
-			Dim As HDC hd
-			Dim As HDC bufDC
-			Dim As HBITMAP bufBMP
-			Dim As TEXTMETRIC tm
-			Dim As HWND hwndTT
-		#endif
 		Dim As ..RECT rc
-		#ifndef __USE_GTK__
-			Dim sz As ..Size
-			Dim As SCROLLINFO si
-		#endif
 		Dim As String Symbols = "!@#$~`'%^&*+-=()/\?<>.,;:[]{}""" & Chr(13) & Chr(10) & Chr(9)
 		Dim As Integer iMin
 		Dim As Integer iMax
@@ -237,22 +220,10 @@ Namespace My.Sys.Forms
 		Declare Function InCollapseRect(i As Integer, X As Integer, Y As Integer) As Boolean
 		Declare Function InIncludeFileRect(i As Integer, X As Integer, Y As Integer) As Boolean
 		Declare Sub ProcessMessage(ByRef msg As Message)
-		#ifdef __USE_GTK__
 			Declare Static Function Blink_cb(user_data As gpointer) As gboolean
-		#else
-			Dim lXOffset As Long
-			Dim lYOffset As Long
-			Dim tP As ..Point
-			Dim lVertOffset As Long
-			Dim lHorzOffset As Long
-			Dim As ..Point m_tP
-			Declare Static Sub EC_TimerProc(hwnd As HWND, uMsg As UINT, idEvent As UINT_PTR, dwTime As DWORD)
-			Declare Sub SetDark(Value As Boolean)
-		#endif
 		Declare Function deltaToScrollAmount(lDelta As Integer) As Integer
 		Declare Sub MiddleScroll
 	Public:
-		#ifdef __USE_GTK__
 			Declare Static Function ActivateLink(label As GtkLabel Ptr, uri As gchar Ptr, user_data As gpointer) As Boolean
 			Dim As cairo_t Ptr cr
 			Dim As GtkWidget Ptr wText
@@ -261,9 +232,7 @@ Namespace My.Sys.Forms
 			Dim As GdkDisplay Ptr pdisplay
 			Dim As GdkCursor Ptr gdkCursorIBeam
 			Dim As GdkCursor Ptr gdkCursorHand
-			#ifdef __USE_GTK3__
 				Dim As GtkStyleContext Ptr scontext
-			#endif
 			Dim As GtkWidget Ptr scrollbarv
 			Dim As GtkWidget Ptr scrollbarh
 			Dim As GtkAdjustment Ptr adjustmentv
@@ -278,7 +247,6 @@ Namespace My.Sys.Forms
 			Dim As Integer BlinkTime
 			Dim As Boolean InFocus
 			Dim As Boolean bChanged
-		#endif
 		Dim As Integer dwClientX    ' ширина клиентской области
 		Dim As Integer dwClientY    ' Высота клиентской области
 		Canvas As My.Sys.Drawing.Canvas
@@ -297,13 +265,8 @@ Namespace My.Sys.Forms
 		Dim LeftMargin As Integer
 		Dim HScrollPos As Integer
 		Dim VScrollPos As Integer
-		#ifdef __USE_GTK__
 			lvIntellisense As ListView
 			lblTooltip As GtkWidget Ptr
-		#else
-			cboIntellisense As ComboBoxEx
-			pnlIntellisense As Panel
-		#endif
 		DropDownShowed As Boolean
 		DropDownChar As Integer
 		ToolTipShowed As Boolean
@@ -402,16 +365,13 @@ Namespace My.Sys.Forms
 	
 	Declare Sub GetColor(iColor As Long, ByRef iRed As Double, ByRef iGreen As Double, ByRef iBlue As Double)
 	
-	#ifdef __USE_GTK__
 		Declare Sub cairo_rectangle(cr As cairo_t Ptr, x As Double, y As Double, x1 As Double, y1 As Double, z As Boolean)
 		Declare Sub cairo_rectangle_(cr As cairo_t Ptr, x As Double, y As Double, x1 As Double, y1 As Double, z As Boolean)
-	#endif
 	
 	Declare Function GetKeyWordCase(ByRef KeyWord As String, KeyWordsList As WStringList Ptr = 0) As String
 	
 	Declare Function TextWithoutQuotesAndComments(subject As String, OldCommentIndex As Integer = 0, WithoutComments As Boolean = True) As String
 	
-	#ifdef __USE_GTK__
 		Declare Function EditControl_OnDraw(widget As GtkWidget Ptr, cr As cairo_t Ptr, data1 As gpointer) As Boolean
 		
 		Declare Function EditControl_OnExposeEvent(widget As GtkWidget Ptr, Event As GdkEventExpose Ptr, data1 As gpointer) As Boolean
@@ -419,7 +379,6 @@ Namespace My.Sys.Forms
 		Declare Sub EditControl_SizeAllocate(widget As GtkWidget Ptr, allocation As GdkRectangle Ptr, user_data As Any Ptr)
 		
 		Declare Sub EditControl_ScrollValueChanged(widget As GtkAdjustment Ptr, user_data As Any Ptr)
-	#endif
 End Namespace
 
 #ifndef __USE_MAKE__

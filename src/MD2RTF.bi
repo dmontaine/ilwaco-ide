@@ -162,31 +162,6 @@ Function MDtoRTF(ByRef mdiText As WString) As WString Ptr
 	For k As Integer = 1 To KeywordLists.Count - 1
 		KeyWordColorStr &= RGBToRTF(GetRed(Keywords(k).Foreground), GetGreen(Keywords(k).Foreground), GetBlue(Keywords(k).Foreground))
 	Next
-	#ifdef __USE_WINAPI__
-		AIRTF_HEADER = _
-		"{\urtf1\ansi\ansicpg" & GetACP() & "\deff0" & _
-		"{\fonttbl{\f0\fnil\fcharset0 " & AIEditorFontName & ";}{\f1\fnil\fcharset204 Consolas;}}" & _
-		"{\colortbl;" & _
-		"\red0\green0\blue0;" & _       ' 1: Black (base text) Background color needs -1
-		"\red255\green0\blue0;" & _     ' 2: Red
-		"\red255\green128\blue0;" & _    ' 3: Orange
-		"\red255\green255\blue0;" & _    ' 4: Yellow
-		"\red0\green128\blue0;" & _     ' 5: Green
-		"\red0\green0\blue255;" & _     ' 6: Blue
-		"\red0\green150\blue240;" & _    ' 7: Indigo (actually using teal as substitute) 128
-		"\red128\green0\blue128;" & _    ' 8: Purple
-		"\red255\green255\blue255;" & _ ' 9: White (background)
-		"\red48\green48\blue48;" & _    ' 10: Dark gray (background)
-		RGBToRTF(GetRed(NormalText.Foreground), GetGreen(NormalText.Foreground), GetBlue(NormalText.Foreground)) & _
-		RGBToRTF(GetRed(Strings.Foreground), GetGreen(Strings.Foreground), GetBlue(Strings.Foreground)) & _
-		RGBToRTF(GetRed(ColorMacros.Foreground), GetGreen(ColorMacros.Foreground), GetBlue(ColorMacros.Foreground)) & _
-		KeyWordColorStr & _
-		"\red0\green200\blue200;" & _   ' 11: Teal (new)
-		"\red128\green128\blue128;" & _ ' 12: Gray (new)
-		"\red255\green0\blue255;" & _   ' 13: Pink (new)
-		"}" & _
-		"\viewkind4\uc1\pard\lang2052\f1\" & AIRTF_FontSize ' Default font: Consolas, 9pt
-	#endif
 	'ColorOperators, ColorProperties, ColorComps, ColorGlobalNamespaces, ColorGlobalTypes, ColorGlobalEnums, ColorEnumMembers, ColorConstants, ColorGlobalFunctions, ColorLineLabels, ColorLocalVariables, ColorSharedVariables, ColorCommonVariables, ColorByRefParameters, ColorByValParameters, ColorFields, ColorDefines, ColorMacros, ColorSubs
 	'Bookmarks, Breakpoints, Comments, CurrentBrackets, CurrentLine, CurrentWord, ExecutionLine, FoldLines, Identifiers, IndicatorLines, Keywords(Any), LineNumbers, NormalText, Numbers, RealNumbers, Selection, SpaceIdentifiers, Strings
 	

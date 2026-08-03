@@ -27,17 +27,10 @@ Declare Sub DeleteDebugCursor
 
 'Common Shared As Byte runtype        'running type 07/12/2014
 
-#ifdef __FB_64BIT__
 	#define regip rip
 	#define regbp rbp
 	#define regsp rsp
 	#define ver3264 "(64bit) "
-#else
-	#define regip eip
-	#define regbp ebp
-	#define regsp esp
-	#define ver3264 "(32bit) "
-#endif
 
 '#define fulldbg_prt 'uncomment to get more information
 #define dbg_prt2 Rem ' dbg_prt 'used temporary for debugging, change rem by print 
@@ -57,71 +50,6 @@ Declare Sub DeleteDebugCursor
 	#define KNEWARRAYFIELD ''to skip flag field
 #endif
 
-#ifdef __FB_WIN32__
-	#include once "windows.bi"
-	#include once "win\commctrl.bi"
-	#include once "win\commdlg.bi"
-	#include once "win\wingdi.bi"
-	#include once "win\richedit.bi"
-	#include once "win\tlhelp32.bi"
-	#include once "win\shellapi.bi"
-	#include once "win\psapi.bi"
-	#include once "TabWindow.bi"
-	
-	'' if they are not already defined
-	#ifndef EXCEPTION_DEBUG_EVENT
-		#define EXCEPTION_DEBUG_EVENT  1
-		#define CREATE_THREAD_DEBUG_EVENT  2
-		#define CREATE_PROCESS_DEBUG_EVENT  3
-		#define EXIT_THREAD_DEBUG_EVENT  4
-		#define EXIT_PROCESS_DEBUG_EVENT  5
-		#define LOAD_DLL_DEBUG_EVENT  6
-		#define UNLOAD_DLL_DEBUG_EVENT  7
-		#define OUTPUT_DEBUG_STRING_EVENT  8
-		#define RIP_EVENT  9
-		'' DUPLICATE #define DBG_CONTINUE  &h00010002
-		#define DBG_TERMINATE_THREAD           &h40010003
-		#define DBG_TERMINATE_PROCESS          &h40010004
-		#define DBG_CONTROL_C                  &h40010005
-		#define DBG_CONTROL_BREAK              &h40010008
-	#endif
-	'' DBG_EXCEPTION_NOT_HANDLED = &H80010001
-	#define EXCEPTION_GUARD_PAGE_VIOLATION      &H80000001
-	#define EXCEPTION_NO_MEMORY                 &HC0000017
-	#define EXCEPTION_FLOAT_DENORMAL_OPERAND    &HC000008D
-	#define EXCEPTION_FLOAT_DIVIDE_BY_ZERO      &HC000008E
-	#define EXCEPTION_FLOAT_INEXACT_RESULT      &HC000008F
-	#define EXCEPTION_FLOAT_INVALID_OPERATION   &HC0000090
-	#define EXCEPTION_FLOAT_OVERFLOW            &HC0000091
-	#define EXCEPTION_FLOAT_STACK_CHECK         &HC0000092
-	#define EXCEPTION_FLOAT_UNDERFLOW           &HC0000093
-	#define EXCEPTION_INTEGER_DIVIDE_BY_ZERO    &HC0000094
-	#define EXCEPTION_INTEGER_OVERFLOW          &HC0000095
-	#define EXCEPTION_PRIVILEGED_INSTRUCTION    &HC0000096
-	#define EXCEPTION_CONTROL_C_EXIT            &HC000013A
-	
-	''DLL
-	Const DLLMAX=300
-	Type tdll
-		As HANDLE   hdl 'handle to close
-		As UInteger bse 'base address
-		As Any Ptr  tv  'item treeview to delete
-		As Integer gblb 'index/number in global var table
-		As Integer gbln
-		As Integer  lnb 'index/number in line
-		As Integer  lnn
-		As String   fnm 'full name
-	End Type
-	
-	'' Output information
-	#define dbg_prt(txt) output_wds(txt)
-	Declare Sub output_wds(As String)
-	
-	#define HCOMBO 500
-
-	#define WSTRSIZE 2 ''size of one charactere in wstring
-''==========================================================
-#else ''======================== LINUX =====================
 ''==========================================================
 
 	Enum
@@ -151,11 +79,7 @@ Declare Sub DeleteDebugCursor
 		KCRASHED
 	End Enum
 
-	#ifdef __FB_64BIT__
 		#define FIRSTBYTE &hFFFFFFFFFFFFFF00
-	#else
-		#define FIRSTBYTE &hFFFFFF00
-	#endif
 
 	Enum PTRACE_REQUEST
 		PTRACE_TRACEME             =0
@@ -236,25 +160,6 @@ Declare Sub DeleteDebugCursor
 	End Type
 	
 	Type pt_regs 'or user_regs_struct
-	#ifndef __FB_64BIT__
-		As Long ebx
-		As Long ecx
-		As Long edx
-		As Long esi
-		As Long edi
-		As Long xbp
-		As Long eax
-		As Long ds', __dsu
-		As Long es', __esu
-		As Long fs', __fsu
-		As Long gs', __gsu
-		As Long orig_eax
-		As ULong xip
-		As Long  cs', __csu
-		As Long eflags
-		As Long xsp
-		As Long ss', __ssu
-	#else
 	   As UInteger r15
 	   As UInteger r14
 	   As UInteger r13
@@ -282,7 +187,6 @@ Declare Sub DeleteDebugCursor
 	   As UInteger es
 	   As UInteger fs
 	   As UInteger gs
-	#endif
 	End Type
 	'#define	EPERM		 1
 	'#define	ENOENT		 2
@@ -320,40 +224,16 @@ Declare Sub DeleteDebugCursor
 	'#define	ERANGE		34
 	
 	#define WSTRSIZE 4
-#endif
 ''====================== end for linux =========================
 
 Declare Sub string_sh(tv As Any Ptr)
 Declare Sub shwexp_new(tview As Any Ptr)
-#ifdef __USE_GTK__
 	Common Shared windmain As Any Ptr
 	Common Shared tviewcur As TreeView Ptr  'TV1 ou TV2 ou TV3
 	Common Shared tviewvar As TreeView Ptr 'running proc/var
 	Common Shared tviewprc As TreeView Ptr 'all proc
 	Common Shared tviewthd As TreeView Ptr 'all threads
 	Common Shared tviewwch As TreeView Ptr 'watched variables
-#else
-	Declare Sub fastrun()
-	Declare Sub thread_rsm()
-	Declare Sub exe_mod()
-	Declare Sub brk_set(t As Integer)
-	Declare Function var_sh1(i As Integer) As String
-	
-	Common Shared windmain As HWND
-	'Common Shared stopcode As Integer
-	'Common Shared dbghand As HANDLE 'debugged proc handle
-	'Common Shared As Integer linenb
-	Common Shared tviewcur As HWND  'TV1 ou TV2 ou TV3
-	Common Shared tviewvar As HWND 'running proc/var
-	Common Shared tviewprc As HWND 'all proc
-	Common Shared tviewthd As HWND 'all threads
-	Common Shared tviewwch As HWND 'watched variables
-
-	'Common Shared As Integer linenbprev 'used for dll
-	'Common Shared rline() As tline
-	'Common Shared source() As String    'source names
-	Common Shared As HWND htab1, htab2
-#endif
 Common Shared As Integer rlineold 'numbers of lines, index of previous executed line (rline)
 Common Shared As Integer fntab
 
@@ -474,13 +354,8 @@ End Enum
 
 Union pointeurs
 	pxxx As Any Ptr
-	#ifdef __FB_64BIT__
 	   pinteger As Long Ptr
 	   puinteger As ULong Ptr
-	#else
-	   pinteger As Integer Ptr
-	   puinteger As UInteger Ptr
-	#endif
 	'pinteger As Integer Ptr
 	'puinteger As UInteger Ptr
 	psingle As Single Ptr
@@ -700,13 +575,8 @@ End Type
 ''======================== Threads ====================================
 Const THREADMAX=500
 Type tthread
-#ifdef __FB_WIN32__
-	hd  As HANDLE    'handle
-	id  As UInteger  'ident
- #else
 	hd As Integer  'not use
 	id As Long
-#endif
  pe  As Integer   'flag if true indicates proc end
  sv  As Integer   'sav line
  od  As Integer   'previous line
@@ -993,10 +863,8 @@ Declare Function thread_select(id As Integer = 0) As Integer
 Declare Function var_search(pproc As Integer, text() As String, vnb As Integer, varr As Integer, vpnt As Integer = 0) As Integer
 Declare Sub RunWithDebug(Debugger As String = "", ByRef ProjectFileName As WString, ByRef ProjectCommandLineArguments As WString, ByRef MainFile As WString, ByRef CompileLine As WString, ByRef FirstLine As WString)
 Declare Sub RunProgramWithDebug(Param As Any Ptr)
-#ifndef __FB_WIN32__
 	Declare Function SetTimer(hwnd As Any Ptr = 0, ByRef idTimer As Long, iElapse As Long, pTimerProc As Any Ptr) As Long
 	Declare Sub KillTimer(hwnd As Any Ptr = 0, idTimer As Long)
-#endif
 
 #ifndef __USE_MAKE__
 	#include once "Debug.bas"

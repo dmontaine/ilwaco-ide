@@ -13,41 +13,7 @@
 	#define _NOT_AUTORUN_FORMS_
 #endif
 
-#if defined(__USE_WINAPI__) OrElse defined(__FB_WIN32__) AndAlso Not defined(__USE_GTK__)
-	#ifdef __FB_64BIT__
-		#cmdline "-x ../VisualFBEditor64.exe"
-	#else
-		#cmdline "-x ../VisualFBEditor32.exe"
-	#endif
-#elseif defined(__USE_GTK__) AndAlso defined(__FB_WIN32__)
-	#ifdef __FB_64BIT__
-		#ifdef __USE_GTK3__
-			#cmdline "-x ../VisualFBEditor64_gtk3.exe"
-		#else
-			#cmdline "-x ../VisualFBEditor64_gtk2.exe"
-		#endif
-	#else
-		#ifdef __USE_GTK3__
-			#cmdline "-x ../VisualFBEditor32_gtk3.exe"
-		#else
-			#cmdline "-x ../VisualFBEditor32_gtk2.exe"
-		#endif
-	#endif
-#else
-	#ifdef __FB_64BIT__
-		#ifdef __USE_GTK3__
 			#cmdline "-x ../VisualFBEditor64_gtk3"
-		#else
-			#cmdline "-x ../VisualFBEditor64_gtk2"
-		#endif
-	#else
-		#ifdef __USE_GTK3__
-			#cmdline "-x ../VisualFBEditor32_gtk3"
-		#else
-			#cmdline "-x ../VisualFBEditor32_gtk2"
-		#endif
-	#endif
-#endif
 
 #define APP_TITLE "Visual FB Editor"
 #define VER_MAJOR "1"
@@ -111,25 +77,8 @@ Sub RunCmd(Param As Any Ptr)
 	Else
 		WLet(Workdir, *CommandPromptFolder)
 	End If
-	#ifdef __USE_GTK__
 		cmd = WGet(TerminalPath) & " --working-directory=""" & *Workdir & """"
 		Shell(cmd)
-	#else
-		cmd = Environ("COMSPEC") & " /K cd /D """ & *Workdir & """"
-		Dim As Integer pClass
-		Dim SInfo As STARTUPINFO
-		Dim PInfo As PROCESS_INFORMATION
-		WLet(CmdL, cmd)
-		SInfo.cb = Len(SInfo)
-		SInfo.dwFlags = STARTF_USESHOWWINDOW
-		SInfo.wShowWindow = SW_NORMAL
-		pClass = CREATE_UNICODE_ENVIRONMENT Or CREATE_NEW_CONSOLE
-		If CreateProcessW(NULL, CmdL, ByVal NULL, ByVal NULL, False, pClass, NULL, Workdir, @SInfo, @PInfo) Then
-			CloseHandle(PInfo.hProcess)
-			CloseHandle(PInfo.hThread)
-		End If
-		If CmdL Then _Deallocate( CmdL)
-	#endif
 	If Workdir Then _Deallocate( Workdir)
 End Sub
 
@@ -342,25 +291,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 			LoadTheme
 			UpdateAllTabWindows
 		End If
-		#ifdef __USE_WINAPI__
-			If DarkMode AndAlso g_darkModeSupported Then
-				txtLabelProperty.BackColor = darkBkColor
-				txtLabelEvent.BackColor = darkBkColor
-				fAddIns.txtDescription.BackColor = darkBkColor
-			Else
-				txtLabelProperty.BackColor = clBtnFace
-				txtLabelEvent.BackColor = clBtnFace
-				fAddIns.txtDescription.BackColor = clBtnFace
-			End If
-			For i As Integer = 0 To pApp->FormCount - 1
-				If pApp->Forms[i]->Handle Then
-					AllowDarkModeForWindow pApp->Forms[i]->Handle, DarkMode
-					RefreshTitleBarThemeColor(pApp->Forms[i]->Handle)
-					RedrawWindow pApp->Forms[i]->Handle, 0, 0, RDW_INVALIDATE Or RDW_ALLCHILDREN
-					DrawMenuBar pApp->Forms[i]->Handle
-				End If
-			Next i
-		#endif
 	Case "ProjectExplorer":                     tpProject->SelectTab: txtExplorer.SetFocus
 	Case "PropertiesWindow":                    tpProperties->SelectTab: txtProperties.SetFocus
 	Case "EventsWindow":                        tpEvents->SelectTab: txtEvents.SetFocus
@@ -416,7 +346,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 			'SaveAll '
 			Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
 			If CurrentDebugger = IntegratedGDBDebugger Then
-				#if Not (defined(__FB_WIN32__) AndAlso defined(__USE_GTK__))
 					If iFlagStartDebug = 0 Then
 						If UseDebugger Then
 							runtype = RTFRUN
@@ -428,30 +357,11 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 					Else
 						continue_debug
 					End If
-				#endif
 			Else
 				If InDebug Then
 					'#ifndef __USE_GTK__
 					ChangeEnabledDebug False, True, True
-					#ifdef __USE_WINAPI__
-						If 1 = 0 Then
-							brk_set(12)
-							runtype = RTAUTO
-							#ifdef __FB_WIN32__
-								set_cc()
-							#else
-								If ccstate= KCC_NONE Then
-									msgdata = 1 ''CC everywhere
-									exec_order(KPT_CCALL)
-								End If
-							#endif
-							thread_set()
-						Else
-							fastrun()
-						End If
-					#else
 						fastrun()
-					#endif
 					'runtype = RTRUN
 					'thread_resume()
 					'#endif
@@ -490,7 +400,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 		ClearThreadsWindow
 		Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
 		If CurrentDebugger = IntegratedGDBDebugger Then
-			#if Not (defined(__FB_WIN32__) AndAlso defined(__USE_GTK__))
 				If iFlagStartDebug = 0 Then
 					If UseDebugger Then
 						runtype= RTFRUN
@@ -503,14 +412,10 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 					ChangeEnabledDebug False, True, True
 					continue_debug()
 				End If
-			#endif
 		Else
 			If InDebug Then
 				'#ifndef __USE_GTK__
 				ChangeEnabledDebug False, True, True
-				#ifdef __FB_WIN32__
-					fastrun()
-				#endif
 				'runtype = RTRUN
 				'thread_resume()
 				'#endif
@@ -527,30 +432,15 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 			End If
 		End If
 	Case "Break":
-		#ifdef __USE_GTK__
 			ChangeEnabledDebug True, False, True
-		#else
-			If runtype=RTFREE Or runtype=RTFRUN Then
-				runtype=RTFRUN 'to treat free as fast
-				For i As Integer = 1 To linenb 'restore every breakpoint
-					WriteProcessMemory(dbghand,Cast(LPVOID,rline(i).ad),@breakcpu,1,0)
-				Next
-			Else
-				runtype=RTSTEP:procad=0:procin=0:proctop=False:procbot=0
-			End If
-			stopcode=CSHALTBU
-			'SetFocus(richeditcur)
-		#endif
 	Case "End":
 		Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
 		If CurrentDebugger = IntegratedGDBDebugger Then
-			#if Not (defined(__FB_WIN32__) AndAlso defined(__USE_GTK__))
 				If Running Then
 					kill_debug()
 				Else
 					command_debug "q"
 				End If
-			#endif
 		Else
 			'#ifdef __USE_GTK__
 			'	ChangeEnabledDebug True, False, False
@@ -570,9 +460,7 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 		ClearThreadsWindow
 		Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
 		If CurrentDebugger = IntegratedGDBDebugger Then
-			#if Not (defined(__FB_WIN32__) AndAlso defined(__USE_GTK__))
 				command_debug("r")
-			#endif
 		Else
 			'#ifndef __USE_GTK__
 			If prun AndAlso kill_process(ML("Trying to launch but debuggee still running")) = False Then
@@ -591,7 +479,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 		ptabBottom->TabIndex = 6 'David Changed
 		Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
 		If CurrentDebugger = IntegratedGDBDebugger Then
-			#if Not (defined(__FB_WIN32__) AndAlso defined(__USE_GTK__))
 				If iFlagStartDebug = 0 Then
 					runtype = RTSTEP
 					CurrentTimer = SetTimer(0, 0, 1, Cast(Any Ptr, @TimerProcGDB))
@@ -599,7 +486,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 				Else
 					step_debug("s")
 				End If
-			#endif
 		Else
 			If InDebug Then
 				ChangeEnabledDebug False, True, True
@@ -608,14 +494,10 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 				''bcktrk_close
 				'SetFocus(windmain)
 				'thread_resume
-				#ifdef __FB_WIN32__
-					set_cc()
-				#else
 					If ccstate=KCC_NONE Then
 						msgdata=1 ''CC everywhere
 						exec_order(KPT_CCALL)
 					End If
-				#endif
 				dbg_prt2 "=============== STEP =================================="
 				stopcode=0
 				runtype=RTSTEP
@@ -632,30 +514,16 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 		ClearThreadsWindow
 		Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
 		If CurrentDebugger = IntegratedGDBDebugger Then
-			#if Not (defined(__FB_WIN32__) AndAlso defined(__USE_GTK__))
 				If iFlagStartDebug = 0 Then
 					CurrentTimer = SetTimer(0, 0, 1, Cast(Any Ptr, @TimerProcGDB))
 					ThreadCounter(ThreadCreate_(@StartDebugging))
 				Else
 					step_debug("n")
 				End If
-			#endif
 		Else
 			If InDebug Then
 				ChangeEnabledDebug False, True, True
-				#ifndef __USE_GTK__
-					procin = procsk
-					runtype = RTRUN
-					SetFocus(windmain)
-					thread_rsm()
-				#endif
 			Else
-				#ifndef __USE_GTK__
-					procin = procsk
-					runtype = RTFRUN
-					SetTimer(0, GTIMER001, 1, Cast(Any Ptr, @DEBUG_EVENT))
-					CurrentTimer = SetTimer(0, 0, 1, @TIMERPROC)
-				#endif
 				ThreadCounter(ThreadCreate_(@StartDebugging))
 			End If
 		End If
@@ -731,21 +599,13 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 					tp->Controls[i]->Width = (tp->Width - ptabPanelNew->splGroup.Width * SplitterCount) / (SplitterCount + 1)
 				End If
 			Next
-			#ifdef __USE_GTK__
 				g_object_ref(tb->Handle)
 				g_object_ref(tb->btnClose.Handle)
 				gtk_container_remove(GTK_CONTAINER(tb->_Box), tb->btnClose.Handle)
-			#endif
 			'ptabPanel->tabCode.DeleteTab tb
 			tb->Parent = @ptabPanelNew->tabCode
-			#ifdef __USE_GTK__
 				tb->txtCode.cr = 0
 				gtk_box_pack_end(GTK_BOX(tb->_Box), tb->btnClose.Handle, False, False, 0)
-			#else
-				tb->ImageKey = tb->ImageKey
-				ptabPanelNew->tabCode.Add @tb->btnClose
-				tp->RequestAlign
-			#endif
 			ptabCode = @ptabPanelNew->tabCode
 			TabPanels.Add ptabPanelNew
 		Case "AITracepointError"
@@ -800,15 +660,10 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 			ClearThreadsWindow
 			Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
 			If CurrentDebugger = IntegratedGDBDebugger Then
-				#if Not (defined(__FB_WIN32__) AndAlso defined(__USE_GTK__))
 					Dim As Integer iStartLine, iEndLine, iStartChar, iEndChar
 					tb->txtCode.GetSelection iStartLine, iEndLine, iStartChar, iEndChar
 					command_debug("jump " & Replace(tb->FileName, "\", "/") & ":" & Str(iEndLine))
-				#endif
 			Else
-				#ifndef __USE_GTK__
-					exe_mod()
-				#endif
 			End If
 		Case "ShowVar":
 			'#ifndef __USE_GTK__
@@ -818,32 +673,17 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 			ClearThreadsWindow
 			Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
 			If CurrentDebugger = IntegratedGDBDebugger Then
-				#if Not (defined(__FB_WIN32__) AndAlso defined(__USE_GTK__))
 					If iFlagStartDebug = 0 Then
 						ThreadCounter(ThreadCreate_(@StartDebugging))
 					Else
 						step_debug("n")
 					End If
-				#endif
 			Else
-				#ifndef __USE_GTK__
-					If InDebug Then
-						ChangeEnabledDebug False, True, True
-						If (threadcur<>0 AndAlso proc_find(thread(threadcur).id,KLAST)<>proc_find(thread(threadcur).id,KFIRST)) _
-							OrElse (threadcur=0 AndAlso PROC(procr(proc_find(thread(0).id,KLAST)).idx).nm<>"main") Then 'impossible to go out first proc of thread, constructore for shared 22/12/2015
-							procad = procsv
-							runtype = RTFRUN
-						End If
-						SetFocus(windmain)
-						thread_rsm()
-					End If
-				#endif
 			End If
 		Case "RunToCursor":
 			ClearThreadsWindow
 			Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
 			If CurrentDebugger = IntegratedGDBDebugger Then
-				#if Not (defined(__FB_WIN32__) AndAlso defined(__USE_GTK__))
 					If iFlagStartDebug = 1 Then
 						ChangeEnabledDebug False, True, True
 						set_bp True
@@ -853,13 +693,9 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 						CurrentTimer = SetTimer(0, 0, 1, Cast(Any Ptr, @TimerProcGDB))
 						ThreadCounter(ThreadCreate_(@StartDebugging))
 					End If
-				#endif
 			Else
 				If InDebug Then
 					ChangeEnabledDebug False, True, True
-					#ifndef __USE_GTK__
-						brk_set(9)
-					#endif
 				Else
 					RunningToCursor = True
 					runtype = RTFRUN
@@ -943,9 +779,7 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 	Case "EraseOutputWindow":               txtOutput.Text = ""
 	Case "EraseImmediateWindow":            txtImmediate.Text = ""
 	Case "Update":
-		#if Not (defined(__FB_WIN32__) AndAlso defined(__USE_GTK__))
 			iStateMenu = IIf(tbBottom.Buttons.Item("Update")->Checked, 2, 1): If Running = False Then command_debug("")
-		#endif
 	Case "AddForm":                         AddFromTemplate ExePath + "/Templates/Files/Form.frm"
 	Case "AddModule":                       AddFromTemplate ExePath + "/Templates/Files/Module.bas"
 	Case "AddIncludeFile":                  AddFromTemplate ExePath + "/Templates/Files/Include File.bi"
@@ -983,12 +817,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 	Case "VariableDump":                var_dump(tviewvar)
 	Case "PointedDataDump":             var_dump(tviewvar, 1)
 	Case "MemoryDumpWatch":             var_dump(tviewwch)
-		#ifndef __USE_GTK__
-		Case "ShowStringWatch":             string_sh(tviewwch)
-		Case "ShowExpandVariableWatch":     shwexp_new(tviewwch)
-		Case "ShowString":                  string_sh(tviewvar)
-		Case "ShowExpandVariable":          shwexp_new(tviewvar)
-		#endif
 	Case "Undo", "Redo", "CutCurrentLine", "Cut", "Copy", "Paste", "SelectAll", "Duplicate", "SingleComment", "BlockComment", "UnComment", _
 		"Indent", "Outdent", "Format", "Unformat", "AddSpaces", _
 		"Breakpoint", "ToggleBookmark", "CollapseAll", "UnCollapseAll", "CollapseAllProcedures", "UnCollapseAllProcedures", _
@@ -1137,15 +965,10 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 				Case "Breakpoint":
 					Dim As DebuggerTypes CurrentDebugger = IIf(tbt32Bit->Checked, CurrentDebuggerType32, CurrentDebuggerType64)
 					If CurrentDebugger = IntegratedGDBDebugger Then
-						#if Not (defined(__FB_WIN32__) AndAlso defined(__USE_GTK__))
 							If iFlagStartDebug = 1 Then
 								set_bp
 							End If
-						#endif
 					Else
-						#ifndef __USE_GTK__
-							If InDebug Then: brk_set(1): End If
-						#endif
 					End If
 					ec->Breakpoint
 				Case "CollapseAll":                 ec->CollapseAll

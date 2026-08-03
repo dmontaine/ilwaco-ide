@@ -2,15 +2,26 @@
 
 ## ⇢ NEXT ACTION (staged for a fresh session) — finish compiler removal (stage 2); then resume the changelog walk
 
-The big non-target strip is **done** for both `src/` (EditControl, staged task A) and the MFF framework
-(**staged task B — landed 2026-08-02**, see "Done — MFF non-target strip" below). The compiled surface
-(editor + `libmff64_gtk3.so`) is now clean of *real* non-target `#if`/`#ifdef` directives. Remaining:
+The big non-target strip is **done** for the whole compiled surface: `src/` (EditControl as staged task A,
+then the rest of `src/*.bas`/`*.bi` — 11 files, 626 chains — **landed 2026-08-02**) and the MFF framework
+(**staged task B — landed 2026-08-02**, see "Done — MFF non-target strip" below). The editor +
+`libmff64_gtk3.so` are clean of *real* non-target `#if`/`#ifdef` directives; both build clean and the IDE
+runtime-verified after each. Remaining:
 
-1. **Compiler removal stage 2** — remove the picker UI (Options ▸ compilers list + "Find Compilers"
+1. **Extend the strip to off-build-path code** (owner direction 2026-08-02: "extend to all code in src,
+   Controls and Examples"). `src/` is done; still to do — **non-MFF `Controls/`** (`MariaDBBox`, `SQLite3`,
+   `cJSON` are `__FB_WIN32__`/`__USE_WASM__`-guarded = builtin-safe; `ScintillaControl` uses
+   `__USE_GTK__`/`__USE_WINAPI__`) and **`Examples/`** (~11 cross-platform demos → strip the Windows
+   branch; ~15 whole Windows-only demos: directshow/directsound/WMI/SAPI/WLan/MediaFoundation/Midi/
+   gdipClock/IFileDialog/Com_VBA… → wholesale delete). **Caveat:** both are OFF the Ilwaco build path, so
+   the eliminator's truth table (which relies on MFF `SysUtils.bi` defining `__USE_GTK__`) is only safe
+   for compiler-builtin guards there; `__USE_*` guards need the per-project target assumption and can't be
+   Ilwaco-build-verified. Whole-project deletion in `Examples/` is destructive → confirm the list first.
+2. **Compiler removal stage 2** — remove the picker UI (Options ▸ compilers list + "Find Compilers"
    button), the per-project `CompilerPath` override, and the vestigial `[Compilers]` INI machinery
    (fragile 10-section loop must be refactored, not just deleted). Full surface in "Done — compiler path
    hard-coded" below.
-2. **Resume the changelog walk** — next candidates: `53d8e473` (compile-warning fixes — check Ilwaco's
+3. **Resume the changelog walk** — next candidates: `53d8e473` (compile-warning fixes — check Ilwaco's
    shared files), then the menu-taxonomy feature ports.
 
 **Deferred strip sub-items** (low-value / off the compiled path — do opportunistically, not blocking):

@@ -103,19 +103,13 @@ Type PTabWindow As TabWindow Ptr
 
 Declare Function Err2Description(Code As Integer) ByRef As WString
 
-#ifdef __USE_GTK__
 	Type CloseButton Extends Panel
-#else
-	Type CloseButton Extends Label
-#endif
 Public:
 	OldBackColor As Integer
 	OldForeColor As Integer
 	MouseIn As Boolean
 	tbParent As PTabWindow
-	#ifdef __USE_GTK__
 		layout As PangoLayout Ptr
-	#endif
 	Declare Constructor
 	Declare Destructor
 End Type
@@ -222,13 +216,8 @@ Public:
 	pnlTopMenu As Panel
 	Des As My.Sys.Forms.Designer Ptr
 	splForm As Splitter
-	#ifdef __USE_GTK__
 		overlay As GtkWidget Ptr
 		layout As GtkWidget Ptr
-	#else
-		'ToolTipHandle As HWND
-		DateFileTime As FILETIME
-	#endif
 	NewLineType As NewLineTypes
 	FileEncoding As FileEncodings
 	FormNeedDesign As Boolean
@@ -309,11 +298,9 @@ Declare Sub CloseButton_MouseLeave(ByRef Designer As My.Sys.Object, ByRef Sender
 
 Declare Function CloseTab(ByRef tb As TabWindow Ptr, WithoutMessage As Boolean = False) As Boolean
 
-#ifdef __USE_GTK__
 	Declare Function CloseButton_OnDraw(widget As GtkWidget Ptr, cr As cairo_t Ptr, data1 As gpointer) As Boolean
 	
 	Declare Function CloseButton_OnExposeEvent(widget As GtkWidget Ptr, Event As GdkEventExpose Ptr, data1 As gpointer) As Boolean
-#endif
 
 Declare Function GetPropertyType(ClassName As String, PropertyName As String) As TypeElement Ptr
 
@@ -369,11 +356,7 @@ Declare Sub DesignerClickProperties(ByRef Sender As Designer, Ctrl As Any Ptr)
 
 Common Shared As Integer SelLinePos, SelCharPos
 
-#ifdef __USE_GTK__
 	Declare Sub lvIntellisense_ItemActivate(ByRef Designer As My.Sys.Object, ByRef Sender As ListView, ByVal ItemIndex As Integer)
-#else
-	Declare Sub cboIntellisense_Selected(ByRef Designer As My.Sys.Object, ByRef Sender As ComboBoxEdit, ItemIndex As Integer)
-#endif
 
 Declare Sub OnKeyDownEdit(ByRef Designer As My.Sys.Object, ByRef Sender As Control, Key As Integer, Shift As Integer)
 
@@ -410,9 +393,7 @@ Declare Sub SelectError(ByRef FileName As WString, iLine As Integer, tabw As Tab
 
 Declare Sub PipeCmd(ByRef file As WString, ByRef cmd As WString, MainThread As Boolean = True)
 
-#ifdef __USE_GTK__
 	Declare Function build_create_shellscript(ByRef working_dir As WString, ByRef cmd As WString, autoclose As Boolean, debug As Boolean = False, ByRef Arguments As WString = "") As String
-#endif
 
 Declare Sub GetIncludeFiles(ByRef Content As EditControlContent, Project As ProjectElement Ptr)
 
