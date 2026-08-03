@@ -24,7 +24,17 @@ runtime-verified after each. The strip was then **extended across the whole tree
      remains — a packaging concern, not a code bug). Full surface in PROJECT_STATUS "Task 13 DONE" block.
    - **Net result:** the only compiler path in the system is the hard-coded `BundledCompilerPath`. "One
      compiler, no picker, no INI machinery" fully realized.
-2. **Resume the changelog walk** — next candidates: `53d8e473` (compile-warning fixes — check Ilwaco's
+2. **NEW — strip all 32-bit code (Ilwaco is 64-bit only).** Owner directive (2026-08-02): "we can remove
+   anything 32-bit related, ilwaco will be 64-bit only." A dedicated incremental strip like the Windows strip
+   — its own careful session, build after each pass. Rough surface (survey each first): `Bit32` +
+   `tbt32Bit` toolbar toggle (the 32/64 build-target buttons) — 4 `Dim As Boolean Bit32 = tbt32Bit->Checked`
+   sites (Main.bas:511, Debug.bas, TabWindow.bas x2); `Compiler32Path`/`Compiler32Arguments`;
+   `Debugger32`/`GDBDebugger32`/`CurrentDebugger32`/`DefaultDebugger32`/`CurrentDebuggerType32` +
+   `cboDebug32`/`txtDebug32` (~96+25+35 refs — the largest); `txtfbc32`/`lblfbc32`; collapse every
+   `IIf(Bit32, …32, …64)` to the 64 branch; and the `#ifdef __FB_64BIT__` guards (keep the 64 branch — a
+   handful in frmSplash/frmComponents/Debug.bas/frmOptions). **Trap:** `__FB_64BIT__` is *not* Windows-only —
+   read each guard. See assistant memory `project-64bit-only`.
+3. **Resume the changelog walk** — next candidates: `53d8e473` (compile-warning fixes — check Ilwaco's
    shared files), then the menu-taxonomy feature ports.
 
 **Deferred strip sub-items** (low-value / off the compiled path — do opportunistically, not blocking):
