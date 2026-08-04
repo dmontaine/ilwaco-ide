@@ -65,6 +65,10 @@ Dim Shared As Panel pnlLeft, pnlRight, pnlBottom, pnlBottomTab, pnlLeftPin, pnlR
 Dim Shared As Panel pnlLeftRail, pnlRightRail       ' collapsed-panel rails (left/right edge, re-open buttons)
 Dim Shared As ToolBar tbLeftRailPin, tbRightRailPin ' pin icon at the top of each rail (re-expands to the last tab)
 Dim Shared As CommandButton btnLeftRailProject, btnLeftRailToolbox, btnRightRailProperty, btnRightRailEvent  ' vertical-text tab buttons (label rotated 90 deg), à la Astoria's collapsed strip
+Dim Shared As Panel pnlBottomRail                   ' collapsed bottom rail: a separate thin strip shown at the bottom edge while pnlBottom is hidden
+Dim Shared As ToolBar tbBottomRailPin               ' pin at the left of the bottom rail (re-opens to the last tab)
+Dim Shared As CommandButton btnBottomRail(0 To 13)  ' rail tab buttons: 0..6 Output..Immediate (always), 7..13 Locals..Profiler (debug-only, synced with SetDebugTabsVisible)
+Dim Shared As Boolean bBottomRailReady              ' True once btnBottomRail() is built, so SetDebugTabsVisible (called during startup, before the rail) doesn't touch unbuilt buttons
 Dim Shared As GtkWidget Ptr overlayLeft, overlayRight  ' the GTK overlays hosting the left/right pins; re-laid-out in Show{Left,Right} so the pin repaints after re-show
 Dim Shared As TrackBar trLeft
 Dim Shared As MainMenu mnuMain
@@ -355,6 +359,12 @@ Sub SetDebugTabsVisible(bVisible As Boolean)
 		RemoveBottomDebugTab tpWatches
 		RemoveBottomDebugTab tpMemory
 		RemoveBottomDebugTab tpProfiler
+	End If
+	' Keep the collapsed rail's debug tab buttons (7..13) in sync with the notebook's debug tabs.
+	If bBottomRailReady Then
+		For i As Integer = 7 To 13
+			btnBottomRail(i).Visible = bVisible
+		Next
 	End If
 End Sub
 
@@ -6533,20 +6543,24 @@ Sub ShowRight()
 	If overlayRight <> 0 Then gtk_widget_queue_resize(overlayRight)
 End Sub
 
+' Collapse the bottom tool panel — mirror of CloseLeft. Hide pnlBottom entirely and show pnlBottomRail
+' (a separate thin strip at the bottom edge) whose pin + tab buttons re-open the panel.
 Sub CloseBottom()
 	splBottom.Visible = False
-		pnlBottom.Height = 25
 	pnlBottomPin.Visible = False
+	pnlBottom.Visible = False
+	pnlBottomRail.Visible = True
 	frmMain.RequestAlign
 End Sub
 
 Sub ShowBottom()
-	ptabBottom->SetFocus
+	pnlBottomRail.Visible = False
+	pnlBottom.Visible = True
 	pnlBottom.Height = tabBottomHeight
-	pnlBottom.RequestAlign
 	splBottom.Visible = True
 	pnlBottomPin.Visible = True
-	frmMain.RequestAlign '<bp>
+	ptabBottom->SetFocus
+	frmMain.RequestAlign
 End Sub
 
 Function GetLeftClosedStyle As Boolean
@@ -8419,7 +8433,7 @@ Sub RestoreStatusText
 End Sub
 
 Function GetBottomClosedStyle As Boolean
-	Return Not ptabBottom->TabPosition = tpTop
+	Return Not pnlBottom.Visible
 End Function
 
 Sub SetBottomClosedStyle(Value As Boolean, WithClose As Boolean = True)
@@ -8427,34 +8441,16 @@ Sub SetBottomClosedStyle(Value As Boolean, WithClose As Boolean = True)
 	bClosing = True
 	With *tbBottom.Buttons.Item("PinBottom")
 		If Value Then
-			ptabBottom->TabPosition = tpBottom
-			'			ptabBottom->SelectedTabIndex = -1
-			'			#ifdef __USE_GTK__
-			'				pnlBottom.Height = 25
-			'			#else
-			'				pnlBottom.Height = ptabBottom->ItemHeight(0) + 2
-			'			#endif
-			'			splBottom.Visible = False
 			.ImageKey = "Pin"
 			.Checked = False
-			'tbBottom.Top = 2
 			If WithClose Then CloseBottom
-			'pnlBottom.RequestAlign
 		Else
-			ptabBottom->TabPosition = tpTop
-			ptabBottom->Height = tabBottomHeight
-			pnlBottom.Height = tabBottomHeight
-			pnlBottom.RequestAlign
-			splBottom.Visible = True
-			pnlBottomPin.Visible = True
 			.ImageKey = "Pinned"
 			.Checked = True
-			'tbBottom.Top = 2
+			If WithClose Then ShowBottom
 		End If
 	End With
-	'#IfNDef __USE_GTK__
 	frmMain.RequestAlign
-	'#EndIf
 	bClosing = False
 End Sub
 
@@ -8549,7 +8545,7 @@ pnlBottom.OnResize = @pnlBottom_Resize
 
 tbBottom.ImagesList = @imgList
 tbBottom.Align = DockStyle.alRight
-tbBottom.Buttons.Add tbsCheck, "Pinned", , @mClick, "PinBottom", "", ML("Pin"), , Cast(ToolButtonState, tstEnabled Or tstChecked)
+tbBottom.Buttons.Add tbsButton, "Pinned", , @mClick, "PinBottom", "", ML("Pin"), , tstEnabled   ' plain button: a checked tbsCheck on this vertical toolbar draws no icon (only the eraser tbsButtons do)
 tbBottom.Buttons.Add tbsSeparator
 tbBottom.Buttons.Add , "Eraser", , @mClick, "EraseOutputWindow", "", ML("Erase output window"), , tstEnabled
 tbBottom.Buttons.Add , "Eraser", , @mClick, "EraseImmediateWindow", "", ML("Erase immediate window"), , tstEnabled
@@ -8622,6 +8618,42 @@ pnlBottomTab.Parent = @pnlBottom
 pnlBottomPin.Align = DockStyle.alRight
 pnlBottomPin.Width = tbLeft.Height
 pnlBottomPin.Parent = @pnlBottom
+
+Sub railBottomTabClick(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
+	If Not pnlBottom.Visible Then SetBottomClosedStyle False
+	Dim As TabPage Ptr tp = Sender.Tag
+	If tp <> 0 Then tp->SelectTab
+End Sub
+
+' Collapsed-panel rail (bottom): a thin horizontal strip shown at the bottom edge only while pnlBottom is
+' hidden. A pin at the left re-opens to the last tab; the tab buttons re-open to that tab. Buttons 7..13 are
+' the debug tabs — hidden until SetDebugTabsVisible turns them on, so the rail matches the notebook.
+pnlBottomRail.Name = "pnlBottomRail"
+pnlBottomRail.Align = DockStyle.alBottom
+pnlBottomRail.Height = 30
+pnlBottomRail.Visible = False
+tbBottomRailPin.ImagesList = @imgList
+tbBottomRailPin.Flat = True
+tbBottomRailPin.Buttons.Add tbsButton, "Pinned", , @mClick, "PinBottom", "", ML("Pin"), , tstEnabled
+tbBottomRailPin.Align = DockStyle.alLeft
+tbBottomRailPin.Width = 30
+tbBottomRailPin.Parent = @pnlBottomRail
+gtk_toolbar_set_show_arrow(GTK_TOOLBAR(tbBottomRailPin.Handle), False)
+Dim As TabPage Ptr railBottomTabs(0 To 13) = { _
+	tpOutput, tpProblems, tpSuggestions, tpFind, tpToDo, tpChangeLog, tpImmediate, _
+	tpLocals, tpGlobals, tpProcedures, tpThreads, tpWatches, tpMemory, tpProfiler }
+For i As Integer = 0 To 13
+	btnBottomRail(i).Designer = @frmMain
+	btnBottomRail(i).Text = railBottomTabs(i)->Caption
+	btnBottomRail(i).Tag = railBottomTabs(i)
+	btnBottomRail(i).Align = DockStyle.alLeft
+	btnBottomRail(i).Width = 86
+	btnBottomRail(i).OnClick = @railBottomTabClick
+	btnBottomRail(i).Parent = @pnlBottomRail
+	If i >= 7 Then btnBottomRail(i).Visible = False   ' debug tabs: shown by SetDebugTabsVisible
+Next
+bBottomRailReady = True
+If UseDebugger Then For i As Integer = 7 To 13 : btnBottomRail(i).Visible = True : Next   ' catch up if the debugger was already on
 
 'pnlBottom.Add ptabBottom
 
@@ -9401,6 +9433,7 @@ frmMain.Add @splLeft
 frmMain.Add @pnlRightRail
 frmMain.Add @pnlRight
 frmMain.Add @splRight
+frmMain.Add @pnlBottomRail
 frmMain.Add @pnlBottom
 frmMain.Add @splBottom
 frmMain.Add ptabPanel

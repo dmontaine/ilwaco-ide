@@ -16,6 +16,62 @@ to VisualFBEditor upstream, where Astoria's Win64-only ones cannot apply).
 
 ---
 
+## ⚠ IN PROGRESS (2026-08-04) — bottom-panel collapse: dedicated rail (WRITTEN, **NOT BUILT/VERIFIED**)
+
+**START HERE.** Porting `e212819d`/`ef3b43e9` (bottom-panel persistence + collapse). Persistence itself
+**already worked** and is verified. The work here is the **collapsed-panel pin/affordance**, which fought
+GTK across many attempts (see TechnicalDebt "bottom-panel collapsed pin"). Owner chose the **dedicated-rail
+approach** (mirror the left/right rails: hide `pnlBottom`, show a separate `pnlBottomRail`).
+
+**State: source edits complete for the rail; NOT compiled, NOT run. Next step is BUILD + fix errors + verify.**
+Changed `src/Main.bas` + `src/ilwaco.bas` (uncommitted at time of writing → about to be committed as WIP).
+
+**What was implemented (this approach, `src/Main.bas`):**
+- New globals: `pnlBottomRail` (Panel), `tbBottomRailPin` (ToolBar), `btnBottomRail(0 To 13)` (CommandButton
+  array — 0..6 = Output..Immediate, 7..13 = Locals..Profiler), `bBottomRailReady` (Boolean guard).
+- `CloseBottom`/`ShowBottom` rewritten to mirror `CloseLeft`/`ShowLeft`: collapse **hides** `pnlBottom` +
+  `pnlBottomPin` + `splBottom` and shows `pnlBottomRail`; expand reverses.
+- `GetBottomClosedStyle` → `Not pnlBottom.Visible`; `SetBottomClosedStyle` mirrors `SetLeftClosedStyle`
+  (set pin icon, delegate to Close/Show), commented cruft removed.
+- Rail built after `pnlBottomPin.Parent` (~line 8615): `pnlBottomRail` (`alBottom`, Height 30, hidden), a
+  pin toolbar `tbBottomRailPin` (`alLeft`, `"PinBottom"`, `show_arrow` FALSE), then a loop creating the 14
+  `btnBottomRail(i)` (`alLeft`, `.Text = tab->Caption`, `.Tag = tab ptr`, `.OnClick = @railBottomTabClick`,
+  `.Designer = @frmMain`; i>=7 start hidden). `railBottomTabClick` = `If Not pnlBottom.Visible Then
+  SetBottomClosedStyle False : (Sender.Tag As TabPage Ptr)->SelectTab`.
+- **Debug sync:** `SetDebugTabsVisible` now also toggles `btnBottomRail(7..13).Visible` (guarded by
+  `bBottomRailReady`, since it's first called during startup **before** the rail is built; a catch-up loop
+  after the rail sets them if `UseDebugger` was already on).
+- `tbBottom`'s `PinBottom` changed `tbsCheck`→`tbsButton` (a *checked* tbsCheck on that vertical toolbar
+  draws no icon — the expanded pin was blank too).
+- `frmMain.Add @pnlBottomRail` added before `@pnlBottom`.
+- `src/ilwaco.bas`: `PinBottom` handler simplified to the one-liner (`If splBottom.Visible Then …True,True
+  Else …False,True`); the `OutputWindow`…`WatchWindow` menu cases now `If Not pnlBottom.Visible Then
+  ShowBottom :` before selecting (so those View menus re-open a collapsed panel).
+
+**NEXT (in order):**
+1. **BUILD** (`./build-linux.sh editor` or the raw fbc line) and fix any compile errors. Likely suspects:
+   `TabPage->Caption` type for `.Text` (WString), `CommandButton.Tag`/`.Text`/`.Designer` availability,
+   the `railBottomTabs()` initializer of `TabPage Ptr`, and the array-in-construction scope.
+2. **Verify on `:0`** (window steals focus — `xdotool windowactivate` before clicks; launches small from a
+   reset INI, resize to fullscreen 0,0 2560x1340): collapse the bottom → `pnlBottomRail` shows at the
+   bottom edge with the **pin (left) + Output..Immediate buttons**; the pin re-opens to the last tab; each
+   tab button re-opens to that tab; **enable the debugger** and confirm Locals..Profiler buttons appear in
+   the rail (and vanish when disabled).
+3. **REFLOW BUG (owner-reported, still open):** when the bottom collapses, the other panels/editor don't
+   redraw to fill the freed space. The rail approach *may* fix it (it mirrors left/right, whose reflow is
+   fine) — **verify**; if not, the fix is a stronger re-layout in `CloseBottom`/`ShowBottom` (e.g. force
+   `ptabPanel`/frmMain re-align, or a `queue_resize`), same as would be needed for the freed vertical space.
+4. Runtime-verify persistence still round-trips (BottomClosed save/load — `frmMain_Create`/`frmMain_Close`
+   already wired), then update AstoriaParity (`e212819d`/`ef3b43e9` → done) + this doc + `git checkout Settings/`.
+
+**Prior failed approaches (do NOT retry; full detail in TechnicalDebt):** in-place squeeze + in-strip pin
+toolbar (child of a squeezed panel gets no allocation → pin draws blank) and a floating-overlay pin (renders
+but doesn't track the collapse → pin stuck at the expanded position). The rail sidesteps both by using a
+**separate** panel, and keeps debug mode working because... (note: the rail now *replicates* the tabs, so the
+debug sync above is the required extra code the owner accepted).
+
+---
+
 ## ✅ DONE (2026-08-04) — left/right panel collapse: vertical-text rail + pin-repaint fix (UNCOMMITTED, verified)
 
 Owner asked to make the **left/right tool panels collapse and reopen** with a **visual** affordance (not a

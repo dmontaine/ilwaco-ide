@@ -39,6 +39,29 @@ as the durable register:
   friends — Windows debugging utilities that are dead weight on Linux and candidates for the strip
   (the mirror of the Astoria mission: delete non-target code when a change touches the area).
 
+## Bottom-panel collapsed pin — GTK layout findings (2026-08-04)
+
+Making the collapsed bottom panel show a working **pin** (re-open affordance) fought GTK across many
+builds. Persistence itself already works; this is only the visible affordance. Findings, so a future
+attempt need not re-derive them:
+
+- A **checked `tbsCheck`** on the bottom's *vertical* toolbar draws its active-state background but **no
+  icon** (plain `tbsButton`s beside it — the erasers — draw fine). So the pin must be a `tbsButton`; the
+  pinned/unpinned look comes from the ImageKey.
+- A single `ToolBar` button in a narrow strip needs `gtk_toolbar_set_show_arrow(FALSE)` to draw at all.
+- **A child control inside a panel that is *squeezed* to the collapsed height gets no usable allocation**,
+  so an in-strip pin toolbar draws nothing there — even as a lone `tbsButton`. This is the core wall.
+- A **floating GTK overlay** gives the pin an explicit rectangle (bypassing the squeeze) and it renders —
+  **but** reparenting an MFF `ToolBar` handle into the overlay silently fails (MFF event-box-wraps
+  toolbars); you must wrap the pin in a **Panel** and reparent that (as the left/right pins do). Even then,
+  the overlay **does not track the panel collapsing** — the pin stayed at the expanded position, floating
+  in the editor area (a regression).
+- **Resolution (in progress):** the owner chose a **separate rail** (`pnlBottomRail`, not a child of
+  `pnlBottom`) — mirroring the left/right rails — which sidesteps all of the above. It costs extra code
+  because the rail must **replicate the tab buttons and sync the 7 debug tabs** with `SetDebugTabsVisible`.
+  See PROJECT_STATUS "IN PROGRESS — bottom-panel collapse". Also open: **collapsing the bottom does not
+  reflow the other panels** into the freed space (a re-layout gap to verify/fix with the rail work).
+
 ## Repo hygiene
 
 - **The tracked `ilwaco` binary drifts from source.** Source commits generally omit the ~4.6 MB

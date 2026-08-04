@@ -201,18 +201,18 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 	                                            tpEvents->SelectTab: txtEvents.SetFocus
 	Case "Toolbox":                             If Not pnlLeft.Visible Then SetLeftClosedStyle False
 	                                            tpToolbox->SelectTab: txtForm.SetFocus
-	Case "OutputWindow":                        tpOutput->SelectTab
-	Case "ProblemsWindow":                      tpProblems->SelectTab
-	Case "SuggestionsWindow":                   tpSuggestions->SelectTab
-	Case "FindWindow":                          tpFind->SelectTab
-	Case "ToDoWindow":                          tpToDo->SelectTab
-	Case "ChangeLogWindow":                     tpChangeLog->SelectTab
-	Case "ImmediateWindow":                     tpImmediate->SelectTab
-	Case "LocalsWindow":                        tpLocals->SelectTab
-	Case "GlobalsWindow":                       tpGlobals->SelectTab
+	Case "OutputWindow":                        If Not pnlBottom.Visible Then ShowBottom : tpOutput->SelectTab
+	Case "ProblemsWindow":                      If Not pnlBottom.Visible Then ShowBottom : tpProblems->SelectTab
+	Case "SuggestionsWindow":                   If Not pnlBottom.Visible Then ShowBottom : tpSuggestions->SelectTab
+	Case "FindWindow":                          If Not pnlBottom.Visible Then ShowBottom : tpFind->SelectTab
+	Case "ToDoWindow":                          If Not pnlBottom.Visible Then ShowBottom : tpToDo->SelectTab
+	Case "ChangeLogWindow":                     If Not pnlBottom.Visible Then ShowBottom : tpChangeLog->SelectTab
+	Case "ImmediateWindow":                     If Not pnlBottom.Visible Then ShowBottom : tpImmediate->SelectTab
+	Case "LocalsWindow":                        If Not pnlBottom.Visible Then ShowBottom : tpLocals->SelectTab
+	Case "GlobalsWindow":                       If Not pnlBottom.Visible Then ShowBottom : tpGlobals->SelectTab
 		'Case "ProceduresWindow":                    tpProcedures->SelectTab
-	Case "ThreadsWindow":                       tpThreads->SelectTab
-	Case "WatchWindow":                         tpWatches->SelectTab
+	Case "ThreadsWindow":                       If Not pnlBottom.Visible Then ShowBottom : tpThreads->SelectTab
+	Case "WatchWindow":                         If Not pnlBottom.Visible Then ShowBottom : tpWatches->SelectTab
 	Case "ImageManager":                        pfImageManager->Show *pfrmMain : pfImageManager->CenterToParent
 	Case "Toolbars":                            'ShowMainToolbar = Not ShowMainToolbar: ReBar1.Visible = ShowMainToolbar: pfrmMain->RequestAlign
 	Case "Standard":                            ShowStandardToolBar = Not ShowStandardToolBar: MainReBar.Bands.Item(0)->Visible = ShowStandardToolBar: mnuStandardToolBar->Checked = ShowStandardToolBar: pfrmMain->RequestAlign
@@ -597,16 +597,8 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 		' splRight.Visible tracks open/closed: open -> collapse to the rail, closed -> re-open.
 		If splRight.Visible Then SetRightClosedStyle True, True Else SetRightClosedStyle False, True
 	Case "PinBottom":
-		Dim pinBottomBtn As ToolButton Ptr = tbBottom.Buttons.Item("PinBottom")
-		If pinBottomBtn = 0 Then Exit Select
-		If splBottom.Visible Then
-			If pinBottomBtn->Checked Then pinBottomBtn->Checked = False
-			SetBottomClosedStyle True, True
-		ElseIf pinBottomBtn->Checked Then
-			SetBottomClosedStyle False, False
-		Else
-			SetBottomClosedStyle True, False
-		End If
+		' splBottom.Visible tracks open/closed: open -> collapse to the rail, closed -> re-open.
+		If splBottom.Visible Then SetBottomClosedStyle True, True Else SetBottomClosedStyle False, True
 	Case "EraseOutputWindow":               txtOutput.Text = ""
 	Case "EraseImmediateWindow":            txtImmediate.Text = ""
 	Case "Update":
