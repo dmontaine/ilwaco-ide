@@ -119,7 +119,7 @@ Some Astoria *infrastructure* choices are independently already true in Ilwaco:
 | Astoria commit | Change | Class | Ilwaco status |
 |---|---|---|---|
 | `bbfa3999` | Initial Win64 fork import | — | base (shared ancestor, different snapshot) |
-| `e212819d` | Bottom panel **collapse-on-pin** (+ persistence, split out below); add PROJECT_STATUS | PORT | **collapse-on-pin DONE** 2026-08-02 (build-clean); **left/right persistence SUPERSEDED** 2026-08-03 by the activity-rail REIMPLEMENT (save/load works); bottom persistence still deferred ↓ |
+| `e212819d` | Bottom panel **collapse-on-pin** (+ persistence, split out below); add PROJECT_STATUS | PORT | **DONE** — collapse-on-pin 2026-08-02; **bottom rail REIMPLEMENT DONE + live-verified** 2026-08-04 (dedicated rail, debug-button sync, debugger-toggle fix, CSS pin trim; persistence round-trips) ↓ |
 | `c2672840` | Right panel not collapsing on Pin click | PORT | **DONE** 2026-08-02 (build-clean) |
 | `64daa66e` | Left panel not collapsing on Pin click | PORT | **DONE** 2026-08-02 (build-clean) |
 | `bef92671` | Form Designer never activating (strip-tool root cause) | N/A | **verified does NOT reproduce** 2026-08-03 — Astoria's cause was its own `strip_gtk_preprocessor.ps1` deleting `#ifdef __EXPORT_PROCS__` blocks; Ilwaco's `ppstrip.py` preserved them, `libmff64_gtk3.so` exports all 36 Designer.bas dispatchers (`nm -D`). See ↓ |
@@ -491,6 +491,9 @@ click-through not yet exercised (per owner's steer against chasing the runtime n
 
 ### Deferred, split out: bottom-panel *persistence* (rest of e212819d)
 
+**Superseded 2026-08-04** — see "Done 2026-08-04 — bottom-panel collapse via a horizontal activity
+rail" below; the bottom rail landed and persistence round-trips. The note below is the original plan.
+
 The other half of `e212819d` — remembering collapsed-vs-closed state across restart — is a separate,
 riskier change and is **not** done. It needs infrastructure Ilwaco's older base lacks: `IsBottomCollapsed`
 (+ Left/Right), `bApplyingStartupLayout`, `SaveMainWindowPanelLayout`, the `*Collapsed` INI keys, and
@@ -550,11 +553,64 @@ and with `LeftClosed=true`/`RightClosed=true` both strips show **collapsed at st
 
 **Supersedes** the deferred `e212819d`/`ef3b43e9` left/right *persistence* item: save/load already
 worked (`GetLeft/RightClosedStyle` write `LeftClosed`/`RightClosed`; `frmMain_Create` re-applies).
-The **bottom** panel keeps the old collapse-to-strip behaviour and its own persistence is still deferred.
+The **bottom** panel got its own horizontal rail on 2026-08-04 (section below); its persistence round-trips.
 
 **Left-over dead conditions (both sides, pre-existing, harmless):** `tab{Left,Right}_SelChange` /
 `tab{Left,Right}_Click` and the focus-loss auto-collapse still guard on `TabPosition = tp{Left,Right}` /
 `Width = 30`, which can no longer be true; a `no-dead-code` cleanup pass can drop them.
+
+## Done 2026-08-04 — bottom-panel collapse via a horizontal activity rail (GTK REIMPLEMENT)
+
+Completes the bottom half of `e212819d`/`ef3b43e9`. Same problem and solution shape as the left/right
+rail (a docked GTK notebook can't shrink while shown), applied to the **bottom** edge and **built +
+live-verified** this session. On collapse, `pnlBottom` is hidden and a separate 25px `pnlBottomRail`
+(`alBottom`) is shown: a **pin at the right** (matching the expanded panel's `pnlBottomPin`, so it
+doesn't jump) plus **14 tab buttons** — `Output..Immediate` always, `Locals..Profiler` only with the
+debugger on.
+
+**`src/Main.bas`:**
+- New globals `pnlBottomRail`, `tbBottomRailPin`, `btnBottomRail(0..13)`, `bBottomRailReady`.
+- `CloseBottom` hides `splBottom`/`pnlBottomPin`/`pnlBottom`, shows `pnlBottomRail`; `ShowBottom`
+  reverses and calls `gtk_widget_show_all(pnlBottomPin.Handle)` so the expanded pin repaints on re-show
+  (same fix as the left/right rails, but the bottom pin is a plain child, not an overlay).
+- `Get/SetBottomClosedStyle` mirror the left side (`Not pnlBottom.Visible`; set pin icon + delegate).
+- Rail built after `pnlBottomPin`: pin `ToolBar` (`alRight`, `PinBottom`, `show_arrow` FALSE), then a
+  loop creating the 14 `btnBottomRail(i)` (`alLeft`, `.Text=tab->Caption`, `.Tag=tab ptr`,
+  `.Designer=@frmMain`, `OnClick=@railBottomTabClick`; i>=7 start hidden). `railBottomTabClick`
+  re-opens then `->SelectTab`.
+- `tbBottom`'s `PinBottom` button `tbsCheck`→`tbsButton` (a *checked* `tbsCheck` on that vertical
+  toolbar drew no icon).
+
+**Hard-won GTK/MFF facts specific to the bottom rail (do not re-derive):**
+- **Debug buttons need a re-assert + re-align on show.** `pnlBottomRail.Visible=True` runs
+  `gtk_widget_show_all` (MFF `Panel.Visible` path), which un-hides *every* child regardless of its own
+  state, and MFF's manual `alLeft` dock never sized the debug buttons because they were hidden when the
+  rail first laid out. So `CloseBottom` re-sets `btnBottomRail(7..13).Visible = UseDebugger` and calls
+  `pnlBottomRail.RequestAlign`; `SetDebugTabsVisible` does the same live re-align when the rail is
+  already on-screen. Without this the debug buttons never appeared (or wrongly appeared with the
+  debugger off).
+- **Pin must be `alRight`**, not `alLeft` — the expanded pin is `alRight`, so a left-docked rail pin
+  visibly jumped from right to left on collapse.
+- **GtkToolbar has a min-height taller than a 25px strip**, which clipped the 16px pin's bottom. Fixed
+  with a `GtkCssProvider` (`gtk_css_provider_load_from_data` → `add_provider_for_screen`) trimming
+  `min-height/padding/margin`, **scoped by a `.ilwacorailpin` style class** set only on that toolbar so
+  no other toolbar is touched. `gtk_widget_set_valign(GTK_ALIGN_START)` was tried first and pushed the
+  icon *down* (it anchors the toolbar's oversized natural box) — do not use it here.
+
+**Debugger-toggle desync fixed (`ChangeUseDebugger` + `ilwaco.bas` `"UseDebugger"`), surfaced by this
+work:** the menu handler read MFF's cached `MenuItem.Checked` (`FChecked`), which a native GTK check-item
+click flips *without* updating, so `Not …Checked` drifted from `UseDebugger` → "click twice to enable,
+once to disable". Now the handler reads GTK's real post-click state
+(`gtk_check_menu_item_get_active`) as the source of truth, and `ChangeUseDebugger` only re-sets the menu
+check when it actually differs (calling MFF's setter when already-correct primes its activate-guard and
+would eat the next click). Single, symmetric click each way.
+
+**Verified live (DISPLAY :0, screenshots):** collapse → rail with pin (right) + `Output..Immediate`;
+pin re-opens to the last tab; each tab button re-opens to its tab; expanded pin repaints on reopen;
+enabling the debugger adds `Locals..Profiler` to both notebook and rail (and removes them when off);
+the debugger toggles in one click; the rail pin renders unclipped. Build clean (`fbc` exit 0); additive
+to MFF, no `.so` rebuild. **Persistence** (`BottomClosed` INI key via `GetBottomClosedStyle` +
+`frmMain_Create`/`_Close`) already round-tripped and is unchanged.
 
 ## Next action
 

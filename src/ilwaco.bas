@@ -223,7 +223,7 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 	Case "Debug":                               ShowDebugToolBar = Not ShowDebugToolBar: MainReBar.Bands.Item(4)->Visible = ShowDebugToolBar: mnuDebugToolBar->Checked = ShowDebugToolBar: pfrmMain->RequestAlign
 	Case "Run":                                 ShowRunToolBar = Not ShowRunToolBar: MainReBar.Bands.Item(5)->Visible = ShowRunToolBar: mnuRunToolBar->Checked = ShowRunToolBar: pfrmMain->RequestAlign
 	Case "TBUseDebugger":                       ChangeUseDebugger tbtUseDebugger->Checked, 0
-	Case "UseDebugger":                         ChangeUseDebugger Not mnuUseDebugger->Checked, 1
+	Case "UseDebugger":                         ChangeUseDebugger CBool(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(mnuUseDebugger->Widget))), 1  ' read GTK's real (post-click) state, not MFF's stale FChecked
 	Case "UseProfiler":                         mnuUseProfiler->Checked = Not mnuUseProfiler->Checked
 	Case "ShowWithFolders":                     ChangeFolderType ProjectFolderTypes.ShowWithFolders
 	Case "ShowWithoutFolders":                  ChangeFolderType ProjectFolderTypes.ShowWithoutFolders

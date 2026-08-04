@@ -66,7 +66,7 @@ Dim Shared As Panel pnlLeftRail, pnlRightRail       ' collapsed-panel rails (lef
 Dim Shared As ToolBar tbLeftRailPin, tbRightRailPin ' pin icon at the top of each rail (re-expands to the last tab)
 Dim Shared As CommandButton btnLeftRailProject, btnLeftRailToolbox, btnRightRailProperty, btnRightRailEvent  ' vertical-text tab buttons (label rotated 90 deg), à la Astoria's collapsed strip
 Dim Shared As Panel pnlBottomRail                   ' collapsed bottom rail: a separate thin strip shown at the bottom edge while pnlBottom is hidden
-Dim Shared As ToolBar tbBottomRailPin               ' pin at the left of the bottom rail (re-opens to the last tab)
+Dim Shared As ToolBar tbBottomRailPin               ' pin at the right of the bottom rail (re-opens to the last tab); alRight to match the expanded panel's pin position
 Dim Shared As CommandButton btnBottomRail(0 To 13)  ' rail tab buttons: 0..6 Output..Immediate (always), 7..13 Locals..Profiler (debug-only, synced with SetDebugTabsVisible)
 Dim Shared As Boolean bBottomRailReady              ' True once btnBottomRail() is built, so SetDebugTabsVisible (called during startup, before the rail) doesn't touch unbuilt buttons
 Dim Shared As GtkWidget Ptr overlayLeft, overlayRight  ' the GTK overlays hosting the left/right pins; re-laid-out in Show{Left,Right} so the pin repaints after re-show
@@ -365,6 +365,9 @@ Sub SetDebugTabsVisible(bVisible As Boolean)
 		For i As Integer = 7 To 13
 			btnBottomRail(i).Visible = bVisible
 		Next
+		' If the rail is on-screen (panel collapsed) when the debugger toggles, re-align it so the
+		' newly shown/hidden debug buttons take/free their alLeft dock space live.
+		If pnlBottomRail.Visible Then pnlBottomRail.RequestAlign
 	End If
 End Sub
 
@@ -2850,7 +2853,14 @@ End Sub
 Sub ChangeUseDebugger(bUseDebugger As Boolean, ChangeObject As Integer = -1)
 	UseDebugger = bUseDebugger
 	If ChangeObject <> 0 Then tbtUseDebugger->Checked = bUseDebugger
-	If ChangeObject <> 1 AndAlso mnuUseDebugger->Checked <> UseDebugger Then mnuUseDebugger->Checked = bUseDebugger
+	' Sync the menu check to UseDebugger. Compare against GTK's real active state — MFF's cached FChecked
+	' drifts because a user click toggles the GTK check item natively without updating it — and only call
+	' the setter when it must change: calling it while already-correct primes MFF's activate guard and
+	' would swallow the next click. The menu path (ChangeObject=1) already toggled the visual natively,
+	' which we read as the source of truth in the handler, so it needs no re-set here.
+	If ChangeObject <> 1 AndAlso CBool(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(mnuUseDebugger->Widget))) <> bUseDebugger Then
+		mnuUseDebugger->Checked = bUseDebugger
+	End If
 	SetDebugTabsVisible bUseDebugger
 End Sub
 
@@ -6550,6 +6560,16 @@ Sub CloseBottom()
 	pnlBottomPin.Visible = False
 	pnlBottom.Visible = False
 	pnlBottomRail.Visible = True
+	' Showing the rail runs gtk_widget_show_all, which un-hides every child regardless of its own state,
+	' and MFF's manual alLeft docking never sized the debug buttons (they were hidden when the rail was
+	' first laid out). So re-assert the debug buttons' visibility (on only with the debugger) and re-align
+	' the rail so the now-visible ones get their dock positions.
+	If bBottomRailReady Then
+		For i As Integer = 7 To 13
+			btnBottomRail(i).Visible = UseDebugger
+		Next
+		pnlBottomRail.RequestAlign
+	End If
 	frmMain.RequestAlign
 End Sub
 
@@ -6559,6 +6579,7 @@ Sub ShowBottom()
 	pnlBottom.Height = tabBottomHeight
 	splBottom.Visible = True
 	pnlBottomPin.Visible = True
+	gtk_widget_show_all(pnlBottomPin.Handle)   ' remap the toolbar + its icon so the pin repaints after re-show (mirror of ShowLeft)
 	ptabBottom->SetFocus
 	frmMain.RequestAlign
 End Sub
@@ -8630,15 +8651,22 @@ End Sub
 ' the debug tabs — hidden until SetDebugTabsVisible turns them on, so the rail matches the notebook.
 pnlBottomRail.Name = "pnlBottomRail"
 pnlBottomRail.Align = DockStyle.alBottom
-pnlBottomRail.Height = 30
+pnlBottomRail.Height = 25   ' tighter strip; the pin toolbar's padding is CSS-trimmed below so the 16px pin fits without clipping
 pnlBottomRail.Visible = False
 tbBottomRailPin.ImagesList = @imgList
 tbBottomRailPin.Flat = True
 tbBottomRailPin.Buttons.Add tbsButton, "Pinned", , @mClick, "PinBottom", "", ML("Pin"), , tstEnabled
-tbBottomRailPin.Align = DockStyle.alLeft
+tbBottomRailPin.Align = DockStyle.alRight   ' pin stays at the right edge, matching the expanded panel's pnlBottomPin (alRight); avoids the pin jumping left on collapse
 tbBottomRailPin.Width = 30
 tbBottomRailPin.Parent = @pnlBottomRail
 gtk_toolbar_set_show_arrow(GTK_TOOLBAR(tbBottomRailPin.Handle), False)
+' GtkToolbar carries a built-in min-height/padding taller than the 25px rail, which clipped the pin's
+' bottom. Trim it with a CSS provider scoped to a class we set only on this toolbar, so the 16px pin
+' fits and centres in the strip without affecting any other toolbar.
+Dim As GtkCssProvider Ptr railPinCss = gtk_css_provider_new()
+gtk_css_provider_load_from_data(railPinCss, ".ilwacorailpin, .ilwacorailpin * { min-height:0px; min-width:0px; padding:0px; margin:0px; }", -1, NULL)
+gtk_style_context_add_provider_for_screen(gtk_widget_get_screen(tbBottomRailPin.Handle), GTK_STYLE_PROVIDER(railPinCss), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION)
+gtk_style_context_add_class(gtk_widget_get_style_context(tbBottomRailPin.Handle), "ilwacorailpin")
 Dim As TabPage Ptr railBottomTabs(0 To 13) = { _
 	tpOutput, tpProblems, tpSuggestions, tpFind, tpToDo, tpChangeLog, tpImmediate, _
 	tpLocals, tpGlobals, tpProcedures, tpThreads, tpWatches, tpMemory, tpProfiler }

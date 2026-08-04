@@ -56,11 +56,17 @@ attempt need not re-derive them:
   toolbars); you must wrap the pin in a **Panel** and reparent that (as the left/right pins do). Even then,
   the overlay **does not track the panel collapsing** — the pin stayed at the expanded position, floating
   in the editor area (a regression).
-- **Resolution (in progress):** the owner chose a **separate rail** (`pnlBottomRail`, not a child of
-  `pnlBottom`) — mirroring the left/right rails — which sidesteps all of the above. It costs extra code
-  because the rail must **replicate the tab buttons and sync the 7 debug tabs** with `SetDebugTabsVisible`.
-  See PROJECT_STATUS "IN PROGRESS — bottom-panel collapse". Also open: **collapsing the bottom does not
-  reflow the other panels** into the freed space (a re-layout gap to verify/fix with the rail work).
+- **Resolution (DONE 2026-08-04, live-verified):** the owner chose a **separate rail** (`pnlBottomRail`,
+  not a child of `pnlBottom`) — mirroring the left/right rails — which sidesteps all of the above. It costs
+  extra code because the rail must **replicate the tab buttons and sync the 7 debug tabs** with
+  `SetDebugTabsVisible` (re-asserted + re-aligned on show, since MFF `show_all` un-hides all children and
+  never sized hidden buttons). The reflow concern **did not materialise** — the editor reclaims the freed
+  vertical space on collapse. Two extra GTK facts learned finishing it: a 25px strip clips GtkToolbar's
+  min-height (fix: a `.ilwacorailpin`-scoped `GtkCssProvider` trimming padding/min-height, **not**
+  `gtk_widget_set_valign`, which pushes the icon *down*); and a native check-menu click flips GTK's active
+  state without updating MFF's cached `MenuItem.Checked`, so debugger-toggle logic must read
+  `gtk_check_menu_item_get_active`, not `->Checked`. Full detail in AstoriaParity "Done 2026-08-04 —
+  bottom-panel collapse via a horizontal activity rail".
 
 ## Repo hygiene
 
