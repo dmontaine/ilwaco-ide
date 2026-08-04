@@ -70,9 +70,10 @@ attempt need not re-derive them:
 
 ## Repo hygiene
 
-- **The tracked `ilwaco` binary drifts from source.** Source commits generally omit the ~4.6 MB
-  artifact, so the committed blob is usually stale. Consider `.gitignore`-ing it (it rebuilds via
-  `./build-linux.sh editor`) rather than tracking a perpetually-stale binary.
+- **The tracked `ilwaco` binary is committed on purpose — do not `.gitignore` it.** Owner directive
+  (2026-08-04): the repo moves between two machines and the built editor must travel with each push
+  (rebuilt via `./build-linux.sh editor` only when necessary). So **rebuild + commit the binary when
+  committing source changes** to it, rather than letting the committed blob go stale.
 
 ---
 

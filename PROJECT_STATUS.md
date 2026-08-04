@@ -171,9 +171,10 @@ catches doc drift, a skill says what to update when, and CLAUDE.md points at bot
 Then the menu-taxonomy feature ports (`49ec5ccd` cluster). All owner directives (32-bit, UTF-8/LF, AI,
 English-only) remain cleared.
 
-**Repo-hygiene note:** the tracked `./ilwaco` binary drifts from source — `c087255` committed source
-without rebuilding it, and source commits generally omit the 4.6 MB artifact. Consider `.gitignore`-ing the
-built binary (it rebuilds via `./build-linux.sh editor`) rather than tracking a perpetually-stale blob.
+**Repo-hygiene note:** the `./ilwaco` binary is tracked **by owner directive (2026-08-04) — do not
+`.gitignore` it** (the repo moves between two machines and the built editor must travel with each push).
+Instead, **rebuild it (`./build-linux.sh editor`) and commit it alongside source changes** so the tracked
+blob stays current rather than drifting.
 
 ---
 
