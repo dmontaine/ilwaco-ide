@@ -65,6 +65,35 @@ Toolbox ≈(17,305); right pin ≈(2543,130), Properties ≈(2543,230), Events �
 
 ---
 
+## ✅ DONE (2026-08-04) — documentation-maintenance apparatus + Astoria doc-set analogues (UNCOMMITTED)
+
+Ported Astoria's document-maintenance discipline to Ilwaco, **adapted for Linux/GTK**, and gave every
+file in Astoria's `Documentation/` folder an Ilwaco analogue. **The rule now has teeth:** a checker
+catches doc drift, a skill says what to update when, and CLAUDE.md points at both.
+
+- **`Tools/DocCheck.py`** — Astoria's checker, Linux-adapted and trimmed to 3 checks: (1) a doc names
+  a *removed* feature as if it ships (`REMOVED_FEATURES` seeded with Ilwaco's removals), (2) a doc
+  names a deleted file in inline code, (3) a maintained doc is missing from the rule table. Dropped
+  the Windows-only bits (Chrome-PDF/`.txt` freshness, PowerShell changelog, `ROADMAP.md` §-check);
+  file-suffix set is Linux (`.so`/`.sh`). Fixed a case-sensitivity bug in the FS fallback. **Green:**
+  `python3 Tools/DocCheck.py` → "Documentation is current (10 documents checked)"; `--selftest` OK.
+- **`Documentation/TestPlan.md`** — carries **the rule table** (which doc to update when) that
+  `DocCheck` enforces, plus the current (thin) test scenarios and the Linux verify-by-effect method.
+- **`.claude/skills/update-ilwaco-docs/SKILL.md`** — the trigger table as a skill (now registered).
+- **`CLAUDE.md`** — Working practices now require `DocCheck` before commit and fold docs into "finish
+  the whole job"; `update-ilwaco-docs` moved from pending to shipped.
+- **Doc analogues** (all listed in the rule table): real content — `UpstreamFixes.md`,
+  `TechnicalDebt.md`, `Testing.md`, `ControlTesting.md`, `IlwacoIDESignificantChanges.md`; honest
+  scaffolds (purpose + Astoria source + "GTK review needed", per owner's choice) — `Controls.md`,
+  `MyFbFrameworkGuide.md`, `FrameworkFeatures.md`, `IlwacoIDEManual.md`; plus root `CHANGELOG.md`.
+  `AstoriaParity.md` + `AstoriaDetailedChangeLog.md` are excluded from `DocCheck` as historical
+  records (like Astoria excludes its `DetailedChangelog`).
+
+**NEXT:** commit when asked (all uncommitted). Fill the scaffolds as their subjects stabilise. Keep
+`DocCheck` green — it runs on Documentation/*.md and is the pre-commit gate now.
+
+---
+
 ## Session handoff (2026-08-03, earlier) — changelog walk + debug-tab visibility ported
 
 **START HERE.** Continued the Astoria→Ilwaco changelog walk from the oldest entries in

@@ -60,10 +60,10 @@ not by "it compiled". A durable `build-linux.sh` + vendored shim is an open infr
 `.claude/skills/` holds the platform-neutral FreeBASIC/MFF skills brought over from Astoria (renamed):
 `add-form`, `add-module`, `add-control-event`, `add-resource` (pending), `edit-form-safely`,
 `find-framework-control`, `fix-compile-errors`, `refactor-freebasic`, `debug-freebasic-app`,
-`audit-project-manifest`. **Pending Ilwaco rewrites** (Astoria's shipped as Windows-process and would
-be *wrong* here): `build-ilwaco` (Linux build above), `verify-ilwaco-behaviour` (drive the GTK build
-over `:0` with `wmctrl`/`scrot`), `release-ilwaco` (AppImage — see below), `update-ilwaco-docs`, and
-a `gtk-interop` to replace `winapi-interop`.
+`audit-project-manifest`, `update-ilwaco-docs` (the doc-maintenance rule — see below). **Pending
+Ilwaco rewrites** (Astoria's shipped as Windows-process and would be *wrong* here): `build-ilwaco`
+(Linux build above), `verify-ilwaco-behaviour` (drive the GTK build over `:0` with `wmctrl`/`scrot`),
+`release-ilwaco` (AppImage — see below), and a `gtk-interop` to replace `winapi-interop`.
 
 ## FreeBASIC traps that apply here (compiler-level, not Win32)
 
@@ -98,8 +98,14 @@ a `gtk-interop` to replace `winapi-interop`.
   reload; a dirty tab competes with your edit.
 - **Update the documents after any change that makes one wrong** — especially PROJECT_STATUS and
   AstoriaParity. A *removal* leaves nothing to trip over, so it is the easiest drift to miss.
+  [Documentation/TestPlan.md](Documentation/TestPlan.md) opens with a table of **which document to
+  update when**; the `update-ilwaco-docs` skill is how to satisfy it, and **`python3 Tools/DocCheck.py`
+  before you commit** is what catches it being skipped (it flags a doc naming a removed feature or a
+  deleted file, or a maintained doc missing from the rule table). On a *removal*, also add a line to
+  `REMOVED_FEATURES` in `Tools/DocCheck.py`. (Ilwaco drops Astoria's Windows-only doc machinery: no
+  Chrome-PDF/`.txt` companions, no PowerShell changelog, no `ROADMAP.md` §-check.)
 - **Finish the whole job, not the code.** A change is done when it builds, its effect has been
-  observed, and PROJECT_STATUS + AstoriaParity match it.
+  observed, PROJECT_STATUS + AstoriaParity match it, and `DocCheck` is green.
 - **Commit and push only when asked.**
 
 ## Product standard
