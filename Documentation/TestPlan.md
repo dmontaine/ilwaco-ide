@@ -35,13 +35,16 @@ came to describe a deleted Git menu for four days). Treat every row below as a t
 | `Testing.md` | what is **proven or unproven** changes (typically a test run) |
 | `TestPlan.md` | a test scenario is added, run, or made obsolete |
 | `UpstreamFixes.md` | a bug in vendored upstream code (VisualFBEditor or MyFbFramework) is fixed |
+| `AstoriaParity.md` | a changelog-walk item is ported, deferred, or reclassified, or its current-status / next-action changes — the port backlog's classification + "Done" record |
 
-Two documents are **not** in this table because they are historical records, maintained by their
-own workflow and excluded from `DocCheck` (they describe what *was* true):
+These are **not** rows in the table above:
 
-- `PROJECT_STATUS.md` (root) and `AstoriaParity.md` — updated after **any** change, per CLAUDE.md;
-  they are the handoff and the port backlog.
-- `AstoriaDetailedChangeLog.md` — the pruned port backlog (the diff to walk).
+- `AstoriaParity.md` **is** now a synchronized doc (row above, per owner 2026-08-04). It stays exempt
+  from `DocCheck`'s removed-feature / deleted-file *content* scans — as a port history it names removed
+  features and deleted files by design — but it **is** required to appear in the rule table.
+- `PROJECT_STATUS.md` (root) — updated after **any** change, per CLAUDE.md; the session handoff. It
+  lives at the repo root, outside `Documentation/`, so `DocCheck` does not scan it.
+- `AstoriaDetailedChangeLog.md` — the pruned port backlog (the diff to walk); fully excluded from `DocCheck`.
 - `CHANGELOG.md` (root) — append a line at each shipped milestone; hand-kept (Ilwaco has no
   PowerShell changelog generator, and `AstoriaDetailedChangeLog.md` already tracks the port work).
 

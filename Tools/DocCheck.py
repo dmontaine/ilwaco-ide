@@ -16,7 +16,9 @@ go stale:
 
   1. a document names a removed feature as if it still ships (REMOVED_FEATURES below);
   2. a document names a file, in inline code, that no longer exists in the repo;
-  3. a maintained document is missing from the rule table in Documentation/TestPlan.md.
+  3. a maintained document is missing from the rule table in Documentation/TestPlan.md;
+  4. PROJECT_STATUS.md has let finished session narratives pile up instead of moving the oldest
+     to HISTORY.md -- it is a handoff, not an archive (MAX_STATUS_SESSION_SECTIONS below).
 
 Adding a removal is one line in REMOVED_FEATURES. That is the whole maintenance cost, and it is
 paid once by whoever does the removing -- which is the point.
@@ -35,9 +37,25 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOCS = "Documentation"
 
-# Pure historical records: they describe what WAS true (the Astoria port history / backlog) and
-# must not be judged against what ships now. Analogous to Astoria excluding its DetailedChangelog.
+# Content-scan exemptions (checks 1 & 2): these catalog what WAS true (the Astoria port history /
+# backlog), so they legitimately name removed features and deleted files and must not be judged
+# against what ships now. Analogous to Astoria excluding its DetailedChangelog.
 EXCLUDE = {"AstoriaDetailedChangeLog.md", "AstoriaParity.md"}
+
+# Rule-table exemptions (check 3): documents NOT required to appear in TestPlan.md's rule table.
+# AstoriaParity.md is content-exempt above but IS a maintained, synchronized document (owner, 2026-08-04),
+# so it must appear in the rule table; only the raw pruned backlog stays out.
+RULE_TABLE_EXEMPT = {"AstoriaDetailedChangeLog.md"}
+
+# Check 4 -- PROJECT_STATUS.md is a *handoff*, not an archive. When a session's work is done and
+# committed, its dated narrative section should move to HISTORY.md (newest-first). This flags the
+# file once dated session sections pile up, so the prune stays a regular habit rather than drifting.
+# A "dated session section" is a level-2 heading carrying a (YYYY-...) date -- e.g.
+# "## ✅ DONE (2026-08-04) — ..." or "## Session handoff (2026-08-03, earlier) — ...". The evergreen
+# "## NEXT ..." and "## Current state ..." headings carry no date and do not count.
+STATUS_DOC = "PROJECT_STATUS.md"
+MAX_STATUS_SESSION_SECTIONS = 2   # the current handoff + at most one carried-over; older -> HISTORY.md
+STATUS_SESSION_HEADING = re.compile(r"^##\s+.*\(20\d\d[-,)]")
 
 # A finding is suppressed when the line, or any of the few lines around it, marks the passage as
 # historical -- so a removal notice ("we removed the compiler picker") does not read as the very
@@ -66,10 +84,12 @@ REMOVED_FEATURES = [
 PATH_IN_CODE = re.compile(r"`([A-Za-z0-9_./\\-]+\.(?:bas|bi|frm|rc|so|a|vfp|ini|md|py|sh))`")
 
 
-def repo_docs():
+def repo_docs(exclude=None):
+    if exclude is None:
+        exclude = EXCLUDE
     out = []
     for name in sorted(os.listdir(os.path.join(ROOT, DOCS))):
-        if name.endswith(".md") and name not in EXCLUDE:
+        if name.endswith(".md") and name not in exclude:
             out.append(os.path.join(DOCS, name))
     return out
 
@@ -137,11 +157,26 @@ def check_rule_table(findings):
         return
     block = text[start:text.find("\n\n", start)]
     listed = set(re.findall(r"([A-Za-z0-9]+\.md)", block))
-    for rel in repo_docs():
+    for rel in repo_docs(RULE_TABLE_EXEMPT):
         name = os.path.basename(rel)
         if name not in listed:
             findings.append((os.path.join(DOCS, "TestPlan.md"), 0,
                              "%s is maintained but appears in no rule" % name))
+
+
+def check_status_prune(findings):
+    """PROJECT_STATUS.md is a handoff: flag when finished session narratives accumulate instead of
+    being moved to HISTORY.md, so the prune stays a regular habit."""
+    path = os.path.join(ROOT, STATUS_DOC)
+    if not os.path.exists(path):
+        return
+    with open(path, encoding="utf-8") as fh:
+        lines = fh.read().split("\n")
+    dated = [ln for ln in lines if STATUS_SESSION_HEADING.match(ln)]
+    if len(dated) > MAX_STATUS_SESSION_SECTIONS:
+        findings.append((STATUS_DOC, 0,
+                         "%d dated session sections -- keep at most %d; move the oldest to HISTORY.md "
+                         "(newest-first)" % (len(dated), MAX_STATUS_SESSION_SECTIONS)))
 
 
 def run(selftest_extra=None):
@@ -149,6 +184,7 @@ def run(selftest_extra=None):
     check_removed_features(findings, selftest_extra)
     check_missing_files(findings)
     check_rule_table(findings)
+    check_status_prune(findings)
     return findings
 
 

@@ -103,12 +103,9 @@ Everything above the **Total: 888 commits, 2026-07-02 to 2026-08-02.**
   *Build/Tools, Docs, Examples, Settings · 6 files*
 - **`5eeb2f93`** — Rebuild mff64.dll and VisualFBEditor64.exe (clean compile, 0 errors/0 warnings)
   *Framework/Controls, IDE · 2 files*
-- **`4bd02894`** — Add missing example .vfp project files; add "no unnecessary options" guiding principle; audit Examples/ for GTK/Linux/Win32-only
-  Audited all 33 Examples/ subdirectories for GTK dependency, Linux-only code, or Win32-only (non-64-bit) source, per the owner's ad-hoc request.
-  *Docs, Examples, Framework/Controls, IDE · 18 files*
-- **`51441d7a`** — Fix Graphics example against current mff API; add future Examples/ review task
-  CanvasDraw.bas called CreateDoubleBuffer/TransferDoubleBuffer, which no longer exist (double-buffering is now handled internally via Control's DoubleBuffered property); used bare integers against the now strictly-typed PenStyle enum property; and had an ambiguous StretchMode reference (both...
-  *Docs, Examples, Framework/Controls, IDE · 4 files*
+> **Reordered 2026-08-04 (owner):** the two **Examples items** that sat here — `4bd02894` (Examples audit
+> + "no unnecessary options") and `51441d7a` (fix Graphics example) — were moved **out of chronological
+> order to run just before the testing phase**. See them relocated just above `91110174` below.
 - **`e139c2cc`** — Remove leftover 32-bit GCC internals; clarify gas64/gcc are not two competing compilers
   Compiler/bin/libexec/gcc/i686-w64-mingw32/9.3.0/ was a complete parallel 32-bit GCC toolchain (cc1.exe, as.exe, ld.exe, 9 DLLs -- 31 MB) that the earlier 32-bit-removal commit (15e66cc) missed, since it only caught the top-level Compiler/bin/win32/ folder.
   *Build/Tools, Docs, Framework/Controls, IDE · 6 files*
@@ -628,6 +625,15 @@ Everything above the **Total: 888 commits, 2026-07-02 to 2026-08-02.**
 - **`92a6c240`** — Built-in terminal list, working menu icons, and help/page cleanup
   Terminals are now built in and not user-editable: the list lives in SeedBuiltInTerminals() rather than indexed [Terminals] keys, and offers only the consoles Windows ships -- Standard Windows Console, Command Prompt, Windows PowerShell, and the newly added Windows Terminal.
   *Docs, IDE, Settings · 11 files*
+> **Examples items — relocated here 2026-08-04 (owner)** from their chronological slot after `5eeb2f93`,
+> to run **just before the testing phase** that begins at `91110174`. Do these two immediately before the
+> control-testing / TestPlan work below (the Examples audit naturally pairs with the test projects).
+- **`4bd02894`** — Add missing example .vfp project files; add "no unnecessary options" guiding principle; audit Examples/ for GTK/Linux/Win32-only
+  Audited all 33 Examples/ subdirectories for GTK dependency, Linux-only code, or Win32-only (non-64-bit) source, per the owner's ad-hoc request.
+  *Docs, Examples, Framework/Controls, IDE · 18 files*
+- **`51441d7a`** — Fix Graphics example against current mff API; add future Examples/ review task
+  CanvasDraw.bas called CreateDoubleBuffer/TransferDoubleBuffer, which no longer exist (double-buffering is now handled internally via Control's DoubleBuffered property); used bare integers against the now strictly-typed PenStyle enum property; and had an ambiguous StretchMode reference (both...
+  *Docs, Examples, Framework/Controls, IDE · 4 files*
 - **`91110174`** — Control testing: per-control test programs, results doc, and two library fixes
   Adds Documentation/ControlTesting.md - a status table for all 74 toolbox elements (Name, Visual, Compiled, Tested, Verified, Notes) - plus the 73 generated test projects under Examples/Controls/, one Windows Application per control containing exactly that control.
   *Build/Tools, Docs, Examples, Framework/Controls · 296 files*

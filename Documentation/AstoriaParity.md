@@ -1,56 +1,20 @@
 # Astoria → Ilwaco parity tracking
 
-## ⇢ NEXT ACTION (staged for a fresh session) — compiler removal COMPLETE; resume the changelog walk
+## Current status (2026-08-04)
 
-The big non-target strip is **done** for the whole compiled surface: `src/` (EditControl as staged task A,
-then the rest of `src/*.bas`/`*.bi` — 11 files, 626 chains — **landed 2026-08-02**) and the MFF framework
-(**staged task B — landed 2026-08-02**, see "Done — MFF non-target strip" below). The editor +
-`libmff64_gtk3.so` are clean of *real* non-target `#if`/`#ifdef` directives; both build clean and the IDE
-runtime-verified after each. The strip was then **extended across the whole tree** — non-MFF `Controls/`
-(MariaDBBox, SQLite3, ScintillaControl, cJSON) and `Examples/` (cross-platform demos branch-stripped;
-16 Windows-only demos deleted, Astoria-mirror) — landed 2026-08-02 in commits `a0919c5`, `422e931`,
-`d0b22a1` (+ infra `0b61d0c`). See "Done — whole-tree non-target strip" below. Remaining:
+**Foundation strips DONE** (build + runtime-verified; committed or staged): one bundled compiler / no
+picker / no `[Compilers]` INI machinery (Tasks 11–13, `0fb1746` + staged); the **whole-tree non-target
+strip** — `src/`, MFF, non-MFF `Controls/`, `Examples/` (`a0919c5`/`422e931`/`d0b22a1`/`0b61d0c`);
+**32-bit removal** passes 1/2a/2b/2c (`a1b2722`/`12044a1` + staged); plus the owner directives UTF-8/LF-only,
+English-only, and the Ilwaco rebrand. Per-task detail lives in the "Done" narratives below and in
+[HISTORY.md](../HISTORY.md) / [PROJECT_STATUS.md](../PROJECT_STATUS.md).
 
-1. **Compiler removal stage 2 — COMPLETE (2026-08-02). All three tasks DONE + build+runtime-verified.**
-   - *Task 12 (per-project `CompilerPath` override)* — DONE, committed `0fb1746`.
-   - *Task 11 (picker UI)* — DONE, **staged (uncommitted)**. Removed the Options compilers ListView +
-     Default-Compilers combos + Add/Change/Remove/Clear + "Find Compilers" scan subsystem, and the
-     frmParameters per-build compiler selector; also removed the `Compiler32/64Path` clobber on OK/Apply.
-     Compiler tab is now an empty parent node.
-   - *Task 13 (`[Compilers]` INI machinery)* — DONE, **staged (uncommitted)**. Retired `Compilers`/
-     `pCompilers`/`Current/DefaultCompiler32/64` + the `[Compilers]` INI read/write; kept the fragile
-     10-section load loop's `Compilers` KeyExists term and the bundled `Compiler32/64Path`. Runtime-verified
-     by a real in-IDE compile (bundled fbc ran, `.bas→.c→.asm→.o` clean; only a shim `-lncurses` link gap
-     remains — a packaging concern, not a code bug). Full surface in PROJECT_STATUS "Task 13 DONE" block.
-   - **Net result:** the only compiler path in the system is the hard-coded `BundledCompilerPath`. "One
-     compiler, no picker, no INI machinery" fully realized.
-2. **Strip all 32-bit code (Ilwaco is 64-bit only) — DONE 2026-08-03 (passes 1, 2a, 2b, 2c).** Owner
-   directive: "we can remove anything 32-bit related, ilwaco will be 64-bit only." Incremental, build after
-   each pass.
-   - **Pass 1 — DONE, build+runtime-verified, committed `a1b2722`.** Removed the `tbt32Bit`/`tbt64Bit`
-     32/64 build-target toolbar toggle and collapsed every `Bit32`/`tbt32Bit->Checked` consumer to the 64
-     branch (compile path, debugger picks, `-gen gas64`, lib folder). Fixed a latent both-branches-32 bug in
-     the intellisense temp-compile. `Bit32`/`tbt32Bit`/`tbt64Bit` now zero refs.
-   - **Pass 2a — debugger-32 subsystem — DONE, build-verified, committed `12044a1`.** Removed all
-     `*Debugger32*`/`*DebuggerType32`/`Debug32Arguments` globals + the `cboDebug32`/`txtDebug32`/
-     `cboDebugger32`/`cboGDBDebugger32` form controls (frmParameters + frmOptions) + load/save/dealloc;
-     repointed shared debugger handlers to the 64 combo; fixed two more latent 32/64 bugs. Kept `lblDebugger321`.
-   - **Pass 2b — compiler-32 — DONE, build-verified.** Removed `Compiler32Path`/`Compiler32Arguments`
-     (Main.bi globals + Main.bas assign/read/dealloc), `LibX32Folder` (Main.bi struct field + Main.bas load),
-     collapsed the `Main.bas` include-resolver + the `TabWindow.bas` lib-path pair to the 64 attempt, and the
-     frmParameters `txtfbc32`/`lblfbc32`/`lblAddCompilerOption32` designer blocks + populate/apply/save +
-     the `lblAddCompilerOption32_Click` handler + `.bi` declares/dims. Kept the `…64` equivalents.
-   - **Pass 2c — `CompilationArguments32` project property — DONE, build+runtime-verified.**
-     frmProjectProperties `lblCompilationArguments32`/`…32Linux` labels + `txtCompilationArguments32Windows`/
-     `…32Linux` textboxes + populate/apply/clear; `TabWindow.bi` struct fields `CompilationArguments32Windows`/
-     `…32Linux` + `TabWindow.bas` deallocs; `Main.bas` `.vfp` parse + save. Kept `lblCompilationArguments321`
-     (a different "Command Line Arguments" control). Also collapsed the live `#ifdef __FB_64BIT__` guards in
-     frmSplash/frmComponents/frmOptions to the 64 branch. Grep of `Compiler32|LibX32|CompilationArguments32`
-     (excl. `…321`) is empty. **Left:** three commented-out `#ifdef __FB_64BIT__` lines inside large
-     pre-existing dead-comment blocks in `Debug.bas` (~914/4568/9498) — belong to the standing
-     "no commented-out code" sweep of Debug.bas, not the 32-bit feature strip. See memory `project-64bit-only`.
-3. **Resume the changelog walk** — next candidates: `53d8e473` (compile-warning fixes — check Ilwaco's
-   shared files), then the menu-taxonomy feature ports.
+**Active work: the changelog walk.** Bottom-panel collapse (`e212819d`/`ef3b43e9`) landed + live-verified
+2026-08-04. For the current next item see **[Next action](#next-action)** at the foot of this file — short
+version: the two Examples items are deferred to just before the testing phase, so next up are `5fa5cf25`
+(remove alt-compiler/debugger-choice code) then the `49ec5ccd`/`37ba31ea` menu-taxonomy cluster.
+
+**Still-open, opportunistic (not blocking):**
 
 **Deferred strip sub-items** (low-value / off the compiled path — do opportunistically, not blocking):
 - `mff/win/` (Windows headers dir) — now only reached via the excluded `SysUtils.bi` WINAPI includes
@@ -101,7 +65,9 @@ A large fraction does **not** port straight across:
 - ~37 commits are **docs-only** — N/A as ports.
 - ~181 commit lines mention **panel/menu/toolbar/dialog/warning** — the richest vein of PORT work.
 
-**Coverage of Astoria's *specific* deltas in Ilwaco today: ~none.** Ilwaco sits at ~upstream
+**Coverage of Astoria's *specific* deltas in Ilwaco today: a handful of ports in** (as of 2026-08-04 —
+panel collapse, debug-tab visibility, bottom-panel tab clearing, compile-warning hunks; the foundation
+strips above; see the "Done" narratives). It was **~none** at scan time. Ilwaco sits at ~upstream
 VisualFBEditor **1.3.8** (only 643 lines from the "Newer" upstream copy). Astoria's base `bbfa3999` is
 **two layers** on that same root: (a) a ~5,000-line pre-changelog **DeepSeek/Cursor** layer (where
 `bApplyingStartupLayout`, `IsLeftCollapsed`, the panel-persistence machinery live) baked into the
@@ -614,11 +580,15 @@ to MFF, no `.so` rebuild. **Persistence** (`BottomClosed` INI key via `GetBottom
 
 ## Next action
 
-After the deferred persistence item (optional), continue the walk. **Candidate next PORT:** `ae74b31c`
-— rename the top-level **"Service"** menu (Uzbek `miXizmat`) to **"Tools"** and the inner "Tools"
-submenu to "External Tools"; verify Ilwaco still has the old naming first. Also `53d8e473` (compile
-warning fixes) — check whether Ilwaco's shared files emit the same warnings. Skip the GTK/Linux/32-bit
-stripping commits (`c494207f`, `7baebd1e`, `add4642a`, `76abaa5a`, `15e66cc5`, `e139c2cc`).
+The bottom-panel collapse cluster (`e212819d`/`ef3b43e9`) is **done** (section above); `ae74b31c`
+(Service→Tools) and `53d8e473` (compile warnings) are already done/pruned. The two **Examples items**
+(`4bd02894`, `51441d7a`) are **deferred to just before the testing phase** (owner, 2026-08-04) — moved in
+[AstoriaDetailedChangeLog.md](AstoriaDetailedChangeLog.md) to just above `91110174`. **Candidate next
+PORT:** `5fa5cf25` — remove the Integrated (stabs) debugger + alt-compiler-backend / debugger-choice code
+(matches the one-compiler/one-debugger directive; verify Ilwaco still carries that choice code first).
+Then the **menu-taxonomy cluster** `49ec5ccd`/`37ba31ea` (menu labels, File-menu restructure, Code-Editor
+grouping, compiler-options simplification — the debug-tabs sub-item is already done). Skip the pure
+GTK/Linux/32-bit stripping commits (`e139c2cc`, `c494207f`, `7baebd1e`, `add4642a`, `76abaa5a`, `15e66cc5`).
 
 ## Foundation status (2026-08-02)
 

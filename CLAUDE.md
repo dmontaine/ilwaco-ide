@@ -101,9 +101,15 @@ Ilwaco rewrites** (Astoria's shipped as Windows-process and would be *wrong* her
   [Documentation/TestPlan.md](Documentation/TestPlan.md) opens with a table of **which document to
   update when**; the `update-ilwaco-docs` skill is how to satisfy it, and **`python3 Tools/DocCheck.py`
   before you commit** is what catches it being skipped (it flags a doc naming a removed feature or a
-  deleted file, or a maintained doc missing from the rule table). On a *removal*, also add a line to
-  `REMOVED_FEATURES` in `Tools/DocCheck.py`. (Ilwaco drops Astoria's Windows-only doc machinery: no
-  Chrome-PDF/`.txt` companions, no PowerShell changelog, no `ROADMAP.md` §-check.)
+  deleted file, a maintained doc missing from the rule table, or **PROJECT_STATUS carrying too many
+  finished session sections**). On a *removal*, also add a line to `REMOVED_FEATURES` in
+  `Tools/DocCheck.py`. (Ilwaco drops Astoria's Windows-only doc machinery: no Chrome-PDF/`.txt`
+  companions, no PowerShell changelog, no `ROADMAP.md` §-check.)
+- **Keep PROJECT_STATUS pruned — it is a handoff, not an archive.** It holds only the most-recent
+  session handoff, the NEXT actions, and the standing facts. When a session's work is done and
+  committed, **move its dated narrative to [HISTORY.md](HISTORY.md) (newest-first)** rather than
+  stacking handoffs. `DocCheck` (check 4) flags PROJECT_STATUS once more than two dated session
+  sections accumulate, so this stays a regular habit.
 - **Finish the whole job, not the code.** A change is done when it builds, its effect has been
   observed, PROJECT_STATUS + AstoriaParity match it, and `DocCheck` is green.
 - **Commit and push only when asked.**
