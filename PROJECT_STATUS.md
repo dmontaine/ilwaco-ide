@@ -65,9 +65,12 @@ rather than trusting the program's own output.
 
 ## NEXT — two found bugs, then the menu-taxonomy cluster
 
-- Two **found bugs to fix**: the debugger source path-case `LCase` (`Main.bas:2885`, spawned task — now
-  confirmed reproducible) and the cosmetic breakpoint-line path render (the source path is drawn after the
-  code text).
+- ~~The debugger source path-case `LCase`~~ — **fixed 2026-08-04** (`Main.bas TimerProc`; verified by
+  debugging a project from `/tmp/ArgTest_MixedCase/`). The remaining found bug is the cosmetic
+  breakpoint-line path render (the source path is drawn after the code text).
+- **New, deferred:** `EqualPaths` (`Main.bas`) compares `LCase(a) = LCase(b)`, so Ilwaco treats `Foo.bas`
+  and `foo.bas` as one file. Wrong on Linux, but it is on every tab-lookup / tree-match / project-file
+  comparison path, so it wants its own build-verified pass. See TechnicalDebt.
 - Then the **menu-taxonomy cluster** `49ec5ccd`/`37ba31ea`; skip the pure 32-bit/GTK-strip entries
   (`e139c2cc` etc.). The two **Examples items** (`4bd02894`, `51441d7a`) stay deferred to just before the
   testing phase (owner). All owner directives (32-bit, UTF-8/LF, AI, English-only) remain cleared.
@@ -107,13 +110,12 @@ classified in [AstoriaParity.md](Documentation/AstoriaParity.md)). Past session 
 - Harmless startup warnings: resources `AppAddin`/`AppConsole` "do not exist".
 
 **Known gaps (tracked, not blockers).**
-- **Packaging/shim:** the dev shim has `libtinfo.so.5` but no `libncurses.so`, so the IDE can't fully *link*
-  a console user-project in this environment (fbc's default console link wants libncurses). Add a
+- **Packaging/shim:** the dev shim has `libtinfo.so.5` but no `libncurses.so`, so fbc's *default* console
+  link fails here. Work around it per-project with `CompilationArguments64Linux="-p <shim> -l tinfo"` — the
+  IDE then compiles, links and debugs a console project end-to-end (verified 2026-08-04). Add a
   `libncurses` dev symlink when building the AppImage. AppImage packaging itself is still open (memory
   `project-packaging`).
 - **GTK dark mode (REIMPLEMENT):** MFF ships a real GTK3 `SetDarkMode`, but `g_darkModeSupported` was only
   ever set by the deleted Win32 `InitDarkMode`, so the dark-styling branches never fire on GTK. Track with
   Astoria's dark-mode commits (`56f6d180`/`b3633bc5`/`a7c7839d`).
-- **Debugger source-path case:** `Main.bas:2885` lowercases the source path, so debugging a project
-  under a path containing uppercase letters fails with "File not found" (see NEXT). `UseDebugger=false`
-  by default. GDB is gone — the Integrated engine needs no external debugger.
+- `UseDebugger=false` by default. GDB is gone — the Integrated engine needs no external debugger.

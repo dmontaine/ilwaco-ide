@@ -2877,7 +2877,10 @@ End Sub
 	shwtab = fntab
 	Dim As TabWindow Ptr tb = Cast(TabWindow Ptr, ptabCode->SelectedTab)
 	If tb = 0 OrElse Not EqualPaths(tb->FileName, source(fntab)) Then
-		tb = AddTab(LCase(source(fntab)))
+		'' No LCase: a Win32-ism. Paths are case-sensitive on Linux, so lowercasing the source path
+		'' made AddTab fail with "File not found" for any project under a path containing uppercase
+		'' letters. AddTab de-duplicates via EqualPaths, so it never needed a normalised path.
+		tb = AddTab(source(fntab))
 	End If
 	If tb = 0 Then Exit Sub
 	CurEC = @tb->txtCode

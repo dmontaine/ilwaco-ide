@@ -22,6 +22,8 @@ The format is loosely [Keep a Changelog](https://keepachangelog.com/). Dates are
   `DetachTab` (2026-08-03).
 
 ### Fixed
+- Debugging a project stored under a path containing uppercase letters failed with "File not found":
+  the debugger lowercased the source path, a Win32 habit that is wrong on Linux (2026-08-04).
 - The Parameters dialog silently discarded whatever was typed in the Debug arguments box — `cmdOK`
   never wrote it back (2026-08-04).
 - Panel pin vanishing after a collapse/reopen cycle (overlay remap + relayout) (2026-08-04).

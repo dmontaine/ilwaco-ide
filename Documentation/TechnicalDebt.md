@@ -16,20 +16,27 @@ These are the standing items from [PROJECT_STATUS.md](../PROJECT_STATUS.md) "Kno
 as the durable register:
 
 - **Packaging / dev shim — no `libncurses`.** The in-repo shim under `Compilers/shim/` provides
-  `libtinfo.so.5` but no `libncurses.so`, so `fbc`'s default console link fails when the IDE tries
-  to *link* a console user-project in this environment. Add a `libncurses` dev symlink when building
-  the AppImage. (Blocks TestPlan T4 — end-to-end project build.)
+  `libtinfo.so.5` but no `libncurses.so`, so `fbc`'s *default* console link fails in this dev
+  environment. Not a blocker: a console project links and runs once it carries
+  `CompilationArguments64Linux="-p <shim> -l tinfo"` (TestPlan T4 passes that way, 2026-08-04). Add a
+  `libncurses` dev symlink when building the AppImage so users need no per-project arguments.
 - **GTK dark mode never fires (REIMPLEMENT).** MFF ships a real GTK3 `SetDarkMode`, but
   `g_darkModeSupported` was only ever set by the deleted Win32 `InitDarkMode`, so the dark-styling
   branches never run on GTK. Track with Astoria's dark-mode commits (`56f6d180`/`b3633bc5`/
   `a7c7839d`); drive `g_darkModeSupported` + per-control theming from the GTK theme.
-- **Debugger source paths are lowercased.** `Main.bas:2885` does `AddTab(LCase(source(fntab)))` — a
-  Win32-ism that is wrong on a case-sensitive filesystem: debugging any project under a path
-  containing uppercase letters fails with "File not found". Reproduced 2026-08-04.
+- **`EqualPaths` is case-insensitive** (`Main.bas`: `LCase(a) = LCase(b)`), a Win32 assumption. On
+  Linux `Foo.bas` and `foo.bas` are different files, so two of them can collide onto one tab. Wide
+  blast radius — every tab lookup, tree-node match and project-file comparison routes through it —
+  so it needs its own build-verified pass. Found 2026-08-04.
 - **Cosmetic: the breakpoint line renders the source path after the code text.**
 - **`UseDebugger=false` by default.** (The old note here — "`gdb` not installed, the debugger default
   won't resolve" — is obsolete: GDB was removed 2026-08-04 and the built-in Integrated engine, which
   needs no external debugger, is the only one.)
+
+**Paid down 2026-08-04:** the debugger lowercased the source path (`AddTab(LCase(source(fntab)))` in
+`Main.bas TimerProc`), so debugging any project under a path containing uppercase letters failed with
+"File not found". The `LCase` was a Win32-ism and was never load-bearing — `AddTab` de-duplicates via
+`EqualPaths`, which lowercases both sides itself. Fixed and verified from `/tmp/ArgTest_MixedCase/`.
 - **Intermittent startup/shutdown `SIGSEGV`.** A known Astoria-fixed threading issue — do *not*
   chase it as a new regression. It closed the IDE mid-test at least once this project.
 - **AppImage packaging is unbuilt.** Read-only bundle + external writable Projects/Examples/Docs is

@@ -87,4 +87,7 @@ rows (T1, T2, …) as scenarios are defined and run. See [Testing.md](Testing.md
 | T1 | Editor builds from source and the window opens on `:0` with no error dialog | **PASS** (standing; see PROJECT_STATUS) |
 | T2 | Left/right panels collapse to the vertical rail and re-expand to each tab; pin repaints | **PASS** 2026-08-04 (screenshots) |
 | T3 | Designer control library loads (toolbox populates without a runtime error) | not formally recorded |
-| T4 | A user `.vfp` project builds through the IDE (end-to-end, not `fbc`-direct) | **not yet** — blocked in this env by the missing `libncurses` link dep (see TechnicalDebt.md) |
+| T4 | A user `.vfp` project builds through the IDE (end-to-end, not `fbc`-direct) | **PASS** 2026-08-04 — console `.vfp` compiled, linked and launched from the IDE (exe deleted beforehand). Needs `CompilationArguments64Linux="-p <shim> -l tinfo"` in *this* dev env only |
+| T5 | A project debugs under the Integrated engine: tracing stop, current-line marker, Locals | **PASS** 2026-08-04 |
+| T6 | The debuggee receives its arguments and environment (override + inheritance; IDE env untouched) | **PASS** 2026-08-04 (`pgrep -a`, `/proc/<pid>/environ`) |
+| T7 | A project under a path containing uppercase letters debugs (path-case regression) | **PASS** 2026-08-04 (`/tmp/ArgTest_MixedCase/`) |

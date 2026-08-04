@@ -25,13 +25,21 @@ necessary but not sufficient — "it compiled" is not "it works".
   enabled; Immediate stays visible. Verified both states by screenshot.
 - **Bottom/debug panel clearing.** Stale project/debug results are cleared on project close and on
   debug end; all bottom tabs render. Build + launch verified.
+- **End-to-end user-project build *and debug* through the IDE (2026-08-04).** A console `.vfp`
+  compiles, links and launches under the Integrated debugger from the IDE itself — the exe was
+  deleted before each run, so the IDE genuinely produced it. Confirmed: tracing stop with the
+  current-line marker, Locals populated, and the debuggee's real `argv` and environment read from
+  `pgrep -a` / `/proc/<pid>/environ`. Caveat: in *this* dev environment the project needs
+  `CompilationArguments64Linux="-p <shim> -l tinfo"`; that is a dev-shim artefact, not an IDE
+  limitation (see [TechnicalDebt.md](TechnicalDebt.md)).
+- **Debuggee arguments and environment (2026-08-04).** Arguments arrive in order (program name, the
+  Parameters *Debug* arguments, then the project's *Command-line arguments*); environment variables
+  are injected, the inherited environment is preserved, a user variable overrides the inherited one
+  of the same name leaving exactly one entry, and the IDE's own environment is untouched.
+- **Debugging from a mixed-case path (2026-08-04).** A project under `/tmp/ArgTest_MixedCase/` loads
+  its source and debugs without the old "File not found" — the path-case regression test.
 
 ## Not proven (known gaps)
-
-- **End-to-end user-project build through the IDE.** Blocked in this environment by the missing
-  `libncurses` link dependency (see [TechnicalDebt.md](TechnicalDebt.md)); a console `.vfp` cannot
-  be fully linked here. This is the single most important untested path — a fixture compiled with
-  `fbc` directly does **not** exercise it.
 - **Designer control library load.** `Controls/MyFbFramework/libmff64_gtk3.so` must be built or the
   toolbox errors at runtime; that it loads cleanly is relied upon but not formally recorded as a
   scenario.
