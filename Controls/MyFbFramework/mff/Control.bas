@@ -1798,6 +1798,23 @@ Namespace My.Sys.Forms
 				If scrolledwidget <> 0 AndAlso GTK_IS_WIDGET(scrolledwidget) Then
 					g_signal_handlers_disconnect_by_func(scrolledwidget, G_CALLBACK(@Control_Scroll), @This)
 				End If
+			'' A shared context menu outlives the controls that point at it. The ContextMenu
+			'' setter writes FContextMenu->ParentWindow = @This, so when one menu is shared
+			'' across N controls the LAST one to bind wins -- and nothing ever cleared it.
+			'' Destroying that control left the menu holding a dangling Component Ptr, and the
+			'' next MenuItem.Enabled assignment dereferenced it; a null check on ParentWindow
+			'' cannot help, because reaching ->Handle derefs the dead object first.
+			''
+			'' Ilwaco points every tab's editor at the one shared mnuCode, so this is the same
+			'' shape Astoria measured on its 78-tab close (13.68): 78 binds, 78 frees, and the
+			'' faulting read is the last bound address.
+			''
+			'' Only cleared when it still points at THIS control: a menu already re-bound to a
+			'' living control must keep that binding.
+			If FContextMenu AndAlso _
+				Cast(Any Ptr, FContextMenu->ParentWindow) = Cast(Any Ptr, @This) Then
+				FContextMenu->ParentWindow = 0
+			End If
 			FreeWnd
 			'If FText Then Deallocate FText
 			If FProgID Then _Deallocate(FProgID)

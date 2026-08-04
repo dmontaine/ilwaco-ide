@@ -31,7 +31,7 @@ pfFind = @fFind
 			.DefaultButton = @btnFind
 			.CancelButton = @btnCancel
 			.Designer = @This
-			.SetBounds 0, 0, 433, 85
+			.SetBounds 0, 0, 740, 85
 		End With
 		'btnReplaceShow
 		With btnReplaceShow
@@ -84,8 +84,8 @@ pfFind = @fFind
 			.Name = "chkMatchCase"
 			.TabIndex = 4
 			.Hint = ML("Match Case")
-			.SetBounds 284, 1, 30, 21
-			.Text = "Aa"
+			.SetBounds 250, 1, 100, 21
+			.Text = ML("Match Case")
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As CheckBox), @chkBox_Click)
 			.Parent = @This
@@ -93,10 +93,10 @@ pfFind = @fFind
 		'chkMatchWholeWords
 		With chkMatchWholeWords
 			.Name = "chkMatchWholeWords"
-			.Text = "W"
+			.Text = ML("Whole Word")
 			.TabIndex = 5
 			.Hint = ML("Match Whole Words")
-			.SetBounds 316, 1, 30, 21
+			.SetBounds 352, 1, 100, 21
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As CheckBox), @chkBox_Click)
 			.Parent = @This
@@ -104,11 +104,11 @@ pfFind = @fFind
 		'chkUsePatternMatching
 		With chkUsePatternMatching
 			.Name = "chkUsePatternMatching"
-			.Text = ".*"
+			.Text = ML("Regex")
 			.TabIndex = 6
 			.Hint = ML("Use Pattern Matching")
-			.Caption = ".*"
-			.SetBounds 345, 1, 30, 21
+			.Caption = ML("Regex")
+			.SetBounds 454, 1, 70, 21
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As CheckBox), @chkBox_Click)
 			.Parent = @This
@@ -116,10 +116,10 @@ pfFind = @fFind
 		'btnFindPrev
 		With btnFindPrev
 			.Name = "btnFindPrev"
-			.Text = "<"
+			.Text = ML("Find Previous")
 			.TabIndex = 7
 			.Hint = ML("Find Previous") & " (" & HK("Find Previous", "Shift + F3") & ")"
-			.SetBounds 376, 1, 25, 22
+			.SetBounds 526, 1, 100, 22
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @btnFindPrev_Click)
 			.Designer = @This
 			.Parent = @This
@@ -127,11 +127,11 @@ pfFind = @fFind
 		'btnFind
 		With btnFind
 			.Name = "btnFind"
-			.Text = ">"
+			.Text = ML("Find Next")
 			.Default = True
 			.TabIndex = 8
 			.Hint = ML("Find Next") & " (" & HK("Find Next", "F3") & ")"
-			.SetBounds 403, 1, 25, 22
+			.SetBounds 628, 1, 100, 22
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @btnFind_Click)
 			.Designer = @This
 			.Parent = @This

@@ -16,6 +16,8 @@ Dim Shared FPropertyItems As WStringList
 Dim Shared FListItems As WStringList
 Dim Shared txtCodeBi As EditControl
 Dim Shared mnuCode As PopupMenu
+'' Numbers new documents Untitled1, Untitled2, ... so several unsaved tabs are tellable apart.
+Static Shared untitledCounter As Integer = 0
 pmnuCode = @mnuCode
 Dim Shared MouseHoverTimerVal As Double
 txtCodeBi.WithHistory = False
@@ -154,7 +156,7 @@ Sub FormatProject(UnFormat As Any Ptr)
 	pfrmMain->Enabled = True
 	If tbCurrent <> 0 Then tbCurrent->txtCode.UpdateUnLock
 	ThreadsEnter()
-	pstBar->Panels[0]->Caption = ML("Press F1 for get more information")
+	pstBar->Panels[0]->Caption = ML("Press F1 for help")
 	ThreadsLeave()
 End Sub
 
@@ -210,6 +212,9 @@ Sub ChangeMenuItemsEnabled
 	miSaveProject->Enabled = bEnabledProjectAndFolder
 	miSaveProjectAs->Enabled = bEnabledProjectAndFolder
 	miCloseProject->Enabled = bEnabledProjectAndFolder
+	'' Rename/Delete Project act on a real project folder, so they follow the same rule.
+	miRenameProject->Enabled = bEnabledProjectAndFolder
+	miDeleteProject->Enabled = bEnabledProjectAndFolder
 	miExplorerCloseProject->Enabled = bEnabledProjectAndFolder
 	miProjectProperties->Enabled = bEnabledProjectAndFolder
 	miExplorerProjectProperties->Enabled = bEnabledProjectAndFolder
@@ -10145,7 +10150,8 @@ Constructor TabWindow(ByRef wFileName As WString = "", bNew As Boolean = False, 
 	txtCode.OnDropDownCloseUp = @OnDropDownCloseUp
 	txtCode.OnSplitHorizontallyChange = @OnSplitHorizontallyChangeEdit
 	txtCode.OnSplitVerticallyChange = @OnSplitVerticallyChangeEdit
-	txtCode.Content.FileName = ML("Untitled")
+	untitledCounter += 1
+	txtCode.Content.FileName = ML("Untitled") & WStr(untitledCounter)
 	txtCode.Tag = @This
 	txtCode.ShowHint = False
 	'CheckedFiles.Sorted = True
@@ -10246,7 +10252,7 @@ Constructor TabWindow(ByRef wFileName As WString = "", bNew As Boolean = False, 
 		'txtCode.LoadFromFile(wFileName, False)
 		This.Caption = GetFileName(FileName)
 	Else
-		This.Caption = ML("Untitled") & "*"
+		This.Caption = ML("Untitled") & WStr(untitledCounter) & "*"
 	End If
 	IsNew = bNew OrElse wFileName = ""
 	pnlForm.Top = -500

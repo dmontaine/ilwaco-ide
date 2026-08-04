@@ -92,3 +92,5 @@ rows (T1, T2, …) as scenarios are defined and run. See [Testing.md](Testing.md
 | T6 | The debuggee receives its arguments and environment (override + inheritance; IDE env untouched) | **PASS** 2026-08-04 (`pgrep -a`, `/proc/<pid>/environ`) |
 | T7 | A project under a path containing uppercase letters debugs (path-case regression) | **PASS** 2026-08-04 (`/tmp/ArgTest_MixedCase/`) |
 | T8 | Two files differing only in case open as two tabs with their own content | **PASS** 2026-08-04 (`Foo.bas` / `foo.bas`) |
+| T9 | Close Project closes the project and leaves the IDE running | **🔴 FAIL** 2026-08-04 — SIGSEGV (exit 139), deterministic, pre-existing (see TechnicalDebt.md) |
+| T10 | Delete Project removes the project folder from disk | **BLOCKED** by T9 — the process dies inside `CloseProject` before the delete |

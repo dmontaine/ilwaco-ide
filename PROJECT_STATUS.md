@@ -63,15 +63,41 @@ rather than trusting the program's own output.
 
 ---
 
-## NEXT — two found bugs, then the menu-taxonomy cluster
+## NEXT — 🔴 the Close Project crash, then finish the menu cluster
+
+**Close Project segfaults the IDE (exit 139), deterministically.** Found 2026-08-04 while porting
+the menu cluster; it is **pre-existing** (reproduces on the committed `087a720` binary) and blocks
+`Rename Project`/`Delete Project`, which both call `CloseProject`. Full measurements, the two
+Astoria fixes already ported (neither cures it), the next unproven lead, and the tooling gap that
+stopped the diagnosis are in [TechnicalDebt.md](Documentation/TechnicalDebt.md) — read that before
+touching it. **The single most valuable next step is a real backtrace:** install `gdb`, or install a
+`sigaction` handler *after* GTK init, because pattern-matching against Astoria has now cost three
+build cycles without a result.
+
+---
+
+## Then — finish the menu-taxonomy cluster
 
 - **The path-case cluster is closed (2026-08-04)** — all three findings fixed and live-verified; see
   TechnicalDebt "Paid down". The cosmetic breakpoint-line report turned out to be a *symptom* of the
   path-case bug (an empty tab conjured from the bad path), not a separate defect, proven by an A/B
   against the pre-fix binary. `EqualPaths` is now a direct comparison with its Win32-isms removed.
-- Then the **menu-taxonomy cluster** `49ec5ccd`/`37ba31ea`; skip the pure 32-bit/GTK-strip entries
-  (`e139c2cc` etc.). The two **Examples items** (`4bd02894`, `51441d7a`) stay deferred to just before the
-  testing phase (owner). All owner directives (32-bit, UTF-8/LF, AI, English-only) remain cleared.
+- **Menu-taxonomy cluster `49ec5ccd`/`37ba31ea` — partly done (2026-08-04).** Owner directive: *"make
+  the menu system as close to Astoria as possible; later changes will fill in the blanks — same with
+  the options panels, except cases like the debug flag entry we've already decided to keep."*
+  **Done + verified:** the label pass (status bar "Press F1 for help", `Format`→`Designer`,
+  "Not Set", "Clear Output"/"Clear Immediate", `tbDebug.Name`, numbered `Untitled1/2/…`, Goto
+  "Go to line:", and the Find dialog's cryptic `Aa`/`W`/`.*`/`<`/`>` buttons relabelled); the
+  **File-menu restructure** to Astoria's project-first taxonomy; **Open Project** exposed (Ilwaco had
+  the handler with the menu item commented out); `Rename Project` + `Delete Project` added, the latter
+  reimplemented for Linux (`rm -rf`, path-guarded) — **both blocked by the Close Project crash above.**
+  **Still to port:** `frmNewProject` + `OpenProjectTemplate`/`Recent Project`; the Options panels
+  (remove the "When the IDE starts" radio group, Code Editor grouping into Display/Completion/
+  IntelliSense/History); and `Show Holiday Frame` → `Show Indent Guides`, which is a *feature* port
+  needing real indent-guide rendering in `EditControl`, not a relabel.
+  Skip the pure 32-bit/GTK-strip entries (`e139c2cc` etc.). The two **Examples items**
+  (`4bd02894`, `51441d7a`) stay deferred to just before the testing phase (owner). All owner
+  directives (32-bit, UTF-8/LF, AI, English-only) remain cleared.
 - Unverified, low priority: **Ctrl+F5 did not resume** a stopped debuggee during this session's driving. May
   be an artefact of synthetic input rather than a defect — check by hand before treating it as a bug.
 

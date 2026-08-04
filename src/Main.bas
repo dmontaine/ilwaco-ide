@@ -73,6 +73,7 @@ Dim Shared As GtkWidget Ptr overlayLeft, overlayRight  ' the GTK overlays hostin
 Dim Shared As TrackBar trLeft
 Dim Shared As MainMenu mnuMain
 Dim Shared As MenuItem Ptr mnuStartWithCompile, mnuStart, mnuBreak, mnuEnd, mnuRestart, mnuStandardToolBar, mnuEditToolBar, mnuProjectToolBar, mnuFormatToolBar, mnuBuildToolBar, mnuDebugToolBar, mnuRunToolBar, mnuSplit, mnuSplitHorizontally, mnuSplitVertically, mnuWindowSeparator, miRecentProjects, miRecentFiles, miRecentFolders, miRecentSessions, miSetAsMain, miClearStartUp, miTabSetAsMain, miTabReloadHistoryCode, miRemoveFiles, miToolBars
+Dim Shared As MenuItem Ptr miRenameProject, miDeleteProject
 Dim Shared As MenuItem Ptr miSaveProject, miSaveProjectAs, miCloseProject, miSave, miSaveAs, miSaveAll, miClose, miCloseAll, miCloseSession, miPrint, miPrintPreview, miPageSetup, miOpenProjectFolder, miProjectProperties, miExplorerOpenProjectFolder, miExplorerRename, miExplorerProjectProperties, miExplorerCloseProject, miRename, miRemoveFileFromProject
 Dim Shared As MenuItem Ptr miUndo, miRedo, miCutCurrentLine, miCut, miCopy, miPaste, miSingleComment, miBlockComment, miUncommentBlock, miDuplicate, miSelectAll, miIndent, miOutdent, miFormat, miUnformat, miFormatProject, miUnformatProject, miAddSpaces, miDeleteBlankLines, miSuggestions, miCompleteWord, miParameterInfo, miStepInto, miStepOver, miStepOut, miRunToCursor, miAddWatch, miToggleBreakpoint, miClearAllBreakpoints, miSetNextStatement, miShowNextStatement
 Dim Shared As MenuItem Ptr dmiMake, dmiMakeClean
@@ -2737,7 +2738,9 @@ Function CloseProject(tn As TreeNode Ptr, WithoutMessage As Boolean = False) As 
 			'		End If
 			'	Next i
 			'Next jj
-			If tn->Nodes.Item(j)->Tag <> 0 Then _Delete(Cast(ExplorerElement Ptr, tn->Nodes.Item(j)->Tag))
+			'' Null after free: Nodes.Remove below fires tvExplorer_SelChange, which derefs Tag
+			'' in an Is-check — fb_IsTypeOf reads the freed object's vtable = SIGSEGV.
+			If tn->Nodes.Item(j)->Tag <> 0 Then _Delete(Cast(ExplorerElement Ptr, tn->Nodes.Item(j)->Tag)): tn->Nodes.Item(j)->Tag = 0
 		Else
 			For k As Integer = tn->Nodes.Item(j)->Nodes.Count - 1 To 0 Step - 1 '
 				'For jj As Integer = 0 To TabPanels.Count - 1
@@ -2750,7 +2753,8 @@ Function CloseProject(tn As TreeNode Ptr, WithoutMessage As Boolean = False) As 
 				'		End If
 				'	Next i
 				'Next jj
-				If tn->Nodes.Item(j)->Nodes.Item(k)->Tag <> 0 Then _Delete(Cast(ExplorerElement Ptr, tn->Nodes.Item(j)->Nodes.Item(k)->Tag))
+				'' Null after free — same dangling-Tag Is-check crash as above.
+				If tn->Nodes.Item(j)->Nodes.Item(k)->Tag <> 0 Then _Delete(Cast(ExplorerElement Ptr, tn->Nodes.Item(j)->Nodes.Item(k)->Tag)): tn->Nodes.Item(j)->Nodes.Item(k)->Tag = 0
 			Next k
 		End If
 	Next
@@ -2762,7 +2766,9 @@ Function CloseProject(tn As TreeNode Ptr, WithoutMessage As Boolean = False) As 
 	'		End Select
 	'	End If
 	If tn = MainNode Then SetMainNode 0
-	If tn->Tag <> 0 Then _Delete(Cast(ProjectElement Ptr, tn->Tag))
+	'' Null after free: Nodes.Remove below fires tvExplorer_SelChange -> *Tag Is ...
+	'' (fb_IsTypeOf on a freed vtable = SIGSEGV). This is the Close Project crash.
+	If tn->Tag <> 0 Then _Delete(Cast(ProjectElement Ptr, tn->Tag)): tn->Tag = 0
 	'miSaveProject->Enabled = False
 	'miSaveProjectAs->Enabled = False
 	'miCloseProject->Enabled = False
@@ -2773,6 +2779,49 @@ Function CloseProject(tn As TreeNode Ptr, WithoutMessage As Boolean = False) As 
 	ClearAnalysisPanels()
 	ClearDebugPanels()
 	ChangeMenuItemsEnabled
+	Return True
+End Function
+
+'' Deletes the selected project: its folder and everything in it. Astoria shelled out to
+'' "cmd /c rd /s /q"; the Linux equivalent is rm -rf, guarded so an empty or root-ish path can
+'' never be handed to it.
+Function DeleteProject() As Boolean
+	Dim As TreeNode Ptr tn = GetParentNode(ptvExplorer->SelectedNode)
+	If tn = 0 OrElse tn->Tag = 0 Then Return False
+	If MsgBox(ML("Are you sure you want to delete the project") & " """ & tn->Text & """?" & Chr(10) & Chr(10) & _
+		ML("This deletes the project folder and everything in it. It cannot be undone."), _
+		"Ilwaco IDE", mtWarning, btYesNo) <> mrYes Then Return False
+	Dim As ProjectElement Ptr ppe = Cast(ProjectElement Ptr, tn->Tag)
+	Dim As UString ProjectPath = GetFolderName(WGet(ppe->FileName), False)
+	'' refuse anything that is not a plainly nested folder — no "", no "/", no "/home/user"
+	If ProjectPath = "" OrElse Len(ProjectPath) < 4 Then Return False
+	If InStr(3, ProjectPath, Slash) = 0 Then Return False
+	If Not FolderExists(ProjectPath) Then Return False
+	If Not CloseProject(tn, True) Then Return False
+	'' Ilwaco's PipeCmd ignores its first argument and shells the SECOND (unlike Astoria's, which
+	'' used the first) — passing the command as `file` silently runs Shell("") and deletes nothing.
+	PipeCmd "", "rm -rf """ & ProjectPath & """"
+	Return True
+End Function
+
+'' Renames the selected project: its folder, and re-opens the .vfp under the new name.
+Function RenameProject() As Boolean
+	Dim As TreeNode Ptr tn = GetParentNode(ptvExplorer->SelectedNode)
+	If tn = 0 OrElse tn->Tag = 0 Then Return False
+	Dim As ProjectElement Ptr ppe = Cast(ProjectElement Ptr, tn->Tag)
+	Dim As UString OldFolder = GetFolderName(WGet(ppe->FileName), False)
+	Dim As UString NewName = InputBox(ML("New project name") & ":", ML("Rename Project"), tn->Text)
+	If NewName = "" Then Return False
+	If NewName = tn->Text Then Return True
+	Dim As UString NewFolder = GetFolderName(OldFolder) & NewName
+	If FolderExists(NewFolder) Then
+		MsgBox ML("A folder with that name already exists.")
+		Return False
+	End If
+	If Not CloseProject(tn, True) Then Return False
+	Name OldFolder As NewFolder
+	Dim As UString NewVfpPath = NewFolder & Slash & NewName & ".vfp"
+	If FileExists(NewVfpPath) Then AddProject NewVfpPath
 	Return True
 End Function
 
@@ -5606,7 +5655,7 @@ End Sub
 
 Dim As Double tWidth = Max(8, DefaultFont.Size) * 0.85
 stBar.Align = DockStyle.alBottom
-stBar.Add ML("Press F1 for get more information"), tWidth * 25
+stBar.Add ML("Press F1 for help"), tWidth * 25
 stBar.Add("", tWidth * 50) 'Row +Col 
 stBar.Add ML("IntelliSense fully loaded"), tWidth * 27
 stBar.Add "UTF-8", tWidth * 11
@@ -5785,16 +5834,19 @@ Sub CreateMenusAndToolBars
 	pfSplash->lblProcess.Text = ML("Load On Startup") & ": " & ML("Load Hot Keys")
 	LoadHotKeys
 	Var miFile = mnuMain.Add(ML("&File"), "", "File")
+	'' Project commands first, then file commands — Astoria's File-menu taxonomy (37ba31ea).
+	'' Close Folder is not here: Ilwaco removed that command earlier (see IlwacoIDESignificantChanges).
 	miFile->Add(ML("&New Project") & HK("NewProject", "Ctrl+Shift+N"), "Project", "NewProject", @mClick)
-	miFile->Add("-")
-	miFile->Add(ML("&New") & HK("New", "Ctrl+N"), "New", "New", @mClick)
-	miFile->Add(ML("&Open") & "..." & HK("Open", "Ctrl+O"), "Open", "Open", @mClick)
-	'miFile->Add(ML("New Project") & HK("NewProject", "Ctrl+Shift+N"), "Project", "NewProject", @mClick)
-	'miFile->Add(ML("Open Project") & HK("OpenProject", "Ctrl+Shift+O"), "", "OpenProject", @mClick)
+	miFile->Add(ML("&Open Project") & "..." & HK("OpenProject", "Ctrl+Shift+O"), "", "OpenProject", @mClick)
+	miRenameProject = miFile->Add(ML("Rename Project") & "...", "", "RenameProject", @mClick, , , False)
+	miCloseProject = miFile->Add(ML("Close Project") & HK("CloseProject", "Ctrl+Shift+F4"), "", "CloseProject", @mClick, , , False)
+	miDeleteProject = miFile->Add(ML("Delete Project"), "", "DeleteProject", @mClick, , , False)
 	miFile->Add("-")
 	miSaveProject = miFile->Add(ML("Save Project") & "..." & HK("SaveProject", "Ctrl+Shift+S"), "SaveAll", "SaveProject", @mClick, , , False)
 	miSaveProjectAs = miFile->Add(ML("Save Project As") & "..." & HK("SaveProjectAs"), "", "SaveProjectAs", @mClick, , , False)
-	miCloseProject = miFile->Add(ML("Close Project") & HK("CloseProject", "Ctrl+Shift+F4"), "", "CloseProject", @mClick, , , False)
+	miFile->Add("-")
+	miFile->Add(ML("&New") & HK("New", "Ctrl+N"), "New", "New", @mClick)
+	miFile->Add(ML("&Open") & "..." & HK("Open", "Ctrl+O"), "Open", "Open", @mClick)
 	miFile->Add("-")
 	miFile->Add(ML("Open Session") & HK("OpenSession", "Ctrl+Alt+O"), "", "OpenSession", @mClick)
 	miFile->Add(ML("Save Session") & HK("SaveFolder", "Ctrl+Alt+S"), "", "SaveSession", @mClick)
@@ -5980,7 +6032,7 @@ Sub CreateMenusAndToolBars
 	miProject->Add("-")
 	miProjectProperties = miProject->Add(ML("&Project Properties") & "..." & HK("ProjectProperties"), "", "ProjectProperties", @mClick, , , False)
 	
-	Var miFormFormat = mnuMain.Add(ML("F&ormat"), "", "FormFormat")
+	Var miFormFormat = mnuMain.Add(ML("&Designer"), "", "FormFormat")
 	Var miAlign = miFormFormat->Add(ML("&Align"), "Align", "Align", @mClick)
 	miAlignLefts = miAlign->Add(ML("&Lefts") & HK("AlignLefts"), "AlignLefts", "AlignLefts", @mClick)
 	miAlignCenters = miAlign->Add(ML("&Centers") & HK("AlignLefts"), "AlignCenters", "AlignCenters", @mClick)
@@ -6273,7 +6325,7 @@ Sub CreateMenusAndToolBars
 	'	#ifdef __USE_GTK__
 	'		tbBuild.Align = 3
 	'	#endif
-	tbDebug.Name = "Run"
+	tbDebug.Name = "Debug"
 	tbDebug.ImagesList = @imgList
 	tbDebug.HotImagesList = @imgList
 	tbDebug.Flat = True
@@ -6311,7 +6363,7 @@ Sub CreateMenusAndToolBars
 	'	#endif
 	tbProject.Flat = True
 	tbProject.List = True
-	tbtNotSetted = tbProject.Buttons.Add(Cast(ToolButtonStyle, tbsAutosize Or tbsCheckGroup), "NotSetted", , @mClick, "NotSetted", , ML("Not Setted"), True)
+	tbtNotSetted = tbProject.Buttons.Add(Cast(ToolButtonStyle, tbsAutosize Or tbsCheckGroup), "NotSetted", , @mClick, "NotSetted", , ML("Not Set"), True)
 	tbtConsole = tbProject.Buttons.Add(Cast(ToolButtonStyle, tbsAutosize Or tbsCheckGroup), "Console", , @mClick, "Console", , ML("Console"), True)
 	tbtGUI = tbProject.Buttons.Add(Cast(ToolButtonStyle, tbsAutosize Or tbsCheckGroup), "Form", , @mClick, "GUI", , ML("GUI"), True)
 	tbProject.Buttons.Add tbsSeparator
@@ -8378,7 +8430,7 @@ lvSearch.OnItemActivate = @lvSearch_ItemActivate
 'lvSearch.OnKeyDown = @lvSearch_KeyDown
 
 Sub RestoreStatusText
-	pstBar->Panels[0]->Caption = ML("Press F1 for get more information")
+	pstBar->Panels[0]->Caption = ML("Press F1 for help")
 End Sub
 
 Function GetBottomClosedStyle As Boolean
@@ -8495,8 +8547,8 @@ tbBottom.ImagesList = @imgList
 tbBottom.Align = DockStyle.alRight
 tbBottom.Buttons.Add tbsButton, "Pinned", , @mClick, "PinBottom", "", ML("Pin"), , tstEnabled   ' plain button: a checked tbsCheck on this vertical toolbar draws no icon (only the eraser tbsButtons do)
 tbBottom.Buttons.Add tbsSeparator
-tbBottom.Buttons.Add , "Eraser", , @mClick, "EraseOutputWindow", "", ML("Erase output window"), , tstEnabled
-tbBottom.Buttons.Add , "Eraser", , @mClick, "EraseImmediateWindow", "", ML("Erase immediate window"), , tstEnabled
+tbBottom.Buttons.Add , "Eraser", , @mClick, "EraseOutputWindow", "", ML("Clear Output"), , tstEnabled
+tbBottom.Buttons.Add , "Eraser", , @mClick, "EraseImmediateWindow", "", ML("Clear Immediate"), , tstEnabled
 tbBottom.Buttons.Add , "Add", , @mClick, "AddWatch", "", ML("Add Watch"), , Cast(ToolButtonState, tstEnabled Or tstWrap)
 tbBottom.Buttons.Add , "Remove", , @mClick, "RemoveWatch", "", ML("Remove Watch"), , tstEnabled
 tbBottom.Buttons.Item("EraseImmediateWindow")->Visible = False

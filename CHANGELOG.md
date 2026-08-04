@@ -10,6 +10,10 @@ The format is loosely [Keep a Changelog](https://keepachangelog.com/). Dates are
 ## [Unreleased]
 
 ### Added
+- **Open Project** is now on the File menu — the command existed but its menu item was commented
+  out, so there was no way to reach it (2026-08-04).
+- **Rename Project** and **Delete Project** commands (2026-08-04). ⚠️ Both currently inherit a
+  pre-existing crash in Close Project — see `Documentation/TechnicalDebt.md`.
 - The debugged program now receives its **command-line arguments and environment variables**. Both
   were settable in the UI but never applied; the project's Command-line arguments field (on the
   *Debugging* tab) was honoured by Run and silently dropped by Debug (2026-08-04).
@@ -33,6 +37,11 @@ The format is loosely [Keep a Changelog](https://keepachangelog.com/). Dates are
 - Bottom/debug panels cleared on project close and debug end (2026-08-03).
 
 ### Changed / Removed (opinionated by design)
+- Menus follow Astoria's taxonomy: the File menu leads with project commands, `Format` is now
+  `Designer`, and several labels are plainer — the status bar reads "Press F1 for help", the output
+  toolbar says "Clear Output"/"Clear Immediate", Goto asks "Go to line:", and the Find dialog's
+  `Aa` / `W` / `.*` / `<` / `>` buttons are now Match Case / Whole Word / Regex / Find Previous /
+  Find Next. New documents are numbered `Untitled1`, `Untitled2`, … (2026-08-04).
 - Rebranded VisualFBEditor → Ilwaco IDE; x86_64/GTK3/Linux only.
 - Removed the compiler picker (one bundled compiler), the AI-assistant features, non-English UI
   languages, encoding/newline selection, the Direct2D option, and assorted legacy menus.

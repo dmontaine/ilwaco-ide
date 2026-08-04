@@ -202,6 +202,8 @@ Declare Sub OpenUrl(ByVal url As String)
 Declare Function AddProject(ByRef FileName As WString = "", pFilesList As WStringList Ptr = 0, tn As TreeNode Ptr = 0, bNew As Boolean = False) As TreeNode Ptr
 Declare Function SaveProject(ByRef tn As TreeNode Ptr, bWithQuestion As Boolean = False) As Boolean
 Declare Function CloseProject(tn As TreeNode Ptr, WithoutMessage As Boolean = False) As Boolean
+Declare Function DeleteProject() As Boolean
+Declare Function RenameProject() As Boolean
 Declare Sub SetMainNode(tn As TreeNode Ptr)
 Declare Sub OpenProjectFolder
 Declare Sub OpenFiles(ByRef FileName As WString)

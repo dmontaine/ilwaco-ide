@@ -42,6 +42,15 @@ necessary but not sufficient — "it compiled" is not "it works".
   separate tabs, each showing its own content, and both appear in the explorer. Previously the
   case-insensitive path compare collapsed them onto one tab.
 
+## Proven broken
+
+- **🔴 Close Project kills the IDE (2026-08-04).** Exit 139 (SIGSEGV), deterministic. Measured:
+  new build → 139; committed `087a720` → 139 (so pre-existing, not caused by the menu work);
+  open a project and *don't* close it → survives indefinitely, so the fault is the close itself,
+  not the open path and not the known intermittent startup crash. `Rename Project` and
+  `Delete Project` inherit it. See [TechnicalDebt.md](TechnicalDebt.md) for the two ported Astoria
+  fixes that did *not* cure it and the next lead.
+
 ## Not proven (known gaps)
 - **Designer control library load.** `Controls/MyFbFramework/libmff64_gtk3.so` must be built or the
   toolbox errors at runtime; that it loads cleanly is relied upon but not formally recorded as a

@@ -4,3 +4,8 @@
 
 # FreeBASIC crash dump written by the runtime on an unhandled error.
 DebugInfo.log
+
+# Scratch-save the IDE writes beside the current tab's file (TabWindow.bas) when it needs a
+# on-disk copy of an unsaved buffer. A runtime artifact, never source — Astoria committed
+# several of these by accident (Examples/*/Temp.bas).
+Temp.bas
