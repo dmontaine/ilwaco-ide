@@ -11568,19 +11568,7 @@ Function GetFirstCompileLine(ByRef FileName As WString, ByRef Project As Project
 			Case 2: Result += " -s gui"
 			End Select
 		End If
-		If Project->CompileTo = ToGAS Then
-			Result += " -gen gas64"
-		ElseIf Project->CompileTo = ToLLVM Then
-			Result += " -gen llvm"
-		ElseIf Project->CompileTo = ToGCC Then
-			Result += " -gen gcc" & IIf(Project->OptimizationLevel > 0, " -Wc -O" & WStr(Project->OptimizationLevel), IIf(Project->OptimizationFastCode, " -Wc -Ofast", IIf(Project->OptimizationSmallCode, " -Wc -Os", ""))) & _
-			IIf(Project->ShowUnusedLabelWarnings, " -Wc -Wunused-label", "") & IIf(Project->ShowUnusedFunctionWarnings, " -Wc -Wunused-function", "") & IIf(Project->ShowUnusedVariableWarnings, " -Wc -Wunused-variable", "") & _
-			IIf(Project->ShowUnusedButSetVariableWarnings, " -Wc -Wunused-but-set-variable", "") & IIf(Project->ShowMainWarnings, " -Wc -Wmain", "")
-		ElseIf Project->CompileTo = ToCLANG Then
-			Result += " -gen clang" & IIf(Project->OptimizationLevel > 0, " -Wc -O" & WStr(Project->OptimizationLevel), IIf(Project->OptimizationFastCode, " -Wc -Ofast", IIf(Project->OptimizationSmallCode, " -Wc -Os", ""))) & _
-			IIf(Project->ShowUnusedLabelWarnings, " -Wc -Wunused-label", "") & IIf(Project->ShowUnusedFunctionWarnings, " -Wc -Wunused-function", "") & IIf(Project->ShowUnusedVariableWarnings, " -Wc -Wunused-variable", "") & _
-			IIf(Project->ShowUnusedButSetVariableWarnings, " -Wc -Wunused-but-set-variable", "") & IIf(Project->ShowMainWarnings, " -Wc -Wmain", "")
-		End If
+		Result += " -gen gas64"   ' Ilwaco is gas64-only (no backend picker); the GCC/CLANG-only optimization + -Wc warning flags went with it
 	End If
 	If UseDefine <> "" Then Result += " -d " & UseDefine
 	If cboBuildConfiguration.ItemIndex > 0 Then

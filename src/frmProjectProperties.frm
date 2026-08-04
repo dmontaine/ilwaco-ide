@@ -6,7 +6,6 @@
 '#########################################################
 
 #include once "frmProjectProperties.bi"
-#include once "frmAdvancedOptions.bi"
 #include once "TabWindow.bi"
 #include once "Main.bi"
 #include once "frmImageManager.bi"
@@ -264,27 +263,6 @@ pfProjectProperties = @fProjectProperties
 		lblHelpFileName.TabIndex = 14
 		lblHelpFileName.SetBounds 10, 240, 172, 18
 		lblHelpFileName.Parent = @tpGeneral
-		' grbCompileToGCC
-		grbCompileToGCC.Name = "grbCompileToGCC"
-		grbCompileToGCC.Text = ""
-		grbCompileToGCC.Enabled = False
-		grbCompileToGCC.TabIndex = 87
-		grbCompileToGCC.SetBounds 10, 35, 469, 101
-		grbCompileToGCC.Parent = @tpCompile
-		' optCompileToGas
-		optCompileToGas.Name = "optCompileToGas"
-		optCompileToGas.Text = ML("Compile to GAS")
-		optCompileToGas.TabIndex = 46
-		optCompileToGas.SetBounds 180, 15, 140, 16
-		optCompileToGas.OnClick = @optCompileToGas_Click
-		optCompileToGas.Parent = @tpCompile
-		' optCompileToGcc
-		optCompileToGcc.Name = "optCompileToGcc"
-		optCompileToGcc.Text = ML("Compile to GCC")
-		optCompileToGcc.TabIndex = 48
-		optCompileToGcc.SetBounds 16, 34, 132, 16
-		optCompileToGcc.OnClick = @optCompileToGcc_Click
-		optCompileToGcc.Parent = @tpCompile
 		' tpIncludes
 		With tpIncludes
 			.Name = "tpIncludes"
@@ -318,36 +296,6 @@ pfProjectProperties = @fProjectProperties
 		txtCommandLineArguments.SetBounds 211, 14, 262, 21
 		txtCommandLineArguments.Text = ""
 		txtCommandLineArguments.Parent = @tpDebugging
-		' picCompileToGCC
-		picCompileToGCC.Name = "picCompileToGCC"
-		picCompileToGCC.TabIndex = 49
-		picCompileToGCC.SetBounds 22, 51, 445, 80
-		picCompileToGCC.Text = ""
-		picCompileToGCC.Parent = @tpCompile
-		' optOptimizationFastCode
-		optOptimizationFastCode.Name = "optOptimizationFastCode"
-		optOptimizationFastCode.Text = ML("Optimize for Fast Code")
-		optOptimizationFastCode.TabIndex = 50
-		optOptimizationFastCode.SetBounds 10, 3, 184, 24
-		optOptimizationFastCode.Parent = @picCompileToGCC
-		' optOptimizationLevel
-		optOptimizationLevel.Name = "optOptimizationLevel"
-		optOptimizationLevel.Text = ML("Optimization level") & ":"
-		optOptimizationLevel.TabIndex = 51
-		optOptimizationLevel.SetBounds 220, 9, 160, 16
-		optOptimizationLevel.Parent = @picCompileToGCC
-		' optOptimizationSmallCode
-		optOptimizationSmallCode.Name = "optOptimizationSmallCode"
-		optOptimizationSmallCode.Text = ML("Optimize for Small Code")
-		optOptimizationSmallCode.TabIndex = 53
-		optOptimizationSmallCode.SetBounds 10, 29, 184, 16
-		optOptimizationSmallCode.Parent = @picCompileToGCC
-		' optNoOptimization
-		optNoOptimization.Name = "optNoOptimization"
-		optNoOptimization.Text = ML("No Optimization")
-		optNoOptimization.TabIndex = 54
-		optNoOptimization.SetBounds 10, 52, 192, 16
-		optNoOptimization.Parent = @picCompileToGCC
 		' chkCreateDebugInfo
 		chkCreateDebugInfo.Name = "chkCreateDebugInfo"
 		chkCreateDebugInfo.Text = ML("Create Symbolic Debug Info")
@@ -361,25 +309,6 @@ pfProjectProperties = @fProjectProperties
 		cboSubsystem.AddItem ML("(not selected)")
 		cboSubsystem.AddItem ML("Console")
 		cboSubsystem.AddItem ML("GUI")
-		' cboOptimizationLevel
-		cboOptimizationLevel.Name = "cboOptimizationLevel"
-		cboOptimizationLevel.Text = "ComboBoxEdit1"
-		cboOptimizationLevel.TabIndex = 52
-		cboOptimizationLevel.SetBounds 386, 6, 56, 21
-		cboOptimizationLevel.Parent = @picCompileToGCC
-		cboOptimizationLevel.AddItem "0"
-		cboOptimizationLevel.AddItem "1"
-		cboOptimizationLevel.AddItem "2"
-		cboOptimizationLevel.Designer = @This
-		cboOptimizationLevel.OnSelected = @_cboOptimizationLevel_Selected
-		cboOptimizationLevel.AddItem "3"
-		' cmdAdvancedOptions
-		cmdAdvancedOptions.Name = "cmdAdvancedOptions"
-		cmdAdvancedOptions.Text = ML("Advanced Options") & " ..."
-		cmdAdvancedOptions.TabIndex = 55
-		cmdAdvancedOptions.SetBounds 220, 46, 224, 24
-		cmdAdvancedOptions.OnClick = @cmdAdvancedOptions_Click
-		cmdAdvancedOptions.Parent = @picCompileToGCC
 		' txtCompilationArguments64Linux
 		With txtCompilationArguments64Linux
 			.Name = "txtCompilationArguments64Linux"
@@ -489,29 +418,6 @@ pfProjectProperties = @fProjectProperties
 			.TabIndex = 57
 			.SetBounds 24, 156, 445, 113
 			.Text = ""
-			.Parent = @tpCompile
-		End With
-		' optCompileByDefault
-		With optCompileByDefault
-			.Name = "optCompileByDefault"
-			.Text = ML("Compile by default")
-			.TabIndex = 45
-			.Checked = True
-			.SetBounds 16, 15, 150, 16
-			'.Caption = ML("Compile by default")
-			.Designer = @This
-			.OnClick = @optCompileByDefault_Click_
-			.Parent = @tpCompile
-		End With
-		' optCompileToLLVM
-		With optCompileToLLVM
-			.Name = "optCompileToLLVM"
-			.Text = ML("Compile to LLVM")
-			.TabIndex = 47
-			.SetBounds 330, 15, 140, 16
-			'.Caption = ML("Compile to LLVM")
-			.Designer = @This
-			.OnClick = @optCompileToLLVM_Click_
 			.Parent = @tpCompile
 		End With
 		' CommandButton1
@@ -907,18 +813,6 @@ pfProjectProperties = @fProjectProperties
 			.Designer = @This
 			.Parent = @tpIncludes
 		End With
-		' optCompileToClang
-		With optCompileToClang
-			.Name = "optCompileToClang"
-			.Text = ML("Compile to CLANG")
-			.TabIndex = 111
-			.ControlIndex = 3
-			.Caption = ML("Compile to CLANG")
-			.SetBounds 180, 34, 142, 16
-			.Designer = @This
-			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As RadioButton), @optCompileToClang_Click)
-			.Parent = @tpCompile
-		End With
 	End Constructor
 	
 	Private Sub frmProjectProperties._cmdRemoveLibrary_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
@@ -947,10 +841,6 @@ pfProjectProperties = @fProjectProperties
 	
 	Private Sub frmProjectProperties._Form_Create(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		(*Cast(frmProjectProperties Ptr, Sender.Designer)).Form_Create(Sender)
-	End Sub
-	
-	Private Sub frmProjectProperties._cboOptimizationLevel_Selected(ByRef Designer As My.Sys.Object, ByRef Sender As ComboBoxEdit, ItemIndex As Integer)
-		(*Cast(frmProjectProperties Ptr, Sender.Designer)).cboOptimizationLevel_Selected(Sender, ItemIndex)
 	End Sub
 	
 	Private Sub frmProjectProperties.chkManifest_Click_(ByRef Designer As My.Sys.Object, ByRef Sender As CheckBox)
@@ -1001,16 +891,6 @@ Private Sub frmProjectProperties.cmdOK_Click(ByRef Designer As My.Sys.Object, By
 		WLet(ppe->LegalTrademarks, .Types.Get(ML("Legal Trademarks")))
 		WLet(ppe->OriginalFilename, .Types.Get(ML("Original Filename")))
 		WLet(ppe->ProductName, .Types.Get(ML("Product Name")))
-		Select Case True
-		Case .optCompileByDefault.Checked: ppe->CompileTo = ByDefault
-		Case .optCompileToGas.Checked: ppe->CompileTo = ToGAS
-		Case .optCompileToLLVM.Checked: ppe->CompileTo = ToLLVM
-		Case .optCompileToGcc.Checked: ppe->CompileTo = ToGCC
-		Case .optCompileToCLANG.Checked: ppe->CompileTo = ToCLANG
-		End Select
-		ppe->OptimizationFastCode = .optOptimizationFastCode.Checked
-		ppe->OptimizationSmallCode = .optOptimizationSmallCode.Checked
-		ppe->OptimizationLevel = IIf(.optOptimizationLevel.Checked, Val(.cboOptimizationLevel.Text), 0)
 		WLet(ppe->CompilationArguments64Windows, .txtCompilationArguments64Windows.Text)
 		WLet(ppe->CompilationArguments64Linux, .txtCompilationArguments64Linux.Text)
 		ppe->Components.Clear
@@ -1244,24 +1124,6 @@ Public Sub frmProjectProperties.RefreshProperties()
 				.Types.Set ML("Legal Trademarks"), *ppe->LegalTrademarks
 				.Types.Set ML("Original Filename"), *ppe->OriginalFilename
 				.Types.Set ML("Product Name"), *ppe->ProductName
-				.optCompileByDefault.Checked = False
-				.optCompileToGas.Checked = False
-				.optCompileToLLVM.Checked = False
-				.optCompileToGcc.Checked = False
-				.optCompileToClang.Checked = False
-				Select Case ppe->CompileTo
-				Case ByDefault: .optCompileByDefault.Checked = True
-				Case ToGAS: .optCompileToGas.Checked = True
-				Case ToLLVM: .optCompileToLLVM.Checked = True
-				Case ToGCC: .optCompileToGcc.Checked = True
-				Case ToCLANG: .optCompileToClang.Checked = True
-				End Select
-				.optCompileToGas_Click(*.optCompileToGas.Designer, .optCompileToGas)
-				.optNoOptimization.Checked = ppe->OptimizationLevel = 0
-				.optOptimizationLevel.Checked = ppe->OptimizationLevel > 0
-				.cboOptimizationLevel.ItemIndex = ppe->OptimizationLevel
-				.optOptimizationSmallCode.Checked = ppe->OptimizationSmallCode
-				.optOptimizationFastCode.Checked = ppe->OptimizationFastCode
 				.txtCompilationArguments64Windows.Text = *ppe->CompilationArguments64Windows
 				.txtCompilationArguments64Linux.Text = *ppe->CompilationArguments64Linux
 				For i As Integer = 0 To ppe->Components.Count - 1
@@ -1370,61 +1232,8 @@ Private Sub frmProjectProperties.txtValue_LostFocus(ByRef Designer As My.Sys.Obj
 	End With
 End Sub
 
-Private Sub frmProjectProperties.cmdAdvancedOptions_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
-	With *pfAdvancedOptions
-		.ProjectTreeNode = fProjectProperties.ProjectTreeNode
-		.chkShowUnusedLabelWarnings.Checked = False
-		.chkShowUnusedFunctionWarnings.Checked = False
-		.chkShowUnusedVariableWarnings.Checked = False
-		.chkShowUnusedButSetVariableWarnings.Checked = False
-		.chkShowMainWarnings.Checked = False
-		If .ProjectTreeNode <> 0 Then
-			Dim As ProjectElement Ptr ppe = .ProjectTreeNode->Tag
-			If ppe <> 0 Then
-				.chkShowUnusedLabelWarnings.Checked = ppe->ShowUnusedLabelWarnings
-				.chkShowUnusedFunctionWarnings.Checked = ppe->ShowUnusedFunctionWarnings
-				.chkShowUnusedVariableWarnings.Checked = ppe->ShowUnusedVariableWarnings
-				.chkShowUnusedButSetVariableWarnings.Checked = ppe->ShowUnusedButSetVariableWarnings
-				.chkShowMainWarnings.Checked = ppe->ShowMainWarnings
-			End If
-		End If
-		.ShowModal fProjectProperties
-	End With
-End Sub
-
 Private Sub frmProjectProperties.Form_Show(ByRef Designer As My.Sys.Object, ByRef Sender As Form)
 	
-End Sub
-
-Private Sub frmProjectProperties.optCompileToGas_Click(ByRef Designer As My.Sys.Object, ByRef Sender As RadioButton)
-	With fProjectProperties
-		Dim As Boolean bEnabled = .optCompileToGcc.Checked OrElse .optCompileToClang.Checked
-		.grbCompileToGCC.Enabled = bEnabled
-		.optOptimizationLevel.Enabled = bEnabled
-		.optOptimizationSmallCode.Enabled = bEnabled
-		.optNoOptimization.Enabled = bEnabled
-		.optOptimizationFastCode.Enabled = bEnabled
-		.cboOptimizationLevel.Enabled = bEnabled
-		.cmdAdvancedOptions.Enabled = bEnabled
-	End With
-End Sub
-
-Private Sub frmProjectProperties.optCompileToGcc_Click(ByRef Designer As My.Sys.Object, ByRef Sender As RadioButton)
-	frmProjectProperties.optCompileToGas_Click Designer, Sender
-End Sub
-
-Private Sub frmProjectProperties.optCompileByDefault_Click_(ByRef Designer As My.Sys.Object, ByRef Sender As RadioButton)
-	(*Cast(frmProjectProperties Ptr, Sender.Designer)).optCompileByDefault_Click(Sender)
-End Sub
-Private Sub frmProjectProperties.optCompileByDefault_Click(ByRef Sender As RadioButton)
-	frmProjectProperties.optCompileToGas_Click *Sender.Designer, Sender
-End Sub
-
-Private Sub frmProjectProperties.optCompileToLLVM_Click_(ByRef Designer As My.Sys.Object, ByRef Sender As RadioButton)
-	(*Cast(frmProjectProperties Ptr, Sender.Designer)).optCompileToLLVM_Click(Sender)
-End Sub
-Private Sub frmProjectProperties.optCompileToLLVM_Click(ByRef Sender As RadioButton)
-	frmProjectProperties.optCompileToGas_Click *Sender.Designer, Sender
 End Sub
 
 Private Sub frmProjectProperties.CommandButton1_Click_(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
@@ -1487,10 +1296,6 @@ Private Sub frmProjectProperties.chkManifest_Click(ByRef Sender As CheckBox)
 	chkRunAsAdministrator.Enabled = chkManifest.Checked
 End Sub
 
-Private Sub frmProjectProperties.cboOptimizationLevel_Selected(ByRef Sender As ComboBoxEdit, ItemIndex As Integer)
-	optOptimizationLevel.Checked = True
-End Sub
-
 Private Sub frmProjectProperties.Form_Create(ByRef Sender As Control)
 	fProjectProperties.RefreshProperties
 End Sub
@@ -1544,8 +1349,4 @@ End Sub
 Private Sub frmProjectProperties.cmdRemoveLibrary_Click(ByRef Sender As Control)
 	Var Index = lstLibraryPaths.ItemIndex
 	If Index <> -1 Then lstLibraryPaths.RemoveItem Index
-End Sub
-
-Private Sub frmProjectProperties.optCompileToClang_Click(ByRef Sender As RadioButton)
-	frmProjectProperties.optCompileToGas_Click *Sender.Designer, Sender
 End Sub

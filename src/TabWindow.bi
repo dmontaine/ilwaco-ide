@@ -28,14 +28,6 @@ Using My.Sys.Forms
 
 Declare Sub CompleteWord()
 
-Enum CompileToVariants
-	ByDefault
-	ToGAS
-	ToLLVM
-	ToGCC
-	ToCLANG
-End Enum
-
 Type ProjectElement Extends ExplorerElement
 	MainFileName As WString Ptr
 	ResourceFileName As WString Ptr
@@ -66,15 +58,6 @@ Type ProjectElement Extends ExplorerElement
 	LegalTrademarks As WString Ptr
 	OriginalFilename As WString Ptr
 	ProductName As WString Ptr
-	CompileTo As CompileToVariants
-	OptimizationLevel As Integer
-	OptimizationFastCode As Boolean
-	OptimizationSmallCode As Boolean
-	ShowUnusedLabelWarnings As Boolean
-	ShowUnusedFunctionWarnings As Boolean
-	ShowUnusedVariableWarnings As Boolean
-	ShowUnusedButSetVariableWarnings As Boolean
-	ShowMainWarnings As Boolean
 	CompilationArguments64Windows As WString Ptr
 	CompilationArguments64Linux As WString Ptr
 	CommandLineArguments As WString Ptr

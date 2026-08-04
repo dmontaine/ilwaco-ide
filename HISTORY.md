@@ -11,6 +11,22 @@ for the classified port backlog, [Documentation/AstoriaParity.md](Documentation/
 
 ---
 
+## ✅ DONE (2026-08-04) — bottom-panel collapse: dedicated horizontal rail (COMMITTED)
+
+Finished `e212819d`/`ef3b43e9` (bottom-panel collapse + persistence). The collapsed-panel affordance is a
+horizontal activity rail mirroring the left/right rails: on collapse `pnlBottom` is hidden and a 25px
+`pnlBottomRail` (`alBottom`) is shown — a pin at the right plus 14 tab buttons (`Output..Immediate` always;
+`Locals..Profiler` only with the debugger on). Live-verified on `:0` by the owner. Full detail + the GTK/MFF
+facts live in [AstoriaParity.md](Documentation/AstoriaParity.md) "Done 2026-08-04 — bottom-panel collapse via
+a horizontal activity rail". Changed `src/Main.bas` + `src/ilwaco.bas`. Key fixes: pin repaint on reopen
+(`ShowBottom` → `gtk_widget_show_all(pnlBottomPin.Handle)`); pin docked `alRight` (was `alLeft`, which jumped);
+debug buttons re-asserted on the rail via `CloseBottom`/`SetDebugTabsVisible`; rail pin unclipped via a
+`.ilwacorailpin` `GtkCssProvider`; and a **debugger-toggle desync fix** — `ilwaco.bas "UseDebugger"` reads
+GTK's real `gtk_check_menu_item_get_active` instead of MFF's stale `Checked`. Persistence via the
+`BottomClosed` INI key round-trips.
+
+---
+
 ## ✅ DONE (2026-08-04) — left/right panel collapse: vertical-text rail + pin-repaint fix (UNCOMMITTED, verified)
 
 Owner asked to make the **left/right tool panels collapse and reopen** with a **visual** affordance (not a

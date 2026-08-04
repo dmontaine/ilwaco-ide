@@ -580,12 +580,23 @@ to MFF, no `.so` rebuild. **Persistence** (`BottomClosed` INI key via `GetBottom
 
 ## Next action
 
-The bottom-panel collapse cluster (`e212819d`/`ef3b43e9`) is **done** (section above); `ae74b31c`
-(Service→Tools) and `53d8e473` (compile warnings) are already done/pruned. The two **Examples items**
-(`4bd02894`, `51441d7a`) are **deferred to just before the testing phase** (owner, 2026-08-04) — moved in
-[AstoriaDetailedChangeLog.md](AstoriaDetailedChangeLog.md) to just above `91110174`. **Candidate next
-PORT:** `5fa5cf25` — remove the Integrated (stabs) debugger + alt-compiler-backend / debugger-choice code
-(matches the one-compiler/one-debugger directive; verify Ilwaco still carries that choice code first).
+The bottom-panel collapse cluster (`e212819d`/`ef3b43e9`) is **done** (now in [HISTORY.md](../HISTORY.md));
+`ae74b31c` (Service→Tools) and `53d8e473` (compile warnings) are already done/pruned. The two **Examples
+items** (`4bd02894`, `51441d7a`) are **deferred to just before the testing phase** (owner, 2026-08-04).
+
+**In progress — `5fa5cf25` (PORT with INVERTED debugger choice).** Astoria removed the Integrated engine and
+kept GDB; **Ilwaco does the opposite — keeps the built-in Integrated (stabs) debugger and removes GDB** —
+because the Integrated engine reads FreeBASIC's `.dbgdat`/`.dbgstr` sections that only the **gas64** backend
+emits with `-g` (Ilwaco is gas64-only; gdb isn't installed; Astoria's bundled-gdb doesn't transfer). See
+memory `project-debugger-keep-internal`. **Done (2026-08-04, uncommitted, built, live-re-verified):** the
+alt-compiler-backend picker + optimization + `frmAdvancedOptions` removed (`-gen gas64` hardcoded), and
+**debugger Pass 1** — the whole GDB engine deleted from `Debug.bas` (−2130 lines), `RunWithDebug`'s GDB
+branch + the `ilwaco.bas` GDB dispatch + `TimerProcGDB`/`GDBCommand`/`miGDBCommand` gone; the Integrated
+debugger was re-verified working on `:0` (gas64 build → `t (tracing stop)` → Locals/current-line). **Remaining
+— debugger Pass 2:** the debugger-choice UI/settings (`pDebuggers`, `Debugger64Path`/`GDBDebugger64Path`,
+`frmOptions` debugger-paths, `frmParameters` combo, `GDBCommands.txt` writer) and the `DebuggerTypes` enum,
+plus the residual `Debug.bas` orphan declares/globals. See PROJECT_STATUS "NEXT".
+
 Then the **menu-taxonomy cluster** `49ec5ccd`/`37ba31ea` (menu labels, File-menu restructure, Code-Editor
 grouping, compiler-options simplification — the debug-tabs sub-item is already done). Skip the pure
 GTK/Linux/32-bit stripping commits (`e139c2cc`, `c494207f`, `7baebd1e`, `add4642a`, `76abaa5a`, `15e66cc5`).

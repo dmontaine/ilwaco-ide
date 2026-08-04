@@ -28,7 +28,7 @@ Using My.Sys.Forms
 		Dim As CommandButton cmdOK, cmdCancel
 		Dim As Label lblfbc64, lblMake1, llblMake2, lblRun, lblDebug64
 		Dim As TextBox txtfbc64, txtMake1, txtMake2, txtRun, txtDebug64
-		Dim As ComboBoxEdit cboMake1, cboMake2, cboRun, cboDebug64
+		Dim As ComboBoxEdit cboMake1, cboMake2, cboRun
 		Dim As Label lblAddCompilerOption64
 	End Type
 	

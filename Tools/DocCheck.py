@@ -77,6 +77,7 @@ REMOVED_FEATURES = [
     (r"\bChatGPT/Codex\b",              "a non-Claude AI assistant (removed: AI features stripped)"),
     (r"Use\s+Direct2D",                 "the Direct2D user option (removed; Win32-only path stripped)"),
     (r"32-bit\s+(?:build|target|compiler)", "32-bit build support (removed: Ilwaco is x86_64-only)"),
+    (r"Compile to (?:GAS|LLVM|GCC|CLANG)", "the alt compiler-backend picker (removed: gas64-only)"),
 ]
 
 # Files whose absence should be reported when a document still names them, written as an

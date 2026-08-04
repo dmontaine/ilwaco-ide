@@ -26,7 +26,6 @@ name=Main.bi
 name=TabWindow.bi
 name=frmAbout.bi
 name=frmAddIns.bi
-name=frmAdvancedOptions.bi
 name=frmFind.bi
 name=frmFindInFiles.bi
 name=frmGoto.bi

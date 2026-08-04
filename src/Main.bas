@@ -74,7 +74,7 @@ Dim Shared As TrackBar trLeft
 Dim Shared As MainMenu mnuMain
 Dim Shared As MenuItem Ptr mnuStartWithCompile, mnuStart, mnuBreak, mnuEnd, mnuRestart, mnuStandardToolBar, mnuEditToolBar, mnuProjectToolBar, mnuFormatToolBar, mnuBuildToolBar, mnuDebugToolBar, mnuRunToolBar, mnuSplit, mnuSplitHorizontally, mnuSplitVertically, mnuWindowSeparator, miRecentProjects, miRecentFiles, miRecentFolders, miRecentSessions, miSetAsMain, miClearStartUp, miTabSetAsMain, miTabReloadHistoryCode, miRemoveFiles, miToolBars
 Dim Shared As MenuItem Ptr miSaveProject, miSaveProjectAs, miCloseProject, miSave, miSaveAs, miSaveAll, miClose, miCloseAll, miCloseSession, miPrint, miPrintPreview, miPageSetup, miOpenProjectFolder, miProjectProperties, miExplorerOpenProjectFolder, miExplorerRename, miExplorerProjectProperties, miExplorerCloseProject, miRename, miRemoveFileFromProject
-Dim Shared As MenuItem Ptr miUndo, miRedo, miCutCurrentLine, miCut, miCopy, miPaste, miSingleComment, miBlockComment, miUncommentBlock, miDuplicate, miSelectAll, miIndent, miOutdent, miFormat, miUnformat, miFormatProject, miUnformatProject, miAddSpaces, miDeleteBlankLines, miSuggestions, miCompleteWord, miParameterInfo, miStepInto, miStepOver, miStepOut, miRunToCursor, miGDBCommand, miAddWatch, miToggleBreakpoint, miClearAllBreakpoints, miSetNextStatement, miShowNextStatement
+Dim Shared As MenuItem Ptr miUndo, miRedo, miCutCurrentLine, miCut, miCopy, miPaste, miSingleComment, miBlockComment, miUncommentBlock, miDuplicate, miSelectAll, miIndent, miOutdent, miFormat, miUnformat, miFormatProject, miUnformatProject, miAddSpaces, miDeleteBlankLines, miSuggestions, miCompleteWord, miParameterInfo, miStepInto, miStepOver, miStepOut, miRunToCursor, miAddWatch, miToggleBreakpoint, miClearAllBreakpoints, miSetNextStatement, miShowNextStatement
 Dim Shared As MenuItem Ptr dmiMake, dmiMakeClean
 Dim Shared As MenuItem Ptr miCode, miForm, miCodeAndForm, miGotoCodeForm, miCollapseCurrent, miCollapseAllProcedures, miCollapseAll, miUnCollapseCurrent, miUnCollapseAllProcedures, miUnCollapseAll, miImageManager, miAddProcedure, miAddType, miFind, miReplace, miFindNext, miFindPrevious, miGoto, miDefine, miToggleBookmark, miNextBookmark, miPreviousBookmark, miClearAllBookmarks, miSyntaxCheck, miCompile, miCompileAll, miBuildBundle, miBuildAPK, miGenerateSignedBundle, miGenerateSignedAPK, miMake, miMakeClean
 Dim Shared As MenuItem Ptr miAlignLefts, miAlignCenters, miAlignRights, miAlignTops, miAlignMiddles, miAlignBottoms, miAlignToGrid, miMakeSameSizeWidth, miMakeSameSizeHeight, miMakeSameSizeBoth, miSizeToGrid, miHorizontalSpacingMakeEqual, miHorizontalSpacingIncrease, miHorizontalSpacingDecrease, miHorizontalSpacingRemove, miVerticalSpacingMakeEqual, miVerticalSpacingIncrease, miVerticalSpacingDecrease, miVerticalSpacingRemove, miCenterInParentHorizontally, miCenterInParentVertically, miOrderBringToFront, miOrderSendToBack, miLockControls
@@ -698,13 +698,7 @@ Function Compile(Parameter As String = "", bAll As Boolean = False) As Integer
 		'	WAdd CompileWith, " -Wl ""--post-js " & *MFFPathC & "\mff\Web\mff.js"""
 		'End If
 		If Project Then
-			Select Case Project->CompileTo
-			Case ByDefault:
-			Case ToGAS: WAdd(CompileWith, " -gen gas64")
-			Case ToLLVM: WAdd(CompileWith, " -gen llvm" )
-			Case ToGCC: WAdd(CompileWith, " -gen gcc" )
-			Case ToCLANG: WAdd(CompileWith, " -gen clang" )
-			End Select
+			WAdd(CompileWith, " -gen gas64")   ' Ilwaco is gas64-only (no backend picker)
 			For i As Integer = 0 To Project->Components.Count - 1
 				If EndsWith(Project->Components.Item(i), Slash) Then
 					WAdd(CompileWith, " -i """ & GetRelativePath(Left(Project->Components.Item(i), Len(Project->Components.Item(i)) - 1), *ProjectPath & Slash) & """")
@@ -1508,14 +1502,6 @@ Function AddProject(ByRef FileName As WString = "", pFilesList As WStringList Pt
 					WLet(ppe->OriginalFilename, Mid(Buff, Pos1 + 2, Len(Buff) - Pos1 - 2))
 				ElseIf Parameter = "ProductName" Then
 					WLet(ppe->ProductName, Mid(Buff, Pos1 + 2, Len(Buff) - Pos1 - 2))
-				ElseIf Parameter = "CompileTo" Then
-					ppe->CompileTo = Cast(CompileToVariants, Val(Mid(Buff, Pos1 + 1)))
-				ElseIf Parameter = "OptimizationLevel" Then
-					ppe->OptimizationLevel = Val(Mid(Buff, Pos1 + 1))
-				ElseIf Parameter = "OptimizationFastCode" Then
-					ppe->OptimizationFastCode = CBool(Mid(Buff, Pos1 + 1))
-				ElseIf Parameter = "OptimizationSmallCode" Then
-					ppe->OptimizationFastCode = CBool(Mid(Buff, Pos1 + 1))
 				ElseIf Parameter = "CompilationArguments64Windows" Then
 					WLet(ppe->CompilationArguments64Windows, Mid(Buff, Pos1 + 2, Len(Buff) - Pos1 - 2))
 				ElseIf Parameter = "CompilationArguments64Linux" Then
@@ -2107,10 +2093,6 @@ Function SaveProject(ByRef tnP As TreeNode Ptr, bWithQuestion As Boolean = False
 	Print #Fn, "LegalTrademarks=""" & *ppe->LegalTrademarks & """"
 	Print #Fn, "OriginalFilename=""" & *ppe->OriginalFilename & """"
 	Print #Fn, "ProductName=""" & *ppe->ProductName & """"
-	Print #Fn, "CompileTo=" & ppe->CompileTo
-	Print #Fn, "OptimizationLevel=" & ppe->OptimizationLevel
-	Print #Fn, "OptimizationFastCode=" & ppe->OptimizationFastCode
-	Print #Fn, "OptimizationSmallCode=" & ppe->OptimizationSmallCode
 	Print #Fn, "CompilationArguments64Windows=""" & *ppe->CompilationArguments64Windows & """"
 	Print #Fn, "CompilationArguments64Linux=""" & *ppe->CompilationArguments64Linux & """"
 	Print #Fn, "CommandLineArguments=""" & *ppe->CommandLineArguments & """"
@@ -2888,7 +2870,6 @@ Sub ChangeEnabledDebug(bStart As Boolean, bBreak As Boolean, bEnd As Boolean)
 	mnuBreak->Enabled = bBreak
 	mnuEnd->Enabled = bEnd
 	mnuRestart->Enabled = bStart
-	miGDBCommand->Enabled = bEnd
 	miAddWatch->Enabled = bEnd
 	miStepOut->Enabled = bEnd
 	miShowNextStatement->Enabled = bEnd
@@ -2911,30 +2892,6 @@ End Sub
 	fntab = 0
 	fcurlig = -1
 End Sub
-
-	Function TimerProcGDB() As Integer
-		If fcurlig < 1 AndAlso fcurlig <> -2 Then Return 1
-		ChangeEnabledDebug True, False, True
-		If fcurlig <> -2 Then
-			Dim As TabWindow Ptr tb = Cast(TabWindow Ptr, ptabCode->SelectedTab)
-			If tb = 0 OrElse Not EqualPaths(tb->FileName, CurrentFile) Then
-				tb = AddTab(CurrentFile)
-			End If
-			If tb Then
-				CurEC = @tb->txtCode
-				tb->txtCode.CurExecutedLine = fcurlig - 1
-				tb->txtCode.SetSelection fcurlig - 1, fcurlig - 1, 0, 0
-				tb->txtCode.PaintControl
-			End If
-		Else
-			tpOutput->SelectTab
-			txtOutput.SetSel txtOutput.GetTextLength, txtOutput.GetTextLength
-			txtOutput.ScrollToCaret
-		End If
-		'info_all_variables_debug()
-		fcurlig = -1
-		Return 1
-	End Function
 
 Function EqualPaths(ByRef a As WString, ByRef b As WString) As Boolean
 	Dim FileNameLeft As WString Ptr
@@ -5696,15 +5653,6 @@ Function HK(Key As String, Default As String = "", WithSpace As Boolean = False)
 	End If
 End Function
 
-Sub GDBCommand
-	fTheme.Text = ML("GDB Command")
-	fTheme.lblThemeName.Text = ML("Type command:")
-	If fTheme.ShowModal(frmMain) = ModalResults.OK Then
-		'ShowResult = True
-			command_debug fTheme.txtThemeName.Text
-	End If
-End Sub
-
 Sub CreateMenusAndToolBars
 	pfSplash->lblProcess.Text = ML("Load On Startup") & ": " & ML("Create Menus And ToolBars")
 	imgList.Name = "imgList"
@@ -6118,7 +6066,6 @@ Sub CreateMenusAndToolBars
 	miStepOut = miDebug->Add(ML("Step O&ut") & HK("StepOut", "Ctrl+Shift+F8"), "StepOut", "StepOut", @mClick, , , False)
 	miRunToCursor = miDebug->Add(ML("&Run To Cursor") & HK("RunToCursor", "Ctrl+F8"), "RunToCursor", "RunToCursor", @mClick, , , False)
 	miDebug->Add("-")
-	miGDBCommand = miDebug->Add(ML("&GDB Command") & HK("GDBCommand"), "", "GDBCommand", @mClick, , , False)
 	miAddWatch = miDebug->Add(ML("&Add Watch") & HK("AddWatch"), "", "AddWatch", @mClick, , , False)
 	miDebug->Add("-")
 	miToggleBreakpoint = miDebug->Add(ML("&Toggle Breakpoint") & HK("Breakpoint", "F9"), "Breakpoint", "Breakpoint", @mClick, , , False)
@@ -7829,7 +7776,6 @@ Sub lvWatches_CellEdited(ByRef Designer As My.Sys.Object, ByRef Sender As TreeLi
 			End If
 		Else
 			WatchIndex = Item->Index
-			command_debug "print " & UCase(NewText)
 			If Item->Index = lvWatches.Nodes.Count - 1 Then
 				lvWatches.Nodes.Add
 			End If
