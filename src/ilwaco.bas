@@ -193,10 +193,14 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 			LoadTheme
 			UpdateAllTabWindows
 		End If
-	Case "ProjectExplorer":                     tpProject->SelectTab: txtExplorer.SetFocus
-	Case "PropertiesWindow":                    tpProperties->SelectTab: txtProperties.SetFocus
-	Case "EventsWindow":                        tpEvents->SelectTab: txtEvents.SetFocus
-	Case "Toolbox":                             tpToolbox->SelectTab: txtForm.SetFocus
+	Case "ProjectExplorer":                     If Not pnlLeft.Visible Then SetLeftClosedStyle False
+	                                            tpProject->SelectTab: txtExplorer.SetFocus
+	Case "PropertiesWindow":                    If Not pnlRight.Visible Then SetRightClosedStyle False
+	                                            tpProperties->SelectTab: txtProperties.SetFocus
+	Case "EventsWindow":                        If Not pnlRight.Visible Then SetRightClosedStyle False
+	                                            tpEvents->SelectTab: txtEvents.SetFocus
+	Case "Toolbox":                             If Not pnlLeft.Visible Then SetLeftClosedStyle False
+	                                            tpToolbox->SelectTab: txtForm.SetFocus
 	Case "OutputWindow":                        tpOutput->SelectTab
 	Case "ProblemsWindow":                      tpProblems->SelectTab
 	Case "SuggestionsWindow":                   tpSuggestions->SelectTab
@@ -587,29 +591,11 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 	Case "ReplaceInFiles":                  mFormFindInFile = False:  pfFindFile->Show *pfrmMain : pfFindFile->CenterToParent
 	Case "Replace":                         pfFind->mFormFind = False: pfFind->Show *pfrmMain
 	Case "PinLeft":
-		Dim pinLeftBtn As ToolButton Ptr = tbLeft.Buttons.Item("PinLeft")
-		If pinLeftBtn = 0 Then Exit Select
-		' Checked toggles before OnClick. When expanded, one click collapses to the tab strip
-		' instead of only restyling the tabs and relying on a later focus change to reclaim the space.
-		If splLeft.Visible Then
-			If pinLeftBtn->Checked Then pinLeftBtn->Checked = False
-			SetLeftClosedStyle True, True
-		ElseIf pinLeftBtn->Checked Then
-			SetLeftClosedStyle False, False
-		Else
-			SetLeftClosedStyle True, False
-		End If
+		' splLeft.Visible tracks open/closed: open -> collapse to the pin strip, closed -> re-open.
+		If splLeft.Visible Then SetLeftClosedStyle True, True Else SetLeftClosedStyle False, True
 	Case "PinRight":
-		Dim pinRightBtn As ToolButton Ptr = tbRight.Buttons.Item("PinRight")
-		If pinRightBtn = 0 Then Exit Select
-		If splRight.Visible Then
-			If pinRightBtn->Checked Then pinRightBtn->Checked = False
-			SetRightClosedStyle True, True
-		ElseIf pinRightBtn->Checked Then
-			SetRightClosedStyle False, False
-		Else
-			SetRightClosedStyle True, False
-		End If
+		' splRight.Visible tracks open/closed: open -> collapse to the rail, closed -> re-open.
+		If splRight.Visible Then SetRightClosedStyle True, True Else SetRightClosedStyle False, True
 	Case "PinBottom":
 		Dim pinBottomBtn As ToolButton Ptr = tbBottom.Buttons.Item("PinBottom")
 		If pinBottomBtn = 0 Then Exit Select

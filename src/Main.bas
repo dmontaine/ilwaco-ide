@@ -62,6 +62,10 @@ Dim Shared As RadioButton radButton
 Dim Shared As ScrollBarControl scrLeft
 Dim Shared As Label lblLeft
 Dim Shared As Panel pnlLeft, pnlRight, pnlBottom, pnlBottomTab, pnlLeftPin, pnlRightPin, pnlBottomPin, pnlPropertyValue, pnlColor
+Dim Shared As Panel pnlLeftRail, pnlRightRail       ' collapsed-panel rails (left/right edge, re-open buttons)
+Dim Shared As ToolBar tbLeftRailPin, tbRightRailPin ' pin icon at the top of each rail (re-expands to the last tab)
+Dim Shared As CommandButton btnLeftRailProject, btnLeftRailToolbox, btnRightRailProperty, btnRightRailEvent  ' vertical-text tab buttons (label rotated 90 deg), à la Astoria's collapsed strip
+Dim Shared As GtkWidget Ptr overlayLeft, overlayRight  ' the GTK overlays hosting the left/right pins; re-laid-out in Show{Left,Right} so the pin repaints after re-show
 Dim Shared As TrackBar trLeft
 Dim Shared As MainMenu mnuMain
 Dim Shared As MenuItem Ptr mnuStartWithCompile, mnuStart, mnuBreak, mnuEnd, mnuRestart, mnuStandardToolBar, mnuEditToolBar, mnuProjectToolBar, mnuFormatToolBar, mnuBuildToolBar, mnuDebugToolBar, mnuRunToolBar, mnuSplit, mnuSplitHorizontally, mnuSplitVertically, mnuWindowSeparator, miRecentProjects, miRecentFiles, miRecentFolders, miRecentSessions, miSetAsMain, miClearStartUp, miTabSetAsMain, miTabReloadHistoryCode, miRemoveFiles, miToolBars
@@ -6480,40 +6484,53 @@ splLeft.Align = SplitterAlignmentConstants.alLeft
 splRight.Align = SplitterAlignmentConstants.alRight
 splBottom.Align = SplitterAlignmentConstants.alBottom
 
+' Collapse the left tool panel. On GTK a left-docked panel collapses to zero once its notebook is hidden
+' (and the notebook can't shrink while shown), so there's no way to keep a thin strip of the panel itself
+' visible. Instead hide pnlLeft entirely and show pnlLeftRail — a separate, always-available strip at the
+' left edge whose Project/Toolbox buttons re-open the panel to that tab (see ShowLeft / the mClick cases).
 Sub CloseLeft()
 	splLeft.Visible = False
-		pnlLeft.Width = 30
-	pnlLeftPin.Visible = False
+	pnlLeftPin.Visible = False   ' the pin lives in an overlay, so hiding pnlLeft alone leaves it floating
+	pnlLeft.Visible = False
+	pnlLeftRail.Visible = True
 	frmMain.RequestAlign
 End Sub
 
 Sub ShowLeft()
-	tabLeft.SetFocus
+	pnlLeftRail.Visible = False
+	pnlLeft.Visible = True
 	pnlLeft.Width = tabLeftWidth
-	pnlLeft.RequestAlign
 	splLeft.Visible = True
-	pnlLeftPin.Left = tabLeftWidth - pnlLeftPin.Width - 4
 	pnlLeftPin.Visible = True
-	'#IfNDef __USE_GTK__
+	gtk_widget_show_all(pnlLeftPin.Handle)   ' remap the toolbar + its icon so the pin repaints after re-show
+	tabLeft.SetFocus
 	frmMain.RequestAlign
-	'#EndIf
+	' Re-lay-out the overlay so its get-child-position callback runs against the now-restored panel width;
+	' without this the pin stays at its collapsed (stale/zero) allocation and does not repaint on re-show.
+	If overlayLeft <> 0 Then gtk_widget_queue_resize(overlayLeft)
 End Sub
 
+' Collapse the right tool panel — mirror of CloseLeft. Hide pnlRight entirely and show pnlRightRail (a
+' separate strip at the right edge) whose Properties/Events buttons re-open the panel to that tab.
 Sub CloseRight()
 	splRight.Visible = False
-		pnlRight.Width = 30
-	pnlRightPin.Visible = False
+	pnlRightPin.Visible = False   ' the pin lives in an overlay, so hiding pnlRight alone leaves it floating
+	pnlRight.Visible = False
+	pnlRightRail.Visible = True
 	frmMain.RequestAlign
 End Sub
 
 Sub ShowRight()
-	tabRight.SetFocus
+	pnlRightRail.Visible = False
+	pnlRight.Visible = True
 	pnlRight.Width = tabRightWidth
-	pnlRight.RequestAlign
 	splRight.Visible = True
-	pnlRightPin.Left = tabRightWidth - pnlRightPin.Width - tabRight.ItemWidth(0) - 4
 	pnlRightPin.Visible = True
+	gtk_widget_show_all(pnlRightPin.Handle)   ' remap the toolbar + its icon so the pin repaints after re-show
+	tabRight.SetFocus
 	frmMain.RequestAlign
+	' See ShowLeft: re-lay-out the overlay so the pin repositions/repaints against the restored width.
+	If overlayRight <> 0 Then gtk_widget_queue_resize(overlayRight)
 End Sub
 
 Sub CloseBottom()
@@ -6533,7 +6550,7 @@ Sub ShowBottom()
 End Sub
 
 Function GetLeftClosedStyle As Boolean
-	Return Not tabLeft.TabPosition = tpTop
+	Return Not pnlLeft.Visible
 End Function
 
 Dim Shared bClosing As Boolean
@@ -6542,24 +6559,16 @@ Sub SetLeftClosedStyle(Value As Boolean, WithClose As Boolean = True)
 	bClosing = True
 	With *tbLeft.Buttons.Item("PinLeft")
 		If Value Then
-			tabLeft.TabPosition = tpLeft
 			.ImageKey = "Pin"
 			.Checked = False
-			pnlLeftPin.Top = 2
 			If WithClose Then CloseLeft
 		Else
-			pnlLeft.Width = tabLeftWidth
-			tabLeft.TabPosition = tpTop
-			splLeft.Visible = True
-			pnlLeftPin.Visible = True
 			.ImageKey = "Pinned"
 			.Checked = True
-			pnlLeftPin.Top = tabItemHeight
+			If WithClose Then ShowLeft
 		End If
 	End With
-	'#IfNDef __USE_GTK__
 	frmMain.RequestAlign
-	'#EndIf
 	bClosing = False
 End Sub
 
@@ -7013,13 +7022,63 @@ pnlLeftPin.Width = tbLeft.Width
 pnlLeftPin.Left = tabLeftWidth - pnlLeftPin.Width - 4
 pnlLeftPin.Height = tbLeft.Height
 pnlLeftPin.Parent = @pnlLeft
-		Dim As GtkWidget Ptr overlayLeft = gtk_overlay_new()
+		overlayLeft = gtk_overlay_new()
 		gtk_container_add(GTK_CONTAINER(overlayLeft), pnlLeft.Handle)
 		g_object_ref(pnlLeftPin.Handle)
 		gtk_container_remove(GTK_CONTAINER(pnlLeft.Handle), pnlLeftPin.Handle)
 		gtk_overlay_add_overlay(GTK_OVERLAY(overlayLeft), pnlLeftPin.Handle)
 		g_signal_connect(overlayLeft, "get-child-position", G_CALLBACK(@OverlayLeft_get_child_position), @pnlLeft)
 		pnlLeft.WriteProperty("overlaywidget", overlayLeft)
+
+' Rotate a rail button's caption 90 deg so it reads vertically (MFF renders no icon on a CommandButton, so
+' the rail is text-only; this is the same call TabControl uses for vertical tab labels). Safe no-op if the
+' button's child is not a plain label.
+Sub RotateRailButton(ByRef btn As CommandButton, ByVal angle As Double)
+	Dim As GtkWidget Ptr child = gtk_bin_get_child(GTK_BIN(btn.Handle))
+	If child <> 0 AndAlso GTK_IS_LABEL(child) Then gtk_label_set_angle(GTK_LABEL(child), angle)
+End Sub
+
+Sub railLeftProjectClick(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
+	If Not pnlLeft.Visible Then SetLeftClosedStyle False
+	tpProject->SelectTab: txtExplorer.SetFocus
+End Sub
+
+Sub railLeftToolboxClick(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
+	If Not pnlLeft.Visible Then SetLeftClosedStyle False
+	tpToolbox->SelectTab: txtForm.SetFocus
+End Sub
+
+' Collapsed-panel rail (left): a thin vertical strip shown at the left edge only while pnlLeft is collapsed,
+' mimicking Astoria's collapsed panel. A pin at the top re-expands to the last tab; below it, Project and
+' Toolbox as vertical (rotated) text buttons re-open the panel to that tab. Added to frmMain next to pnlLeft.
+pnlLeftRail.Name = "pnlLeftRail"
+pnlLeftRail.Align = DockStyle.alLeft
+pnlLeftRail.Width = 34
+pnlLeftRail.Visible = False
+' Pin (icon) at the top. A single-button toolbar collapses to an overflow chevron in a strip this narrow, so
+' disable the overflow arrow to force the icon to draw. Reuses the "PinLeft" command: while collapsed
+' (splLeft hidden) it re-expands to the last tab.
+tbLeftRailPin.ImagesList = @imgList
+tbLeftRailPin.Flat = True
+tbLeftRailPin.Buttons.Add tbsButton, "Pinned", , @mClick, "PinLeft", ML("Pin"), ML("Pin")
+tbLeftRailPin.Align = DockStyle.alTop
+tbLeftRailPin.Height = 30
+tbLeftRailPin.Parent = @pnlLeftRail
+gtk_toolbar_set_show_arrow(GTK_TOOLBAR(tbLeftRailPin.Handle), False)
+btnLeftRailProject.Designer = @frmMain
+btnLeftRailProject.Text = ML("Project")
+btnLeftRailProject.Align = DockStyle.alTop
+btnLeftRailProject.Height = 84
+btnLeftRailProject.OnClick = @railLeftProjectClick
+btnLeftRailProject.Parent = @pnlLeftRail
+RotateRailButton btnLeftRailProject, 90
+btnLeftRailToolbox.Designer = @frmMain
+btnLeftRailToolbox.Text = ML("Toolbox")
+btnLeftRailToolbox.Align = DockStyle.alTop
+btnLeftRailToolbox.Height = 84
+btnLeftRailToolbox.OnClick = @railLeftToolboxClick
+btnLeftRailToolbox.Parent = @pnlLeftRail
+RotateRailButton btnLeftRailToolbox, 90
 
 Function SetVisibleToTreeNode(Node As TreeNode Ptr, ByRef SearchText As WString) As Boolean
 	Dim As Boolean bVisible
@@ -7578,7 +7637,7 @@ txtLabelEvent.ReadOnly = True
 txtLabelEvent.WordWraps = True
 
 Function GetRightClosedStyle As Boolean
-	Return Not tabRight.TabPosition = tpTop
+	Return Not pnlRight.Visible
 End Function
 
 Sub SetRightClosedStyle(Value As Boolean, WithClose As Boolean = True)
@@ -7586,23 +7645,13 @@ Sub SetRightClosedStyle(Value As Boolean, WithClose As Boolean = True)
 	bClosing = True
 	With *tbRight.Buttons.Item("PinRight")
 		If Value Then
-			tabRight.TabPosition = tpRight
 			.ImageKey = "Pin"
 			.Checked = False
-			pnlRightPin.Top = 2
-			pnlRightPin.Left = tabRightWidth - pnlRightPin.Width - tabItemHeight
 			If WithClose Then CloseRight
 		Else
-			tabRight.TabPosition = tpTop
-			tabRight.Width = tabRightWidth
-			pnlRight.Width = tabRightWidth
-			'pnlRight.RequestAlign
-			splRight.Visible = True
-			pnlRightPin.Visible = True
 			.ImageKey = "Pinned"
 			.Checked = True
-			pnlRightPin.Top = tabItemHeight
-			pnlRightPin.Left = tabRightWidth - pnlRightPin.Width - 4
+			If WithClose Then ShowRight
 		End If
 	End With
 	frmMain.RequestAlign
@@ -7934,13 +7983,53 @@ pnlRightPin.Width = 23
 pnlRightPin.Left = tabRightWidth - pnlRightPin.Width - 4
 pnlRightPin.Height = tbRight.Height
 pnlRightPin.Parent = @pnlRight
-		Dim As GtkWidget Ptr overlayRight = gtk_overlay_new()
+		overlayRight = gtk_overlay_new()
 		gtk_container_add(GTK_CONTAINER(overlayRight), pnlRight.Handle)
 		g_object_ref(pnlRightPin.Handle)
 		gtk_container_remove(GTK_CONTAINER(pnlRight.Handle), pnlRightPin.Handle)
 		gtk_overlay_add_overlay(GTK_OVERLAY(overlayRight), pnlRightPin.Handle)
 		g_signal_connect(overlayRight, "get-child-position", G_CALLBACK(@OverlayRight_get_child_position), @pnlRight)
 		pnlRight.WriteProperty("overlaywidget", overlayRight)
+
+Sub railRightPropertyClick(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
+	If Not pnlRight.Visible Then SetRightClosedStyle False
+	tpProperties->SelectTab: txtProperties.SetFocus
+End Sub
+
+Sub railRightEventClick(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
+	If Not pnlRight.Visible Then SetRightClosedStyle False
+	tpEvents->SelectTab: txtEvents.SetFocus
+End Sub
+
+' Collapsed-panel rail (right): mirror of pnlLeftRail — a thin vertical strip shown at the right edge only
+' while pnlRight is collapsed. A pin at the top re-expands to the last tab; below it, Properties and Events
+' as vertical (rotated top-to-bottom) text buttons re-open the panel to that tab. Added to frmMain next to
+' pnlRight further down.
+pnlRightRail.Name = "pnlRightRail"
+pnlRightRail.Align = DockStyle.alRight
+pnlRightRail.Width = 34
+pnlRightRail.Visible = False
+tbRightRailPin.ImagesList = @imgList
+tbRightRailPin.Flat = True
+tbRightRailPin.Buttons.Add tbsButton, "Pinned", , @mClick, "PinRight", ML("Pin"), ML("Pin")
+tbRightRailPin.Align = DockStyle.alTop
+tbRightRailPin.Height = 30
+tbRightRailPin.Parent = @pnlRightRail
+gtk_toolbar_set_show_arrow(GTK_TOOLBAR(tbRightRailPin.Handle), False)
+btnRightRailProperty.Designer = @frmMain
+btnRightRailProperty.Text = ML("Properties")
+btnRightRailProperty.Align = DockStyle.alTop
+btnRightRailProperty.Height = 96
+btnRightRailProperty.OnClick = @railRightPropertyClick
+btnRightRailProperty.Parent = @pnlRightRail
+RotateRailButton btnRightRailProperty, 270
+btnRightRailEvent.Designer = @frmMain
+btnRightRailEvent.Text = ML("Events")
+btnRightRailEvent.Align = DockStyle.alTop
+btnRightRailEvent.Height = 84
+btnRightRailEvent.OnClick = @railRightEventClick
+btnRightRailEvent.Parent = @pnlRightRail
+RotateRailButton btnRightRailEvent, 270
 'pnlRight.Width = 153
 'pnlRight.Align = 2
 'pnlRight.AddRange 1, @tabRight
@@ -9306,8 +9395,10 @@ frmMain.Add @MainReBar
 pfSplash->lblProcess.Text = ML("Load On Startup") & ": " & ML("Main Form")
 frmMain.Add @stBar
 'frmMain.Add @rbBottom
+frmMain.Add @pnlLeftRail
 frmMain.Add @pnlLeft
 frmMain.Add @splLeft
+frmMain.Add @pnlRightRail
 frmMain.Add @pnlRight
 frmMain.Add @splRight
 frmMain.Add @pnlBottom

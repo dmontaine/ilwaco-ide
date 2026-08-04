@@ -119,7 +119,7 @@ Some Astoria *infrastructure* choices are independently already true in Ilwaco:
 | Astoria commit | Change | Class | Ilwaco status |
 |---|---|---|---|
 | `bbfa3999` | Initial Win64 fork import | — | base (shared ancestor, different snapshot) |
-| `e212819d` | Bottom panel **collapse-on-pin** (+ persistence, split out below); add PROJECT_STATUS | PORT | **collapse-on-pin DONE** 2026-08-02 (build-clean); persistence deferred ↓ |
+| `e212819d` | Bottom panel **collapse-on-pin** (+ persistence, split out below); add PROJECT_STATUS | PORT | **collapse-on-pin DONE** 2026-08-02 (build-clean); **left/right persistence SUPERSEDED** 2026-08-03 by the activity-rail REIMPLEMENT (save/load works); bottom persistence still deferred ↓ |
 | `c2672840` | Right panel not collapsing on Pin click | PORT | **DONE** 2026-08-02 (build-clean) |
 | `64daa66e` | Left panel not collapsing on Pin click | PORT | **DONE** 2026-08-02 (build-clean) |
 | `bef92671` | Form Designer never activating (strip-tool root cause) | N/A | **verified does NOT reproduce** 2026-08-03 — Astoria's cause was its own `strip_gtk_preprocessor.ps1` deleting `#ifdef __EXPORT_PROCS__` blocks; Ilwaco's `ppstrip.py` preserved them, `libmff64_gtk3.so` exports all 36 Designer.bas dispatchers (`nm -D`). See ↓ |
@@ -498,6 +498,63 @@ riskier change and is **not** done. It needs infrastructure Ilwaco's older base 
 `frmMain_Create`/`frmMain_Show`/`frmMain_Close`. Track as its own item; do after more of the panel
 infrastructure is understood. Ilwaco's `CloseLeft/Right/Bottom` also still carry `#ifdef __USE_GTK__ …
 #else …` branches — strip the `#else` (Windows) side when this work touches them.
+
+## Done 2026-08-04 — left/right panel collapse via a vertical-text "activity rail" (GTK REIMPLEMENT)
+
+Owner asked to make the **left/right tool panels collapse and reopen** with a **visual** affordance,
+not a menu, and — refined 2026-08-04 — for the collapsed strip to **look like Astoria's** thin
+**vertical-text** tab strip (rotated captions) with a **pin at the top**. This is a **GTK REIMPLEMENT**,
+not an Astoria port: Astoria's Win32 collapse-to-vertical-tab-strip cannot reuse the GTK notebook — a
+notebook always paints its current page, so the panel can't shrink while shown, and a left/right-docked
+panel collapses to zero once its notebook is hidden. **Solution:** on collapse, hide the panel entirely
+and show a separate, always-visible **rail** at that edge — a thin (34px) vertical strip whose buttons
+reopen the panel to a specific tab.
+
+**Rail contents (the Astoria look, `src/Main.bas`):** MFF renders **no icon** on a `CommandButton` or
+`Label` on GTK (their `GraphicChange` is an empty stub), and nothing in MFF rotates toolbar text — so an
+"icon + text" rail is impossible without custom raw-GTK widgets, and MFF `Panel` is a `GtkLayout`
+(absolute positioning) that fights raw children. Owner chose **vertical text only**. Each rail holds:
+- **Pin at top** — a one-button `ToolBar` (`tb{Left,Right}RailPin`) with the `"Pinned"` icon, reusing the
+  `"PinLeft"/"PinRight"` mClick command (while collapsed → re-expands to the last tab). A single toolbar
+  button collapses to an overflow chevron in a 34px strip, so `gtk_toolbar_set_show_arrow(…, FALSE)`
+  forces the icon to draw.
+- **Tab buttons** — `CommandButton`s (`btn{Left,Right}Rail{Project,Toolbox/Property,Event}`) whose
+  captions are rotated with `gtk_label_set_angle(GTK_LABEL(gtk_bin_get_child(GTK_BIN(btn.Handle))), a)`
+  (`a`=90 left, 270 right) via the `RotateRailButton` helper — the same call TabControl uses for vertical
+  tabs. Each has `.Designer = @frmMain` set (else the `OnClick(*Designer,…)` dispatch null-derefs) and an
+  `OnClick` handler (`railLeftProjectClick` etc.) that `Set…ClosedStyle False` then selects its tab.
+
+**Collapse/expand plumbing (`src/Main.bas` + `src/ilwaco.bas`, both sides symmetric):**
+- `Close{Left,Right}` hide `spl…`, the pin (`pnl…Pin`, in a GTK *overlay* → hidden explicitly), and
+  `pnl…` itself, then show `pnl…Rail`. `Show{Left,Right}` reverse it.
+- `Get{Left,Right}ClosedStyle` → `Return Not pnl….Visible`; `Set…ClosedStyle` sets the pin icon + delegates.
+- **Pin-repaint fix:** after re-show, `Show{Left,Right}` call `gtk_widget_show_all(pnl…Pin.Handle)` (remap
+  the overlay toolbar + its icon so the expanded-panel pin repaints) **and** `gtk_widget_queue_resize` on
+  the stored `overlay{Left,Right}` handle (re-run its `get-child-position` against the restored width).
+  Without the `show_all`, the reopened pin was present/clickable but blank.
+- `ilwaco.bas`: `Pin{Left,Right}` simplified to `If spl….Visible Then Set…ClosedStyle True,True Else
+  Set…ClosedStyle False,True`.
+
+**Hard-won GTK/MFF facts (do not re-derive):** (1) collapse **must** hide the panel entirely —
+width-shrinking fails; visibility toggles are reliable. (2) The pin is in an overlay → hide it in Close,
+and `gtk_widget_show_all` it in Show or it won't repaint. (3) A single `ToolBar` button chevrons in a
+narrow strip unless `gtk_toolbar_set_show_arrow(FALSE)`. (4) `CommandButton`/`Label` render **no image**
+on GTK; only `ToolBar` shows icons (`gtk_image_new_from_icon_name(key,…)`, key = imgList key). (5) Rotate
+a button caption via `gtk_label_set_angle` on `gtk_bin_get_child` of the button.
+
+**Verified live (DISPLAY :0, screenshots):** both panels collapse to a vertical strip showing the pin icon
+above rotated `Project`/`Toolbox` (left) and `Properties`/`Events` (right); the pin re-expands to the last
+tab; each text button re-expands and selects its tab; the **expanded-panel pin repaints** after reopen;
+and with `LeftClosed=true`/`RightClosed=true` both strips show **collapsed at startup**. Build clean
+(`fbc` exit 0); additive to MFF, no `.so` rebuild.
+
+**Supersedes** the deferred `e212819d`/`ef3b43e9` left/right *persistence* item: save/load already
+worked (`GetLeft/RightClosedStyle` write `LeftClosed`/`RightClosed`; `frmMain_Create` re-applies).
+The **bottom** panel keeps the old collapse-to-strip behaviour and its own persistence is still deferred.
+
+**Left-over dead conditions (both sides, pre-existing, harmless):** `tab{Left,Right}_SelChange` /
+`tab{Left,Right}_Click` and the focus-loss auto-collapse still guard on `TabPosition = tp{Left,Right}` /
+`Width = 30`, which can no longer be true; a `no-dead-code` cleanup pass can drop them.
 
 ## Next action
 

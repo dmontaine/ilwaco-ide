@@ -16,7 +16,56 @@ to VisualFBEditor upstream, where Astoria's Win64-only ones cannot apply).
 
 ---
 
-## Session handoff (2026-08-03, latest) — changelog walk + debug-tab visibility ported
+## ✅ DONE (2026-08-04) — left/right panel collapse: vertical-text rail + pin-repaint fix (UNCOMMITTED, verified)
+
+Owner asked to make the **left/right tool panels collapse and reopen** with a **visual** affordance (not a
+menu), and refined it to **look like Astoria's collapsed strip**: a thin **vertical-text** tab strip with a
+**pin at the top**. Delivered as a **GTK REIMPLEMENT**. On collapse the panel is hidden entirely and a
+separate 34px **rail** appears at the edge: a pin icon at top (re-expands to the last tab) above the tab
+captions as **rotated vertical text**. **Both LEFT and RIGHT work, live-verified.** Full detail + the
+hard-won GTK/MFF facts live in [AstoriaParity.md](Documentation/AstoriaParity.md) "Done 2026-08-04 —
+left/right panel collapse via a vertical-text activity rail".
+
+**State: COMPLETE, build-clean (`fbc` exit 0), UNCOMMITTED** on `bbd8ab0`. Changed files: `src/Main.bas`
++ `src/ilwaco.bas` (the `ilwaco` binary + `src/ilwaco.{asm,c}` are build byproducts — do not commit).
+Verified live on `DISPLAY :0` by screenshot: each panel collapses to a vertical strip (pin icon above
+rotated `Project`/`Toolbox` and `Properties`/`Events`); the pin re-expands to the last tab; each text
+button re-expands and selects its tab; the **expanded-panel pin repaints after reopen** (the reported bug —
+fixed); and both strips show **collapsed at startup** with `LeftClosed=true`/`RightClosed=true`. Additive
+to MFF → no `.so` rebuild.
+
+**Key implementation points (`src/Main.bas`):** the rail is text-only because MFF renders no icon on a
+`CommandButton`/`Label` on GTK and rotates no toolbar text (owner chose vertical-text-only over a
+custom-raw-GTK icon+text rail). Pin = one-button `ToolBar` with `gtk_toolbar_set_show_arrow(…,FALSE)`
+(reuses the `PinLeft`/`PinRight` command). Tab buttons = `CommandButton`s with caption rotated via
+`gtk_label_set_angle(gtk_bin_get_child(…),90/270)` (`RotateRailButton` helper), `.Designer=@frmMain` set,
+`OnClick` handlers (`railLeftProjectClick` etc.). **Pin-repaint fix:** `Show{Left,Right}` now call
+`gtk_widget_show_all(pnl…Pin.Handle)` + `gtk_widget_queue_resize(overlay…)` so the overlay pin remaps and
+repaints. `Get…ClosedStyle → Not pnl….Visible`. `ilwaco.bas`: `Pin{Left,Right}` one-liners.
+
+**Supersedes** the deferred `e212819d`/`ef3b43e9` left/right *persistence* item (save/load already works
+via `Get…ClosedStyle` → `LeftClosed`/`RightClosed` INI keys + `frmMain_Create` re-apply). The **bottom**
+panel keeps the old collapse-to-strip behaviour and its persistence is still deferred.
+
+**NEXT:**
+1. **Commit** `src/Main.bas` + `src/ilwaco.bas` + the two docs (message: vertical-text panel-collapse rail
+   + pin repaint; not the binary, per precedent) — *only when the owner asks.*
+2. **Optional hygiene:** `tab{Left,Right}_SelChange`/`_Click` and the focus-loss auto-collapse still carry
+   dead `TabPosition = tp{Left,Right}` / `Width = 30` guards (can no longer be true); a `no-dead-code`
+   pass can drop them. Rail button heights (84/96px) and rotation angles are tuneable if the text looks off.
+3. **Resume the changelog walk** (see the session-handoff section below): bottom-panel *persistence*
+   (`e212819d`/`ef3b43e9`), then `4bd02894`, then the `49ec5ccd` menu-taxonomy cluster.
+
+**Test caution:** kill by PID (`pkill -x ilwaco`), `git checkout Settings/` after any launch, screenshots
+via `scrot` on `DISPLAY=:0`, clicks via `xdotool`. **The Claude desktop app steals focus** — re-activate
+the IDE with `xdotool windowactivate --sync $(xdotool search --name "Ilwaco IDE" | head -1)` before each
+click, and verify `getactivewindow getwindowname` is the IDE. Display is 2560×1340 (screenshots come back
+2000-wide → coords ×1.28). Collapsed rail buttons (real coords): left pin ≈(17,135), Project ≈(17,225),
+Toolbox ≈(17,305); right pin ≈(2543,130), Properties ≈(2543,230), Events ≈(2543,305).
+
+---
+
+## Session handoff (2026-08-03, earlier) — changelog walk + debug-tab visibility ported
 
 **START HERE.** Continued the Astoria→Ilwaco changelog walk from the oldest entries in
 [AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md). Resolved 5 entries (backlog
