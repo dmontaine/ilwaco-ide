@@ -284,7 +284,6 @@ Function AddTab(ByRef FileName As WString = "", bNew As Boolean = False, TreeN A
 	Dim As TabWindow Ptr tb
 	FileNameNew = FileName
 	Dim As Double timeElapse = Timer
-	If EndsWith(FileNameNew, ":") Then FileNameNew = Mid(FileNameNew, 1, Len(FileNameNew) - 1)
 	If FileName <> "" Then
 		Dim As TabControl Ptr ptabCode
 		Dim As TabPanel Ptr pPanel

@@ -2891,15 +2891,17 @@ End Sub
 	fcurlig = -1
 End Sub
 
+'' Do two paths name the same file? Case-SENSITIVE: on Linux Foo.bas and foo.bas are two different
+'' files, so the original case-insensitive compare (a Win32 assumption) collapsed them onto one tab.
+'' Every caller asks "is this the same file?" — the explorer tree, AddTab's de-duplication, the tab
+'' lookup, and the debugger's source/breakpoint matching — so all of them want the strict answer.
+''
+'' The two other Win32-isms are gone as well (owner directive: no project file will be authored on
+'' Windows). Normalising `\` to `/` was worse than useless here — a backslash is a legal character in
+'' a Linux filename, so it corrupted any path containing one — and the trailing-colon strip was
+'' drive-letter handling, which likewise only mangled a file legitimately named "foo:".
 Function EqualPaths(ByRef a As WString, ByRef b As WString) As Boolean
-	Dim FileNameLeft As WString Ptr
-	Dim FileNameRight As WString Ptr
-	WLet(FileNameLeft, Replace(a, "\", "/"))
-	If EndsWith(*FileNameLeft, ":") Then *FileNameLeft = Left(*FileNameLeft, Len(*FileNameLeft) - 1)
-	WLet(FileNameRight, Replace(b, "\", "/"))
-	EqualPaths = LCase(*FileNameLeft) = LCase(*FileNameRight)
-	WDeAllocate(FileNameLeft)
-	WDeAllocate(FileNameRight)
+	Return a = b
 End Function
 
 Sub ChangeTabsTn(TnPrev As TreeNode Ptr, Tn As TreeNode Ptr)

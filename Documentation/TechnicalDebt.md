@@ -24,19 +24,24 @@ as the durable register:
   `g_darkModeSupported` was only ever set by the deleted Win32 `InitDarkMode`, so the dark-styling
   branches never run on GTK. Track with Astoria's dark-mode commits (`56f6d180`/`b3633bc5`/
   `a7c7839d`); drive `g_darkModeSupported` + per-control theming from the GTK theme.
-- **`EqualPaths` is case-insensitive** (`Main.bas`: `LCase(a) = LCase(b)`), a Win32 assumption. On
-  Linux `Foo.bas` and `foo.bas` are different files, so two of them can collide onto one tab. Wide
-  blast radius — every tab lookup, tree-node match and project-file comparison routes through it —
-  so it needs its own build-verified pass. Found 2026-08-04.
-- **Cosmetic: the breakpoint line renders the source path after the code text.**
 - **`UseDebugger=false` by default.** (The old note here — "`gdb` not installed, the debugger default
   won't resolve" — is obsolete: GDB was removed 2026-08-04 and the built-in Integrated engine, which
   needs no external debugger, is the only one.)
 
-**Paid down 2026-08-04:** the debugger lowercased the source path (`AddTab(LCase(source(fntab)))` in
-`Main.bas TimerProc`), so debugging any project under a path containing uppercase letters failed with
-"File not found". The `LCase` was a Win32-ism and was never load-bearing — `AddTab` de-duplicates via
-`EqualPaths`, which lowercases both sides itself. Fixed and verified from `/tmp/ArgTest_MixedCase/`.
+**Paid down 2026-08-04 — the path-case cluster.** Three findings turned out to be one root cause plus
+one shared assumption, all now fixed and verified:
+
+1. The debugger lowercased the source path (`AddTab(LCase(source(fntab)))` in `Main.bas TimerProc`), so
+   debugging any project under a path containing uppercase letters failed with "File not found".
+2. The "breakpoint line renders the source path after the code text" report was **a symptom of (1)**,
+   not a separate bug. With the lowercased path not found, `AddTab` fell past its `bFind` check and
+   built a *new empty tab named after that path*; the debugger then painted into it. Confirmed by
+   running the pre-fix binary (`git show f54867d:ilwaco`) side by side with the fixed one.
+3. `EqualPaths` compared `LCase(a) = LCase(b)`, so `Foo.bas` and `foo.bas` collapsed onto one tab. It
+   is now a direct comparison. Its other two Win32-isms went at the same time (owner directive: no
+   project file will be authored on Windows) — `\`→`/` normalisation, which *corrupted* paths since a
+   backslash is a legal Linux filename character, and a drive-letter trailing-colon strip, which
+   mangled a file legitimately named `foo:`. `AddTab`'s matching colon strip went with it.
 - **Intermittent startup/shutdown `SIGSEGV`.** A known Astoria-fixed threading issue — do *not*
   chase it as a new regression. It closed the IDE mid-test at least once this project.
 - **AppImage packaging is unbuilt.** Read-only bundle + external writable Projects/Examples/Docs is

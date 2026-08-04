@@ -65,12 +65,10 @@ rather than trusting the program's own output.
 
 ## NEXT — two found bugs, then the menu-taxonomy cluster
 
-- ~~The debugger source path-case `LCase`~~ — **fixed 2026-08-04** (`Main.bas TimerProc`; verified by
-  debugging a project from `/tmp/ArgTest_MixedCase/`). The remaining found bug is the cosmetic
-  breakpoint-line path render (the source path is drawn after the code text).
-- **New, deferred:** `EqualPaths` (`Main.bas`) compares `LCase(a) = LCase(b)`, so Ilwaco treats `Foo.bas`
-  and `foo.bas` as one file. Wrong on Linux, but it is on every tab-lookup / tree-match / project-file
-  comparison path, so it wants its own build-verified pass. See TechnicalDebt.
+- **The path-case cluster is closed (2026-08-04)** — all three findings fixed and live-verified; see
+  TechnicalDebt "Paid down". The cosmetic breakpoint-line report turned out to be a *symptom* of the
+  path-case bug (an empty tab conjured from the bad path), not a separate defect, proven by an A/B
+  against the pre-fix binary. `EqualPaths` is now a direct comparison with its Win32-isms removed.
 - Then the **menu-taxonomy cluster** `49ec5ccd`/`37ba31ea`; skip the pure 32-bit/GTK-strip entries
   (`e139c2cc` etc.). The two **Examples items** (`4bd02894`, `51441d7a`) stay deferred to just before the
   testing phase (owner). All owner directives (32-bit, UTF-8/LF, AI, English-only) remain cleared.

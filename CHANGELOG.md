@@ -24,6 +24,9 @@ The format is loosely [Keep a Changelog](https://keepachangelog.com/). Dates are
 ### Fixed
 - Debugging a project stored under a path containing uppercase letters failed with "File not found":
   the debugger lowercased the source path, a Win32 habit that is wrong on Linux (2026-08-04).
+- Two files whose names differ only in case (`Foo.bas` / `foo.bas`) collapsed onto a single editor
+  tab — path comparison was case-insensitive, a Win32 assumption. Paths now compare exactly, and the
+  backslash-normalisation and drive-letter handling that went with it are gone (2026-08-04).
 - The Parameters dialog silently discarded whatever was typed in the Debug arguments box — `cmdOK`
   never wrote it back (2026-08-04).
 - Panel pin vanishing after a collapse/reopen cycle (overlay remap + relayout) (2026-08-04).

@@ -38,6 +38,9 @@ necessary but not sufficient — "it compiled" is not "it works".
   of the same name leaving exactly one entry, and the IDE's own environment is untouched.
 - **Debugging from a mixed-case path (2026-08-04).** A project under `/tmp/ArgTest_MixedCase/` loads
   its source and debugs without the old "File not found" — the path-case regression test.
+- **Case-distinct filenames (2026-08-04).** `Foo.bas` and `foo.bas` in one directory open as two
+  separate tabs, each showing its own content, and both appear in the explorer. Previously the
+  case-insensitive path compare collapsed them onto one tab.
 
 ## Not proven (known gaps)
 - **Designer control library load.** `Controls/MyFbFramework/libmff64_gtk3.so` must be built or the

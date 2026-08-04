@@ -91,3 +91,4 @@ rows (T1, T2, …) as scenarios are defined and run. See [Testing.md](Testing.md
 | T5 | A project debugs under the Integrated engine: tracing stop, current-line marker, Locals | **PASS** 2026-08-04 |
 | T6 | The debuggee receives its arguments and environment (override + inheritance; IDE env untouched) | **PASS** 2026-08-04 (`pgrep -a`, `/proc/<pid>/environ`) |
 | T7 | A project under a path containing uppercase letters debugs (path-case regression) | **PASS** 2026-08-04 (`/tmp/ArgTest_MixedCase/`) |
+| T8 | Two files differing only in case open as two tabs with their own content | **PASS** 2026-08-04 (`Foo.bas` / `foo.bas`) |
