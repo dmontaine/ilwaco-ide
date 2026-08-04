@@ -2782,6 +2782,12 @@ Function CloseProject(tn As TreeNode Ptr, WithoutMessage As Boolean = False) As 
 	Return True
 End Function
 
+#include once "crt/errno.bi"
+Extern "C"
+	Declare Function rename_ Alias "rename" (ByVal oldpath As Const ZString Ptr, ByVal newpath As Const ZString Ptr) As Long
+	Declare Function strerror_ Alias "strerror" (ByVal errnum As Long) As ZString Ptr
+End Extern
+
 '' Deletes the selected project: its folder and everything in it. Astoria shelled out to
 '' "cmd /c rd /s /q"; the Linux equivalent is rm -rf, guarded so an empty or root-ish path can
 '' never be handed to it.
@@ -2810,18 +2816,40 @@ Function RenameProject() As Boolean
 	If tn = 0 OrElse tn->Tag = 0 Then Return False
 	Dim As ProjectElement Ptr ppe = Cast(ProjectElement Ptr, tn->Tag)
 	Dim As UString OldFolder = GetFolderName(WGet(ppe->FileName), False)
-	Dim As UString NewName = InputBox(ML("New project name") & ":", ML("Rename Project"), tn->Text)
+	'' MFF's signature is InputBox(caption, messageText, defaultText) — Astoria's call had the first
+	'' two the other way round, which titled the window "New project name:" and captioned the body
+	'' "Rename Project". Default to the project name WITHOUT its extension: the new name becomes a
+	'' folder name below, so offering "foo.vfp" would create a folder literally called "foo.vfp".
+	Dim As UString OldName = GetFileName(OldFolder & Slash & tn->Text, False)
+	Dim As UString NewName = InputBox(ML("Rename Project"), ML("New project name") & ":", OldName)
 	If NewName = "" Then Return False
-	If NewName = tn->Text Then Return True
+	If NewName = OldName Then Return True
 	Dim As UString NewFolder = GetFolderName(OldFolder) & NewName
 	If FolderExists(NewFolder) Then
 		MsgBox ML("A folder with that name already exists.")
 		Return False
 	End If
 	If Not CloseProject(tn, True) Then Return False
-	Name OldFolder As NewFolder
+	'' Call rename(2) directly rather than FB's Name statement: Name reports failure only through
+	'' Err and otherwise carries on, so an unguarded rename fails SILENTLY (project closed, nothing
+	'' moved), and it would not say why. rename() gives us errno to show the user.
+	Dim As String sOld = ToUtf8(OldFolder), sNew = ToUtf8(NewFolder)
+	If rename_(StrPtr(sOld), StrPtr(sNew)) <> 0 Then
+		MsgBox ML("Could not rename the project folder") & ":" & Chr(10) & Chr(10) & _
+			OldFolder & Chr(10) & "->" & Chr(10) & NewFolder & Chr(10) & Chr(10) & _
+			ML("Error") & " " & errno & " - " & *strerror_(errno), "Ilwaco IDE", mtError
+		Dim As UString OldVfpPath = OldFolder & Slash & OldName & ".vfp"
+		If FileExists(OldVfpPath) Then AddProject OldVfpPath
+		Return False
+	End If
 	Dim As UString NewVfpPath = NewFolder & Slash & NewName & ".vfp"
-	If FileExists(NewVfpPath) Then AddProject NewVfpPath
+	'' The .vfp inside keeps its old name, so re-open whichever of the two is actually there.
+	If FileExists(NewVfpPath) Then
+		AddProject NewVfpPath
+	Else
+		Dim As UString MovedVfpPath = NewFolder & Slash & OldName & ".vfp"
+		If FileExists(MovedVfpPath) Then AddProject MovedVfpPath
+	End If
 	Return True
 End Function
 

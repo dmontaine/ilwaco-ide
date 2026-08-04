@@ -512,6 +512,9 @@ Namespace My.Sys.Forms
 		Dim As TabPage Ptr It, Prev
 		If Index >= 0 And Index <= FTabCount - 1 Then
 			Prev = Tabs[Index]
+			'' A non-dynamic TabPage outlives its removal from the notebook, so remember whether
+			'' it survives -- its _Label/_Box must be cleared below (see gtk_notebook_remove_page).
+			Dim As Boolean bPageSurvives = Not Prev->FDynamic
 			Prev->Parent = 0
 			This.Remove(Tabs[Index])
 			If Prev->FDynamic Then _Delete(Prev)
@@ -528,6 +531,15 @@ Namespace My.Sys.Forms
 				Tabs = _Reallocate(Tabs, FTabCount * SizeOf(TabPage Ptr))
 			End If
 				gtk_notebook_remove_page(GTK_NOTEBOOK(widget), Index)
+			'' The notebook owned the tab's box and label; removing the page drops the last
+			'' reference and GTK finalises them. A surviving (non-dynamic) TabPage must not keep
+			'' pointing at those freed widgets: TabPage.Text does
+			''     If GTK_IS_LABEL(_Label) Then gtk_label_set_text(...)
+			'' and GTK_IS_LABEL reads the instance's class pointer, so it cannot detect a FREED
+			'' widget -- it dereferences it first. Measured: Close Project -> ClearAnalysisPanels
+			'' -> tpProblems->Caption = ... faulted in TabPage.Text with _Label holding
+			'' 0x0000006600000061, i.e. the label's heap reused for the UTF-32 text "af".
+			If bPageSurvives Then Prev->_Label = 0: Prev->_Box = 0
 			If Index > 0 Then
 				SelectedTabIndex = Index - 1
 			ElseIf Index < TabCount - 1 Then

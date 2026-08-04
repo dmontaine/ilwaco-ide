@@ -688,7 +688,18 @@ End Type
 			tib->sText = *gtk_entry_get_text(Cast(Any Ptr, tib->entry))
 		
 		gtk_dialog_response(Cast(Any Ptr, tib->dialog) , GTK_RESPONSE_OK)
-		
+
+	End Sub
+
+	'' Cancel deliberately does NOT copy the entry text: InputBox only returns text when
+	'' gtk_dialog_run reports GTK_RESPONSE_OK, so this yields "" — the same result Escape and the
+	'' window-manager close already give, and what every caller treats as "cancelled".
+	Sub EventbuttonInputBoxCancelSub cdecl(Gwindow As GtkWidget Ptr,  data_ As gpointer) Export
+
+		Dim As TInputBox Ptr tib = data_
+
+		gtk_dialog_response(Cast(Any Ptr, tib->dialog) , GTK_RESPONSE_CANCEL)
+
 	End Sub
 	
 	Function EventEntryInputBoxFunc cdecl( Gwindow As GtkWidget Ptr, gEvent As GdkEvent Ptr, data_ As gpointer) As gboolean Export
@@ -715,7 +726,9 @@ Function InputBox(ByRef sCaption As WString  = "" , ByRef sMessageText As WStrin
 		Dim As GtkWidget  Ptr entry
 		
 		Dim As GtkWidget  Ptr button
-		
+
+		Dim As GtkWidget  Ptr buttonCancel
+
 		Dim As GtkWidget  Ptr hBoxDialog , vBox , hBox1 , hBox2 , hBox3 , vboxfill
 		
 		dialog = gtk_dialog_new ()
@@ -735,7 +748,9 @@ Function InputBox(ByRef sCaption As WString  = "" , ByRef sMessageText As WStrin
 		entry = gtk_entry_new ()
 		
 		button = gtk_button_new_with_label("OK")
-		
+
+		buttonCancel = gtk_button_new_with_label("Cancel")
+
 		vBox = gtk_vbox_new( 0 , 5)
 		
 		hBox1 = gtk_hbox_new( 1 , 180)
@@ -760,7 +775,11 @@ Function InputBox(ByRef sCaption As WString  = "" , ByRef sMessageText As WStrin
 		
 		gtk_box_pack_start(Cast(Any Ptr , hBox2), entry , 1 , 1, 0)
 		
-		gtk_box_pack_start(Cast(Any Ptr , hBox3), button ,1 , 1, 100)
+		'' Cancel left, OK right — the GTK/GNOME order. The old padding of 100 only existed to
+		'' centre a single button; with two it would push them off the dialog.
+		gtk_box_pack_start(Cast(Any Ptr , hBox3), buttonCancel ,1 , 1, 20)
+
+		gtk_box_pack_start(Cast(Any Ptr , hBox3), button ,1 , 1, 20)
 		
 		gtk_widget_set_size_request(entry, 300, 30)
 		
@@ -777,6 +796,8 @@ Function InputBox(ByRef sCaption As WString  = "" , ByRef sMessageText As WStrin
 		tib->entry = entry
 		
 		g_signal_connect(G_OBJECT(button), "clicked", G_CALLBACK (@EventbuttonInputBoxSub),tib)
+
+		g_signal_connect(G_OBJECT(buttonCancel), "clicked", G_CALLBACK (@EventbuttonInputBoxCancelSub),tib)
 		
 		If iFlag2 Then
 			

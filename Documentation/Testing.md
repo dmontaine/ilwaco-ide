@@ -38,18 +38,17 @@ necessary but not sufficient — "it compiled" is not "it works".
   of the same name leaving exactly one entry, and the IDE's own environment is untouched.
 - **Debugging from a mixed-case path (2026-08-04).** A project under `/tmp/ArgTest_MixedCase/` loads
   its source and debugs without the old "File not found" — the path-case regression test.
+- **Close Project / Delete Project / Rename Project (2026-08-04).** Close Project closes the project
+  and leaves the IDE running; Delete Project removes the folder from disk; Rename Project prompts
+  with the project name (no extension), its dialog has both OK and Cancel, the folder is renamed on
+  disk and the project re-opens. Close Project had segfaulted deterministically, and Rename failed
+  silently through FreeBASIC's `Name` statement — both fixed; see TechnicalDebt "Paid down".
+- **Debug tabs survive remove/re-add (2026-08-04).** Toggling Use Debugger removes and re-adds the
+  seven analysis tabs; their captions still render, confirming the MFF `_Label` fix did not break
+  `AddTab`.
 - **Case-distinct filenames (2026-08-04).** `Foo.bas` and `foo.bas` in one directory open as two
   separate tabs, each showing its own content, and both appear in the explorer. Previously the
   case-insensitive path compare collapsed them onto one tab.
-
-## Proven broken
-
-- **🔴 Close Project kills the IDE (2026-08-04).** Exit 139 (SIGSEGV), deterministic. Measured:
-  new build → 139; committed `087a720` → 139 (so pre-existing, not caused by the menu work);
-  open a project and *don't* close it → survives indefinitely, so the fault is the close itself,
-  not the open path and not the known intermittent startup crash. `Rename Project` and
-  `Delete Project` inherit it. See [TechnicalDebt.md](TechnicalDebt.md) for the two ported Astoria
-  fixes that did *not* cure it and the next lead.
 
 ## Not proven (known gaps)
 - **Designer control library load.** `Controls/MyFbFramework/libmff64_gtk3.so` must be built or the

@@ -92,5 +92,7 @@ rows (T1, T2, …) as scenarios are defined and run. See [Testing.md](Testing.md
 | T6 | The debuggee receives its arguments and environment (override + inheritance; IDE env untouched) | **PASS** 2026-08-04 (`pgrep -a`, `/proc/<pid>/environ`) |
 | T7 | A project under a path containing uppercase letters debugs (path-case regression) | **PASS** 2026-08-04 (`/tmp/ArgTest_MixedCase/`) |
 | T8 | Two files differing only in case open as two tabs with their own content | **PASS** 2026-08-04 (`Foo.bas` / `foo.bas`) |
-| T9 | Close Project closes the project and leaves the IDE running | **🔴 FAIL** 2026-08-04 — SIGSEGV (exit 139), deterministic, pre-existing (see TechnicalDebt.md) |
-| T10 | Delete Project removes the project folder from disk | **BLOCKED** by T9 — the process dies inside `CloseProject` before the delete |
+| T9 | Close Project closes the project and leaves the IDE running | **PASS** 2026-08-04 — was a deterministic SIGSEGV; fixed in MFF `TabControl.DeleteTab` |
+| T10 | Delete Project removes the project folder from disk | **PASS** 2026-08-04 |
+| T11 | Rename Project prompts with the project name and renames the folder | **PASS** 2026-08-04 — dialog has OK + Cancel; folder renamed and project re-opened. Note: the `.vfp` inside keeps its old name (TechnicalDebt) |
+| T12 | Debug tabs keep their captions after Use Debugger is toggled off and on | **PASS** 2026-08-04 (regression check for the MFF `_Label` fix) |

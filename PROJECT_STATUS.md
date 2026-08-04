@@ -63,20 +63,14 @@ rather than trusting the program's own output.
 
 ---
 
-## NEXT — 🔴 the Close Project crash, then finish the menu cluster
+## NEXT — finish the menu-taxonomy cluster
 
-**Close Project segfaults the IDE (exit 139), deterministically.** Found 2026-08-04 while porting
-the menu cluster; it is **pre-existing** (reproduces on the committed `087a720` binary) and blocks
-`Rename Project`/`Delete Project`, which both call `CloseProject`. Full measurements, the two
-Astoria fixes already ported (neither cures it), the next unproven lead, and the tooling gap that
-stopped the diagnosis are in [TechnicalDebt.md](Documentation/TechnicalDebt.md) — read that before
-touching it. **The single most valuable next step is a real backtrace:** install `gdb`, or install a
-`sigaction` handler *after* GTK init, because pattern-matching against Astoria has now cost three
-build cycles without a result.
+**The Close Project crash is FIXED (2026-08-04)** — it was an MFF bug (`TabControl.DeleteTab` left a
+surviving `TabPage`'s `_Label` pointing at a finalised GTK widget), not the close path. `Rename
+Project` and `Delete Project` were blocked by it and are now verified working. Diagnosis, including
+how the fault address was recovered from a core dump with no debugger installed, is in
+[Controls.md](Documentation/Controls.md) and [TechnicalDebt.md](Documentation/TechnicalDebt.md).
 
----
-
-## Then — finish the menu-taxonomy cluster
 
 - **The path-case cluster is closed (2026-08-04)** — all three findings fixed and live-verified; see
   TechnicalDebt "Paid down". The cosmetic breakpoint-line report turned out to be a *symptom* of the
@@ -90,7 +84,10 @@ build cycles without a result.
   "Go to line:", and the Find dialog's cryptic `Aa`/`W`/`.*`/`<`/`>` buttons relabelled); the
   **File-menu restructure** to Astoria's project-first taxonomy; **Open Project** exposed (Ilwaco had
   the handler with the menu item commented out); `Rename Project` + `Delete Project` added, the latter
-  reimplemented for Linux (`rm -rf`, path-guarded) — **both blocked by the Close Project crash above.**
+  reimplemented for Linux (`rm -rf`, path-guarded) — both **verified working** once the Close Project
+  crash was fixed. The Rename dialog's `InputBox` title/prompt were swapped and its default carried
+  the `.vfp` extension into what becomes a folder name; both corrected, and MFF's `InputBox` gained a
+  **Cancel** button (it offered only OK).
   **Still to port:** `frmNewProject` + `OpenProjectTemplate`/`Recent Project`; the Options panels
   (remove the "When the IDE starts" radio group, Code Editor grouping into Display/Completion/
   IntelliSense/History); and `Show Holiday Frame` → `Show Indent Guides`, which is a *feature* port
