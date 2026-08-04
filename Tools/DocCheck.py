@@ -78,6 +78,11 @@ REMOVED_FEATURES = [
     (r"Use\s+Direct2D",                 "the Direct2D user option (removed; Win32-only path stripped)"),
     (r"32-bit\s+(?:build|target|compiler)", "32-bit build support (removed: Ilwaco is x86_64-only)"),
     (r"Compile to (?:GAS|LLVM|GCC|CLANG)", "the alt compiler-backend picker (removed: gas64-only)"),
+    (r"\bdebugger picker\b",            "the debugger-selection UI (removed: Integrated engine only)"),
+    (r"\bDebugger Paths?\b",            "the Debugger Paths list (removed: Integrated engine only)"),
+    (r"\bDefault Debuggers\b",          "the Default Debuggers group (removed: Integrated engine only)"),
+    (r"Integrated GDB Debugger",        "the GDB debugger engine (removed: Integrated engine only)"),
+    (r"Limit debug to the directory",   "the Limit debug option (removed: it was never functional)"),
 ]
 
 # Files whose absence should be reported when a document still names them, written as an

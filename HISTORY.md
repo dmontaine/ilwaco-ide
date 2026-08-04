@@ -11,6 +11,66 @@ for the classified port backlog, [Documentation/AstoriaParity.md](Documentation/
 
 ---
 
+## ✅ DONE (2026-08-04) — `5fa5cf25`: alt-compiler-backend removal + debugger Passes 1/2 + debuggee argv/env wiring (COMMITTED)
+
+Completed the port of Astoria's `5fa5cf25` with the **inverted debugger choice** — Ilwaco keeps the built-in
+Integrated (stabs) debugger and removes GDB, because the Integrated engine reads FreeBASIC's `.dbgdat`/`.dbgstr`
+sections that only the **gas64** backend emits with `-g`, and Ilwaco is gas64-only. Detail in
+[AstoriaParity.md](Documentation/AstoriaParity.md); memory `project-debugger-keep-internal`.
+
+**Compiler-backend half + debugger Pass 1** (earlier commit `1deb849`): removed the `ToGAS/ToLLVM/ToGCC/ToCLANG`
+picker, the optimization radios and `frmAdvancedOptions` (`-gen gas64` hardcoded); deleted the whole GDB engine
+from `Debug.bas` (−2130 lines) plus `TimerProcGDB`/`GDBCommand`/`miGDBCommand`.
+
+**Pass 2C — `frmOptions` debugger page.** Deleted the debugger-*choice* UI: `grbDefaultDebuggers`,
+`grbDebuggerPaths`, `cboDebugger64`, `cboGDBDebugger64`, `lvDebuggerPaths`, `hbxDebugger`, the four
+`cmd*Debugger*` buttons and three `lblDebugger*` labels, their 5 handlers, the LoadSettings/SaveSettings blocks
+and the `[Debuggers]` INI writer (`frmOptions.frm` −272 lines). **Kept `pnlDebugger`** — contrary to the
+original plan — because it still hosts the live `chkDisplayWarningsInDebug` (`TabWindow.bas:481`); deleting the
+panel would have silently dropped a working setting. **Terminal promoted to a top-level options node** (it
+drives Run, not the debugger). Removed `LimitDebug` entirely (global + INI + checkbox): it never worked, its
+only reference being a commented-out `#ifdef __FB_WIN32__` block in `Debug.bas`, which was deleted too (−274
+comment-only lines, each verified blank-or-comment first).
+
+**Pass 2D — the machinery.** Removed the `DebuggerTypes` enum, `DefaultDebuggerType64`/`CurrentDebuggerType64`,
+the `pDebuggers`/`Debuggers` dictionary, the `[Debuggers]` settings load/save/dealloc, and
+`Debugger64Path`/`GDBDebugger64Path`/`DefaultDebugger64`/`GDBDebugger64`/`CurrentDebugger64`. **Trap:** dropping
+the `Debuggers` term from `LoadSettings`'s `Do Until` meant its `= -10` sentinel had to become `= -9`, or
+settings loading would have stopped at index 0. Also found `build_create_shellscript`'s only caller sat behind
+`If 0 Then` — statically dead — so the `If 0/Else` was collapsed to the live branch and the function, its
+declare, the commented-out GTK-VTE experiment and an unused `Dim As GPid pid` all went.
+
+**Residual GDB cleanup.** Removed the orphan block at the foot of `Debug.bas`: 12 dead `Declare`s, the
+`Extern "C"` FFI block (`fdopen`/`poll`/`ioctl`/`_access`), `Type pollfd`, and the unreferenced globals
+(`pIn`/`pOut`, `Running`, `ShowResult`, `szDataForPipe`, `iVersionGdb`, `CurrentFile`/`NewCommand`, the pipe and
+flag counters). Kept `SIGKILL`, `WatchIndex`, `w9T`/`KillTimer`/`SetTimer`. Also removed the dead **`tlockGDB`**
+cluster (created/destroyed/unlocked under `If iFlagStartDebug = 1`, a flag nothing sets) and the debug panel's
+**"Update" toggle** — a clickable button whose only effect was writing `iStateMenu`, which nothing read.
+
+**2E — debuggee argv + environment made real (divergence from Astoria).** Astoria removed its env-vars option as
+non-functional and left its debug-parameters box inert; Ilwaco wires both instead, because on `fork`/`execv` it is
+contained and because the project's own Command-line arguments field — on a tab literally named *Debugging* —
+was honoured by Run and silently dropped by Debug. `RunWithDebug` now stages `debugargs` (Parameters
+`Debug64Arguments` + the project's `CommandLineArguments`), and the debuggee gets a real NULL-terminated argv
+with `argv(0)` set (previously `execv_(…, NULL)` — no `argv[0]` at all). `frmParameters.cmdOK` now writes
+`txtDebug64` back; it never did, so typing there was silently discarded.
+**The fork trap:** the first attempt called `SetEnviron` (i.e. `putenv`) in the forked child and *silently*
+failed — after `fork()` in a multithreaded process only async-signal-safe calls are legal, and `putenv`
+allocates. That is exactly why the argv half worked (stack-only) while the env half did not. The fix builds the
+program path, argv tail and full environment block in the **parent** (`build_debug_launch`), leaving the child to
+copy already-allocated pointers into stack arrays and call `execve`. Staged at all three `ThreadCreate(@start_pgm)`
+sites: `restart_exe` reuses the same arguments/environment, `external_launch` clears the arguments.
+Verified at kernel level via `/proc/<pid>/environ`: injection works, inheritance is preserved (83 entries),
+a user `LANG` **overrides** the inherited one leaving exactly one entry (glibc `getenv` returns the first match,
+so a duplicate would be ambiguous), multiple space-separated vars parse, and the IDE's own environment is
+untouched. argv observed as `/tmp/argtest/argtest alpha beta gamma`.
+
+**Confirmed live:** the pre-existing debugger **path-case bug** is real and reproducible — a project under a path
+containing uppercase letters fails with "File not found" showing a lowercased path (`Main.bas:2885`
+`AddTab(LCase(source(fntab)))`, a Win32-ism). Worked around by testing from an all-lowercase path.
+
+---
+
 ## ✅ DONE (2026-08-04) — bottom-panel collapse: dedicated horizontal rail (COMMITTED)
 
 Finished `e212819d`/`ef3b43e9` (bottom-panel collapse + persistence). The collapsed-panel affordance is a

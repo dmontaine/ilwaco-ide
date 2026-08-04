@@ -71,16 +71,12 @@ Using My.Sys.Forms
 		Declare Static Sub cmdAddMakeTool_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		Declare Static Sub cmdRemoveMakeTool_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		Declare Static Sub cmdClearMakeTools_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
-		Declare Static Sub cmdAddDebugger_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
-		Declare Static Sub cmdRemoveDebugger_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
-		Declare Static Sub cmdClearDebuggers_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		Declare Static Sub cmdAddTerminal_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		Declare Static Sub cmdRemoveTerminal_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		Declare Static Sub cmdClearTerminals_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		Declare Static Sub cmdFrame_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		Declare Static Sub chkFrame_Click(ByRef Designer As My.Sys.Object, ByRef Sender As CheckBox)
 		Declare Static Sub cmdChangeTerminal_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
-		Declare Static Sub cmdChangeDebugger_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		Declare Static Sub cmdChangeMakeTool_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		Declare Static Sub cmdAddHelp_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		Declare Static Sub cmdChangeHelp_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
@@ -110,8 +106,6 @@ Using My.Sys.Forms
 		Declare Sub lvOtherEditors_ItemActivate(ByRef Sender As ListView, ByVal ItemIndex As Integer)
 		Declare Static Sub lvTerminalPaths_ItemActivate_(ByRef Designer As My.Sys.Object, ByRef Sender As ListView, ByVal ItemIndex As Integer)
 		Declare Sub lvTerminalPaths_ItemActivate(ByRef Sender As ListView, ByVal ItemIndex As Integer)
-		Declare Static Sub lvDebuggerPaths_ItemActivate_(ByRef Designer As My.Sys.Object, ByRef Sender As ListView, ByVal ItemIndex As Integer)
-		Declare Sub lvDebuggerPaths_ItemActivate(ByRef Sender As ListView, ByVal ItemIndex As Integer)
 		Declare Static Sub lvHelpPaths_ItemActivate_(ByRef Designer As My.Sys.Object, ByRef Sender As ListView, ByVal ItemIndex As Integer)
 		Declare Sub lvHelpPaths_ItemActivate(ByRef Sender As ListView, ByVal ItemIndex As Integer)
 		Declare Static Sub lvMakeToolPaths_ItemActivate_(ByRef Designer As My.Sys.Object, ByRef Sender As ListView, ByVal ItemIndex As Integer)
@@ -143,15 +137,15 @@ Using My.Sys.Forms
 		Declare Destructor
 		
 		Dim As TreeView tvOptions
-		Dim As CommandButton cmdOK, cmdCancel, cmdApply, cmdMFFPath, cmdAddInclude, cmdRemoveInclude, cmdAddLibrary, cmdRemoveLibrary, cmdChangeDebugger, cmdChangeTerminal, cmdChangeMakeTool, cmdAdd, cmdRemove, cmdForeground, cmdFont, cmdProjectsPath, cmdBackground, cmdIndicator, cmdAddDebugger, cmdRemoveDebugger, cmdClearDebuggers, cmdAddMakeTool, cmdRemoveMakeTool, cmdClearMakeTools, cmdAddTerminal, cmdRemoveTerminal, cmdClearTerminals, cmdSetShortcut
+		Dim As CommandButton cmdOK, cmdCancel, cmdApply, cmdMFFPath, cmdAddInclude, cmdRemoveInclude, cmdAddLibrary, cmdRemoveLibrary, cmdChangeTerminal, cmdChangeMakeTool, cmdAdd, cmdRemove, cmdForeground, cmdFont, cmdProjectsPath, cmdBackground, cmdIndicator, cmdAddMakeTool, cmdRemoveMakeTool, cmdClearMakeTools, cmdAddTerminal, cmdRemoveTerminal, cmdClearTerminals, cmdSetShortcut
 		Dim As Label lblBlack, lblTabSize, lblHistoryLimit, lblGridSize, lblFont, lblProjectsPath, lblForeground, lblBackground, lblIndicator, lblOthers, lblShortcut
 		Dim As ScrollControl pnlGeneral, pnlCodeEditor, pnlDesigner, sccColors, sccInterfaceColors
 		Dim As Panel pnlThemes, pnlShortcuts, pnlColorsAndFonts, pnlCompiler, pnlMake, pnlDebugger, pnlTerminal, pnlHelp, pnlIncludes, pnlIncludeMFFPath, pnlInterfaceFont, pnlGrid, pnlOtherEditors, pnlLine, pnlProjectsPath, pnlSelectShortcut, pnlAutoSaveCharMax, pnlBuildConfigurations
-		Dim As HorizontalBox hbxEditors, hbxHelp, hbxTerminal, hbxDebugger, hbxMakeTool, hbxColors, hbxThemeCommands, hbxForeground, hbxBackground, hbxFrame, hbxIndicator, pnlCommands, hbxConfigurations, hbxIncludePaths, hbxLibraryPaths, hbxInterfaceColors, hbxInterfaceThemeCommands, hbxInterfaceColor
+		Dim As HorizontalBox hbxEditors, hbxHelp, hbxTerminal, hbxMakeTool, hbxColors, hbxThemeCommands, hbxForeground, hbxBackground, hbxFrame, hbxIndicator, pnlCommands, hbxConfigurations, hbxIncludePaths, hbxLibraryPaths, hbxInterfaceColors, hbxInterfaceThemeCommands, hbxInterfaceColor
 		Dim As Panel pnlChangeKeywordsCase, pnlChangeIdentifiersCase, pnlTreatTabAsSpaces, pnlTabSize, pnlHistoryLimit, pnlIntellisenseLimit, pnlHistoryFileSavingDays, pnlChangeEndingType, pnlCodeEditorHoverTime
 		Dim As TextBox txtColorForeground, txtColorBackground, txtColorIndicator, txtColorFrame
 		Dim As TextBox txtMFFpath, txtTabSize, txtHistoryLimit, txtGridSize, txtProjectsPath, txtInFolder, txtIntellisenseLimit, txtEnvironmentVariables, txtHistoryCodeDays,  txtFoldsHtml(0), txtFoldsLng, txtAutoSaveCharMax, txtCodeEditorHoverTime, txtInterfaceColor
-		Dim As ComboBoxEdit cboIdentifiersCase, cboCase, cboTabStyle, cboTheme, cboMakeTool, cboTerminal, cboHelp, cboDebugger64, cboDefaultProjectFile, cboOpenedFile, cboGDBDebugger64, cboConfiguration, cboConstructions, cboInterfaceTheme
+		Dim As ComboBoxEdit cboIdentifiersCase, cboCase, cboTabStyle, cboTheme, cboMakeTool, cboTerminal, cboHelp, cboDefaultProjectFile, cboOpenedFile, cboConfiguration, cboConstructions, cboInterfaceTheme
 		Dim As CheckBox CheckBox1, chkAutoCreateRC, chkAutoSaveCurrentFileBeforeCompiling, chkEnableAutoComplete, chkTabAsSpaces, chkAutoIndentation, chkShowSpaces, chkShowAlignmentGrid, chkSnapToGrid, chkChangeKeywordsCase, chkBold, chkItalic, chkUnderline, chkUseMakeOnStartWithCompile
 		Dim As HotKey hkShortcut
 		Dim OpenD As OpenFileDialog
@@ -170,18 +164,18 @@ Using My.Sys.Forms
 		Dim As Boolean HotKeysChanged
 		Dim As Integer LibraryPathsCount
 		Dim As ListControl lstIncludePaths, lstLibraryPaths, lstColorKeys, lstInterfaceColorKeys
-		Dim As GroupBox grbGrid, grbColors, grbThemes, grbFont, grbDefaultDebuggers, grbDebuggerPaths, grbMakeToolPaths, grbDefaultMakeTool, grbDefaultTerminal, grbTerminalPaths, grbIncludePaths, grbLibraryPaths, grbDefaultHelp, grbHelpPaths, grbWhenCompiling, grbShortcuts, grbOtherEditors, grbWhenVFBEStarts, grbCommandPromptOptions, grbDefaultConfiguration, grbConfigurations
-		Dim As ListView lvDebuggerPaths, lvMakeToolPaths, lvTerminalPaths, lvHelpPaths, lvShortcuts, lvOtherEditors, lvConfigurations
+		Dim As GroupBox grbGrid, grbColors, grbThemes, grbFont, grbMakeToolPaths, grbDefaultMakeTool, grbDefaultTerminal, grbTerminalPaths, grbIncludePaths, grbLibraryPaths, grbDefaultHelp, grbHelpPaths, grbWhenCompiling, grbShortcuts, grbOtherEditors, grbWhenVFBEStarts, grbCommandPromptOptions, grbDefaultConfiguration, grbConfigurations
+		Dim As ListView lvMakeToolPaths, lvTerminalPaths, lvHelpPaths, lvShortcuts, lvOtherEditors, lvConfigurations
 		Dim As Label lblInterfaceFont
 		Dim As CommandButton cmdInterfaceFont
 		Dim As Label lblInterfaceFontLabel
 		Dim As CheckBox chkDisplayIcons, chkShowMainToolbar, chkAutoCreateBakFiles, chkShowToolBoxLocal, chkShowPropLocal
-		Dim As Label lblFrame, lblDebugger64, lblOpenCommandPromptIn, lblIntellisenseLimit, lblDebugger321, lblDebugger641, lblHistoryDay, lbAutoSaveCharMax, lblCodeEditorHoverTime, lblInterfaceColor
+		Dim As Label lblFrame, lblOpenCommandPromptIn, lblIntellisenseLimit, lblHistoryDay, lbAutoSaveCharMax, lblCodeEditorHoverTime, lblInterfaceColor
 		Dim As CommandButton cmdFrame, cmdAddHelp, cmdChangeHelp, cmdRemoveHelp, cmdClearHelps, cmdAddEditor, cmdChangeEditor, cmdRemoveEditor, cmdClearEditor, cmdInFolder, cmdClearConfigurations, cmdRemoveConfiguration, cmdChangeConfiguration, cmdAddConfiguration, cmdInterfaceThemeAdd, cmdInterfaceThemeRemove, cmdInterfaceColor
 		Dim As CheckBox chkFrame, chkForeground, chkBackground, chkIndicator
 		Dim As CheckBox chkHighlightCurrentWord
 		Dim As CheckBox chkHighlightCurrentLine
-		Dim As CheckBox chkHighlightBrackets, chkIncludeMFFPath, chkLimitDebug, chkDisplayWarningsInDebug, chkCreateNonStaticEventHandlers, chkShowKeywordsTooltip, chkShowSymbolsTooltipsOnMouseHover, chkShowClassesExplorerOnOpenWindow, chkAddSpacesToOperators, chkCreateFormTypesWithoutTypeWord, chkTurnOnEnvironmentVariables, chkDarkMode, chkPlaceStaticEventHandlersAfterTheConstructor, chkCreateStaticEventHandlersWithAnUnderscoreAtTheBeginning, chkAddRelativePathsToRecent, chkShowTooltipsAtTheTop, chkChangeIdentifiersCase, chkSyntaxHighlightingIdentifiers, chkEnableAutoSuggestions, chkShowHorizontalSeparatorLines, chkCreateEventHandlersWithoutStaticEventHandlerIfEventAllowsIt, chkAutoSaveSession, chkShowHolidayFrame, ShowClassesExplorerOnOpenWindow, chkChangeEndingType, chkInterfaceColor
+		Dim As CheckBox chkHighlightBrackets, chkIncludeMFFPath, chkDisplayWarningsInDebug, chkCreateNonStaticEventHandlers, chkShowKeywordsTooltip, chkShowSymbolsTooltipsOnMouseHover, chkShowClassesExplorerOnOpenWindow, chkAddSpacesToOperators, chkCreateFormTypesWithoutTypeWord, chkTurnOnEnvironmentVariables, chkDarkMode, chkPlaceStaticEventHandlersAfterTheConstructor, chkCreateStaticEventHandlersWithAnUnderscoreAtTheBeginning, chkAddRelativePathsToRecent, chkShowTooltipsAtTheTop, chkChangeIdentifiersCase, chkSyntaxHighlightingIdentifiers, chkEnableAutoSuggestions, chkShowHorizontalSeparatorLines, chkCreateEventHandlersWithoutStaticEventHandlerIfEventAllowsIt, chkAutoSaveSession, chkShowHolidayFrame, ShowClassesExplorerOnOpenWindow, chkChangeEndingType, chkInterfaceColor
 		Dim As Boolean oldDisplayMenuIcons
 		Dim As RadioButton optSaveCurrentFile, optDoNotSave, optSaveAllFiles, optPromptForProjectAndFile, optCreateProjectFile, optOpenLastSession, optDoNotNothing, optPromptToSave, optMainFileFolder, optInFolder
 		Dim As VerticalBox vbxCodeEditor, vbxGeneral, vbxColors

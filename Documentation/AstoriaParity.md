@@ -10,9 +10,10 @@ English-only, and the Ilwaco rebrand. Per-task detail lives in the "Done" narrat
 [HISTORY.md](../HISTORY.md) / [PROJECT_STATUS.md](../PROJECT_STATUS.md).
 
 **Active work: the changelog walk.** Bottom-panel collapse (`e212819d`/`ef3b43e9`) landed + live-verified
-2026-08-04. For the current next item see **[Next action](#next-action)** at the foot of this file — short
-version: the two Examples items are deferred to just before the testing phase, so next up are `5fa5cf25`
-(remove alt-compiler/debugger-choice code) then the `49ec5ccd`/`37ba31ea` menu-taxonomy cluster.
+2026-08-04; `5fa5cf25` (alt-compiler-backend + debugger-choice removal, inverted to keep the Integrated
+engine) **completed** 2026-08-04. For the current next item see **[Next action](#next-action)** at the foot of
+this file — short version: the two Examples items are deferred to just before the testing phase, so next up
+are two found debugger bugs, then the `49ec5ccd`/`37ba31ea` menu-taxonomy cluster.
 
 **Still-open, opportunistic (not blocking):**
 
@@ -584,18 +585,37 @@ The bottom-panel collapse cluster (`e212819d`/`ef3b43e9`) is **done** (now in [H
 `ae74b31c` (Service→Tools) and `53d8e473` (compile warnings) are already done/pruned. The two **Examples
 items** (`4bd02894`, `51441d7a`) are **deferred to just before the testing phase** (owner, 2026-08-04).
 
-**In progress — `5fa5cf25` (PORT with INVERTED debugger choice).** Astoria removed the Integrated engine and
+**DONE — `5fa5cf25` (PORT with INVERTED debugger choice).** Astoria removed the Integrated engine and
 kept GDB; **Ilwaco does the opposite — keeps the built-in Integrated (stabs) debugger and removes GDB** —
 because the Integrated engine reads FreeBASIC's `.dbgdat`/`.dbgstr` sections that only the **gas64** backend
 emits with `-g` (Ilwaco is gas64-only; gdb isn't installed; Astoria's bundled-gdb doesn't transfer). See
-memory `project-debugger-keep-internal`. **Done (2026-08-04, uncommitted, built, live-re-verified):** the
-alt-compiler-backend picker + optimization + `frmAdvancedOptions` removed (`-gen gas64` hardcoded), and
-**debugger Pass 1** — the whole GDB engine deleted from `Debug.bas` (−2130 lines), `RunWithDebug`'s GDB
-branch + the `ilwaco.bas` GDB dispatch + `TimerProcGDB`/`GDBCommand`/`miGDBCommand` gone; the Integrated
-debugger was re-verified working on `:0` (gas64 build → `t (tracing stop)` → Locals/current-line). **Remaining
-— debugger Pass 2:** the debugger-choice UI/settings (`pDebuggers`, `Debugger64Path`/`GDBDebugger64Path`,
-`frmOptions` debugger-paths, `frmParameters` combo, `GDBCommands.txt` writer) and the `DebuggerTypes` enum,
-plus the residual `Debug.bas` orphan declares/globals. See PROJECT_STATUS "NEXT".
+memory `project-debugger-keep-internal`. Completed 2026-08-04 across four build-verified passes; the full
+narrative is in [HISTORY.md](../HISTORY.md).
+
+- **Compiler-backend half + Pass 1** — alt-backend picker, optimization radios and `frmAdvancedOptions`
+  removed (`-gen gas64` hardcoded); the whole GDB engine deleted from `Debug.bas` (−2130 lines) plus the
+  `ilwaco.bas` GDB dispatch, `TimerProcGDB`/`GDBCommand`/`miGDBCommand`.
+- **Pass 2A/2B** — `RunWithDebug` rewritten Integrated-only; `frmParameters`'s `cboDebug64` combo removed.
+- **Pass 2C** — the `frmOptions` debugger-choice UI, its 5 handlers, LoadSettings/SaveSettings and the
+  `[Debuggers]` INI writer. **Deviation from plan:** `pnlDebugger` was **kept**, because it still hosts the
+  live `chkDisplayWarningsInDebug`; only the choice UI went. **Terminal** promoted to a top-level options
+  node (it drives Run, not the debugger). `LimitDebug` removed as never-functional.
+- **Pass 2D** — `DebuggerTypes`, `DefaultDebuggerType64`/`CurrentDebuggerType64`, `pDebuggers`/`Debuggers`,
+  the `[Debuggers]` load/save/dealloc, the five `*Debugger64*` path globals, and the statically-dead
+  `build_create_shellscript`. **Trap:** `LoadSettings`'s `Do Until … = -10` sentinel had to drop to `-9`.
+- **Residual cleanup** — the orphan declare/`Extern "C"`/`pollfd`/global block at the foot of `Debug.bas`,
+  the dead `tlockGDB` cluster, and the no-op debug "Update" toggle.
+
+**2E — divergence from Astoria (deliberate).** Astoria removed its "Turn on Environment variables" checkbox as
+confirmed non-functional (`frmOptions.frm` comment, 13.3.A S6 O4) and left its debug-parameters box in place but
+inert — `Debug64Arguments` is saved and never read, and `RunWithDebug` ignores the `ProjectCommandLineArguments`
+it receives. **Ilwaco wires both up instead.** Rationale: the project's Command-line arguments field lives on a
+tab named *Debugging* and was honoured by Run while silently dropped by Debug, so this fixes an existing broken
+promise rather than adding a feature; Astoria's blocker was Win32-specific (`CreateProcess` with
+`lpEnvironment=0`) whereas on `fork`/`execv` it is contained; and on Linux `LD_LIBRARY_PATH` for the debuggee is
+a real need. Owner decision 2026-08-04 ("students using linux would usually be a bit more advanced"). The
+debuggee now gets a real `argv` (including `argv(0)`, previously absent) and an environment built pre-fork and
+passed via `execve`.
 
 Then the **menu-taxonomy cluster** `49ec5ccd`/`37ba31ea` (menu labels, File-menu restructure, Code-Editor
 grouping, compiler-options simplification — the debug-tabs sub-item is already done). Skip the pure

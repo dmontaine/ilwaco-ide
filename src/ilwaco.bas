@@ -505,8 +505,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 		If splBottom.Visible Then SetBottomClosedStyle True, True Else SetBottomClosedStyle False, True
 	Case "EraseOutputWindow":               txtOutput.Text = ""
 	Case "EraseImmediateWindow":            txtImmediate.Text = ""
-	Case "Update":
-			iStateMenu = IIf(tbBottom.Buttons.Item("Update")->Checked, 2, 1)
 	Case "AddForm":                         AddFromTemplate ExePath + "/Templates/Files/Form.frm"
 	Case "AddModule":                       AddFromTemplate ExePath + "/Templates/Files/Module.bas"
 	Case "AddIncludeFile":                  AddFromTemplate ExePath + "/Templates/Files/Include File.bi"

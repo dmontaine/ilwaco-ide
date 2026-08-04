@@ -22,80 +22,57 @@ CLAUDE.md "Working practices".
 
 ---
 
-## ✅ DONE (2026-08-04) — `5fa5cf25`: alt-compiler-backend removal + debugger Pass 1 (GDB engine deleted, Integrated kept & re-verified) + Pass 2 steps 2A/2B — COMMITTED (partial; Pass 2 2C/2D pending — see NEXT)
+## ✅ DONE (2026-08-04) — `5fa5cf25` COMPLETE: debugger Pass 2C/2D + residual GDB cleanup + debuggee argv/env wiring
 
-Porting Astoria's `5fa5cf25` ("remove Integrated (stabs) debugger and alt-compiler-backend/debugger-choice
-code"), **adapted with the inverse debugger choice**: Ilwaco **keeps its built-in Integrated (stabs)
-debugger and removes GDB** (Astoria kept GDB, dropped Integrated). Rationale: keep Astoria's opinionated
-"one debugger, no picker" philosophy but make the best choice for Linux — the Integrated engine reads
-FreeBASIC's own `.dbgdat`/`.dbgstr` ELF sections, emitted **only** by the **gas64** backend with `-g`
-(Ilwaco is gas64-only), whereas gdb isn't installed here and Astoria's bundled-gdb path doesn't transfer.
-See memory `project-debugger-keep-internal` and [AstoriaParity.md](Documentation/AstoriaParity.md).
+`5fa5cf25` is **finished**. The full narrative (what each pass removed, the traps hit, and the 2E divergence
+from Astoria) is in [HISTORY.md](HISTORY.md); the classification is in
+[AstoriaParity.md](Documentation/AstoriaParity.md). Headlines:
 
-**Compiler-backend half (done, built):** removed the `ToGAS/ToLLVM/ToGCC/ToCLANG` backend picker, the
-optimization radios, and the whole `frmAdvancedOptions` dialog (GCC-only warning flags); `-gen gas64` is now
-hardcoded in the project compile path (`Main.bas Compile()` + `TabWindow.bas GetFirstCompileLine`). Changed
-`ilwaco.vfp`, `src/.poseidon`, `src/Main.bas`, `src/TabWindow.{bas,bi}`, `src/frmProjectProperties.{bi,frm}`,
-`src/makefile`; deleted `src/frmAdvancedOptions.{bi,frm}`. (Correct that `-gen gas64` lives under `If Project
-Then` — Ilwaco is **project-only**, not a loose-file editor.)
+- **2C** — the `frmOptions` debugger-*choice* UI is gone (picker, paths list, Add/Change/Remove/Clear,
+  handlers, LoadSettings/SaveSettings, `[Debuggers]` INI writer). **`pnlDebugger` was kept** (the plan said to
+  delete it) because it still hosts the live `chkDisplayWarningsInDebug`. **Terminal is now a top-level
+  options node.** `LimitDebug` removed — it never worked.
+- **2D** — `DebuggerTypes`, `DefaultDebuggerType64`/`CurrentDebuggerType64`, `pDebuggers`/`Debuggers`, the
+  `[Debuggers]` load/save/dealloc and the five `*Debugger64*` path globals are gone, along with the
+  statically-dead `build_create_shellscript` (its only caller sat behind `If 0 Then`).
+- **Residual cleanup** — the orphan `Declare`/`Extern "C"`/`pollfd`/global block at the foot of `Debug.bas`,
+  the dead `tlockGDB` cluster, and the debug panel's no-op **"Update"** toggle.
+- **2E (new capability)** — the debuggee now receives a real **argv** (`argv(0)` + Parameters
+  `Debug64Arguments` + the project's `CommandLineArguments`) and a real **environment**. Astoria removed its
+  env-vars option as non-functional; Ilwaco wired it instead. `frmParameters.cmdOK` now writes `txtDebug64`
+  back — it never did.
 
-**Debugger Pass 1 (done, built, re-verified live):** removed the entire GDB engine — **2130 lines** from
-`src/Debug.bas` (`CreatePipeD`→`deinit`: the `tlockGDB` pipe cluster, `run_debug`/`continue_debug`/
-`step_debug`/`command_debug`/`kill_debug`, `load_file`/`get_read_data`/`set_bp`, `fill_*`/`info_*_debug`,
-`get_version_gdb`, `GetPartPath`) plus `RunWithDebug`'s `IntegratedGDBDebugger` branch; collapsed the 10
-`ilwaco.bas` `If CurrentDebugger = IntegratedGDBDebugger … Else …` dispatch blocks to their Integrated branch;
-removed `Main.bas` `TimerProcGDB`, the `GDBCommand` sub + `miGDBCommand` menu, and the GDB watch
-`command_debug`. `Debug.bas` 10,362 → 8,232. **Integrated debugger re-verified on `:0` after the refactor:**
-gas64 project compiles → debuggee enters `t (tracing stop)` → Locals thread view + current-line marker work.
+**Verification:** four clean whole-program builds; Options tree/pages and Terminal page checked live on `:0`;
+argv and environment confirmed at kernel level via `/proc/<pid>/environ` (injection, inheritance, same-name
+override leaving exactly one entry, multi-var parsing, and no pollution of the IDE's own environment).
 
-**Verification method (reusable):** a small **console `.vfp` project** (not a loose `.bas`) with the dev shim
-on its lib path (`CompilationArguments64Linux="-p <shim> -l tinfo"`, needed only in this dev env — see Known
-gaps), Integrated IDE debugger in `Settings/ilwaco.ini`, driven over `:0` with `xdotool`/`scrot`; `readelf -S`
-confirms `-gen gas64 -g` emits `.dbgdat`/`.dbgstr`.
+**The fork trap, worth remembering:** after `fork()` in a multithreaded process only async-signal-safe calls
+are legal. A first attempt at env injection called `SetEnviron` (`putenv`, which allocates) in the child and
+failed **silently** — argv worked because it is stack-only. Anything staged for the debuggee must now be built
+in the parent (`build_debug_launch`); the child only copies pointers and calls `execve`.
 
-**Two pre-existing Linux bugs found (NOT Pass-1 regressions):** (1) the Integrated debugger lowercases the
-source path (`Main.bas:2885 AddTab(LCase(source(fntab)))`, a Win32-ism) → "File not found" on case-sensitive
-paths with uppercase letters (tracked as a spawned task); (2) cosmetic — the breakpoint line renders the
-source file path appended after the code text.
+**Pre-existing bug confirmed live (not a regression):** the Integrated debugger lowercases the source path
+(`Main.bas:2885 AddTab(LCase(source(fntab)))`, a Win32-ism) → "File not found" for any project under a path
+containing uppercase letters. Reproduced this session; worked around by testing from an all-lowercase path.
+
+**Verification recipe (reusable):** a small console `.vfp` project (not a loose `.bas`) with `*File=` marking
+the main file, `CreateDebugInfo=true`, and the dev shim on its lib path
+(`CompilationArguments64Linux="-p <shim> -l tinfo"` — needed only in this dev env). Drive it on `:0` with
+`xdotool`/`scrot`; read the debuggee's real argv with `pgrep -a` and its environment from `/proc/<pid>/environ`
+rather than trusting the program's own output.
 
 ---
 
-## NEXT — `5fa5cf25` debugger Pass 2, then residual cleanup, then continue the walk
+## NEXT — two found bugs, then the menu-taxonomy cluster
 
-`5fa5cf25` is **partly done** (compiler-backend half + debugger Pass 1 + Pass 2 steps 2A/2B above;
-committed, build-clean). Remaining:
-
-- **Debugger Pass 2 — remove the debugger-choice machinery** now that only the Integrated engine survives.
-  **Done (committed, each built green):** **2A** — `RunWithDebug` rewritten to Integrated-only
-  (`check_bitness`→`start_pgm`; dropped the `pDebuggers`/`DebuggerPath`/`CmdL`/`GDBCommands.txt` writer +
-  terminal machinery; `Debug.bas` → 8074). **2B** — `frmParameters`'s `cboDebug64` combo removed (control +
-  `.bi` decl + LoadSettings/cmdOK logic). **Remaining:**
-  - **2C — remove the `frmOptions` debugger options page** (`src/frmOptions.frm` ~55 refs + `frmOptions.bi`).
-    Controls to delete: `pnlDebugger`, `grbDefaultDebuggers`, `grbDebuggerPaths`, `cboDebugger64`,
-    `cboGDBDebugger64`, `lvDebuggerPaths`, `hbxDebugger`, `cmdAddDebugger`/`cmdRemoveDebugger`/
-    `cmdChangeDebugger`/`cmdClearDebuggers`, `lblDebugger64`/`lblDebugger321`/`lblDebugger641` — their
-    constructor blocks, the `.bi` `Dim As …`/`Declare` lines, the 5 handlers (`cmd*Debugger*_Click`,
-    `lvDebuggerPaths_ItemActivate`(`_`)), the LoadSettings block (~3032-3045), the SaveSettings block
-    (~3427-3447), the `[Debuggers]` `WriteString`/`KeyRemove` block (~3617-3628), and `.pnlDebugger.Visible`
-    (~4060). **Tree reparent:** the options tree parents **Terminal under Debugger** (`tnDebugger->Nodes.Add(…
-    "Terminal")` at ~3264); make Terminal a top-level node and drop `tnDebugger` (~3255).
-  - **2D — remove the underlying machinery** (now unreferenced by UI): the **`DebuggerTypes` enum** +
-    `DefaultDebuggerType64`/`CurrentDebuggerType64` (`Debug.bas:292-298`); `pDebuggers`/`Debuggers` dict
-    (`Main.bas:91,122`); the `[Debuggers]` settings load (`Main.bas:5311-5371`) + `WDeAllocate`s
-    (`9430-9434`) + save loop (`9479-9480`); `Debugger64Path`/`GDBDebugger64Path`/`DefaultDebugger64`/
-    `GDBDebugger64`/`CurrentDebugger64` (`Main.bi:123-124,173`); and `build_create_shellscript`'s dead
-    `DebuggerPath`/`bDebug` prefix (`TabWindow.bas:10759` — only ever called `bDebug=False`). Build-gated.
-- **Residual `Debug.bas` GDB cleanup** (deferred from Pass 1 to avoid touching shared symbols mid-removal):
-  the orphan GDB forward `Declare`s (~`Debug.bas:7958-7982`) and now-unused GDB globals (`Running`,
-  `iStateMenu`, `szDataForPipe`, `iVersionGdb`, `CurrentFile`, `iGlPid`, the Extern-C `poll`/`ioctl`/`pollfd`
-  block). **Keep** the shared helpers `KillTimer`/`SetTimer` (+ `w9T`), `DeleteDebugCursor`, `check_bitness`,
-  `hard_closing`, and verify `SIGKILL` (`#define`, used by the Integrated engine at ~1772/2077/2487) is still
-  sourced before removing its block.
-- Two **found bugs to fix**: the debugger source path-case `LCase` (`Main.bas:2885`, spawned task) and the
-  cosmetic breakpoint-line path render.
+- Two **found bugs to fix**: the debugger source path-case `LCase` (`Main.bas:2885`, spawned task — now
+  confirmed reproducible) and the cosmetic breakpoint-line path render (the source path is drawn after the
+  code text).
 - Then the **menu-taxonomy cluster** `49ec5ccd`/`37ba31ea`; skip the pure 32-bit/GTK-strip entries
   (`e139c2cc` etc.). The two **Examples items** (`4bd02894`, `51441d7a`) stay deferred to just before the
   testing phase (owner). All owner directives (32-bit, UTF-8/LF, AI, English-only) remain cleared.
+- Unverified, low priority: **Ctrl+F5 did not resume** a stopped debuggee during this session's driving. May
+  be an artefact of synthetic input rather than a defect — check by hand before treating it as a bug.
 
 **Repo-hygiene note:** the `./ilwaco` binary is tracked **by owner directive (2026-08-04) — do not
 `.gitignore` it** (the repo moves between two machines and the built editor must travel with each push).
@@ -137,4 +114,6 @@ classified in [AstoriaParity.md](Documentation/AstoriaParity.md)). Past session 
 - **GTK dark mode (REIMPLEMENT):** MFF ships a real GTK3 `SetDarkMode`, but `g_darkModeSupported` was only
   ever set by the deleted Win32 `InitDarkMode`, so the dark-styling branches never fire on GTK. Track with
   Astoria's dark-mode commits (`56f6d180`/`b3633bc5`/`a7c7839d`).
-- **`gdb` not installed** here (debugger default won't resolve); `UseDebugger=false` by default.
+- **Debugger source-path case:** `Main.bas:2885` lowercases the source path, so debugging a project
+  under a path containing uppercase letters fails with "File not found" (see NEXT). `UseDebugger=false`
+  by default. GDB is gone — the Integrated engine needs no external debugger.

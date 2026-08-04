@@ -288,14 +288,11 @@ Dim Shared mainfolder As WString * 300 'debuggee main folder
 Dim Shared exedate As Double 'serial date
 Dim Shared As String compilerversion ''compiler version retrieved stabs code = 255
 Dim Shared As String cmdlimmediat
-
-Enum DebuggerTypes
-	IntegratedIDEDebugger
-	IntegratedGDBDebugger
-	CustomDebugger
-End Enum
-
-Dim Shared As DebuggerTypes DefaultDebuggerType64, CurrentDebuggerType64
+'' command line handed to the debuggee: the Debug arguments from the Parameters dialog followed by
+'' the project's own Command-line arguments. Staged by RunWithDebug, consumed by start_pgm in the
+'' forked child -- the same hand-off exename already uses.
+Dim Shared As String debugargs
+Declare Sub build_debug_launch()
 
 '===================================================
 '' set/unset breakpoint markers
@@ -1407,8 +1404,10 @@ Private Sub external_launch()
 	
 	exename=debuggee
 	'exe_sav(exename,cmdline)
+	debugargs = "" ''launched as a bare file, so no project/Parameters arguments apply
+	build_debug_launch()
 	SetTimer(hmain,GTIMER001,100,Cast(Any Ptr,@debug_event))
-	
+
 	If ThreadCreate(@start_pgm)=0 Then
 		KillTimer(hmain, GTIMER001)
 		ThreadsEnter
@@ -1441,9 +1440,10 @@ Private Sub restart_exe(ByVal idx As Integer)
 	
 	reinit() ''all except GUI parts
 	'settitle()
-	
+
+	build_debug_launch() ''restart reuses the same arguments and environment
 	SetTimer(hmain,GTIMER001,100,Cast(Any Ptr,@debug_event))
-	
+
 	If ThreadCreate(@start_pgm)=0 Then
 		KillTimer(hmain, GTIMER001)
 		ThreadsEnter
@@ -2829,8 +2829,94 @@ End Sub
 	'================================================
 	'' starts debuggee for linux
 	'================================================
-	Declare Function execv_ Alias "execv" (ByVal __path As Const ZString Ptr, ByVal __argv As Const ZString Ptr Ptr) As Long
-	
+	Declare Function execve_ Alias "execve" (ByVal __path As Const ZString Ptr, ByVal __argv As Const ZString Ptr Ptr, ByVal __envp As Const ZString Ptr Ptr) As Long
+
+	Extern "C"
+		Extern c_environ Alias "environ" As ZString Ptr Ptr
+	End Extern
+
+	Const MAXDEBUGARGS = 64
+	Const MAXDEBUGENV = 512
+
+	'' the debuggee's argv tail and environment block, both staged pre-fork
+	Dim Shared As String exename_pre
+	Dim Shared As String debugargstore(0 To MAXDEBUGARGS)
+	Dim Shared As Integer debugargcount
+	Dim Shared As String debugenv(0 To MAXDEBUGENV)
+	Dim Shared As Integer debugenvcount
+
+	'' Splits a command line into tokens on whitespace, honouring double quotes so a path with
+	'' spaces survives as one argument. The quotes are delimiters, not content, so
+	'' "/home/my docs/in.csv" arrives at the debuggee as /home/my docs/in.csv. Returns the count.
+	Private Function split_args(ByRef CommandLine As String, args() As String) As Integer
+		Dim As Integer n = 0
+		Dim As Boolean inquotes = False, intoken = False
+		Dim As String token
+		For i As Integer = 1 To Len(CommandLine)
+			Dim As String c = Mid(CommandLine, i, 1)
+			If c = """" Then
+				inquotes = Not inquotes
+				intoken = True
+			ElseIf CBool(c = " " OrElse c = Chr(9)) AndAlso Not inquotes Then
+				If intoken Then
+					If n > UBound(args) Then Return n
+					args(n) = token : n += 1
+					token = "" : intoken = False
+				End If
+			Else
+				token &= c
+				intoken = True
+			End If
+		Next
+		If intoken AndAlso n <= UBound(args) Then args(n) = token : n += 1
+		Return n
+	End Function
+
+	'' Builds the debuggee's environment: the IDE's own, with the user's Environment variables
+	'' overriding any entry of the same name. Format matches the Options field: space-separated
+	'' NAME=VALUE pairs.
+	''
+	'' This runs in the PARENT, before the fork, on purpose. Everything after fork() in a
+	'' multithreaded process must avoid allocation -- another thread can hold the allocator lock
+	'' at fork time -- so the child only copies already-allocated pointers into a stack array and
+	'' calls execve. An earlier attempt that called SetEnviron in the child silently failed to
+	'' reach the debuggee for exactly this reason.
+	Private Sub build_debug_environment()
+		debugenvcount = 0
+		Dim As String uservars(0 To MAXDEBUGARGS)
+		Dim As Integer un = 0
+		If TurnOnEnvironmentVariables Then un = split_args(WGet(EnvironmentVariables), uservars())
+		'' user entries first, so a name they set replaces the inherited one
+		For i As Integer = 0 To un - 1
+			If InStr(uservars(i), "=") > 1 AndAlso debugenvcount <= UBound(debugenv) Then
+				debugenv(debugenvcount) = uservars(i) : debugenvcount += 1
+			End If
+		Next
+		Dim As Integer usercount = debugenvcount
+		Dim As Integer n = 0
+		While c_environ[n] <> 0 AndAlso debugenvcount <= UBound(debugenv)
+			Dim As String entry = *c_environ[n]
+			Dim As Integer eq = InStr(entry, "=")
+			Dim As Boolean overridden = False
+			If eq > 1 Then
+				Dim As String nm = Left(entry, eq)
+				For i As Integer = 0 To usercount - 1
+					If Left(debugenv(i), Len(nm)) = nm Then overridden = True : Exit For
+				Next
+			End If
+			If Not overridden Then debugenv(debugenvcount) = entry : debugenvcount += 1
+			n += 1
+		Wend
+	End Sub
+
+	'' Stages everything execve needs, in the parent: the program path, the argv tail and the
+	'' environment block. Must be called before the start_pgm thread is created.
+	Sub build_debug_launch()
+		exename_pre = exename
+		debugargcount = split_args(debugargs, debugargstore())
+		build_debug_environment()
+	End Sub
+
 	Private Sub start_pgm(p As Any Ptr)
 		
 		thread2=syscall(SYS_GETTID)
@@ -2854,8 +2940,22 @@ End Sub
 				Exit Sub
 			End If
 			dbg_prt2 "name=";exename
-			Dim As String exename_ = exename
-			If execv_(StrPtr(exename_), NULL) Then
+			'' Nothing below may allocate -- see build_debug_environment. argstore/argv/envp are
+			'' stack arrays filled from strings the parent already built.
+			'' + 2: argv(0) is the program name and the last slot is the NULL terminator
+			Dim As ZString Ptr argv(0 To MAXDEBUGARGS + 2)
+			Dim As ZString Ptr envp(0 To MAXDEBUGENV + 1)
+			argv(0) = StrPtr(exename_pre)
+			For i As Integer = 0 To debugargcount - 1
+				argv(i + 1) = StrPtr(debugargstore(i))
+			Next
+			argv(debugargcount + 1) = NULL
+			For i As Integer = 0 To debugenvcount - 1
+				envp(i) = StrPtr(debugenv(i))
+			Next
+			envp(debugenvcount) = NULL
+			dbg_prt2 "args=";debugargs
+			If execve_(StrPtr(exename_pre), @argv(0), @envp(0)) Then
 				dbg_prt2 "error on starting debuggee=";errno ' argv, envp)=-1
 				Exit Sub
 			End If
@@ -6007,280 +6107,6 @@ Private Function debug_extract(exebase As UInteger, nfile As String, dllflag As 
 					End Select
 					'=========================================
 					basestab += SizeOf(udtstab)
-				'#else
-				'	Select Case recupstab.code
-				'	Case 36 'proc
-				'		procnodll=False
-				'		' procnmt=cutup_proc(Left(recup,InStr(recup,":")-1))
-				'		procnmt=cutup_proc(recup) '02/11/2014
-				'		If procnmt="main" Then flagstabd=True ' + TODO remove the equivalent below
-				'		'If procnmt<>"" And procnmt<>"{MODLEVEL}" And(flagmain=TRUE Or procnmt<>"main") Then '' mike's bug 02/12/2015
-				'		If procnmt<>"" And(flagmain=True Or procnmt<>"main") Then  '' mike's bug 02/12/2015
-				'			'If InStr(procnmt,"structor : IRHLCCTX")=0 And InStr(procnmt,".LT")=0 Then
-				'			If InStr(procnmt,".LT")=0 Then
-				'				#ifdef fulldbg_prt
-				'					dbg_prt ("Proc : "+procnmt)
-				'				#endif
-				'				If flagmain=True And procnmt="main" Then
-				'					flagmain=False:flagstabd=True'first main ok but not the others
-				'					#ifdef fulldbg_prt
-				'						dbg_prt("MAIN main "+source(sourceix))
-				'					#endif
-				'				End If
-				'				procnodll=True:proc2=recupstab.ad+exebase-baseimg 'only when <> exebase and baseimg (DLL)
-				'				procfg=1:procnb+=1:proc(procnb).sr=sourceix
-				'				proc(procnb).nm=procnmt 'proc(procnb).ad=proc2 keep it if needed
-				'				'GCC to remove @ in proc name ex test@0: --> test:
-				'				If InStr(procnmt,"@") Then
-				'					procnmt=Left(procnmt,InStr(procnmt,"@")-1)
-				'				End If
-				'				proc(procnb).nm = procnmt
-				'				' :F --> public / :f --> private then return value
-				'				Dim As String recupbis
-				'				If gengcc=1 Then recupbis=recup:translate_gcc(recupbis):recup=recupbis
-				'				cutup_retval(procnb,Mid(recup,InStr(recup,":")+2,99))'return value .rv + pointer .pt
-				'				proc(procnb).st=1 'state no checked
-				'				proc(procnb).nu=recupstab.nline:lastline=0
-				'				proc(procnb+1).vr=proc(procnb).vr 'in case there is not param nor local var
-				'				proc(procnb).rvadr = 0 'for now only used in gcc case 19/08/2015
-				'			End If
-				'		End If
-				'	Case 32,38,40,128,160 'init common/ var / uninit var / local / parameter
-				'		cutup_1(recup,recupstab.ad,exebase-baseimg)
-				'		'GCC
-				'	Case 60
-				'		If recup="gcc2_compiled." Then
-				'			'fb_message("Compiled with option -gen gcc","     Expect few strange behaviours   ")
-				'			gengcc=1
-				'			srccomp(sourcenb)=gengcc 'stabs 60 arrives just after stabs 100 ....
-				'		End If
-				'		'END GCC
-				'	Case 100
-				'		If flag=0 Then
-				'			If InStr(recup,":")=0  Then Exit Select ' case just name in excess then new path
-				'			flag=1
-				'			recup=LCase(recup)
-				'			If InStr(recup,".") Then 'full name so can check
-				'				temp=check_source(recup)
-				'			Else
-				'				temp=-1
-				'			End If
-				'			If temp=-1 Then
-				'				sourcenb+=1:source(sourcenb)=recup:sourceix=sourcenb:sourceixs=sourceix
-				'			Else
-				'				sourceix=temp:sourceixs=sourceix
-				'			End If
-				'			dbgmaster=sourcenb 'master bas not the include files
-				'			'reinit when new module (main, lib or dll)
-				'			gengcc=0:procnodll=True
-				'			srccomp(sourcenb)=gengcc 'could be changed after by case60 10/01/2014
-				'		Else
-				'			flag=0 'case path then full name or path then name
-				'			'GCC
-				'			If Right(recup,2)=".c" Then
-				'				recup=Left(recup,Len(recup)-2)+".bas"
-				'				dbgmain=sourcenb 'considering that entry point is inside this source
-				'			End If
-				'			'END GCC
-				'			If InStr(recup,":")=0 Then recup=source(sourcenb)+recup 'path + name
-				'			temp=check_source(recup)
-				'			If temp<>-1 Then
-				'				sourceix=temp:sourceixs=sourceix:sourcenb-=1
-				'			Else
-				'				source(sourcenb)=recup
-				'			End If
-				'		End If
-				'	Case 130 'include RAS
-				'	Case 132 'include
-				'		#ifdef fulldbg_prt
-				'			dbg_prt ("Include : "+recup)
-				'		#endif
-				'		'GCC
-				'		' 	               If InStr(recup,":") Then 'new include file path name with file name
-				'		'                     temp=check_source(recup)
-				'		'                     If temp=-1 Then
-				'		'                        sourcenb+=1:source(sourcenb)=recup:sourceix=sourcenb
-				'		'                        srccomp(sourcenb)=gengcc
-				'		'                     Else
-				'		'                 	      sourceix=temp
-				'		'                     End If
-				'		' 	               Else
-				'		'               	   sourceix=0
-				'		' 	               EndIf
-				'		If InStr(recup,":")=0 Then 'new include file no path only file name
-				'			recup=Left(source(0),InStrRev(source(0),"\"))+recup ''add path
-				'		End If
-				'		recup=LCase(recup)
-				'		temp=check_source(recup)
-				'		If temp=-1 Then
-				'			sourcenb+=1:source(sourcenb)=recup:sourceix=sourcenb
-				'			srccomp(sourcenb)=gengcc
-				'		Else
-				'			sourceix=temp
-				'		End If
-				'		lastline=0 ''2018/08/03
-				'		' ==
-				'		'If InStr(recup,":") Then 'new include file path name with file name
-				'		'	sourcenb+=1:source(sourcenb)=recup:sourceix=sourcenb' ????? Purpose :sourcead(sourcenb)=recupstab.ad
-				'		'Else 'return in main source because no path name
-				'		'	sourceix=0
-				'		'EndIf
-				'		'just usefull if GCC because the information for include is arriving after the proc !!!
-				'		If gengcc Then proc(procnb).sr=sourceix':dbg_prt("include ahah "+source(sourceix)+" "+proc(procnb).nm)
-				'		'END GCC
-				'	Case 42 'main proc  = entry point
-				'		flagstabd=False ' order : code 42 / stabd / code 36 main
-				'		dbgmain=dbgmaster
-				'	Case Else
-				'		#ifdef fulldbg_prt
-				'			dbg_prt ("UNKNOWN stabs "+Str(recupstab.code)+" "+Str(recupstab.stabs)+" "+Str(recupstab.nline)+" "+Str(recupstab.ad)+" "+recup)
-				'		#endif
-				'	End Select
-				'#endif
-			'Else
-				'#ifdef __FB_WIN32__
-				'	Select Case recupstab.code
-				'	Case 68
-				'		'dbg_prt2("code 68 "+Str(procnodll)+" "+Str(flagstabd)+" "+Str(recupstab.nline)+" "+Str(lastline))
-				'		'And recupstab.nline>lastline    : To avoid very last line see next comment about lastline
-				'		'recupstab.nline<>65535 And
-				'		If procnodll And flagstabd Then 'And recupstab.nline>lastline Then
-				'			''''''''''''''''==
-				'			'12/01/2014''''''''''''If recupstab.nline<>firstline Then
-				'			If recupstab.nline Then
-				'				
-				'				If recupstab.nline>lastline Then
-				'					'asm with just comment
-				'					If recupstab.ad+proc2<>rline(linenb).ad Then
-				'						linenb+=1
-				'					Else
-				'						WriteProcessMemory(dbghand,Cast(LPVOID,rline(linenb).ad),@rline(linenb).sv,1,0)
-				'					End If
-				'					rline(linenb).ad=recupstab.ad+proc2
-				'					ReadProcessMemory(dbghand,Cast(LPCVOID,rline(linenb).ad),@rline(linenb).sv,1,0) 'sav 1 byte before writing &CC
-				'					If rline(linenb).sv=-112 Then 'nop, address of looping (eg in a for/next loop correponding to the command next)
-				'						linenb-=1
-				'						'''	dbg_prt2("NUM LINE = NOP "+Str(recupstab.nline))'gcc only
-				'					Else
-				'						rline(linenb).nu=recupstab.nline:rline(linenb).px=procnb:rline(linenb).sx=sourceix
-				'						If runtype = RTSTEP Then
-				'							If LimitDebug AndAlso Not EqualPaths(GetFolderName(source(sourceix)), mainfolder) Then
-				'							Else
-				'								WriteProcessMemory(dbghand,Cast(LPVOID,rline(linenb).ad),@breakcpu,1,0)
-				'							End If
-				'						End If
-				'						#ifdef fulldbg_prt
-				'							dbg_prt("Line / adr : "+Str(recupstab.nline)+" "+Hex(rline(linenb).ad))
-				'							dbg_prt("")
-				'						#endif
-				'						If recupstab.ad<>0 Then lastline=recupstab.nline 'first proc line always coded 1 but ad=0
-				'						'12/01/2014'''''''''''''If recupstab.ad=0 AndAlso gengcc=1 Then
-				'						''''''''''''''	firstline=recupstab.nline 'in case of gcc the line could be anything
-				'						''''''''''''''	rLine(linenb).nu=-1
-				'						''''''''''''''Else
-				'						''''''''''''''	firstline=-1
-				'						''''''''''''''EndIf
-				'					End If
-				'				Else
-				'					'dbg_prt2("NUM LINE NOT > LAST LINE")
-				'				End If
-				'			Else
-				'				'dbg_prt2("NUM LINE = 0")
-				'			End If
-				'			'12/01/2014''''''''''''''''Else
-				'			''''''''''''''''dbg_prt2("STILL VERY FIRST LINE = "+Str(firstline))
-				'			'12/01/2014'''''''''''EndIf
-				'		End If
-				'	Case 192
-				'		'' if procfg And procnodll then
-				'		''Begin.block proc, real first program ligne for every proc not use now
-				'		''procfg=0:proc(procnb).db=recupstab.ad+proc2
-				'		''else
-				'		''Begin. of block
-				'		''end if
-				'	Case 224
-				'		''End of block
-				'		If procnodll Then proc1=recupstab.ad+proc2
-				'	Case 36
-				'		''End of proc
-				'		If procnodll Then
-				'			If gengcc=1 Then
-				'				proc1=recupstab.ad+proc2 'under gcc 36=224 or 224 not use 10/01/2014
-				'				proc(procnb).ed=recupstab.ad+proc2
-				'			Else
-				'				proc(procnb).ed=recupstab.ad+proc2 '18/08/2015 for gcc it's done below
-				'			End If
-				'			proc(procnb).fn=proc1:proc(procnb).db=proc2
-				'			
-				'			If proc1>procfn Then procfn=proc1+1 ' just to be sure to be above see gest_brk
-				'			'dbg_prt2("Procfn stab="+Hex(procfn))
-				'		End If
-				'		
-				'		If proc(procnb).nu=rline(linenb).nu AndAlso linenb>2 Then 'for proc added by fbc (constructor, operator, ...) '11/05/2014 adding >2 to avoid case only one line ...
-				'			proc(procnb).nu=-1
-				'			For i As Integer =1 To linenb
-				'				'dbg_prt2("Proc db/fn inside for stab="+Hex(proc(procnb).db)+" "+Hex(proc(procnb).fn))
-				'				'dbg_prt2("Line Adr="+Hex(rline(i).ad)+" "+Str(rline(i).ad))
-				'				If rline(i).ad>=proc(procnb).db AndAlso rline(i).ad<=proc(procnb).fn Then
-				'					'dbg_prt2("Cancel breakpoint adr="+Hex(rline(i).ad)+" "+Str(rline(i).ad))
-				'					WriteProcessMemory(dbghand,Cast(LPVOID,rline(i).ad),@rline(i).sv,1,0)
-				'					'nota rline(linenb).nu=-1
-				'				End If
-				'			Next
-				'		Else
-				'			'for GCC ''''''''''
-				'			If gengcc Then
-				'				If proc(procnb).rv=7 Then 'sub return void
-				'					rline(linenb).nu-=1 'decrement the number of the last line of the proc
-				'					proc(procnb).fn=rline(linenb).ad    'replace address because = next proc address
-				'					''' dbg_prt2("SPECIAL GCC1 "+proc(procnb).nm+" "+Str(rline(linenb).nu)+" "+Str(rline(linenb).ad))
-				'				Else 'function
-				'					linenb-=1 'remove the last line (added by gcc but unexist)
-				'					If proc(procnb).nm<>"main" Then 'main = NO CHANGE
-				'						WriteProcessMemory(dbghand,Cast(LPVOID,rline(linenb).ad),@rline(linenb).sv,1,0) 'restore to avoid stop
-				'						rline(linenb).ad=rline(linenb+1).ad 'replace the address by these of the next one
-				'						rline(linenb).sv=rline(linenb+1).sv
-				'						proc(procnb).fn=rline(linenb).ad    'replace address because = next proc address
-				'						''' dbg_prt2("SPECIAL GCC2 "+proc(procnb).nm+" "+Str(rline(linenb).ad))
-				'					Else
-				'						''' dbg_prt2("SPECIAL GCC3")
-				'					End If
-				'				End If
-				'			End If
-				'		End If
-				'		'''''''''''''''''''''''''''''
-				'		
-				'		''removing {modlevel empty just prolog and epilog
-				'		If proc(procnb).nm="{MODLEVEL}" And proc(procnb).fn-proc(procnb).db <8 Then
-				'			''removing lines
-				'			For iline As Long = linenb To 1 Step -1
-				'				If rline(iline).px=procnb Then
-				'					WriteProcessMemory(dbghand,Cast(LPVOID,rline(iline).ad),@rline(iline).sv,1,0) 'restore to avoid stop
-				'					linenb-=1
-				'				Else
-				'					Exit For
-				'				End If
-				'			Next
-				'			'dbg_prt2("remove modlevel in"+source(proc(procnb).sr))
-				'			procnb-=1 ''removing proc
-				'		End If
-				'	Case 162
-				'		''End include
-				'		sourceix=sourceixs
-				'	Case 100
-				'		flag=0
-				'		'as the definitions for integer, ushort etc are repeated keep only the 15 first ones
-				'		udtcpt=udtmax-TYPESTD '20/08/2015
-				'	Case 46,78 'beginning/end of a relocatable function block, not used
-				'	Case Else   ''should not happen but in this case (reported by luis) terminating the loading.... 2016/08/14
-				'		#ifdef fulldbg_prt
-				'			dbg_prt ("UNKNOWN "+Str(recupstab.code)+" "+Str(recupstab.stabs)+" "+Str(recupstab.nline)+" "+Str(recupstab.ad))
-				'		#endif
-				'		Exit While
-				'	End Select
-				'#endif
-			'End If
-			'basestab += SizeOf(udtstab)
 		Wend
 	End If
 	'
@@ -7953,66 +7779,12 @@ Sub DeleteDebugCursor
 	End If
 End Sub
 
-	Dim Shared As Long pIn, pOut
-	
-	Declare Function readpipe(WithoutAnswer As Boolean = False, WithoutShowing As Boolean = False) As String
-	Declare Function CreatePipeD(szCmd As WString Ptr , szCmdParam As WString Ptr = 0 , szCmdParam2 As WString Ptr = 0) As Long
-	
-		Declare Sub writepipefast(ByRef szBuf As ZString, iTime As Long = 1)
-		Declare Sub writepipe(ByRef szBuf As ZString, iTime As Long = 1)
-	Declare Function fill_locals_variables(sBuf As String , iFlagAutoUpdate As Long = 0) As Long
-	Declare Sub fill_all_variables(sBuf As String , iFlagUpdate As Long = 0)
-	Declare Sub info_all_variables_debug(iFlagUpdate As Long = 0)
-	Declare Sub info_loc_variables_debug(iFlagAutoUpdate As Long = 0)
-	Declare Sub info_threads_debug(iFlagAutoUpdate As Long = 0)
-	Declare Sub deinit()
-	
-	Dim Shared As Boolean Running, ShowResult
-	
-	Dim Shared As ZString * 200000 szDataForPipe
-	
-	Dim Shared As Long iVersionGdb
-	
-	Dim Shared As String CurrentFile, NewCommand
-	
-	Dim Shared As Integer iPosStartLast, iPosEndLast, iCurselLast, TimerID, WatchIndex
-	
-	Declare Function timer_data() As Integer
-	
-	Declare Sub continue_debug()
-	
-		#include once "crt/unistd.bi"
-		
-		Extern "C"
-			
-			Declare Function fdopen(fildes As Long, mode As ZString Ptr) As FILE Ptr
-			'Declare Function kill_ Alias "kill" ( pid As pid_t, sig As Integer) As Integer
-			Declare Function poll(ufds As Any Ptr, nfds As ULong, timeout As Long) As Long
-			Declare Function ioctl Alias "ioctl" (fd As Integer, request As ULong, ...) As Integer
-			Declare Function _access Alias "access" (ByVal As ZString Ptr, ByVal As Long) As Long
-		End Extern
-		
-		#define SIGKILL 9
-		#define FIONREAD    &h541B
-		
-		Type pollfd
-			
-			As Long fd          '/* file descriptor */
-			As Short events     '/* requested events */
-			As Short revents    '/* returned events */
-			
-		End Type
-		
-		Dim Shared As pid_t pid
-		
-		Dim Shared As Long 	iReadPipe(1), iWritePipe(1)
-	
-		Dim Shared As Long iGlPid
-	
-	Dim Shared As Long iFlagThreadSignal, iFlagUpdateVariables
-	
-	Dim Shared As Long iCounterUpdateVariables, iFlagStartDebug, iStateMenu = 1
-	
+	Dim Shared As Integer WatchIndex
+
+	#include once "crt/unistd.bi"
+
+	#define SIGKILL 9
+
 		Dim Shared As guint w9T(50000)
 		
 		Sub KillTimer(hwnd As Any Ptr = 0, idTimer As Long)
@@ -8067,6 +7839,9 @@ Sub RunWithDebug(Debugger As String = "", ByRef ProjectFileName As WString, ByRe
 	Else
 		Restarting = False
 	End If
+	'' Same arguments the Run path uses, so Run and Debug launch the program identically.
+	debugargs = Trim(Trim(WGet(Debug64Arguments)) & " " & Trim(ProjectCommandLineArguments))
+	build_debug_launch()
 	WatchIndex = -1
 	ThreadsEnter()
 	tpLocals->SelectTab

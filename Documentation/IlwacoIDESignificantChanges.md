@@ -37,6 +37,16 @@ Each of these was a *choice* in VisualFBEditor and is now made once, with the op
 - **Legacy editor options removed** — Error Handling and Line Numbering menu items, the "Close
   Folder" command, the "Use" target-selector dropdown, and the Help ▸ GitHub submenu are no longer
   present (Astoria parity).
+- **The alt compiler-backend picker is gone** — no GAS/LLVM/GCC/CLANG choice, no optimization radios
+  and no Advanced Options dialog; `-gen gas64` is hard-coded (2026-08-04).
+- **The debugger picker is gone (2026-08-04).** Ilwaco ships **one** debugger, the built-in
+  Integrated (stabs) engine, and the GDB engine is removed — the *inverse* of Astoria's choice, made
+  because the Integrated engine reads FreeBASIC's `.dbgdat`/`.dbgstr` sections that only the gas64
+  backend emits. With it went the Default Debuggers / Debugger Paths options page, the debugger
+  combo in Parameters, and the `[Debuggers]` settings block.
+- **Two never-functional options removed (2026-08-04)** — "Limit debug to the directory of the main
+  file" (its only reference was commented-out Win32 code) and the debug panel's "Update" toggle (it
+  wrote a flag nothing read). A broken option costs a beginner more than a missing one.
 
 ## 3. Behaviour reimplemented for GTK
 
@@ -47,6 +57,14 @@ Each of these was a *choice* in VisualFBEditor and is now made once, with the op
   panel is hidden and a separate rail is shown. State persists across sessions.
 - **Debug-tab visibility.** The debugger's seven analysis tabs appear only when the debugger is
   enabled; the Immediate tab stays visible.
+- **The debuggee's arguments and environment now work (2026-08-04).** VisualFBEditor exposed Debug
+  arguments and an "Environment variables" option that were never applied — and Astoria, hitting the
+  same thing on Win32, removed the env option as non-functional. Ilwaco wires both up instead: the
+  debuggee is launched with a real `argv` (program name, the Parameters *Debug* arguments, then the
+  project's *Command-line arguments*, matching what Run already did) and a real environment, with a
+  user variable overriding the inherited one of the same name. Implemented for `fork`/`execve`: the
+  block is built in the parent, because after `fork()` in a multithreaded process the child must not
+  allocate.
 
 ---
 

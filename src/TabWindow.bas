@@ -10753,28 +10753,6 @@ Sub PipeCmd(ByRef file As WString, ByRef cmd As WString, MainThread As Boolean =
 		'i_retcode = g_spawn_command_line_sync(ToUTF8(cmd), NULL, NULL, @i_exitcode, NULL)
 End Sub
 
-	Function build_create_shellscript(ByRef working_dir As WString, ByRef cmd As WString, autoclose As Boolean, bDebug As Boolean = False, ByRef Arguments As WString = "") As String
-		'?Replace(cmd, "\", "/")
-		'?!"#!/bin/sh\n\nrm $0\n\ncd " & Replace(working_dir, "\", "/") & !"\n\n" & Replace(cmd, "\", "/") & !"\n\necho ""\n\n------------------\n(program exited with code: $?)"" \n\n" & IIF(autoclose, "", !"\necho ""Press return to continue""\n#to be more compatible with shells like ""dash\ndummy_var=""""\nread dummy_var") & !"\n"
-		Dim As WString Ptr DebuggerPath = Debugger64Path
-		Dim As String ScriptPath
-		Dim As Integer Fn = FreeFile_
-		ScriptPath = *g_get_tmp_dir() & "/vfb_run_script.sh"
-		Open ScriptPath For Output As #Fn
-		Print #Fn, "#!/bin/sh"
-		Print #Fn, ""
-		Print #Fn, "rm $0"
-		Print #Fn, ""
-		Print #Fn, "cd " & Replace(working_dir, "\", "/")
-		Print #Fn, ""
-		Print #Fn, IIf(bDebug, """" & WGet(DebuggerPath) & """" & " ", "") & Replace(cmd, "\", "/") & " " & Arguments
-		Print #Fn, ""
-		Print #Fn, !"echo ""\n\n------------------\n(program exited with code: $?)"" \n\n" & IIf(autoclose, "", !"\necho ""Press return to continue""\n#to be more compatible with shells like ""dash\ndummy_var=""""\nread dummy_var") & !"\n"
-		CloseFile_(Fn)
-		ScriptPath = "sh " & ScriptPath
-		Return ScriptPath
-	End Function
-
 '#IfDef __USE_GTK__
 'Type VteInfo
 '	Dim As gboolean load_vte			'/* this is the preference, NOT the current instance VTE state */
@@ -11959,60 +11937,33 @@ Sub RunPr(Debugger As String = "", ByRef ProjectFileName As WString, ByRef Proje
 		If CmdL Then _Deallocate(CmdL)
 	Else
 		WLet(ExeFileName, (GetExeFileName(MainFile, CompileLine & " " & FirstLine)))
-			Dim As GPid pid = 0
-			'		Dim As GtkWidget Ptr win, vte
-			'		win = gtk_window_new(gtk_window_toplevel)
-			'		If vf->vte_terminal_new <> 0 Then
-			'			vte = vf->vte_terminal_new()
-			'			g_signal_connect(vte, "button-press-event", G_CALLBACK(@vte_button_pressed), NULL)
-			'			gtk_container_add(gtk_container(win), vte)
-			'			'Dim As gint i_retcode = 0, i_exitcode = 0
-			'			Dim As gchar Ptr Ptr argv = g_strsplit(ToUTF8(build_create_shellscript(GetFolderName(*ExeFileName), *ExeFileName, False)), " ", -1)
-			'			gtk_widget_show_all(win)
-			'			Dim As GError Ptr error1
-			'			vf->vte_terminal_spawn_sync(vte_terminal(vte), VTE_PTY_DEFAULT, ToUTF8(GetFolderName(*ExeFileName)), argv, NULL, G_SPAWN_SEARCH_PATH Or G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, @pid, NULL, @error1)
-			'	    	If pid > 0 Then
-			'	    		g_child_watch_add(pid, @run_exit_cb, win)
-			'	    	Else
-			'				m *error1->message
-			'	    		run_exit_cb(pid, 0, win)
-			'	    	End If
-			'	    Else
-			Dim As WString Ptr Arguments
-			WLet(Arguments, *RunArguments)
-			If ProjectCommandLineArguments <> "" Then WAdd(Arguments, " " & ProjectCommandLineArguments)
-			If 0 Then
-				Result = Shell("""" & WGet(TerminalPath) & """ --wait -- """ & build_create_shellscript(GetFolderName(*ExeFileName), *ExeFileName, False, , *Arguments) & """")
+		Dim As WString Ptr Arguments
+		WLet(Arguments, *RunArguments)
+		If ProjectCommandLineArguments <> "" Then WAdd(Arguments, " " & ProjectCommandLineArguments)
+		ChDir(GetFolderName(*ExeFileName))
+		Dim As UString CommandLine
+		If EndsWith(*ExeFileName, ".html") Then
+			CommandLine = "http://localhost:8000/" & GetFileName(*ExeFileName)
+		Else
+			Dim As ToolType Ptr Tool
+			Dim As Integer Idx = pTerminals->IndexOfKey(*CurrentTerminal)
+			If Idx <> - 1 Then
+				Tool = pTerminals->Item(Idx)->Object
+				CommandLine = Tool->GetCommand(Trim(Replace(*ExeFileName, "\", "/") & IIf(*Arguments = "", "", " " & *Arguments)))
+				If Tool->Parameters = "" Then CommandLine &= " --wait -- "
 			Else
-				ChDir(GetFolderName(*ExeFileName))
-				Dim As UString CommandLine
-				If EndsWith(*ExeFileName, ".html") Then
-					CommandLine = "http://localhost:8000/" & GetFileName(*ExeFileName)
-				Else
-					Dim As ToolType Ptr Tool
-					Dim As Integer Idx = pTerminals->IndexOfKey(*CurrentTerminal)
-					If Idx <> - 1 Then
-						Tool = pTerminals->Item(Idx)->Object
-						CommandLine = Tool->GetCommand(Trim(Replace(*ExeFileName, "\", "/") & IIf(*Arguments = "", "", " " & *Arguments)))
-							If Tool->Parameters = "" Then CommandLine &= " --wait -- "
-					Else
-						CommandLine &= """" & Trim(Replace(*ExeFileName, "\", "/") & IIf(*Arguments = "", "", " " & *Arguments)) & """"
-					End If
-				End If
-				ThreadsEnter()
-				ShowMessages(Time & ": " & ML("Run") & ": " & CommandLine + " ...")
-				ThreadsLeave()
-				Result = Shell(CommandLine)
+				CommandLine &= """" & Trim(Replace(*ExeFileName, "\", "/") & IIf(*Arguments = "", "", " " & *Arguments)) & """"
 			End If
-			WDeAllocate(Arguments)
-			ThreadsEnter()
-			ShowMessages(Time & ": " & ML("Application finished. Returned code") & ": " & Result & " - " & Err2Description(Result))
-			CheckProfiler GetFolderName(*ExeFileName), *ExeFileName
-			ThreadsLeave()
-			'EndIf
-			'i_retcode = g_spawn_command_line_sync(ToUTF8(build_create_shellscript(GetFolderName(*ExeFileName), *ExeFileName, False)), NULL, NULL, @i_exitcode, NULL)
-			'?build_create_shellscript(GetFolderName(*ExeFileName), *ExeFileName, False)
-			'Shell "sh " & build_create_shellscript(GetFolderName(*ExeFileName), *ExeFileName, False)
+		End If
+		ThreadsEnter()
+		ShowMessages(Time & ": " & ML("Run") & ": " & CommandLine + " ...")
+		ThreadsLeave()
+		Result = Shell(CommandLine)
+		WDeAllocate(Arguments)
+		ThreadsEnter()
+		ShowMessages(Time & ": " & ML("Application finished. Returned code") & ": " & Result & " - " & Err2Description(Result))
+		CheckProfiler GetFolderName(*ExeFileName), *ExeFileName
+		ThreadsLeave()
 	End If
 	If ExeFileName Then _Deallocate( ExeFileName)
 	Exit Sub

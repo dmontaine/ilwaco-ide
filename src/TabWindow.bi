@@ -372,7 +372,6 @@ Declare Sub SelectError(ByRef FileName As WString, iLine As Integer, tabw As Tab
 
 Declare Sub PipeCmd(ByRef file As WString, ByRef cmd As WString, MainThread As Boolean = True)
 
-	Declare Function build_create_shellscript(ByRef working_dir As WString, ByRef cmd As WString, autoclose As Boolean, debug As Boolean = False, ByRef Arguments As WString = "") As String
 
 Declare Sub GetIncludeFiles(ByRef Content As EditControlContent, Project As ProjectElement Ptr)
 

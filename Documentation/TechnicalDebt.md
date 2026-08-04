@@ -23,7 +23,13 @@ as the durable register:
   `g_darkModeSupported` was only ever set by the deleted Win32 `InitDarkMode`, so the dark-styling
   branches never run on GTK. Track with Astoria's dark-mode commits (`56f6d180`/`b3633bc5`/
   `a7c7839d`); drive `g_darkModeSupported` + per-control theming from the GTK theme.
-- **`gdb` not installed here.** The debugger default won't resolve; `UseDebugger=false` by default.
+- **Debugger source paths are lowercased.** `Main.bas:2885` does `AddTab(LCase(source(fntab)))` — a
+  Win32-ism that is wrong on a case-sensitive filesystem: debugging any project under a path
+  containing uppercase letters fails with "File not found". Reproduced 2026-08-04.
+- **Cosmetic: the breakpoint line renders the source path after the code text.**
+- **`UseDebugger=false` by default.** (The old note here — "`gdb` not installed, the debugger default
+  won't resolve" — is obsolete: GDB was removed 2026-08-04 and the built-in Integrated engine, which
+  needs no external debugger, is the only one.)
 - **Intermittent startup/shutdown `SIGSEGV`.** A known Astoria-fixed threading issue — do *not*
   chase it as a new regression. It closed the IDE mid-test at least once this project.
 - **AppImage packaging is unbuilt.** Read-only bundle + external writable Projects/Examples/Docs is

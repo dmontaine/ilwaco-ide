@@ -88,7 +88,7 @@ Dim Shared As WStringOrStringList Comps, GlobalAsmFunctionsHelp, GlobalFunctions
 'Dim Shared As WStringOrStringList GlobalNamespaces, GlobalTypes, GlobalEnums, GlobalDefines, GlobalFunctions, GlobalTypeProcedures, GlobalArgs
 Dim Shared As WStringList AddIns, IncludeFiles, LoadPaths, IncludePaths, LibraryPaths, MRUFiles, MRUFolders, MRUProjects, MRUSessions, ProfilingFunctions ' add Sessions
 Dim Shared As WString Ptr RecentFiles, RecentFile, RecentProject, RecentFolder, RecentSession
-Dim Shared As Dictionary Helps, HotKeys, MakeTools, Debuggers, Terminals, OtherEditors, BuildConfigurations, mlCompiler, mlTemplates, mpKeys, mcKeys
+Dim Shared As Dictionary Helps, HotKeys, MakeTools, Terminals, OtherEditors, BuildConfigurations, mlCompiler, mlTemplates, mpKeys, mcKeys
 Dim Shared As ListView lvProblems, lvSuggestions, lvSearch, lvToDo, lvMemory
 Dim Shared As ProgressBar prProgress
 Dim Shared As CommandButton btnPropertyValue
@@ -119,7 +119,6 @@ pAddIns = @AddIns
 pTools = @Tools
 pControlLibraries = @ControlLibraries
 pMakeTools = @MakeTools
-pDebuggers = @Debuggers
 pTerminals = @Terminals
 pOtherEditors = @OtherEditors
 pHelps = @Helps
@@ -2228,10 +2227,6 @@ Function CloseSession() As Boolean
 	Dim tn As TreeNode Ptr
 	Dim tnP As TreeNode Ptr
 	Dim Index As Integer
-		If iFlagStartDebug = 1 Then
-			NewCommand = !"q\n"
-			MutexUnlock tlockGDB
-		End If
 	With *pfSave
 		.lstFiles.Clear
 		For i As Integer = tvExplorer.Nodes.Count - 1 To 0 Step -1
@@ -4486,7 +4481,6 @@ End Sub
 tlock = MutexCreate()
 tlockSave = MutexCreate()
 tlockToDo = MutexCreate()
-tlockGDB = MutexCreate()
 tlockSuggestions = MutexCreate()
 
 Sub StartOfLoadFunctions
@@ -5308,9 +5302,9 @@ Sub LoadSettings
 	Dim i As Integer = 0
 	cboBuildConfiguration.AddItem ML("No options")
 	Do Until iniSettings.KeyExists("AIAgents", "Version_" & WStr(i)) + iniSettings.KeyExists("Compilers", "Version_" & WStr(i)) + iniSettings.KeyExists("MakeTools", "Version_" & WStr(i)) + _
-		iniSettings.KeyExists("Debuggers", "Version_" & WStr(i)) + iniSettings.KeyExists("Terminals", "Version_" & WStr(i)) + iniSettings.KeyExists("BuildConfigurations", "Name_" & WStr(i)) + _
+		iniSettings.KeyExists("Terminals", "Version_" & WStr(i)) + iniSettings.KeyExists("BuildConfigurations", "Name_" & WStr(i)) + _
 		iniSettings.KeyExists("Helps", "Version_" & WStr(i)) + iniSettings.KeyExists("OtherEditors", "Version_" & WStr(i)) + _
-		iniSettings.KeyExists("IncludePaths", "Path_" & WStr(i)) + iniSettings.KeyExists("LibraryPaths", "Path_" & WStr(i)) = -10
+		iniSettings.KeyExists("IncludePaths", "Path_" & WStr(i)) + iniSettings.KeyExists("LibraryPaths", "Path_" & WStr(i)) = -9
 		Temp = iniSettings.ReadString("MakeTools", "Version_" & WStr(i), "")
 		If Temp <> "" Then
 			Tool = _New(ToolType)
@@ -5318,14 +5312,6 @@ Sub LoadSettings
 			Tool->Path = iniSettings.ReadString("MakeTools", "Path_" & WStr(i), "")
 			Tool->Parameters = iniSettings.ReadString("MakeTools", "Command_" & WStr(i), "")
 			MakeTools.Add Temp, Tool->Path, Tool
-		End If
-		Temp = iniSettings.ReadString("Debuggers", "Version_" & WStr(i), "")
-		If Temp <> "" Then
-			Tool = _New(ToolType)
-			Tool->Name = Temp
-			Tool->Path = iniSettings.ReadString("Debuggers", "Path_" & WStr(i), "")
-			Tool->Parameters = iniSettings.ReadString("Debuggers", "Command_" & WStr(i), "")
-			Debuggers.Add Temp, Tool->Path, Tool
 		End If
 		Temp = iniSettings.ReadString("Terminals", "Version_" & WStr(i), "")
 		If Temp <> "" Then
@@ -5362,13 +5348,6 @@ Sub LoadSettings
 	WLet(MakeToolPath1, MakeTools.Get(*CurrentMakeTool1, "make"))
 	WLet(CurrentMakeTool2, *DefaultMakeTool)
 	WLet(MakeToolPath2, MakeTools.Get(*CurrentMakeTool2, "make"))
-		WLet(DefaultDebugger64, iniSettings.ReadString("Debuggers", "DefaultDebugger64", "Integrated IDE Debugger"))
-	DefaultDebuggerType64 = IIf(*DefaultDebugger64 = "Integrated IDE Debugger", IntegratedIDEDebugger, IIf(*DefaultDebugger64 = "Integrated GDB Debugger", IntegratedGDBDebugger, CustomDebugger))
-	WLet(CurrentDebugger64, *DefaultDebugger64)
-	CurrentDebuggerType64 = DefaultDebuggerType64
-	WLet(Debugger64Path, Debuggers.Get(*CurrentDebugger64, ""))
-	WLet(GDBDebugger64, iniSettings.ReadString("Debuggers", "GDBDebugger64", ""))
-	WLet(GDBDebugger64Path, Debuggers.Get(*GDBDebugger64, ""))
 	WLet(DefaultTerminal, iniSettings.ReadString("Terminals", "DefaultTerminal", ""))
 	WLet(CurrentTerminal, *DefaultTerminal)
 	WLet(TerminalPath, Terminals.Get(*CurrentTerminal, ""))
@@ -5384,7 +5363,6 @@ Sub LoadSettings
 	CreateFormTypesWithoutTypeWord = iniSettings.ReadBool("Options", "CreateFormTypesWithoutTypeWord", False)
 	OpenCommandPromptInMainFileFolder = iniSettings.ReadBool("Options", "OpenCommandPromptInMainFileFolder", True)
 	WLet(CommandPromptFolder, iniSettings.ReadString("Options", "CommandPromptFolder", "./Projects"))
-	LimitDebug = iniSettings.ReadBool("Options", "LimitDebug", False)
 	DisplayWarningsInDebug = iniSettings.ReadBool("Options", "DisplayWarningsInDebug", False)
 	TurnOnEnvironmentVariables = iniSettings.ReadBool("Options", "TurnOnEnvironmentVariables", True)
 	WLet(EnvironmentVariables, iniSettings.ReadString("Options", "EnvironmentVariables"))
@@ -5736,7 +5714,6 @@ Sub CreateMenusAndToolBars
 	imgList.Add "Down", "Down"
 	imgList.Add "Sort", "Sort"
 	imgList.Add "EnumItem", "EnumItem"
-	imgList.Add "Update", "Update"
 	imgList.Add "Forum", "Forum"
 	imgList.Add "Fixme", "Fixme"
 	imgList.Add "Suggestions", "Suggestions"
@@ -8439,7 +8416,6 @@ Sub tabBottom_SelChange(ByRef Designer As My.Sys.Object, ByRef Sender As Control
 	tbBottom.Buttons.Item("EraseImmediateWindow")->Visible = tp = tpImmediate
 	tbBottom.Buttons.Item("AddWatch")->Visible = tp = tpWatches
 	tbBottom.Buttons.Item("RemoveWatch")->Visible = tp = tpWatches
-	tbBottom.Buttons.Item("Update")->Visible = tp = tpGlobals
 	If newIndex = 9 Then tbBottom.Buttons.Item("AddWatch")->State = Cast(ToolButtonState, tbBottom.Buttons.Item("AddWatch")->State Or ToolButtonState.tstWrap)
 	If ptabBottom->SelectedTab = tpProcedures Then
 		proc_sh
@@ -8518,11 +8494,9 @@ tbBottom.Buttons.Add , "Eraser", , @mClick, "EraseOutputWindow", "", ML("Erase o
 tbBottom.Buttons.Add , "Eraser", , @mClick, "EraseImmediateWindow", "", ML("Erase immediate window"), , tstEnabled
 tbBottom.Buttons.Add , "Add", , @mClick, "AddWatch", "", ML("Add Watch"), , Cast(ToolButtonState, tstEnabled Or tstWrap)
 tbBottom.Buttons.Add , "Remove", , @mClick, "RemoveWatch", "", ML("Remove Watch"), , tstEnabled
-tbBottom.Buttons.Add tbsCheck, "Update", , @mClick, "Update", "", ML("Update"), , tstEnabled
 tbBottom.Buttons.Item("EraseImmediateWindow")->Visible = False
 tbBottom.Buttons.Item("AddWatch")->Visible = False
 tbBottom.Buttons.Item("RemoveWatch")->Visible = False
-tbBottom.Buttons.Item("Update")->Visible = False
 tbBottom.Flat = True
 tbBottom.Wrapable = True
 tbBottom.Width = tbBottom.Height
@@ -9166,7 +9140,6 @@ Sub frmMain_Show(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		tbBottom.Buttons.Item("EraseImmediateWindow")->Visible = False
 		tbBottom.Buttons.Item("AddWatch")->Visible = False
 		tbBottom.Buttons.Item("RemoveWatch")->Visible = False
-		tbBottom.Buttons.Item("Update")->Visible = False
 		SetDebugTabsVisible UseDebugger
 
 	pfSplash->CloseForm
@@ -9427,11 +9400,6 @@ Sub OnProgramQuit() Destructor
 	WDeAllocate(CurrentMakeTool2)
 	WDeAllocate(MakeToolPath1)
 	WDeAllocate(MakeToolPath2)
-	WDeAllocate(DefaultDebugger64)
-	WDeAllocate(GDBDebugger64)
-	WDeAllocate(CurrentDebugger64)
-	WDeAllocate(Debugger64Path)
-	WDeAllocate(GDBDebugger64Path)
 	WDeAllocate(DefaultTerminal)
 	WDeAllocate(CurrentTerminal)
 	WDeAllocate(TerminalPath)
@@ -9468,16 +9436,11 @@ Sub OnProgramQuit() Destructor
 	MutexDestroy tlockToDo
 	MutexDestroy tlock
 	MutexDestroy tlockSave
-	MutexDestroy tlockGDB
 	MutexDestroy tlockSuggestions
 	Dim As UserToolType Ptr tt
 	Dim As ToolType Ptr Tool
 	For i As Integer = 0 To pMakeTools->Count - 1
 		Tool = pMakeTools->Item(i)->Object
-		_Delete(Tool)
-	Next i
-	For i As Integer = 0 To pDebuggers->Count - 1
-		Tool = pDebuggers->Item(i)->Object
 		_Delete(Tool)
 	Next i
 	For i As Integer = 0 To pTerminals->Count - 1

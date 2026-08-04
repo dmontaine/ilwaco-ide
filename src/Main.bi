@@ -95,7 +95,7 @@ Common Shared As Boolean AddRelativePathsToRecent
 Common Shared As Boolean UseMakeOnStartWithCompile
 Common Shared As Boolean CreateNonStaticEventHandlers, CreateFormTypesWithoutTypeWord
 Common Shared As Boolean PlaceStaticEventHandlersAfterTheConstructor, CreateStaticEventHandlersWithAnUnderscoreAtTheBeginning, CreateEventHandlersWithoutStaticEventHandlerIfEventAllowsIt
-Common Shared As Boolean LimitDebug, DisplayWarningsInDebug, TurnOnEnvironmentVariables
+Common Shared As Boolean DisplayWarningsInDebug, TurnOnEnvironmentVariables
 Common Shared As Boolean UseDebugger, ParameterInfoShow, LockControls
 Common Shared As Boolean CompileGUI
 Common Shared As Boolean mFormFindInFile
@@ -120,13 +120,13 @@ Common Shared As WString Ptr gSearchSave, EnvironmentVariables
 Common Shared As WString Ptr ProjectsPath, LastOpenPath, CommandPromptFolder
 Common Shared As WString Ptr DefaultHelp, HelpPath, KeywordsHelpPath, AsmKeywordsHelpPath, DefaultBuildConfiguration
 Common Shared As WString Ptr DefaultMakeTool, CurrentMakeTool1, CurrentMakeTool2
-Common Shared As WString Ptr DefaultDebugger64, GDBDebugger64, CurrentDebugger64, DefaultTerminal, CurrentTerminal
-Common Shared As WString Ptr MakeToolPath1, MakeToolPath2, Debugger64Path, GDBDebugger64Path, TerminalPath, Compiler64Path
+Common Shared As WString Ptr DefaultTerminal, CurrentTerminal
+Common Shared As WString Ptr MakeToolPath1, MakeToolPath2, TerminalPath, Compiler64Path
 ' The bundled FreeBASIC compiler is the one and only compiler, hard-coded here
 ' (resolved relative to the executable, so it travels inside the AppImage bundle).
 #define BundledCompilerPath "./Compilers/FreeBASIC-1.10.1-linux-x86_64/bin/fbc"
 Common Shared As WString Ptr Compiler64Arguments, Make1Arguments, Make2Arguments, RunArguments, Debug64Arguments
-Common Shared As Any Ptr tlock, tlockSave, tlockToDo, tlockGDB, tlockSuggestions
+Common Shared As Any Ptr tlock, tlockSave, tlockToDo, tlockSuggestions
 
 Type Library
 	Name As UString
@@ -170,7 +170,7 @@ Common Shared As List Ptr pTools, pControlLibraries
 Common Shared As WStringOrStringList Ptr pComps, pGlobalNamespaces, pGlobalTypes, pGlobalEnums, pGlobalDefines, pGlobalFunctions, pGlobalTypeProcedures, pGlobalArgs
 Common Shared As WStringList Ptr pAddIns, pIncludeFiles, pLoadPaths, pIncludePaths, pLibraryPaths
 'Common Shared As WStringList Ptr pLocalTypes, pLocalEnums, pLocalProcedures, pLocalFunctions, pLocalFunctionsOthers, pLocalArgs,
-Common Shared As Dictionary Ptr pHelps, pMakeTools, pDebuggers, pTerminals, pOtherEditors
+Common Shared As Dictionary Ptr pHelps, pMakeTools, pTerminals, pOtherEditors
 
 Enum LoadParam
 	OnlyFilePath

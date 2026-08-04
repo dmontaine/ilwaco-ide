@@ -232,6 +232,7 @@ Private Sub frmParameters.cmdOK_Click(ByRef Designer As My.Sys.Object, ByRef Sen
 		WLet(Make1Arguments, .txtMake1.Text)
 		WLet(Make2Arguments, .txtMake2.Text)
 		WLet(RunArguments, .txtRun.Text)
+		WLet(Debug64Arguments, .txtDebug64.Text)
 		WLet(CurrentMakeTool1, .cboMake1.Text)
 		WLet(MakeToolPath1, pMakeTools->Get(*CurrentMakeTool1, pMakeTools->Get(*DefaultMakeTool)))
 		WLet(CurrentMakeTool2, .cboMake2.Text)
