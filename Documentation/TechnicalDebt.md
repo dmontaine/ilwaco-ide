@@ -41,12 +41,20 @@ as the durable register:
   project name — confusing for a beginner.
   Ilwaco re-opens the correct file (Astoria's version silently re-opened nothing), but making the
   rename coherent means moving the `.vfp` and updating `ProjectName` inside it. Found 2026-08-04.
-- **Every GUI app built with Ilwaco prints `Open file failure! in function Application.CurLanguage`
-  at startup**, naming a `Languages/<locale>.lng` beside the executable. Ilwaco is English-only with
-  `ML()` as a passthrough, so MFF should not be loading language files at all. Observed 2026-08-04
-  running the GUI template's binary. User-visible in *every* program a student builds.
 - **AppImage packaging is unbuilt.** Read-only bundle + external writable Projects/Examples/Docs is
   the plan; still open.
+
+**Paid down 2026-08-05 — every GUI app built with Ilwaco printed `Open file failure! in function
+Application.CurLanguage` at startup.** The templates' form bootstrap runs `App.CurLanguage =
+My.Sys.Language`, and `My.Sys.Language` is the OS locale (`setlocale(LC_CTYPE, "")` — e.g. `C.UTF-8`),
+so the `CurLanguage` setter in `mff/Application.bas` tried to open a `Languages/<locale>.lng` that does
+not exist beside a built exe and **printed the failure to stdout** in every student's program. Ilwaco
+is English-only and `ML()` already falls back to the untranslated key, so a missing translation file is
+the normal case, not an error. Fixed by dropping the setter's `Else … Print` branch: a file that cannot
+be opened now silently leaves the current (English) language in place. Verified by A/B — the same GUI
+template app, built against the pre-fix source, printed `…Languages/C.UTF-8.lng`; built against the fix
+it prints nothing. The fix reaches user apps as soon as they recompile against the mff source; the lib
+and editor were rebuilt so the shipped binaries match.
 
 **Paid down 2026-08-05 — Run's terminal launcher defaulted to `gnome-terminal`, absent on many Linux
 boxes.** The shipped `[Terminals]` list held only gnome-terminal/mate-terminal/xterm (xterm with a

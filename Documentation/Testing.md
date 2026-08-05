@@ -70,6 +70,10 @@ necessary but not sufficient — "it compiled" is not "it works".
   `xfce4-terminal`, a **Default** column that moved live when a different terminal was picked in the
   "Default Terminal" combo, and the combo as the override. Previously Run died `sh: gnome-terminal: not
   found` with no window. TechnicalDebt "Paid down 2026-08-05".
+- **No `.lng` startup error in built GUI apps (2026-08-05).** A/B on the GUI Application template: built
+  against the pre-fix `mff/Application.bas` the app printed `Open file failure! … Application.CurLanguage.
+  File Name: …/Languages/C.UTF-8.lng`; built against the fix it prints nothing. `ML()` still returns the
+  untranslated (English) key. TechnicalDebt "Paid down 2026-08-05".
 
 ## Not proven (known gaps)
 - **Six of the eight `FileCopy_` call sites are build-verified only.** New Project exercised the two

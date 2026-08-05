@@ -50,7 +50,7 @@ section.
 
 ---
 
-## ✅ DONE (2026-08-05) — Run's terminal launcher detects an installed terminal; Options gains it
+## ✅ DONE (2026-08-05) — terminal-launcher detection + the `.lng` startup error
 
 Run used to shell out to `gnome-terminal` unconditionally, so on a box without it (this one has
 `xfce4-terminal`) a compiled program "did nothing" — `sh: gnome-terminal: not found`, no window. Fixed
@@ -72,16 +72,23 @@ and verified end to end:
 **Verified by effect:** the default auto-resolved to `xfce4-terminal`; the Options list showed all nine
 with `xfce4-terminal` marked Installed + Default; selecting `xterm` moved the Default mark live (and its
 blank Installed cell warned it is absent); and Run launched `"xfce4-terminal" --hold -x "…/Main"`, the
-program's greeting rendering in the held-open terminal. Detail in
+program's greeting rendering in the held-open terminal.
+
+**The `.lng` startup error is also fixed.** Every GUI app built with Ilwaco used to print
+`Open file failure! in function Application.CurLanguage` at startup, because the templates run
+`App.CurLanguage = My.Sys.Language` (the OS locale, `C.UTF-8` here) and MFF's `CurLanguage` setter
+tried to open a `Languages/<locale>.lng` that isn't there. English-only + `ML()` passthrough means a
+missing translation file is normal, so the setter's `Else … Print` was dropped — a file that won't open
+now silently keeps English. A/B-verified (pre-fix app printed `…/Languages/C.UTF-8.lng`; fixed app
+prints nothing), then the lib **and** editor were rebuilt. Both fixes are detailed in
 [TechnicalDebt.md](Documentation/TechnicalDebt.md) "Paid down 2026-08-05".
 
 ### Start here next session
 
-1. **The `.lng` startup error** — every GUI app built with Ilwaco prints `Open file failure! in
-   function Application.CurLanguage`, naming `Languages/<locale>.lng` beside the executable, though
-   Ilwaco is English-only with `ML()` a passthrough. In `Controls/MyFbFramework/mff/Application.bas`
-   (`CurLanguage`). Needs an IDE + lib rebuild and re-verification. Detailed in
-   [TechnicalDebt.md](Documentation/TechnicalDebt.md).
+Nothing is blocked. Resume the **Astoria→Ilwaco changelog walk** (the "NEXT" cluster below) — the menu
+taxonomy / Options-panel ports (`OpenProjectTemplate`, Recent Project, the Options grouping, and
+`Show Holiday Frame` → `Show Indent Guides`, which needs real indent-guide rendering), plus the deferred
+Examples BOM sweep.
 
 ---
 

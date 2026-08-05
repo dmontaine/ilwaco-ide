@@ -129,9 +129,11 @@ Namespace My
 			mlKeys.SortKeys
 			Close(Fn)
 			WLet(FCurLanguage, Value)
-		Else
-			Print ML("Open file failure!") &  " " & ML("in function") & " Application.CurLanguage. File Name: " &  LanguageFile
 		End If
+		' No .lng for the requested language: keep the current (English) language and stay silent.
+		' Ilwaco is English-only, so a missing translation file is the normal case, not an error -- and
+		' ML() falls back to the untranslated key, so nothing is lost. (A template's boilerplate
+		' `App.CurLanguage = My.Sys.Language` used to print "Open file failure!" in every built app.)
 	End Property
 	
 	Private Property Application.Language ByRef As WString
