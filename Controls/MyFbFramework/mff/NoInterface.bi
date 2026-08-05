@@ -9,6 +9,10 @@
 
 #define APP_TITLE "Ilwaco IDE"
 #include once "UString.bi"
+'' Print-to-debug-window below calls GTK_IS_TEXT_VIEW and the gtk_text_*/gtk_notebook_* family.
+'' The IDE's own build pulls the GTK headers in through other MFF headers first, but a user project
+'' that includes only this one did not — it failed to compile on those symbols.
+#include once "gtk/gtk.bi"
 Private Enum MessageType
 	mtInfo
 	mtWarning
@@ -49,6 +53,18 @@ Enum NewLineTypes
 	MacOSCR
 End Enum
 Declare Function MsgBox Alias "MsgBox" (ByRef MsgStr As WString, ByRef Caption As WString = "", MsgType As MessageType = MessageType.mtInfo, ButtonsType As ButtonsTypes = ButtonsTypes.btOK) As MessageResult
+
+'' The same declaration Application.bas makes. A project that includes this header instead of the
+'' GUI framework still reaches DebugWindowHandle from Debug.Print/Debug.Clear below, and had nothing
+'' to resolve it against.
+#ifdef _DebugWindow_
+	'Gets a handle to the debug window when the application is launched from the IDE.
+	Dim Shared As Any Ptr DebugWindowHandle = Cast(Any Ptr, _DebugWindow_)
+#else
+	'Gets a handle to the debug window when the application is launched from the IDE.
+	Dim Shared As Any Ptr DebugWindowHandle
+#endif
+
 Namespace Debug
 	Declare Sub Print Overload(ByRef Msg As String, bWriteLog As Boolean = False, bPrintMsg As Boolean = True, bShowMsg As Boolean = False, bPrintToDebugWindow As Boolean = True)
 	Declare Sub Print(ByVal MSG As Integer, ByVal Msg1 As Integer = -1, ByVal Msg2 As Integer = -1, ByVal Msg3 As Integer = -1, ByVal Msg4 As Integer = -1, bWriteLog As Boolean = False, bPrintMsg As Boolean = True, bShowMsg As Boolean = False, bPrintToDebugWindow As Boolean = True)

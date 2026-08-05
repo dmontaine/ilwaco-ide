@@ -11,6 +11,25 @@ for the classified port backlog, [Documentation/AstoriaParity.md](Documentation/
 
 ---
 
+## ✅ DONE (2026-08-04) — project templates: BOM fix + default file renamed to `Main`
+
+**Every shipped template source began with a UTF-8 BOM**, which makes FreeBASIC compile string
+literals **wide**: the file builds clean and then prints UTF-32 bytes. Measured directly — the same
+two-line program with and without a BOM printed `hello world` vs
+`h^@^@^@e^@^@^@l^@^@^@...`. So every project created from a template, and every file added via
+*Add Form* / *Add Module*, started out printing garbage. Stripped from all 9 sources under
+`Templates/Projects` and all 7 under `Templates/Files`.
+
+**Default module/form renamed to `Main`** (owner directive, matches Astoria): `Module1.bas`,
+`Form1.bas` and `UserControl1.bas` → `Main.bas`; `Form1.frm` → `Main.frm`. The declared type went
+with it (`Form1Type` → `MainType`), plus the `.rc` references and every `.vfp` manifest's `*File=`
+line. `.vfp` manifests keep their BOMs — the IDE writes one back on save, so stripping them is churn.
+
+**Still BOM'd and deliberately left:** `Examples/` — 93 of 111 sources. Owner: fold into the
+deferred Examples work so that directory is touched once.
+
+---
+
 ## ✅ DONE (2026-08-04) — `5fa5cf25` COMPLETE: debugger Pass 2C/2D + residual GDB cleanup + debuggee argv/env wiring
 
 `5fa5cf25` is **finished**. The full narrative (what each pass removed, the traps hit, and the 2E divergence

@@ -1759,8 +1759,18 @@ Sub AddMRUSession(ByRef FileName As WString)
 	AddMRU FileName, MRUSessions, miRecentSessions, "Sessions"
 End Sub
 
+'' FreeBASIC's FileCopy takes its paths as ZString Ptr, so a UString argument binds through
+'' UString's `Cast() As Any Ptr` and the raw wide buffer is read as a narrow path: it ends at the
+'' first zero byte, so the copy silently fails (returns 1) having copied nothing. A concatenation
+'' with a UString operand behaves the same way, because `&` resolves to UString's own operator.
+'' Route every copy through this wrapper — a WString parameter makes the narrowing the compiler's
+'' job, and that is correct whichever of the two the caller holds.
+Function FileCopy_(ByRef Source As WString, ByRef Destination As WString) As Long
+	Return FileCopy(Source, Destination)
+End Function
+
 Function FolderCopy(FromDir As UString, ToDir As UString) As Integer
-	Dim As WString * 1024 f, fsrc, fdest
+	Dim As WString * 1024 f
 	Dim As UInteger Attr
 	Dim As WStringList Folders
 	MkDir ToDir
@@ -1769,7 +1779,7 @@ Function FolderCopy(FromDir As UString, ToDir As UString) As Integer
 		If (Attr And fbDirectory) <> 0 Then
 			If f <> "." AndAlso f <> ".." Then Folders.Add FromDir & IIf(EndsWith(FromDir, Slash), "", Slash) & f
 		Else
-				FileCopy FromDir & Slash & f, ToDir & Slash & f
+			FileCopy_ FromDir & Slash & f, ToDir & Slash & f
 		End If
 		f = Dir(Attr)
 	Wend
@@ -1978,7 +1988,7 @@ Function SaveProjectFile(ppe As ProjectElement Ptr, ee As ExplorerElement Ptr, t
 		If WGet(ppe->BatchCompilationFileNameLinux) = WGet(ee->FileName) Then WLet(ppe->BatchCompilationFileNameLinux, pSaveD->FileName)
 		WLet(ee->FileName, pSaveD->FileName)
 		tn->Text = GetFileName(*ee->FileName)
-		If WGet(ee->TemplateFileName) <> "" Then FileCopy WGet(ee->TemplateFileName), WGet(ee->FileName)
+		If WGet(ee->TemplateFileName) <> "" Then FileCopy_ WGet(ee->TemplateFileName), WGet(ee->FileName)
 	End If
 	Return True
 End Function
@@ -2463,7 +2473,7 @@ Sub RemoveFileFromProject
 			ee = tn->Tag
 			If ee->FileName> 0 AndAlso Dir(*ee->FileName) <> "" Then
 				'Move the file to temp folds.
-				FileCopy(*ee->FileName, ExePath + "/Temp/" + GetFileName(*ee->FileName))
+				FileCopy_(*ee->FileName, ExePath + "/Temp/" + GetFileName(*ee->FileName))
 				Kill *ee->FileName
 			End If
 		End If
@@ -9012,7 +9022,7 @@ Sub frmMain_Create(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	pnlRightPin.Height = tbRight.Height
 	pnlLeftPin.Height = tbLeft.Height
 	If Dir(ExePath & "/DebugInfo.log") <> "" Then
-			FileCopy ExePath & "/DebugInfo.log", ExePath & "/DebugInfo.bak"
+			FileCopy_ ExePath & "/DebugInfo.log", ExePath & "/DebugInfo.bak"
 		Kill ExePath & "/DebugInfo.log"
 	End If
 	frmMain.Width = iniSettings.ReadInteger("MainWindow", "Width", 800)

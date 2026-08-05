@@ -621,6 +621,15 @@ Then the **menu-taxonomy cluster** `49ec5ccd`/`37ba31ea` (menu labels, File-menu
 grouping, compiler-options simplification — the debug-tabs sub-item is already done). Skip the pure
 GTK/Linux/32-bit stripping commits (`e139c2cc`, `c494207f`, `7baebd1e`, `add4642a`, `76abaa5a`, `15e66cc5`).
 
+**Menu-taxonomy progress (2026-08-04).** The label pass, the File-menu restructure, Open/Rename/Delete
+Project and the new **New Project dialog** (`frmNewProject`) are done and live-verified — New Project
+creates a project on disk from a whitelisted template, which needed the `FileCopy`/`UString` fix (see
+[TechnicalDebt.md](TechnicalDebt.md) and [UpstreamFixes.md](UpstreamFixes.md)). **Still to port in this
+cluster:** `OpenProjectTemplate`/`Recent Project`; the Options panels (drop the "When the IDE starts"
+radio group; group Code Editor into Display/Completion/IntelliSense/History); and `Show Holiday Frame`
+→ `Show Indent Guides`, which is a *feature* port needing real indent-guide rendering in `EditControl`,
+not a relabel. Detail in [PROJECT_STATUS.md](../PROJECT_STATUS.md).
+
 ## Foundation status (2026-08-02)
 
 - **Build baseline:** Ilwaco builds + runs on Linux (PROJECT_STATUS).

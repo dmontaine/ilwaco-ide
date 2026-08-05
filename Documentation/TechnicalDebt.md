@@ -41,8 +41,43 @@ as the durable register:
   project name — confusing for a beginner.
   Ilwaco re-opens the correct file (Astoria's version silently re-opened nothing), but making the
   rename coherent means moving the `.vfp` and updating `ProjectName` inside it. Found 2026-08-04.
+- **`mff/Console.bi` is Windows-only, so the Console Application template cannot build.** 84 Win32
+  console-API calls (`GetStdHandle`, `SetConsoleTextAttribute`, …), no Linux branch anywhere, and its
+  `#include once "windows.bi"` drags in `-lkernel32/-lgdi32/-luser32/…` so the link fails outright.
+  Found 2026-08-04 by TestPlan T14. **Nothing else in the repo includes it** — not one Example, not
+  another template — so the realistic choices are to rewrite the template in plain FreeBASIC (whose
+  `Print`/`Color`/`Locate` work natively on Linux) and delete the header as dead Windows code, or to
+  reimplement `Console.bi` over ANSI escapes. **Decided (owner, 2026-08-04): the plain-FreeBASIC
+  rewrite plus deleting the header**, with execution deferred to a fresh session — see PROJECT_STATUS
+  "Start here next session". Until then a beginner picking "Console Application" gets a project that
+  will not build, which breaches the product standard.
+- **Every GUI app built with Ilwaco prints `Open file failure! in function Application.CurLanguage`
+  at startup**, naming a `Languages/<locale>.lng` beside the executable. Ilwaco is English-only with
+  `ML()` as a passthrough, so MFF should not be loading language files at all. Observed 2026-08-04
+  running the GUI template's binary. User-visible in *every* program a student builds.
+- **Stale `VisualFBEditor` branding in shipped templates.** `Templates/Projects/Console
+  Application/Main.bas` sets `Console.Title = "VisualFBEditor - Console"` and
+  `Templates/Files/Form_3D.frm` sets `.Text = "VisualFBEditor-3D"` — both survive into user projects,
+  against the rebrand directive. Found 2026-08-04.
 - **AppImage packaging is unbuilt.** Read-only bundle + external writable Projects/Examples/Docs is
   the plan; still open.
+
+**Paid down 2026-08-04 — `FileCopy` silently copied nothing when handed a `UString`.** New Project
+created an empty folder and then reported *"Could not create the project"*. Every path involved was
+correct — instrumenting the running IDE showed the right template folder and `.vfp`, both existing,
+and the right branch taken — but `FileCopy` returned 1 and copied nothing. FreeBASIC's `FileCopy`
+takes `ZString Ptr`, so a `UString` argument binds through `UString.Cast() As Any Ptr`: the raw wide
+buffer is read as a narrow path, ending at the first zero byte (a bare `"/"`). A `&` concatenation
+with a `UString` operand fails the same way, because `&` resolves to MFF's `UString` operator.
+Measured shape by shape at a `ZString Ptr` parameter: `UString` and `UString & …` truncate to `"/"`;
+`WString`, `Str(u)`, `*u.vptr` and a narrow `+` concatenation are fine. Two call sites were live
+defects — `Main.bas FolderCopy` (upstream VisualFBEditor's GTK branch, so folder copying has **never**
+worked on that build; the Windows branch staged into `WString` buffers and used `CopyFileW`) and
+`frmNewProject`'s manifest copy. Fixed by routing all copies through a `FileCopy_` wrapper taking
+`ByRef … As WString`, which makes the narrowing the compiler's job; no raw `FileCopy` call remains
+outside the wrapper, so the trap cannot recur. The two pre-existing workarounds it explains —
+`Str(GetBakFileName(…))` and `*x.vptr` at other call sites — are now unnecessary and gone. Offered
+upstream in [UpstreamFixes.md](UpstreamFixes.md).
 
 **Paid down 2026-08-04 — the path-case cluster.** Three findings turned out to be one root cause plus
 one shared assumption, all now fixed and verified:

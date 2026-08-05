@@ -858,7 +858,7 @@ Function TabWindow.SaveTab As Boolean
 	'  It is important to creat a backup file by time.
 	'If txtCode.Modified = True Then
 	If AutoCreateBakFiles Then
-		FileCopy *FFileName, Str(GetBakFileName(*FFileName)) '
+		FileCopy_ *FFileName, GetBakFileName(*FFileName)
 	End If
 	txtCode.SaveToFile(*FFileName, FileEncoding, NewLineType) ', False
 	IsNew = False
@@ -11245,10 +11245,10 @@ Sub Versioning(ByRef FileName As WString, ByRef sFirstLine As WString, ByRef Pro
 	If AutoCreateRC Then
 		If *File <> "" Then
 			If Not FileExists(*File) Then
-				FileCopy ExePath & "/Templates/Files/Resource.rc", *File
+				FileCopy_ ExePath & "/Templates/Files/Resource.rc", *File
 			End If
 			If Not FileExists(GetFolderName(FileName) & "Manifest.xml") Then
-				FileCopy ExePath & "/Templates/Files/Manifest.xml", *GetFolderName(FileName).vptr & "Manifest.xml"
+				FileCopy_ ExePath & "/Templates/Files/Manifest.xml", GetFolderName(FileName) & "Manifest.xml"
 				ManifestIcoCopy = True
 			End If
 		End If

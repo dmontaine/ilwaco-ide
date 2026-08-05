@@ -60,8 +60,7 @@ Each of these was a *choice* in VisualFBEditor and is now made once, with the op
 - **New projects are written to disk with a name you choose (2026-08-04).** New Project used to open
   an unsaved `Project1` from the chosen template that you had to Save As later — easy to lose. It now
   asks for a project type and name up front and creates the project on disk. The dialog offers only
-  project types that work on this build, so there is no Win32 GUI option. *(In progress — see
-  PROJECT_STATUS.)*
+  project types that work on this build, so there is no Win32 GUI option.
 - **Project templates no longer start with a UTF-8 BOM (2026-08-04).** Every shipped template source
   carried one, which makes FreeBASIC treat string literals as wide — so a brand-new project compiled
   cleanly and then printed garbage. The default module/form in a new project is now `Main.bas` /

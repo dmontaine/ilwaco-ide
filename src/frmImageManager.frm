@@ -377,9 +377,9 @@ Private Sub frmImageManager.cmdOK_Click(ByRef Sender As Control)
 		Var Fn = FreeFile_
 		If Not FileExists(ResourceFile) Then
 			If AutoCreateRC Then
-				FileCopy ExePath & "/Templates/Files/Resource.rc", *ResourceFile.vptr
+				FileCopy_ ExePath & "/Templates/Files/Resource.rc", ResourceFile
 				If Not FileExists(GetFolderName(ResourceFile) & "Manifest.xml") Then
-					FileCopy ExePath & "/Templates/Files/Manifest.xml", *GetFolderName(ResourceFile).vptr & "Manifest.xml"
+					FileCopy_ ExePath & "/Templates/Files/Manifest.xml", GetFolderName(ResourceFile) & "Manifest.xml"
 				End If
 			End If
 		End If

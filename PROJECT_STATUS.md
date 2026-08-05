@@ -22,22 +22,27 @@ CLAUDE.md "Working practices".
 
 ---
 
-## ⚠️ IN PROGRESS (2026-08-04) — `frmNewProject`: builds and renders, **create path NOT verified**
+## ✅ DONE (2026-08-04) — `frmNewProject` works end to end; the `FileCopy`/`UString` trap found
 
-**Read this before touching New Project.** The dialog is new (`src/frmNewProject.{bi,frm}`, registered
-in `ilwaco.vfp`, included from `Main.bas`) and `NewProject()` now calls it instead of the old
-templates browser. It **builds clean and renders correctly** — pick-only *Project type* combo, no
-icons, *Project name* row, OK/Cancel.
+New Project (`src/frmNewProject.{bi,frm}`, registered in `ilwaco.vfp`, included from `Main.bas`) is
+**verified creating projects on disk**: GUI Application → `Project1/` with `Main.frm` +
+`Project1.vfp`, Console Application → `Project2/` with `Main.bas`; the manifest's template path
+prefix is stripped (`*File=GUI Application/Main.frm` → `*File=Main.frm`), the offered name advances to
+the first free `ProjectN`, and the project opens with a populated tree.
 
-**It is not finished.** Clicking OK reported *"Selected folder exists, change the project name!"* on a
-path that `Form_Create` had just chosen as the first free `ProjectN`. Not diagnosed. Suspects, in
-order: (a) `Form_Create` runs once, so after a failed OK the offered name is stale; (b) `GetFullPath`
-disagreeing between the two checks; (c) the folder genuinely existing from an earlier run. **Check
-the filesystem first** — `ls /tmp/newprojtest` (or whatever `ProjectsPath` is set to) — before
-changing any code. Nothing about the create path has been observed working end to end.
+**What was wrong was not the dialog.** The previous session's *"Selected folder exists"* was the
+second press of OK; the real failure was an empty project folder and *"Could not create the
+project"*. Instrumenting the running IDE showed every path correct and both template files present —
+`FileCopy` simply returned 1 and copied nothing. **FreeBASIC's `FileCopy` takes `ZString Ptr`, so a
+`UString` argument binds through `UString.Cast() As Any Ptr` and the wide buffer is read as a narrow
+path, ending at the first zero byte.** `&` with a `UString` operand propagates it. All copies now go
+through a `FileCopy_(ByRef … As WString)` wrapper (`Main.bas`) and no raw `FileCopy` call remains, so
+it cannot recur — see CLAUDE.md's trap list, [TechnicalDebt.md](Documentation/TechnicalDebt.md), and
+[UpstreamFixes.md](Documentation/UpstreamFixes.md): `FolderCopy`'s GTK branch is upstream
+VisualFBEditor code, so **folder copying has never worked on that build**.
 
-**What the dialog does when it works:** copies `Templates/Projects/<Type>/` into the chosen folder,
-copies `<Type>.vfp` straight to `<FolderName>.vfp` (no rename step — FB's `Name` fails silently, see
+**What the dialog does:** copies `Templates/Projects/<Type>/` into the chosen folder, copies
+`<Type>.vfp` straight to `<FolderName>.vfp` (no rename step — FB's `Name` fails silently, see
 Main.bi), then rewrites the manifest to strip the `<Type>/` path prefix, because the template's paths
 are relative to `Templates/Projects` and the copied files land at the top of the new project folder.
 
@@ -53,22 +58,44 @@ are relative to `Templates/Projects` and the copied files land at the top of the
 
 ---
 
-## ✅ DONE (2026-08-04) — project templates: BOM fix + default file renamed to `Main`
+## ⚠️ OPEN (2026-08-04) — the Console Application template does not build
 
-**Every shipped template source began with a UTF-8 BOM**, which makes FreeBASIC compile string
-literals **wide**: the file builds clean and then prints UTF-32 bytes. Measured directly — the same
-two-line program with and without a BOM printed `hello world` vs
-`h^@^@^@e^@^@^@l^@^@^@...`. So every project created from a template, and every file added via
-*Add Form* / *Add Module*, started out printing garbage. Stripped from all 9 sources under
-`Templates/Projects` and all 7 under `Templates/Files`.
+T14 (build a created project) ran: **GUI Application passes end to end** — compiles clean, window
+opens, caption renders correctly, which confirms the template BOM fix by effect. GTK Application and
+the three library templates also compile. **Console Application does not.** `mff/Console.bi` is
+Windows-only — 84 Win32 console calls, no Linux branch — and its `windows.bi` include drags in
+`-lkernel32/-lgdi32/-luser32/…`, so the link fails. Two genuine MFF bugs were found and fixed getting
+that far (`NoInterface.bi` missing its GTK include and the `DebugWindowHandle` declaration; that
+header is not on the IDE's own build path, so no rebuild was needed).
 
-**Default module/form renamed to `Main`** (owner directive, matches Astoria): `Module1.bas`,
-`Form1.bas` and `UserControl1.bas` → `Main.bas`; `Form1.frm` → `Main.frm`. The declared type went
-with it (`Form1Type` → `MainType`), plus the `.rc` references and every `.vfp` manifest's `*File=`
-line. `.vfp` manifests keep their BOMs — the IDE writes one back on save, so stripping them is churn.
+**Nothing else in the repo includes `mff/Console.bi`** — no Example, no other template.
 
-**Still BOM'd and deliberately left:** `Examples/` — 93 of 111 sources. Owner: fold into the
-deferred Examples work so that directory is touched once (see NEXT).
+**Decision (owner, 2026-08-04): rewrite the template in plain FreeBASIC** — `Print`/`Color`/`Locate`/
+`Input` all work natively on Linux, colours included — **and delete `mff/Console.bi` as dead Windows
+code** per the strip mantra. The rejected alternative was reimplementing `Console.bi` over ANSI
+escapes: a real feature port for a header nothing else uses.
+
+**NOT STARTED — deliberately deferred to a fresh session (owner, 2026-08-04),** to avoid beginning a
+multi-build change with little headroom left. Nothing about it has been touched: the template still
+includes `mff/Console.bi`, the header is still present, and the branding string is still in it.
+
+### Start here next session
+
+1. **Rewrite `Templates/Projects/Console Application/Main.bas`** in plain FreeBASIC — no
+   `mff/Console.bi`, no `mff/NoInterface.bi`. It should *print something* (the current template
+   prints nothing at all, which is why T14 needed a hand-added `Print` to have anything to check),
+   and its text must render as ASCII, not UTF-32 — that is the BOM regression check. Then **delete
+   `Controls/MyFbFramework/mff/Console.bi`** and add a `REMOVED_FEATURES` line in `Tools/DocCheck.py`.
+2. **The `.lng` startup error** — every GUI app built with Ilwaco prints `Open file failure! in
+   function Application.CurLanguage`, naming `Languages/<locale>.lng` beside the executable, though
+   Ilwaco is English-only with `ML()` a passthrough. In `Controls/MyFbFramework/mff/Application.bas`
+   (`CurLanguage`). Needs an IDE + lib rebuild and re-verification.
+3. **Stale `VisualFBEditor` branding** in `Templates/Files/Form_3D.frm` (`.Text = "VisualFBEditor-3D"`);
+   the Console template's `Console.Title` string goes away with step 1.
+4. **Re-run TestPlan T14/T15** to close them out — create a Console project through the IDE, build it,
+   and check the output text.
+
+All four are detailed in [TechnicalDebt.md](Documentation/TechnicalDebt.md).
 
 ---
 
@@ -97,8 +124,8 @@ how the fault address was recovered from a core dump with no debugger installed,
   crash was fixed. The Rename dialog's `InputBox` title/prompt were swapped and its default carried
   the `.vfp` extension into what becomes a folder name; both corrected, and MFF's `InputBox` gained a
   **Cancel** button (it offered only OK).
-  **In progress:** `frmNewProject` — see the handoff section above; its create path is unverified and
-  is the FIRST thing to pick up. **Still to port:** `OpenProjectTemplate`/`Recent Project`; the Options panels
+  **Done + verified since:** `frmNewProject` — see the handoff section above. **Still to port:**
+  `OpenProjectTemplate`/`Recent Project`; the Options panels
   (remove the "When the IDE starts" radio group, Code Editor grouping into Display/Completion/
   IntelliSense/History); and `Show Holiday Frame` → `Show Indent Guides`, which is a *feature* port
   needing real indent-guide rendering in `EditControl`, not a relabel.

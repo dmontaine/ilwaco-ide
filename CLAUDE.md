@@ -81,6 +81,13 @@ Ilwaco rewrites** (Astoria's shipped as Windows-process and would be *wrong* her
 - A local `Dim` is **procedure-scoped**, not block-scoped — deleting an `If` block can strand a name.
 - **Identifiers are case-insensitive**; watch collisions with keywords (`Name`, `Step`, `Ok`, `out`,
   `pos`, `value`, `line`, `msg`, `val`).
+- **A `UString` passed to a `ZString Ptr` parameter is silently truncated to its first character.**
+  MFF's `UString` has a `Cast() As Any Ptr`, so it binds to a narrow-pointer parameter by handing over
+  the raw *wide* buffer — read as a narrow string it ends at the first zero byte. FreeBASIC's
+  `FileCopy` is declared that way, which is why copies "succeeded" while doing nothing (returning 1).
+  `&` concatenation propagates it: a `&` with a `UString` operand yields a `UString`. **Use the
+  `FileCopy_` wrapper, never `FileCopy` directly**; for any other such API pass a `WString` and let the
+  compiler narrow. Suspect this whenever a copy/open of a correct-looking path silently does nothing.
 - **`FreeFile` does not reserve its number**, so `ff = FreeFile` + `Open … As #ff` is not atomic and
   races (surfaces as a bogus *"Could not find include file"*). Prefer the project's guarded open
   helper for source/include reads.

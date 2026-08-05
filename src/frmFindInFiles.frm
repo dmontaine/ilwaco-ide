@@ -398,12 +398,7 @@ Private Sub frmFindInFiles.ReplaceInFile(ByRef Path As WString ="", ByRef tSearc
 			OrElse EndsWith(LCase(f), ".c") OrElse EndsWith(LCase(f), ".cxx") OrElse EndsWith(LCase(f), ".h") OrElse EndsWith(LCase(f), ".idl") OrElse EndsWith(LCase(f), ".cpp") OrElse EndsWith(LCase(f), ".java") Then
 			If LCase(tML) <> LCase(tReplace) Then
 				FNameOpen = GetBakFileName(Path & f)
-				' https://www.freebasic.net/forum/viewtopic.php?f=2&t=27370&p=257529&hilit=FileCopy#p257529
-				#ifdef __USE_GTK__
-					FileCopy  Path & f, FNameOpen  'Function FileCopy suport unicode file name, But FileExist  is Ok in linux
-				#else
-					CopyFileW Path & f, FNameOpen, False
-				#endif
+				FileCopy_ Path & f, FNameOpen
 			Else
 				FNameOpen = Path & f
 			End If

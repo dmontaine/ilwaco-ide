@@ -25,9 +25,29 @@ the diff.
   it survives) — see `src/Main.bas` debug-tab-visibility work and its commit. Additive and
   non-virtual, so it needs no `.so` ABI break.
 
+- **`NoInterface.bi` cannot be compiled on its own.** It is the header a *non-GUI* project includes
+  instead of the GUI framework, but its `Debug.Print`/`Debug.Clear` bodies call `GTK_IS_TEXT_VIEW` and
+  the `gtk_text_*`/`gtk_notebook_*` family while including only `UString.bi`, and they reference a
+  `DebugWindowHandle` that only `Application.bas` declares. Inside the framework's own build the GTK
+  headers arrive through other headers first, which hides both; a user project that includes just this
+  one fails with "Variable not declared, GTK_IS_TEXT_VIEW" and then "…, DebugWindowHandle". Fixed by
+  adding `#include once "gtk/gtk.bi"` and the same guarded `DebugWindowHandle` declaration
+  `Application.bas` makes. Found by building the stock Console Application template.
+
 ## IDE (VisualFBEditor base) — GTK
 
-*(none recorded yet beyond what is captured in `AstoriaParity.md` as ports)*
+- **`FolderCopy` copies nothing on the GTK build — silently.** `Main.bas FolderCopy` passes its paths
+  straight to FreeBASIC's `FileCopy`, which takes `ZString Ptr`. The arguments there are `UString`
+  expressions (MFF's wide-string type), so the call binds through `UString.Cast() As Any Ptr` and the
+  raw wide buffer is read as a narrow path: it ends at the first zero byte, so every copy fails,
+  returning 1, with no error raised. The Windows branch of the same routine never hit this — it stages
+  into `WString * 1024` buffers (`fsrc`/`fdest`, still declared but unused in the GTK branch) and calls
+  `CopyFileW`. Effect: creating a project from a template produced an **empty folder**. Measured
+  directly — the identical copy returns 1 with `UString` arguments and 0 with `WString` ones. Fixed by
+  routing every copy through a `FileCopy_(ByRef Source As WString, ByRef Destination As WString)`
+  wrapper, which leaves the narrowing to the compiler and is correct for either string type.
+  Note the same trap bites any `&` concatenation with a `UString` operand, since `&` then resolves to
+  MFF's `UString` operator and yields a `UString`.
 
 ---
 

@@ -239,6 +239,7 @@ Declare Sub ChangeNewLineType(NewLineType As NewLineTypes)
 Declare Function WithoutPointers(ByRef e As String) As String
 Declare Function WithoutQuotes(ByRef e As UString) As UString
 Declare Sub ChangeFolderType(Value As ProjectFolderTypes)
+Declare Function FileCopy_(ByRef Source As WString, ByRef Destination As WString) As Long
 Declare Function FolderCopy(FromDir As UString, ToDir As UString) As Integer
 Declare Sub Save
 Declare Function SaveAllBeforeCompile() As Boolean

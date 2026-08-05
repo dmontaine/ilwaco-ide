@@ -182,7 +182,7 @@ Private Sub frmNewProject.cmdOK_Click(ByRef Sender As Control)
 	'' Copy the manifest straight to its final name — the project is named after its folder. No
 	'' rename step, so nothing here can fail silently the way FB's Name does (see Main.bi).
 	SelectedTemplate = SelectedFolder & Slash & GetFileName(SelectedFolder) & ".vfp"
-	FileCopy TemplateVfp, SelectedTemplate
+	FileCopy_ TemplateVfp, SelectedTemplate
 	If Not FileExists(SelectedTemplate) Then
 		MsgBox ML("Could not create the project") & ":" & Chr(10) & Chr(10) & SelectedTemplate, _
 			"Ilwaco IDE", mtError

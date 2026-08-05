@@ -49,15 +49,27 @@ necessary but not sufficient — "it compiled" is not "it works".
 - **Case-distinct filenames (2026-08-04).** `Foo.bas` and `foo.bas` in one directory open as two
   separate tabs, each showing its own content, and both appear in the explorer. Previously the
   case-insensitive path compare collapsed them onto one tab.
+- **A created GUI project compiles and runs (2026-08-04).** The GUI Application template, created
+  through New Project, compiles clean with the bundled `fbc` and its window opens with a
+  correctly-rendered caption — the BOM fix confirmed by effect, since a BOM would have made the
+  literal wide. GTK Application, Dynamic/Static/Control Library also compile. Console Application
+  does **not** (see "Not proven"). TestPlan T14/T15.
+- **New Project creates a project on disk (2026-08-04).** Both a GUI Application and a Console
+  Application were created from the dialog: the template's files land in the new folder, the manifest
+  is copied to `<FolderName>.vfp` with the template's path prefix stripped, the offered name advances
+  to the first free `ProjectN`, and the project opens with a populated explorer tree. Until the
+  `FileCopy`/`UString` fix this produced an empty folder and an error (TechnicalDebt "Paid down").
 
 ## Not proven (known gaps)
 
-- **New Project's create path.** The new `frmNewProject` builds and renders, but no project has been
-  observed being created on disk — OK reported "Selected folder exists" on an apparently free name and
-  that is undiagnosed. See PROJECT_STATUS.
-- **That a created project compiles and runs cleanly after the template BOM fix.** The BOM effect
-  itself was measured directly (a two-line program with/without a BOM), but no end-to-end
-  create-then-build has been run.
+- **That a *Console* project compiles.** It does not — `mff/Console.bi` is Win32-only, so the link
+  fails on `-lkernel32` and friends. The GUI template is proven (below); the console one is a known
+  break awaiting a decision (PROJECT_STATUS). TestPlan T14/T15.
+- **Six of the eight `FileCopy_` call sites are build-verified only.** New Project exercised the two
+  that were actually broken (`FolderCopy` and the manifest copy). The other conversions — backup on
+  save, `Resource.rc`/`Manifest.xml` creation, Find-and-Replace-in-project backups, Remove File From
+  Project, and the `DebugInfo.log` rotation — were already working shapes and are unchanged in
+  behaviour, but none was re-exercised at runtime.
 - **Designer control library load.** `Controls/MyFbFramework/libmff64_gtk3.so` must be built or the
   toolbox errors at runtime; that it loads cleanly is relied upon but not formally recorded as a
   scenario.
