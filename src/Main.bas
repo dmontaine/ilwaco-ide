@@ -161,6 +161,7 @@ LoadSettings
 #include once "frmImageManager.bi"
 #include once "frmOptions.bi"
 #include once "frmTemplates.bi"
+#include once "frmNewProject.bi"
 #include once "frmParameters.bi"
 #include once "frmProjectProperties.bi"
 #include once "frmSave.bi"
@@ -2322,15 +2323,14 @@ Sub RunHelp(Param As Any Ptr)
 	End If
 End Sub
 
+'' New Project asks for a name and location up front and writes the project to disk, rather than
+'' opening an unsaved "Project1" the user can lose (Astoria 37ba31ea + 164c5ead). The old templates
+'' browser is still reachable for opening existing/recent projects.
 Sub NewProject()
-	If pfTemplates->ShowModal(frmMain) = ModalResults.OK Then
-		If pfTemplates->SelectedFolder <> "" Then
-			AddFolder pfTemplates->SelectedFolder
-		ElseIf pfTemplates->SelectedTemplate <> "" Then
-			AddNew pfTemplates->SelectedTemplate
-		ElseIf pfTemplates->SelectedFile <> "" Then
-			OpenFiles pfTemplates->SelectedFile
-		End If
+	Dim fNewProject As frmNewProject
+	pfNewProject = @fNewProject
+	If pfNewProject->ShowModal(frmMain) = ModalResults.OK Then
+		If pfNewProject->SelectedTemplate <> "" Then AddProject pfNewProject->SelectedTemplate
 	End If
 End Sub
 
@@ -2781,12 +2781,6 @@ Function CloseProject(tn As TreeNode Ptr, WithoutMessage As Boolean = False) As 
 	ChangeMenuItemsEnabled
 	Return True
 End Function
-
-#include once "crt/errno.bi"
-Extern "C"
-	Declare Function rename_ Alias "rename" (ByVal oldpath As Const ZString Ptr, ByVal newpath As Const ZString Ptr) As Long
-	Declare Function strerror_ Alias "strerror" (ByVal errnum As Long) As ZString Ptr
-End Extern
 
 '' Deletes the selected project: its folder and everything in it. Astoria shelled out to
 '' "cmd /c rd /s /q"; the Linux equivalent is rm -rf, guarded so an empty or root-ish path can

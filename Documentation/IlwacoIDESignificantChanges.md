@@ -57,6 +57,15 @@ Each of these was a *choice* in VisualFBEditor and is now made once, with the op
   panel is hidden and a separate rail is shown. State persists across sessions.
 - **Debug-tab visibility.** The debugger's seven analysis tabs appear only when the debugger is
   enabled; the Immediate tab stays visible.
+- **New projects are written to disk with a name you choose (2026-08-04).** New Project used to open
+  an unsaved `Project1` from the chosen template that you had to Save As later — easy to lose. It now
+  asks for a project type and name up front and creates the project on disk. The dialog offers only
+  project types that work on this build, so there is no Win32 GUI option. *(In progress — see
+  PROJECT_STATUS.)*
+- **Project templates no longer start with a UTF-8 BOM (2026-08-04).** Every shipped template source
+  carried one, which makes FreeBASIC treat string literals as wide — so a brand-new project compiled
+  cleanly and then printed garbage. The default module/form in a new project is now `Main.bas` /
+  `Main.frm` (was `Module1`/`Form1`/`UserControl1`), matching Astoria.
 - **The debuggee's arguments and environment now work (2026-08-04).** VisualFBEditor exposed Debug
   arguments and an "Environment variables" option that were never applied — and Astoria, hitting the
   same thing on Win32, removed the env option as non-functional. Ilwaco wires both up instead: the

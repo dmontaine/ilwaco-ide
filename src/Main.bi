@@ -27,6 +27,15 @@
 	#define BackSlash "\"
 	#define MAX_PATH 260
 
+'' Prefer rename(2) over FreeBASIC's Name statement for paths held in UString: Name reports failure
+'' only through Err and otherwise carries on, so a failed rename is SILENT. rename() gives errno,
+'' which is what lets the IDE tell the user why. (Measured on Rename Project, 2026-08-04.)
+#include once "crt/errno.bi"
+Extern "C"
+	Declare Function rename_ Alias "rename" (ByVal oldpath As Const ZString Ptr, ByVal newpath As Const ZString Ptr) As Long
+	Declare Function strerror_ Alias "strerror" (ByVal errnum As Long) As ZString Ptr
+End Extern
+
 	Type WStringOrStringList As WStringList
 	Type WStringOrStringListItem As WStringListItem
 

@@ -22,44 +22,53 @@ CLAUDE.md "Working practices".
 
 ---
 
-## ✅ DONE (2026-08-04) — `5fa5cf25` COMPLETE: debugger Pass 2C/2D + residual GDB cleanup + debuggee argv/env wiring
+## ⚠️ IN PROGRESS (2026-08-04) — `frmNewProject`: builds and renders, **create path NOT verified**
 
-`5fa5cf25` is **finished**. The full narrative (what each pass removed, the traps hit, and the 2E divergence
-from Astoria) is in [HISTORY.md](HISTORY.md); the classification is in
-[AstoriaParity.md](Documentation/AstoriaParity.md). Headlines:
+**Read this before touching New Project.** The dialog is new (`src/frmNewProject.{bi,frm}`, registered
+in `ilwaco.vfp`, included from `Main.bas`) and `NewProject()` now calls it instead of the old
+templates browser. It **builds clean and renders correctly** — pick-only *Project type* combo, no
+icons, *Project name* row, OK/Cancel.
 
-- **2C** — the `frmOptions` debugger-*choice* UI is gone (picker, paths list, Add/Change/Remove/Clear,
-  handlers, LoadSettings/SaveSettings, `[Debuggers]` INI writer). **`pnlDebugger` was kept** (the plan said to
-  delete it) because it still hosts the live `chkDisplayWarningsInDebug`. **Terminal is now a top-level
-  options node.** `LimitDebug` removed — it never worked.
-- **2D** — `DebuggerTypes`, `DefaultDebuggerType64`/`CurrentDebuggerType64`, `pDebuggers`/`Debuggers`, the
-  `[Debuggers]` load/save/dealloc and the five `*Debugger64*` path globals are gone, along with the
-  statically-dead `build_create_shellscript` (its only caller sat behind `If 0 Then`).
-- **Residual cleanup** — the orphan `Declare`/`Extern "C"`/`pollfd`/global block at the foot of `Debug.bas`,
-  the dead `tlockGDB` cluster, and the debug panel's no-op **"Update"** toggle.
-- **2E (new capability)** — the debuggee now receives a real **argv** (`argv(0)` + Parameters
-  `Debug64Arguments` + the project's `CommandLineArguments`) and a real **environment**. Astoria removed its
-  env-vars option as non-functional; Ilwaco wired it instead. `frmParameters.cmdOK` now writes `txtDebug64`
-  back — it never did.
+**It is not finished.** Clicking OK reported *"Selected folder exists, change the project name!"* on a
+path that `Form_Create` had just chosen as the first free `ProjectN`. Not diagnosed. Suspects, in
+order: (a) `Form_Create` runs once, so after a failed OK the offered name is stale; (b) `GetFullPath`
+disagreeing between the two checks; (c) the folder genuinely existing from an earlier run. **Check
+the filesystem first** — `ls /tmp/newprojtest` (or whatever `ProjectsPath` is set to) — before
+changing any code. Nothing about the create path has been observed working end to end.
 
-**Verification:** four clean whole-program builds; Options tree/pages and Terminal page checked live on `:0`;
-argv and environment confirmed at kernel level via `/proc/<pid>/environ` (injection, inheritance, same-name
-override leaving exactly one entry, multi-var parsing, and no pollution of the IDE's own environment).
+**What the dialog does when it works:** copies `Templates/Projects/<Type>/` into the chosen folder,
+copies `<Type>.vfp` straight to `<FolderName>.vfp` (no rename step — FB's `Name` fails silently, see
+Main.bi), then rewrites the manifest to strip the `<Type>/` path prefix, because the template's paths
+are relative to `Templates/Projects` and the copied files land at the top of the new project folder.
 
-**The fork trap, worth remembering:** after `fork()` in a multithreaded process only async-signal-safe calls
-are legal. A first attempt at env injection called `SetEnviron` (`putenv`, which allocates) in the child and
-failed **silently** — argv worked because it is stack-only. Anything staged for the debuggee must now be built
-in the parent (`build_debug_launch`); the child only copies pointers and calls `execve`.
+**Design decisions already made (owner):**
+- No icons; a pick-only combo, matching Astoria's current dialog.
+- An explicit **whitelist**, not "everything in the folder": GUI Application (default), Console
+  Application, GTK Application, Dynamic Library, Static Library, Control Library. **Windows
+  Application, Android Project, Addin Project and Empty Project are deliberately not offered** —
+  a Win32 GUI app cannot work on this build. Their template files are still on disk; deleting them
+  is an open question.
+- Not ported from Astoria's current dialog: the Author and License fields, and its "no
+  auto-generated project name" rule. Ilwaco still pre-fills the first free `ProjectN`.
 
-**Pre-existing bug confirmed live (not a regression):** the Integrated debugger lowercases the source path
-(`Main.bas:2885 AddTab(LCase(source(fntab)))`, a Win32-ism) → "File not found" for any project under a path
-containing uppercase letters. Reproduced this session; worked around by testing from an all-lowercase path.
+---
 
-**Verification recipe (reusable):** a small console `.vfp` project (not a loose `.bas`) with `*File=` marking
-the main file, `CreateDebugInfo=true`, and the dev shim on its lib path
-(`CompilationArguments64Linux="-p <shim> -l tinfo"` — needed only in this dev env). Drive it on `:0` with
-`xdotool`/`scrot`; read the debuggee's real argv with `pgrep -a` and its environment from `/proc/<pid>/environ`
-rather than trusting the program's own output.
+## ✅ DONE (2026-08-04) — project templates: BOM fix + default file renamed to `Main`
+
+**Every shipped template source began with a UTF-8 BOM**, which makes FreeBASIC compile string
+literals **wide**: the file builds clean and then prints UTF-32 bytes. Measured directly — the same
+two-line program with and without a BOM printed `hello world` vs
+`h^@^@^@e^@^@^@l^@^@^@...`. So every project created from a template, and every file added via
+*Add Form* / *Add Module*, started out printing garbage. Stripped from all 9 sources under
+`Templates/Projects` and all 7 under `Templates/Files`.
+
+**Default module/form renamed to `Main`** (owner directive, matches Astoria): `Module1.bas`,
+`Form1.bas` and `UserControl1.bas` → `Main.bas`; `Form1.frm` → `Main.frm`. The declared type went
+with it (`Form1Type` → `MainType`), plus the `.rc` references and every `.vfp` manifest's `*File=`
+line. `.vfp` manifests keep their BOMs — the IDE writes one back on save, so stripping them is churn.
+
+**Still BOM'd and deliberately left:** `Examples/` — 93 of 111 sources. Owner: fold into the
+deferred Examples work so that directory is touched once (see NEXT).
 
 ---
 
@@ -88,13 +97,18 @@ how the fault address was recovered from a core dump with no debugger installed,
   crash was fixed. The Rename dialog's `InputBox` title/prompt were swapped and its default carried
   the `.vfp` extension into what becomes a folder name; both corrected, and MFF's `InputBox` gained a
   **Cancel** button (it offered only OK).
-  **Still to port:** `frmNewProject` + `OpenProjectTemplate`/`Recent Project`; the Options panels
+  **In progress:** `frmNewProject` — see the handoff section above; its create path is unverified and
+  is the FIRST thing to pick up. **Still to port:** `OpenProjectTemplate`/`Recent Project`; the Options panels
   (remove the "When the IDE starts" radio group, Code Editor grouping into Display/Completion/
   IntelliSense/History); and `Show Holiday Frame` → `Show Indent Guides`, which is a *feature* port
   needing real indent-guide rendering in `EditControl`, not a relabel.
-  Skip the pure 32-bit/GTK-strip entries (`e139c2cc` etc.). The two **Examples items**
-  (`4bd02894`, `51441d7a`) stay deferred to just before the testing phase (owner). All owner
-  directives (32-bit, UTF-8/LF, AI, English-only) remain cleared.
+  Skip the pure 32-bit/GTK-strip entries (`e139c2cc` etc.). All owner directives (32-bit, UTF-8/LF,
+  AI, English-only) remain cleared.
+- **Examples work — deferred to just before the testing phase (owner).** The two Astoria Examples
+  items (`4bd02894`, `51441d7a`), **plus a BOM sweep**: 93 of 111 sources under `Examples/` start
+  with a UTF-8 BOM, which makes FreeBASIC compile their string literals wide, so they build clean and
+  then print UTF-32 bytes. Measured 2026-08-04; the same defect was fixed in `Templates/` at the
+  time. Do all three together so `Examples/` is touched once.
 - Unverified, low priority: **Ctrl+F5 did not resume** a stopped debuggee during this session's driving. May
   be an artefact of synthetic input rather than a defect — check by hand before treating it as a bug.
 

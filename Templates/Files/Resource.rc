@@ -1,4 +1,4 @@
-﻿1 24 "Manifest.xml"
+1 24 "Manifest.xml"
 
 #define APP_TITLE_STR               "Form1\0"
 #define VER_FILEDESCRIPTION_STR     "Form1\0"

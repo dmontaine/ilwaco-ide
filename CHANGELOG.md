@@ -26,6 +26,8 @@ The format is loosely [Keep a Changelog](https://keepachangelog.com/). Dates are
   `DetachTab` (2026-08-03).
 
 ### Fixed
+- Project templates shipped with a UTF-8 BOM, which makes FreeBASIC compile string literals as wide
+  characters — every new project built cleanly and then printed garbled text (2026-08-04).
 - Debugging a project stored under a path containing uppercase letters failed with "File not found":
   the debugger lowercased the source path, a Win32 habit that is wrong on Linux (2026-08-04).
 - Two files whose names differ only in case (`Foo.bas` / `foo.bas`) collapsed onto a single editor
@@ -37,6 +39,8 @@ The format is loosely [Keep a Changelog](https://keepachangelog.com/). Dates are
 - Bottom/debug panels cleared on project close and debug end (2026-08-03).
 
 ### Changed / Removed (opinionated by design)
+- The default module/form in a new project is now `Main.bas` / `Main.frm`, and New Project offers
+  only project types that work on a Linux/GTK build (2026-08-04).
 - Menus follow Astoria's taxonomy: the File menu leads with project commands, `Format` is now
   `Designer`, and several labels are plainer — the status bar reads "Press F1 for help", the output
   toolbar says "Clear Output"/"Clear Immediate", Goto asks "Go to line:", and the Find dialog's

@@ -1,0 +1,42 @@
+'#Region "Form"
+	#if defined(__FB_MAIN__) AndAlso Not defined(__MAIN_FILE__)
+		#define __MAIN_FILE__
+		#ifdef __FB_WIN32__
+			#cmdline "Main.rc"
+		#endif
+		Const _MAIN_FILE_ = __FILE__
+	#endif
+	#include once "mff/Form.bi"
+	
+	Using My.Sys.Forms
+	
+	Type MainType Extends Form
+		Declare Constructor
+		
+	End Type
+	
+	Constructor MainType
+		#if _MAIN_FILE_ = __FILE__
+			With App
+				.CurLanguagePath = ExePath & "/Languages/"
+				.CurLanguage = My.Sys.Language
+			End With
+		#endif
+		' Main
+		With This
+			.Name = "Main"
+			.Text = "Main"
+			.Designer = @This
+			.SetBounds 0, 0, 350, 300
+		End With
+	End Constructor
+	
+	Dim Shared Main As MainType
+	
+	#if _MAIN_FILE_ = __FILE__
+		App.DarkMode = True
+		Main.MainForm = True
+		Main.Show
+		App.Run
+	#endif
+'#End Region

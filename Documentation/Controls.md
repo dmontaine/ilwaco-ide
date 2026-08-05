@@ -20,6 +20,10 @@ handling must be re-verified against the GTK build before it is stated here.
   collapses to an overflow chevron.
 - A `CommandButton`/`Label` caption rotates with `gtk_label_set_angle` on the label child; wiring an
   event needs `.Designer` set first (the dispatch dereferences it).
+- **A `ListView` needs a `Columns.Add` even in icon view** (`.View = ViewStyle.vsIcon`), or the item
+  captions render as nothing and you get unlabelled icons. Win32 draws icon-view labels without a
+  column, so Astoria's `.frm` files omit it — a porting trap (found 2026-08-04 on `frmNewProject`;
+  `frmTemplates` has the column and works).
 
 Fill this in control-by-control as controls are used and observed. The
 [find-framework-control](../.claude/skills/find-framework-control/SKILL.md) skill locates a

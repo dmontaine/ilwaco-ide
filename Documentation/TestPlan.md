@@ -96,3 +96,5 @@ rows (T1, T2, …) as scenarios are defined and run. See [Testing.md](Testing.md
 | T10 | Delete Project removes the project folder from disk | **PASS** 2026-08-04 |
 | T11 | Rename Project prompts with the project name and renames the folder | **PASS** 2026-08-04 — dialog has OK + Cancel; folder renamed and project re-opened. Note: the `.vfp` inside keeps its old name (TechnicalDebt) |
 | T12 | Debug tabs keep their captions after Use Debugger is toggled off and on | **PASS** 2026-08-04 (regression check for the MFF `_Label` fix) |
+| T13 | New Project creates a project on disk from a template, with a working manifest | **NOT YET** 2026-08-04 — dialog builds and renders; OK reported "Selected folder exists" on an apparently free name, undiagnosed (see PROJECT_STATUS) |
+| T14 | A project created from a template compiles and prints correctly (BOM regression) | **not yet run** — templates are de-BOM'd but no created project has been built end to end |

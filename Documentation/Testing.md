@@ -51,6 +51,13 @@ necessary but not sufficient — "it compiled" is not "it works".
   case-insensitive path compare collapsed them onto one tab.
 
 ## Not proven (known gaps)
+
+- **New Project's create path.** The new `frmNewProject` builds and renders, but no project has been
+  observed being created on disk — OK reported "Selected folder exists" on an apparently free name and
+  that is undiagnosed. See PROJECT_STATUS.
+- **That a created project compiles and runs cleanly after the template BOM fix.** The BOM effect
+  itself was measured directly (a two-line program with/without a BOM), but no end-to-end
+  create-then-build has been run.
 - **Designer control library load.** `Controls/MyFbFramework/libmff64_gtk3.so` must be built or the
   toolbox errors at runtime; that it loads cleanly is relied upon but not formally recorded as a
   scenario.
