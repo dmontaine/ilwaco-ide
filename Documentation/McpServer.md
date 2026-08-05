@@ -151,6 +151,56 @@ is rejected `bad_path` → `add_file` creates a module and refuses a form. Note:
 reads back with `\r\n` — the EditControl normalizes to CRLF internally (whereas `write_file` to disk
 stays LF); harmless for compilation, noted against the LF-only directive.
 
+### Task 4 — NEXT: approach + gotchas (handoff 2026-08-05)
+
+`build`, `syntax_check`, `run`, `get_errors`. This is the delicate one — the async build must not
+freeze the GTK UI. What the next session needs:
+
+- **The threading shape (this differs from Astoria).** Astoria called `Compile()` straight from its
+  pipe-worker thread because Win32 tolerates it. On GTK, widgets must be touched **only on the main
+  thread**, and the build reads editor buffers and writes `txtOutput`. So do NOT run the build on the
+  pipe worker. Instead: marshal "save dirty tabs + kick the build" onto the UI thread (as every command
+  already does via `g_idle_add`), let the build run on Ilwaco's existing compile thread, and have the
+  **pipe worker wait for the build thread to finish** before the command completes — otherwise the
+  agent's `build` returns before the compile is done. The current single-slot flow (`AgentRunCommand`
+  → `g_idle_add` → `AgentDispatch` → `CondSignal`) completes synchronously; `build` needs the
+  completion signal deferred until the compile thread ends (add a build-done condition the compile
+  thread signals, or poll `gAgentBuilding`). Set the existing `gAgentBuilding` flag around it so
+  `get_status` reports it.
+- **Entry points** (declared in `Main.bi:245-249`): `SaveAllBeforeCompile()`, `CompileProgram` (run via
+  `ThreadCreate`), `CompileAndRun`, `Compile` (`Main.bi`). The menu build path is the pattern to copy —
+  find how the menu invokes `CompileProgram` and how it knows the build finished.
+- **Success is NOT the compiler's return.** Derive ok/errors from the **error-severity messages** in
+  `txtOutput` (parse `file(line) error N: msg` lines), exactly as Astoria did — `Compile("Check")`
+  returns success even with errors. `get_build_output` already reads `txtOutput.Text`; `get_errors`
+  parses it.
+- **Save dirty tabs first** — a `set_active_file_content` edit lives only in the EditControl buffer; the
+  menu build saves via `SaveAllBeforeCompile`, but the agent path must do the same before compiling or
+  it builds stale on-disk text.
+- **Console link on the dev box** needs `-p <shim> -l tinfo` (no `libncurses` in the shim yet); a
+  project sets it via `CompilationArguments64Linux`. Keep that in mind when verifying a console build.
+
+### Notes for the next session (facts learned this session)
+
+- **Include ordering is load-bearing.** `AgentPipe.bi` (included in `Main.bas`) is **declarations only**;
+  the implementation `AgentPipe.bas` is `#include`d **last, at the end of `ilwaco.bas`**, so its handlers
+  see the IDE symbols (`MainNode`, `TabPanels`, `txtOutput`, `ProjectElement`, `Compile`, …). Adding a
+  handler that calls a new IDE function just works as long as that function is defined by then.
+- **Loading a project:** use the `open_project` tool. Ilwaco's *command-line* `.vfp` open runs
+  `OpenFiles` but does **not** populate `MainNode` here (an IDE-side quirk, not chased); `open_project`
+  (which also calls `OpenFiles` on the UI thread) does set it. `open_project` asserts `MainNode` after,
+  returning `open_failed` if the project didn't load.
+- **`ProjectElement.Files` is empty after a plain open** — it's only rebuilt from the explorer tree at
+  compile time. `list_files` walks the tree under `MainNode` instead (see `AgentCollectFiles`).
+- **CRLF vs LF:** `write_file` writes exact LF bytes to disk; `set_active_file_content` reads back CRLF
+  because the EditControl normalizes internally. Watch this against the LF-only directive if it matters
+  for a build.
+- **Verify by effect.** Build the editor (~4 min, background it), launch on `:0`, drive the socket with a
+  `socket.AF_UNIX` Python client (recipe below) or spawn `./ilwaco-mcp` and speak MCP over its stdio.
+  Always `git checkout Settings/` after a launch (the IDE writes session state on exit), and remove any
+  agent-created test files from `Examples/` before committing. Kill leftover instances with `pkill -x
+  ilwaco` (not `-f` — it matches the caller).
+
 ## Verification recipe
 
 Build and run the editor (`./build-linux.sh editor`, then

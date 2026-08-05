@@ -110,8 +110,11 @@ client → `ilwaco-mcp` sidecar → Unix socket → live IDE, auto-launching the
 and mutation tools against an opened project, with the project-root path guard blocking `..` escapes.
 **Next: Task 4** — build/run/errors (`build`, `syntax_check`, `run`, `get_errors`): the async part —
 kick the existing compile/run on its worker thread, save dirty tabs first, and derive success from
-error-severity messages rather than the compiler's return. Then Task 5 (`create_project`), 6 (options
-toggle + packaging), 7 (end-to-end).
+error-severity messages rather than the compiler's return. **The concrete approach, the GTK threading
+constraint, the entry points, and the session's learned gotchas are written up in
+[Documentation/McpServer.md](Documentation/McpServer.md) — read "Task 4 — NEXT" and "Notes for the next
+session" there before starting.** Then Task 5 (`create_project`), 6 (options toggle + packaging), 7
+(end-to-end).
 
 ---
 
