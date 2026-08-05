@@ -36,6 +36,7 @@ came to describe a deleted Git menu for four days). Treat every row below as a t
 | `TestPlan.md` | a test scenario is added, run, or made obsolete |
 | `UpstreamFixes.md` | a bug in vendored upstream code (VisualFBEditor or MyFbFramework) is fixed |
 | `AstoriaParity.md` | a changelog-walk item is ported, deferred, or reclassified, or its current-status / next-action changes — the port backlog's classification + "Done" record |
+| `McpServer.md` | the Agent MCP server changes — a task lands or its status changes, a tool is added, or a design decision is revised |
 
 These are **not** rows in the table above:
 

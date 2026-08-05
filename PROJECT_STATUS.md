@@ -85,10 +85,25 @@ prints nothing), then the lib **and** editor were rebuilt. Both fixes are detail
 
 ### Start here next session
 
-Nothing is blocked. Resume the **Astoria→Ilwaco changelog walk** (the "NEXT" cluster below) — the menu
-taxonomy / Options-panel ports (`OpenProjectTemplate`, Recent Project, the Options grouping, and
-`Show Holiday Frame` → `Show Indent Guides`, which needs real indent-guide rendering), plus the deferred
-Examples BOM sweep.
+**In flight: the Agent MCP server** (owner asked 2026-08-05 for Astoria's MCP sidecar in Ilwaco). This
+is a phased Linux/GTK port tracked in [Documentation/McpServer.md](Documentation/McpServer.md) — **Task 0
+(socket + `g_idle_add` marshal skeleton + `ping`) is DONE and verified**; resume at **Task 1 (read-only
+tools)**. New files: [src/AgentPipe.bas](src/AgentPipe.bas)/`.bi` (the IDE-side Unix-socket command
+server) and [src/JsonLite.bas](src/JsonLite.bas)/`.bi` (portable UTF-8 JSON). Not yet committed.
+
+Secondary (only if the MCP thread stalls): the **Astoria→Ilwaco changelog walk** — the menu-taxonomy /
+Options-panel cluster below, plus the deferred Examples BOM sweep.
+
+---
+
+## IN FLIGHT — Agent MCP server
+
+Port Astoria's Agent MCP server to Linux/GTK so an MCP client can drive the live IDE. Design, the three
+Win32→Linux substitutions, the owner decisions, and the Task 0–7 progress table live in
+[Documentation/McpServer.md](Documentation/McpServer.md). Task 0 verified end-to-end (ping round-trips
+over `/run/user/1000/ilwaco-agent.sock` while the GUI stays live; clean shutdown removes the socket).
+**Next: Task 1** — the read-only tools (`get_status`, `list_files`, `read_file`, `get_active_file`,
+`get_build_output`), which need Ilwaco's open-project accessor and active-tab/message-pane reads.
 
 ---
 

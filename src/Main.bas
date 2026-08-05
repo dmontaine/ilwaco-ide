@@ -37,6 +37,7 @@
 #include once "mff/HTTP.bi"
 #include once "fbthread.bi"
 #include once "vbcompat.bi"
+#include once "AgentPipe.bi"   ' Agent MCP command server (Unix socket + g_idle_add marshal)
 
 Using My.Sys.Forms
 Using My.Sys.Drawing
@@ -9265,15 +9266,21 @@ Sub frmMain_Show(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		SetDebugTabsVisible UseDebugger
 
 	pfSplash->CloseForm
-	
+
 	Var File = Command(-1)
+	'' --mcp-agent: the ilwaco-mcp sidecar auto-launched us for agent control. Suppress the
+	'' interactive startup modals (New Project / Tip of the Day) so they don't block the UI
+	'' while the agent drives us over the socket. An agent launch never carries a file to open.
+	Dim As Boolean bAgentLaunched = (InStr(LCase(File), "--mcp-agent") > 0)
+	If bAgentLaunched Then File = ""
+	StartAgentPipe()
 	Var Pos1 = InStr(File, "2>CON")
 	Var bFileOpening = False
 	If Pos1 > 0 Then File = Left(File, Pos1 - 1)
 	If File <> "" AndAlso Right(LCase(File), 4) <> ".exe" Then
 		bFileOpening = True
 	End If
-	If bSharedFind Then
+	If bSharedFind AndAlso Not bAgentLaunched Then
 		Select Case WhenVisualFBEditorStarts
 		Case 1: If Not bFileOpening Then NewProject 'pfTemplates->ShowModal
 		Case 2: If Not bFileOpening Then AddNew ExePath & Slash & "Templates" & Slash & WGet(DefaultProjectFile)
@@ -9305,8 +9312,8 @@ Sub frmMain_Show(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	'			OpenFiles GetFullPath(*RecentFiles)
 	'		End Select
 	'	End If
-	If ShowTipoftheDay Then frmTipOfDay.ShowModal *pfrmMain
-	
+	If ShowTipoftheDay AndAlso Not bAgentLaunched Then frmTipOfDay.ShowModal *pfrmMain
+
 End Sub
 
 
@@ -9352,6 +9359,7 @@ Sub frmMain_Close(ByRef Designer As My.Sys.Object, ByRef Sender As Form, ByRef A
 	End If
 	If Not CloseSession Then Action = 0: Return
 	FormClosing = True
+	StopAgentPipe()   '' stop the agent listener before teardown so no command races the close
 	If frmMain.WindowState <> WindowStates.wsMaximized Then
 		iniSettings.WriteInteger("MainWindow", "Width", frmMain.Width)
 		iniSettings.WriteInteger("MainWindow", "Height", frmMain.Height)
