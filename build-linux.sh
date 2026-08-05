@@ -111,13 +111,23 @@ build_editor() {
 	echo "build-linux.sh: -> $REPO/ilwaco"
 }
 
+build_sidecar() {
+	need_shim
+	echo "build-linux.sh: building ilwaco-mcp (Agent MCP sidecar, console app)…"
+	( cd "$REPO/src" \
+		&& LD_LIBRARY_PATH="$SHIM" "$FBC" AgentMcp.bas -x ../ilwaco-mcp \
+			-p "$SHIM" -l tinfo )
+	echo "build-linux.sh: -> $REPO/ilwaco-mcp"
+}
+
 case "${1:-all}" in
 	-h|--help)      sed -n '2,40p' "$0"; exit 0 ;;
 	--print-shim)   echo "$SHIM"; exit 0 ;;
 	shim)           build_shim ;;
 	lib)            build_lib ;;
 	editor)         build_editor ;;
-	all)            build_shim; build_lib; build_editor
+	sidecar|mcp)    build_sidecar ;;
+	all)            build_shim; build_lib; build_editor; build_sidecar
 	                echo "build-linux.sh: done. Run with:"
 	                echo "  LD_LIBRARY_PATH=\"$SHIM\" DISPLAY=:0 \"$REPO/ilwaco\"" ;;
 	*)              die "unknown argument '$1' (try --help)" ;;

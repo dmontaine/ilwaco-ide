@@ -87,11 +87,12 @@ prints nothing), then the lib **and** editor were rebuilt. Both fixes are detail
 
 **In flight: the Agent MCP server** (owner asked 2026-08-05 for Astoria's MCP sidecar in Ilwaco). This
 is a phased Linux/GTK port tracked in [Documentation/McpServer.md](Documentation/McpServer.md) —
-**Tasks 0 and 1 are DONE and verified** (socket + `g_idle_add` marshal skeleton + `ping`; the read-only
-tools `get_status`/`list_files`/`read_file`/`get_active_file`/`get_build_output` plus `open_project`,
-with a path-traversal guard). Resume at **Task 2 (the `ilwaco-mcp` sidecar)**. Core files:
-[src/AgentPipe.bas](src/AgentPipe.bas)/`.bi` (the IDE-side Unix-socket command server) and
-[src/JsonLite.bas](src/JsonLite.bas)/`.bi` (portable UTF-8 JSON).
+**Tasks 0, 1 and 2 are DONE and verified** — the IDE-side socket server + read-only tools + path guard,
+**and the `ilwaco-mcp` sidecar** (a real MCP client drives the IDE end-to-end, auto-launching it).
+Resume at **Task 3 (mutations: `write_file`, `add_file`, `set_active_file_content`, `open_in_editor`)**.
+Core files: [src/AgentPipe.bas](src/AgentPipe.bas)/`.bi` (IDE-side command server),
+[src/AgentMcp.bas](src/AgentMcp.bas) (the sidecar → `./ilwaco-mcp`), [src/JsonLite.bas](src/JsonLite.bas)/`.bi`
+(portable UTF-8 JSON).
 
 Secondary (only if the MCP thread stalls): the **Astoria→Ilwaco changelog walk** — the menu-taxonomy /
 Options-panel cluster below, plus the deferred Examples BOM sweep.
@@ -102,11 +103,11 @@ Options-panel cluster below, plus the deferred Examples BOM sweep.
 
 Port Astoria's Agent MCP server to Linux/GTK so an MCP client can drive the live IDE. Design, the three
 Win32→Linux substitutions, the owner decisions, and the Task 0–7 progress table live in
-[Documentation/McpServer.md](Documentation/McpServer.md). Tasks 0 and 1 verified end-to-end (ping
-round-trips over `/run/user/1000/ilwaco-agent.sock` while the GUI stays live; the read-only tools reflect
-an opened project; `read_file`'s path-traversal guard blocks `..` escapes). **Next: Task 2** — the
-`ilwaco-mcp` sidecar (Linux stdio + socket client + auto-launch), wired to these tools from a real MCP
-client. Then Task 3 (mutations), 4 (build/run/errors), 5 (`create_project`), 6 (options toggle +
+[Documentation/McpServer.md](Documentation/McpServer.md). Tasks 0–2 verified end-to-end: a real MCP
+client → `ilwaco-mcp` sidecar → Unix socket → live IDE, auto-launching the IDE, running the read-only
+tools against an opened project, with `read_file`'s path-traversal guard blocking `..` escapes.
+**Next: Task 3** — mutations (`write_file`, `add_file`, `set_active_file_content`, `open_in_editor`) with
+the project-root path guard. Then Task 4 (build/run/errors), 5 (`create_project`), 6 (options toggle +
 packaging), 7 (end-to-end).
 
 ---

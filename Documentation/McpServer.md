@@ -54,7 +54,7 @@ MCP client  ──MCP/JSON-RPC over stdio──►  ilwaco-mcp  ──line-JSON 
 | --- | --- | --- |
 | 0 | Socket + `g_idle_add` marshal skeleton + `ping` | **DONE + verified (2026-08-05)** |
 | 1 | Read-only tools: `get_status`, `list_files`, `read_file`, `get_active_file`, `get_build_output` | **DONE + verified (2026-08-05)** |
-| 2 | The sidecar `ilwaco-mcp` (`AgentMcp.bas`), wired to Task 1 from a real MCP client | not started |
+| 2 | The sidecar `ilwaco-mcp` (`AgentMcp.bas`), wired to Task 1 from a real MCP client | **DONE + verified (2026-08-05)** |
 | 3 | Mutations: `write_file`, `add_file`, `set_active_file_content`, `open_in_editor` + path guard | not started |
 | 4 | Build/run/errors: `build`, `syntax_check`, `run`, `get_errors` (async completion; save-dirty-first) | not started |
 | 5 | Project ops: `create_project` (plain template); `open_project` **DONE (brought forward for Task 1 verification)** | partial |
@@ -107,6 +107,28 @@ Verified by effect against the live IDE: `open_project` a sample `.vfp` → `get
 reflect it → `read_file` returns correct content → the five traversal probes above are all blocked.
 `get_active_file`'s happy path (a focused tab) waits on `open_in_editor` (Task 3); its no-tab error
 path is verified.
+
+### Task 2 — DONE + verified (2026-08-05)
+
+The sidecar [src/AgentMcp.bas](src/AgentMcp.bas) → `./ilwaco-mcp`, a Linux port of Astoria's
+`astoria-mcp.exe`. The MCP/JSON-RPC layer (initialize, tools/list, tools/call, ping; the tool table;
+the reachable/complete reply handling) ports almost verbatim; the platform layer is rebuilt:
+
+- **stdio** = libc `read`/`write` on fd 0/1/2 (no CR/LF reinterpretation); **socket client** =
+  `socket`/`connect` to the same per-user path; **auto-launch** = `readlink("/proc/self/exe")` for the
+  IDE's folder, `pgrep -x ilwaco` for "already running", and `system("…/ilwaco --mcp-agent … &")` to
+  start it detached (the child inherits the sidecar's env, so an `LD_LIBRARY_PATH` the client set for
+  the shim carries through).
+- Dropped Astoria's `create_project` `ai_tool` stamping (Ilwaco has no AI-template machinery).
+- The tool table advertises **only the tools the IDE implements today** (the six read-only + project
+  tools); rows for the mutation/build/project tools land with their IDE-side handlers in later tasks.
+
+Built via `./build-linux.sh sidecar` (also folded into `all`). Verified by effect through a real MCP
+client flow over the sidecar's stdio, **with no IDE running beforehand**: `initialize` →
+`serverInfo.name = ilwaco-ide`; `tools/list` → the six tools; `tools/call get_status` **auto-launched
+the IDE** (0 processes before, 1 after) and returned status; `open_project` + `list_files` then
+forwarded correctly. Ship `ilwaco-mcp` alongside `ilwaco` (tracked in git; the built binaries travel
+with the repo).
 
 ## Verification recipe
 
