@@ -198,7 +198,7 @@ Type McpTool
 	schema As String     '' inputSchema (JSON Schema), embedded verbatim
 End Type
 
-Dim Shared gTools(0 To 5) As McpTool
+Dim Shared gTools(0 To 9) As McpTool
 
 Sub InitTools()
 	Dim As String noArgs = "{""type"":""object"",""properties"":{}}"
@@ -221,6 +221,18 @@ Sub InitTools()
 	gTools(5).name = "open_project"
 	gTools(5).description = "Open an existing Ilwaco project by its .vfp path (switches the IDE to that project)."
 	gTools(5).schema = "{""type"":""object"",""properties"":{""path"":{""type"":""string"",""description"":""Path to a .vfp project file.""}},""required"":[""path""]}"
+	gTools(6).name = "write_file"
+	gTools(6).description = "Create or overwrite a file in the open project. Optionally register it in the project and open it in an editor tab. Paths outside the project are rejected."
+	gTools(6).schema = "{""type"":""object"",""properties"":{""path"":{""type"":""string"",""description"":""Project-relative or absolute path inside the project folder.""},""content"":{""type"":""string""},""register"":{""type"":""boolean"",""description"":""Add the file to the project (default false).""},""open"":{""type"":""boolean"",""description"":""Open the file in an editor tab (default false).""}},""required"":[""path"",""content""]}"
+	gTools(7).name = "add_file"
+	gTools(7).description = "Add a new source file (module .bas or header .bi) to the open project, registered and opened by default. Forms are not supported here; create them in the designer."
+	gTools(7).schema = "{""type"":""object"",""properties"":{""name"":{""type"":""string"",""description"":""File name, with or without extension.""},""kind"":{""type"":""string"",""enum"":[""module"",""header""],""description"":""module (.bas) or header (.bi). Default module.""},""register"":{""type"":""boolean""},""open"":{""type"":""boolean""}},""required"":[""name""]}"
+	gTools(8).name = "set_active_file_content"
+	gTools(8).description = "Replace the full text of the currently focused editor tab."
+	gTools(8).schema = "{""type"":""object"",""properties"":{""content"":{""type"":""string""}},""required"":[""content""]}"
+	gTools(9).name = "open_in_editor"
+	gTools(9).description = "Open (or focus) an editor tab for a project file."
+	gTools(9).schema = "{""type"":""object"",""properties"":{""path"":{""type"":""string"",""description"":""Project-relative or absolute path inside the project folder.""}},""required"":[""path""]}"
 End Sub
 
 Function ToolsListJson() As String

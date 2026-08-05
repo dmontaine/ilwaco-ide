@@ -166,6 +166,46 @@ Private Function AgentReadFileBytes(ByRef path As UString) As String
 	Return buf
 End Function
 
+'' Write raw bytes to a file, creating/truncating. Content is written as-is (UTF-8 from JSON,
+'' no BOM -- matches the source-file convention). Output truncates/creates; the Binary reopen
+'' writes the bytes. UI thread.
+Private Function AgentWriteFileBytes(ByRef path As UString, ByRef content As String) As Boolean
+	Dim As Integer fn = FreeFile_
+	If Open(path For Output As #fn) <> 0 Then Return False      '' truncate/create
+	Close #fn
+	fn = FreeFile_
+	If Open(path For Binary Access Write As #fn) <> 0 Then Return False
+	If Len(content) > 0 Then Put #fn, 1, content
+	Close #fn
+	Return True
+End Function
+
+'' Register an existing on-disk file into the open project's tree, so a project save persists
+'' it and a build includes it. Mirrors AddFilesToProject's non-dialog branch (folder routing via
+'' GetTreeNodeChild, an ExplorerElement + tree node, mark the project node dirty). Idempotent.
+Private Function AgentRegisterFileInProject(ByRef fullPath As UString) As Boolean
+	Dim As TreeNode Ptr ptn = MainNode
+	If ptn = 0 Then Return False
+	Dim As WString Ptr fpW : WLet(fpW, fullPath)
+	Dim As TreeNode Ptr tn1 = GetTreeNodeChild(ptn, *fpW)
+	If ContainsFileName(tn1, *fpW) Then WDeAllocate(fpW) : Return True   '' already present
+	Dim As String IconName = GetIconName(*fpW)
+	Dim As TreeNode Ptr tn3 = tn1->Nodes.Add(GetFileName(*fpW), , , IconName, IconName, True)
+	Dim As ExplorerElement Ptr ee = _New(ExplorerElement)
+	WLet(ee->FileName, *fpW)
+	tn3->Tag = ee
+	If Not EndsWith(ptn->Text, "*") Then ptn->Text &= "*"   '' dirty marker on the project node
+	WDeAllocate(fpW)
+	Return True
+End Function
+
+'' Open (or focus) a code tab for a file. AddTab returns the existing tab if already open.
+Private Sub AgentOpenTab(ByRef fullPath As UString)
+	Dim As WString Ptr fpW : WLet(fpW, fullPath)
+	AddTab(*fpW)
+	WDeAllocate(fpW)
+End Sub
+
 '' ---------------------------------------------------------------- read-only handlers (UI thread)
 
 Private Function AgentCmdGetStatus() As JsonValue Ptr
@@ -271,6 +311,82 @@ Private Function AgentCmdOpenProject(ByVal args As JsonValue Ptr, ByRef ecode As
 	Return r
 End Function
 
+'' ---------------------------------------------------------------- mutation handlers (UI thread)
+
+Private Function AgentCmdWriteFile(ByVal args As JsonValue Ptr, ByRef ecode As String, ByRef emsg As String) As JsonValue Ptr
+	If args = 0 Then ecode = "bad_args" : emsg = "write_file requires { path, content }." : Return 0
+	Dim As String path = args->GetStr("path")
+	If path = "" Then ecode = "bad_args" : emsg = "write_file requires a path." : Return 0
+	Dim As String content = args->GetStr("content")
+	Dim As UString resolved = AgentResolveProjectPath(path, ecode, emsg)
+	If ecode <> "" Then Return 0
+	If Not AgentWriteFileBytes(resolved, content) Then ecode = "write_failed" : emsg = "Could not write: " & path : Return 0
+	Dim As Boolean registered = False, opened = False
+	If args->GetBool("register") Then registered = AgentRegisterFileInProject(resolved)
+	If args->GetBool("open") Then AgentOpenTab(resolved) : opened = True
+	Dim As JsonValue Ptr r = JsonNewObject()
+	r->SetMember("path", JsonNewString(ToUtf8(resolved)))
+	r->SetMember("registered", JsonNewBool(registered))
+	r->SetMember("opened", JsonNewBool(opened))
+	Return r
+End Function
+
+Private Function AgentCmdAddFile(ByVal args As JsonValue Ptr, ByRef ecode As String, ByRef emsg As String) As JsonValue Ptr
+	If args = 0 Then ecode = "bad_args" : emsg = "add_file requires { name }." : Return 0
+	If AgentProject() = 0 Then ecode = "no_project" : emsg = "No project is open." : Return 0
+	Dim As String nm = args->GetStr("name")
+	If nm = "" Then ecode = "bad_args" : emsg = "add_file requires a name." : Return 0
+	Dim As String kind = LCase(args->GetStr("kind", "module"))
+	'' Forms need designer scaffolding a stub cannot provide -- create those in the designer.
+	If kind = "form" Then ecode = "unsupported" : emsg = "add_file cannot create forms; use the form designer." : Return 0
+	Dim As String ext = ".bas"
+	If kind = "header" Then ext = ".bi"
+	Dim As String lnm = LCase(nm)
+	If Right(lnm, 4) <> ".bas" AndAlso Right(lnm, 3) <> ".bi" Then nm &= ext
+	Dim As UString resolved = AgentResolveProjectPath(nm, ecode, emsg)
+	If ecode <> "" Then Return 0
+	If FileExists(resolved) Then ecode = "exists" : emsg = "File already exists: " & nm : Return 0
+	If Not AgentWriteFileBytes(resolved, "'' " & GetFileName(resolved) & Chr(10)) Then _
+		ecode = "write_failed" : emsg = "Could not write: " & nm : Return 0
+	Dim As Boolean registered = True, opened = True
+	If args->Find("register") <> 0 Then registered = args->GetBool("register")
+	If args->Find("open") <> 0 Then opened = args->GetBool("open")
+	If registered Then AgentRegisterFileInProject(resolved)
+	If opened Then AgentOpenTab(resolved)
+	Dim As JsonValue Ptr r = JsonNewObject()
+	r->SetMember("path", JsonNewString(ToUtf8(resolved)))
+	r->SetMember("registered", JsonNewBool(registered))
+	r->SetMember("opened", JsonNewBool(opened))
+	Return r
+End Function
+
+Private Function AgentCmdSetActiveContent(ByVal args As JsonValue Ptr, ByRef ecode As String, ByRef emsg As String) As JsonValue Ptr
+	If args = 0 Then ecode = "bad_args" : emsg = "set_active_file_content requires { content }." : Return 0
+	Dim As TabWindow Ptr tb = AgentActiveTab()
+	If tb = 0 Then ecode = "no_active_file" : emsg = "No editor tab is focused." : Return 0
+	Dim As String content = args->GetStr("content")
+	Dim As WString Ptr cw = FromUtf8(StrPtr(content))
+	tb->txtCode.Text = *cw
+	If cw <> 0 Then WDeAllocate(cw)
+	tb->Modified = True
+	Dim As JsonValue Ptr r = JsonNewObject()
+	r->SetMember("path", JsonNewString(ToUtf8(tb->FileName)))
+	Return r
+End Function
+
+Private Function AgentCmdOpenInEditor(ByVal args As JsonValue Ptr, ByRef ecode As String, ByRef emsg As String) As JsonValue Ptr
+	If args = 0 Then ecode = "bad_args" : emsg = "open_in_editor requires { path }." : Return 0
+	Dim As String path = args->GetStr("path")
+	If path = "" Then ecode = "bad_args" : emsg = "open_in_editor requires a path." : Return 0
+	Dim As UString resolved = AgentResolveProjectPath(path, ecode, emsg)
+	If ecode <> "" Then Return 0
+	If Not FileExists(resolved) Then ecode = "not_found" : emsg = "File not found: " & path : Return 0
+	AgentOpenTab(resolved)
+	Dim As JsonValue Ptr r = JsonNewObject()
+	r->SetMember("path", JsonNewString(ToUtf8(resolved)))
+	Return r
+End Function
+
 '' ---------------------------------------------------------------- command dispatch (UI thread)
 
 '' Runs the mapped command on the GTK UI thread. Read-only surface so far; later
@@ -293,6 +409,14 @@ Private Sub AgentDispatch(ByRef cmd As String, ByVal args As JsonValue Ptr, _
 		res = AgentCmdGetBuildOutput() : ok = True
 	Case "open_project"
 		res = AgentCmdOpenProject(args, ecode, emsg) : ok = (res <> 0)
+	Case "write_file"
+		res = AgentCmdWriteFile(args, ecode, emsg) : ok = (res <> 0)
+	Case "add_file"
+		res = AgentCmdAddFile(args, ecode, emsg) : ok = (res <> 0)
+	Case "set_active_file_content"
+		res = AgentCmdSetActiveContent(args, ecode, emsg) : ok = (res <> 0)
+	Case "open_in_editor"
+		res = AgentCmdOpenInEditor(args, ecode, emsg) : ok = (res <> 0)
 	Case Else
 		ecode = "unknown_cmd" : emsg = "Unknown command: " & cmd
 	End Select

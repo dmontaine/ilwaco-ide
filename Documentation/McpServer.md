@@ -55,7 +55,7 @@ MCP client  ──MCP/JSON-RPC over stdio──►  ilwaco-mcp  ──line-JSON 
 | 0 | Socket + `g_idle_add` marshal skeleton + `ping` | **DONE + verified (2026-08-05)** |
 | 1 | Read-only tools: `get_status`, `list_files`, `read_file`, `get_active_file`, `get_build_output` | **DONE + verified (2026-08-05)** |
 | 2 | The sidecar `ilwaco-mcp` (`AgentMcp.bas`), wired to Task 1 from a real MCP client | **DONE + verified (2026-08-05)** |
-| 3 | Mutations: `write_file`, `add_file`, `set_active_file_content`, `open_in_editor` + path guard | not started |
+| 3 | Mutations: `write_file`, `add_file`, `set_active_file_content`, `open_in_editor` + path guard | **DONE + verified (2026-08-05)** |
 | 4 | Build/run/errors: `build`, `syntax_check`, `run`, `get_errors` (async completion; save-dirty-first) | not started |
 | 5 | Project ops: `create_project` (plain template); `open_project` **DONE (brought forward for Task 1 verification)** | partial |
 | 6 | Security/opt-in + packaging: Options toggle (default ON), INI key, ship `ilwaco-mcp`, setup doc | not started |
@@ -129,6 +129,27 @@ client flow over the sidecar's stdio, **with no IDE running beforehand**: `initi
 the IDE** (0 processes before, 1 after) and returned status; `open_project` + `list_files` then
 forwarded correctly. Ship `ilwaco-mcp` alongside `ilwaco` (tracked in git; the built binaries travel
 with the repo).
+
+### Task 3 — DONE + verified (2026-08-05)
+
+Mutation tools, all UI-thread, all path-guarded via `AgentResolveProjectPath`:
+
+- **`write_file`** `{path, content, register?, open?}` — writes BOM-less bytes; `register` mirrors
+  `AddFilesToProject`'s non-dialog branch (add a tree node under `MainNode` with an `ExplorerElement`,
+  mark the project dirty); `open` calls `AddTab`.
+- **`add_file`** `{name, kind}` — module (`.bas`) or header (`.bi`) from a minimal stub, registered +
+  opened by default. Forms are refused (`unsupported`) — they need designer scaffolding a stub can't
+  provide.
+- **`set_active_file_content`** `{content}` — sets `AgentActiveTab()->txtCode.Text` and marks the tab
+  modified.
+- **`open_in_editor`** `{path}` — `AddTab` opens/focuses a code tab.
+
+Verified by effect: `write_file` a new `.bas` (register+open) → `list_files` now includes it →
+`read_file` returns the exact LF bytes → `get_active_file` shows it focused (also closes Task 1's
+deferred happy-path) → `set_active_file_content` replaces its text → `write_file` to `../../ESCAPE.txt`
+is rejected `bad_path` → `add_file` creates a module and refuses a form. Note: `set_active_file_content`
+reads back with `\r\n` — the EditControl normalizes to CRLF internally (whereas `write_file` to disk
+stays LF); harmless for compilation, noted against the LF-only directive.
 
 ## Verification recipe
 

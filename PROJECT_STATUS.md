@@ -87,9 +87,11 @@ prints nothing), then the lib **and** editor were rebuilt. Both fixes are detail
 
 **In flight: the Agent MCP server** (owner asked 2026-08-05 for Astoria's MCP sidecar in Ilwaco). This
 is a phased Linux/GTK port tracked in [Documentation/McpServer.md](Documentation/McpServer.md) —
-**Tasks 0, 1 and 2 are DONE and verified** — the IDE-side socket server + read-only tools + path guard,
-**and the `ilwaco-mcp` sidecar** (a real MCP client drives the IDE end-to-end, auto-launching it).
-Resume at **Task 3 (mutations: `write_file`, `add_file`, `set_active_file_content`, `open_in_editor`)**.
+**Tasks 0–3 are DONE and verified** — the IDE-side socket server, read-only tools + path guard, the
+`ilwaco-mcp` sidecar (a real MCP client drives the IDE end-to-end, auto-launching it), and the mutation
+tools (`write_file`, `add_file`, `set_active_file_content`, `open_in_editor`). Resume at **Task 4
+(build/run/errors: `build`, `syntax_check`, `run`, `get_errors`)** — the async part: kick the existing
+compile/run on its worker thread, save dirty tabs first, derive success from error-severity messages.
 Core files: [src/AgentPipe.bas](src/AgentPipe.bas)/`.bi` (IDE-side command server),
 [src/AgentMcp.bas](src/AgentMcp.bas) (the sidecar → `./ilwaco-mcp`), [src/JsonLite.bas](src/JsonLite.bas)/`.bi`
 (portable UTF-8 JSON).
@@ -105,10 +107,11 @@ Port Astoria's Agent MCP server to Linux/GTK so an MCP client can drive the live
 Win32→Linux substitutions, the owner decisions, and the Task 0–7 progress table live in
 [Documentation/McpServer.md](Documentation/McpServer.md). Tasks 0–2 verified end-to-end: a real MCP
 client → `ilwaco-mcp` sidecar → Unix socket → live IDE, auto-launching the IDE, running the read-only
-tools against an opened project, with `read_file`'s path-traversal guard blocking `..` escapes.
-**Next: Task 3** — mutations (`write_file`, `add_file`, `set_active_file_content`, `open_in_editor`) with
-the project-root path guard. Then Task 4 (build/run/errors), 5 (`create_project`), 6 (options toggle +
-packaging), 7 (end-to-end).
+and mutation tools against an opened project, with the project-root path guard blocking `..` escapes.
+**Next: Task 4** — build/run/errors (`build`, `syntax_check`, `run`, `get_errors`): the async part —
+kick the existing compile/run on its worker thread, save dirty tabs first, and derive success from
+error-severity messages rather than the compiler's return. Then Task 5 (`create_project`), 6 (options
+toggle + packaging), 7 (end-to-end).
 
 ---
 
