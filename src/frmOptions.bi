@@ -59,6 +59,7 @@ Using My.Sys.Forms
 		Declare Static Sub lstColorKeys_Change(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		Declare Static Sub cmdBackground_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		Declare Static Sub cmdIndicator_Click(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
+		Declare Static Sub cboTerminal_Change(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		Declare Static Sub cboTheme_Change(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		Declare Static Sub chkForeground_Click(ByRef Designer As My.Sys.Object, ByRef Sender As CheckBox)
 		Declare Static Sub chkBackground_Click(ByRef Designer As My.Sys.Object, ByRef Sender As CheckBox)

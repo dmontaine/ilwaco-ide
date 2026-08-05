@@ -52,19 +52,26 @@ necessary but not sufficient — "it compiled" is not "it works".
 - **A created GUI project compiles and runs (2026-08-04).** The GUI Application template, created
   through New Project, compiles clean with the bundled `fbc` and its window opens with a
   correctly-rendered caption — the BOM fix confirmed by effect, since a BOM would have made the
-  literal wide. GTK Application, Dynamic/Static/Control Library also compile. Console Application
-  does **not** (see "Not proven"). TestPlan T14/T15.
+  literal wide. GTK Application, Dynamic/Static/Control Library also compile. TestPlan T14/T15.
+- **A created Console project compiles and prints correct text (2026-08-04).** The Console Application
+  template, now plain FreeBASIC (the Win32-only `mff/Console.bi` deleted), was created through New
+  Project and compiled + linked from the IDE ("Layout succeeded"); the built exe prints single-byte
+  ASCII (`Hello, world!` …), exit 0 — the BOM regression check. On the dev box it needs
+  `-p <shim> -l tinfo` to link (no `libncurses` in the shim). TestPlan T14/T15.
 - **New Project creates a project on disk (2026-08-04).** Both a GUI Application and a Console
   Application were created from the dialog: the template's files land in the new folder, the manifest
   is copied to `<FolderName>.vfp` with the template's path prefix stripped, the offered name advances
   to the first free `ProjectN`, and the project opens with a populated explorer tree. Until the
   `FileCopy`/`UString` fix this produced an empty folder and an error (TechnicalDebt "Paid down").
+- **Run launches an installed terminal, output visible (2026-08-05).** On this box (no `gnome-terminal`,
+  only `xfce4-terminal`) Ilwaco auto-selected `xfce4-terminal` as the default terminal, and Run launched
+  `"xfce4-terminal" --hold -x "…/Main"` — the Console program's greeting rendered in the terminal, held
+  open. Tools > Options > Terminals listed all nine known terminals with an **Installed** column marking
+  `xfce4-terminal`, a **Default** column that moved live when a different terminal was picked in the
+  "Default Terminal" combo, and the combo as the override. Previously Run died `sh: gnome-terminal: not
+  found` with no window. TechnicalDebt "Paid down 2026-08-05".
 
 ## Not proven (known gaps)
-
-- **That a *Console* project compiles.** It does not — `mff/Console.bi` is Win32-only, so the link
-  fails on `-lkernel32` and friends. The GUI template is proven (below); the console one is a known
-  break awaiting a decision (PROJECT_STATUS). TestPlan T14/T15.
 - **Six of the eight `FileCopy_` call sites are build-verified only.** New Project exercised the two
   that were actually broken (`FolderCopy` and the manifest copy). The other conversions — backup on
   save, `Resource.rc`/`Manifest.xml` creation, Find-and-Replace-in-project backups, Remove File From

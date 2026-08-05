@@ -5437,6 +5437,39 @@ Sub LoadSettings
 	WLet(DefaultTerminal, iniSettings.ReadString("Terminals", "DefaultTerminal", ""))
 	WLet(CurrentTerminal, *DefaultTerminal)
 	WLet(TerminalPath, Terminals.Get(*CurrentTerminal, ""))
+	' Terminal emulators: make sure every terminal Ilwaco knows about is present in the list (so
+	' Tools > Options > Terminals can show it and mark whether it is installed), then pick a default
+	' that is actually installed. The shipped default may be absent on a given Linux box, which would
+	' make Run's terminal launch fail silently ("sh: gnome-terminal: not found"). Prefer any real
+	' terminal over xterm; fall back to xterm only when nothing else is installed. An installed
+	' default the user has chosen is always kept.
+	Scope
+		Dim As String TermName(0 To 8) = { _
+			"gnome-terminal", "konsole", "xfce4-terminal", "mate-terminal", "lxterminal", _
+			"terminator", "terminology", "qterminal", "xterm" }
+		Dim As String TermArgs(0 To 8) = { _
+			"--wait --", "--hold -e", "--hold -x", "-x", "-e", _
+			"-x", "-e", "-e", "-hold -e" }
+		For t As Integer = 0 To UBound(TermName)
+			If Terminals.IndexOfKey(TermName(t)) = -1 Then
+				Dim As ToolType Ptr NewTool = _New(ToolType)
+				NewTool->Name = TermName(t)
+				NewTool->Path = TermName(t)
+				NewTool->Parameters = TermArgs(t)
+				Terminals.Add TermName(t), TermName(t), NewTool
+			End If
+		Next
+		If *TerminalPath = "" OrElse g_find_program_in_path(ToUtf8(*TerminalPath)) = NULL Then
+			For t As Integer = 0 To UBound(TermName)
+				If g_find_program_in_path(TermName(t)) <> NULL Then
+					WLet(DefaultTerminal, TermName(t))
+					WLet(CurrentTerminal, TermName(t))
+					WLet(TerminalPath, Terminals.Get(TermName(t), ""))
+					Exit For
+				End If
+			Next
+		End If
+	End Scope
 	WLet(DefaultHelp, iniSettings.ReadString("Helps", "DefaultHelp", ""))
 	WLet(HelpPath, Helps.Get(*DefaultHelp, ""))
 	WLet(DefaultBuildConfiguration, iniSettings.ReadString("BuildConfigurations", "DefaultBuildConfiguration", ""))

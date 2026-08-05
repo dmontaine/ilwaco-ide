@@ -50,7 +50,7 @@
 		' Form1
 		With This
 			.Name = "Form1"
-			.Text = "VisualFBEditor-3D"
+			.Text = "Form1"
 			.Designer = @This
 			.StartPosition = FormStartPosition.CenterScreen
 			.OnResize = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control, NewWidth As Integer, NewHeight As Integer), @Form_Resize)

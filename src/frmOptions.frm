@@ -29,7 +29,7 @@ pfOptions = @fOptions
 		This.ExtraMargins.Bottom = -1
 		This.ExtraMargins.Left = 0
 		This.ExtraMargins.Top = 0
-		This.SetBounds 0, 0, 631, 488
+		This.SetBounds 0, 0, 810, 640
 		This.StartPosition = FormStartPosition.CenterParent
 		'This.Caption = ML("Options")
 		This.CancelButton = @cmdCancel
@@ -353,6 +353,7 @@ pfOptions = @fOptions
 			.Text = "cboTerminal"
 			.TabIndex = 92
 			.SetBounds 18, 24, 384, 21
+			.OnChange = @cboTerminal_Change
 			.Parent = @grbDefaultTerminal
 		End With
 		' grbTerminalPaths
@@ -2191,9 +2192,11 @@ pfOptions = @fOptions
 		lvMakeToolPaths.Columns.Add ML("Version"), , 190
 		lvMakeToolPaths.Columns.Add ML("Path"), , 190
 		lvMakeToolPaths.Columns.Add ML("Command line"), , 80
-		lvTerminalPaths.Columns.Add ML("Version"), , 190
-		lvTerminalPaths.Columns.Add ML("Path"), , 190
-		lvTerminalPaths.Columns.Add ML("Command line"), , 80
+		lvTerminalPaths.Columns.Add ML("Version"), , 135
+		lvTerminalPaths.Columns.Add ML("Path"), , 135
+		lvTerminalPaths.Columns.Add ML("Command line"), , 130
+		lvTerminalPaths.Columns.Add ML("Installed"), , 95
+		lvTerminalPaths.Columns.Add ML("Default"), , 62
 		lvHelpPaths.Columns.Add ML("Version"), , 190
 		lvHelpPaths.Columns.Add ML("Path"), , 190
 		' hbxEditors
@@ -2883,6 +2886,12 @@ Sub frmOptions.LoadSettings()
 			.lvTerminalPaths.ListItems.Add pTerminals->Item(i)->Key
 			.lvTerminalPaths.ListItems.Item(i)->Text(1) = pTerminals->Item(i)->Text
 			.lvTerminalPaths.ListItems.Item(i)->Text(2) = Cast(ToolType Ptr, pTerminals->Item(i)->Object)->Parameters
+			If g_find_program_in_path(ToUtf8(pTerminals->Item(i)->Text)) <> NULL Then
+				.lvTerminalPaths.ListItems.Item(i)->Text(3) = ML("Yes")
+			End If
+			If pTerminals->Item(i)->Key = *DefaultTerminal Then
+				.lvTerminalPaths.ListItems.Item(i)->Text(4) = ML("Yes")
+			End If
 			.cboTerminal.AddItem pTerminals->Item(i)->Key
 		Next
 		.cboTerminal.ItemIndex = Max(0, .cboTerminal.IndexOf(*DefaultTerminal))
@@ -4027,6 +4036,18 @@ Private Sub frmOptions.cmdIndicator_Click(ByRef Designer As My.Sys.Object, ByRef
 	End With
 End Sub
 
+Private Sub frmOptions.cboTerminal_Change(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
+	With fOptions
+		For i As Integer = 0 To .lvTerminalPaths.ListItems.Count - 1
+			If .lvTerminalPaths.ListItems.Item(i)->Text(0) = .cboTerminal.Text Then
+				.lvTerminalPaths.ListItems.Item(i)->Text(4) = ML("Yes")
+			Else
+				.lvTerminalPaths.ListItems.Item(i)->Text(4) = ""
+			End If
+		Next
+	End With
+End Sub
+
 Private Sub frmOptions.cboTheme_Change(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	With fOptions
 		If UBound(.Colors) = -1 Then Exit Sub
@@ -4411,6 +4432,9 @@ Private Sub frmOptions.cmdAddTerminal_Click(ByRef Designer As My.Sys.Object, ByR
 				.lvTerminalPaths.ListItems.Add pfPath->txtVersion.Text
 				.lvTerminalPaths.ListItems.Item(.lvTerminalPaths.ListItems.Count - 1)->Text(1) = pfPath->txtPath.Text
 				.lvTerminalPaths.ListItems.Item(.lvTerminalPaths.ListItems.Count - 1)->Text(2) = pfPath->txtCommandLine.Text
+				If g_find_program_in_path(ToUtf8(pfPath->txtPath.Text)) <> NULL Then
+					.lvTerminalPaths.ListItems.Item(.lvTerminalPaths.ListItems.Count - 1)->Text(3) = ML("Yes")
+				End If
 				.cboTerminal.AddItem pfPath->txtVersion.Text
 			Else
 				MsgBox ML("This version is exists!")
@@ -4432,6 +4456,11 @@ Private Sub frmOptions.cmdChangeTerminal_Click(ByRef Designer As My.Sys.Object, 
 				.lvTerminalPaths.SelectedItem->Text(0) = pfPath->txtVersion.Text
 				.lvTerminalPaths.SelectedItem->Text(1) = pfPath->txtPath.Text
 				.lvTerminalPaths.SelectedItem->Text(2) = pfPath->txtCommandLine.Text
+				If g_find_program_in_path(ToUtf8(pfPath->txtPath.Text)) <> NULL Then
+					.lvTerminalPaths.SelectedItem->Text(3) = ML("Yes")
+				Else
+					.lvTerminalPaths.SelectedItem->Text(3) = ""
+				End If
 			Else
 				MsgBox ML("This version is exists!")
 			End If

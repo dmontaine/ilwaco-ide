@@ -22,80 +22,66 @@ CLAUDE.md "Working practices".
 
 ---
 
-## ✅ DONE (2026-08-04) — `frmNewProject` works end to end; the `FileCopy`/`UString` trap found
+## ✅ DONE (2026-08-04, later) — Console template rewritten; T14/T15 now PASS; branding cleared
 
-New Project (`src/frmNewProject.{bi,frm}`, registered in `ilwaco.vfp`, included from `Main.bas`) is
-**verified creating projects on disk**: GUI Application → `Project1/` with `Main.frm` +
-`Project1.vfp`, Console Application → `Project2/` with `Main.bas`; the manifest's template path
-prefix is stripped (`*File=GUI Application/Main.frm` → `*File=Main.frm`), the offered name advances to
-the first free `ProjectN`, and the project opens with a populated tree.
+The Console Application template no longer breaks. It pulled in MFF's `mff/Console.bi`, which was
+pure Win32 (84 console-API calls, a `windows.bi` include dragging in `-lkernel32/-lgdi32/-luser32/…`),
+so a beginner picking "Console Application" got a project that would not link. Per the owner decision:
 
-**What was wrong was not the dialog.** The previous session's *"Selected folder exists"* was the
-second press of OK; the real failure was an empty project folder and *"Could not create the
-project"*. Instrumenting the running IDE showed every path correct and both template files present —
-`FileCopy` simply returned 1 and copied nothing. **FreeBASIC's `FileCopy` takes `ZString Ptr`, so a
-`UString` argument binds through `UString.Cast() As Any Ptr` and the wide buffer is read as a narrow
-path, ending at the first zero byte.** `&` with a `UString` operand propagates it. All copies now go
-through a `FileCopy_(ByRef … As WString)` wrapper (`Main.bas`) and no raw `FileCopy` call remains, so
-it cannot recur — see CLAUDE.md's trap list, [TechnicalDebt.md](Documentation/TechnicalDebt.md), and
-[UpstreamFixes.md](Documentation/UpstreamFixes.md): `FolderCopy`'s GTK branch is upstream
-VisualFBEditor code, so **folder copying has never worked on that build**.
+- **`Templates/Projects/Console Application/Main.bas` rewritten in plain FreeBASIC** — `Print` for
+  output, `Color` for colour, both native on Linux; BOM-less, LF-only. It now prints a greeting
+  instead of the old empty template.
+- **`Controls/MyFbFramework/mff/Console.bi` deleted** as dead Windows code (nothing else in the repo
+  included it), with a `REMOVED_FEATURES` guard for `ConsoleType` added to `Tools/DocCheck.py`.
+- **Stale `VisualFBEditor` branding cleared:** the Console template's `Console.Title` went with the
+  rewrite, and `Templates/Files/Form_3D.frm`'s caption `"VisualFBEditor-3D"` → `"Form1"` (matching the
+  plain `Form.frm` template). The only `VisualFBEditor` strings left are in the *not-offered* Windows
+  templates (Android/Addin), whose deletion is a separate open question.
 
-**What the dialog does:** copies `Templates/Projects/<Type>/` into the chosen folder, copies
-`<Type>.vfp` straight to `<FolderName>.vfp` (no rename step — FB's `Name` fails silently, see
-Main.bi), then rewrites the manifest to strip the `<Type>/` path prefix, because the template's paths
-are relative to `Templates/Projects` and the copied files land at the top of the new project folder.
+**Verified by effect, end to end through the IDE (T14/T15 now PASS).** Created a Console project via
+New Project → compiled + linked it from the IDE ("Layout succeeded, Elapsed 0.06s") → the built exe
+prints single-byte ASCII (`Hello, world!` …), exit 0 — the BOM regression check. The New Project type
+list showed exactly the six-item whitelist. All six offered types compile (Console needs
+`-p <shim> -l tinfo` on the dev box until the AppImage ships `libncurses`). **No IDE rebuild was
+needed** — only template/doc data and a header that was never on the IDE's build path changed.
 
-**Design decisions already made (owner):**
-- No icons; a pick-only combo, matching Astoria's current dialog.
-- An explicit **whitelist**, not "everything in the folder": GUI Application (default), Console
-  Application, GTK Application, Dynamic Library, Static Library, Control Library. **Windows
-  Application, Android Project, Addin Project and Empty Project are deliberately not offered** —
-  a Win32 GUI app cannot work on this build. Their template files are still on disk; deleting them
-  is an open question.
-- Not ported from Astoria's current dialog: the Author and License fields, and its "no
-  auto-generated project name" rule. Ilwaco still pre-fills the first free `ProjectN`.
+Running that Console project also surfaced the terminal-launcher gap, now **fixed** — see the next
+section.
 
 ---
 
-## ⚠️ OPEN (2026-08-04) — the Console Application template does not build
+## ✅ DONE (2026-08-05) — Run's terminal launcher detects an installed terminal; Options gains it
 
-T14 (build a created project) ran: **GUI Application passes end to end** — compiles clean, window
-opens, caption renders correctly, which confirms the template BOM fix by effect. GTK Application and
-the three library templates also compile. **Console Application does not.** `mff/Console.bi` is
-Windows-only — 84 Win32 console calls, no Linux branch — and its `windows.bi` include drags in
-`-lkernel32/-lgdi32/-luser32/…`, so the link fails. Two genuine MFF bugs were found and fixed getting
-that far (`NoInterface.bi` missing its GTK include and the `DebugWindowHandle` declaration; that
-header is not on the IDE's own build path, so no rebuild was needed).
+Run used to shell out to `gnome-terminal` unconditionally, so on a box without it (this one has
+`xfce4-terminal`) a compiled program "did nothing" — `sh: gnome-terminal: not found`, no window. Fixed
+and verified end to end:
 
-**Nothing else in the repo includes `mff/Console.bi`** — no Example, no other template.
+- **`LoadSettings` (`src/Main.bas`)** seeds the nine terminals Ilwaco knows about — gnome-terminal,
+  konsole, xfce4-terminal, mate-terminal, lxterminal, terminator, terminology, qterminal, xterm — into
+  the list if absent, then, when the configured default is not on `PATH`, auto-picks the first
+  **installed** one. Any real terminal is preferred over `xterm` (xterm last). An installed default the
+  user has chosen is always kept, so the override sticks.
+- **`Settings/ilwaco.ini` `[Terminals]`** now ships all nine with correct keep-open args
+  (`xfce4-terminal --hold -x`, `konsole --hold -e`, `xterm -hold -e`, …), replacing the old
+  three-entry block whose `xterm` arg (`-bc`) was broken.
+- **Tools > Options > Terminals** gained **Installed** and **Default** columns (installed via
+  `g_find_program_in_path`; Default tracks the "Default Terminal" combo live through a new
+  `cboTerminal_Change` handler in `frmOptions`), and the dialog was widened (`810×640`) so those
+  columns show. The combo is the override control and lists all nine.
 
-**Decision (owner, 2026-08-04): rewrite the template in plain FreeBASIC** — `Print`/`Color`/`Locate`/
-`Input` all work natively on Linux, colours included — **and delete `mff/Console.bi` as dead Windows
-code** per the strip mantra. The rejected alternative was reimplementing `Console.bi` over ANSI
-escapes: a real feature port for a header nothing else uses.
-
-**NOT STARTED — deliberately deferred to a fresh session (owner, 2026-08-04),** to avoid beginning a
-multi-build change with little headroom left. Nothing about it has been touched: the template still
-includes `mff/Console.bi`, the header is still present, and the branding string is still in it.
+**Verified by effect:** the default auto-resolved to `xfce4-terminal`; the Options list showed all nine
+with `xfce4-terminal` marked Installed + Default; selecting `xterm` moved the Default mark live (and its
+blank Installed cell warned it is absent); and Run launched `"xfce4-terminal" --hold -x "…/Main"`, the
+program's greeting rendering in the held-open terminal. Detail in
+[TechnicalDebt.md](Documentation/TechnicalDebt.md) "Paid down 2026-08-05".
 
 ### Start here next session
 
-1. **Rewrite `Templates/Projects/Console Application/Main.bas`** in plain FreeBASIC — no
-   `mff/Console.bi`, no `mff/NoInterface.bi`. It should *print something* (the current template
-   prints nothing at all, which is why T14 needed a hand-added `Print` to have anything to check),
-   and its text must render as ASCII, not UTF-32 — that is the BOM regression check. Then **delete
-   `Controls/MyFbFramework/mff/Console.bi`** and add a `REMOVED_FEATURES` line in `Tools/DocCheck.py`.
-2. **The `.lng` startup error** — every GUI app built with Ilwaco prints `Open file failure! in
+1. **The `.lng` startup error** — every GUI app built with Ilwaco prints `Open file failure! in
    function Application.CurLanguage`, naming `Languages/<locale>.lng` beside the executable, though
    Ilwaco is English-only with `ML()` a passthrough. In `Controls/MyFbFramework/mff/Application.bas`
-   (`CurLanguage`). Needs an IDE + lib rebuild and re-verification.
-3. **Stale `VisualFBEditor` branding** in `Templates/Files/Form_3D.frm` (`.Text = "VisualFBEditor-3D"`);
-   the Console template's `Console.Title` string goes away with step 1.
-4. **Re-run TestPlan T14/T15** to close them out — create a Console project through the IDE, build it,
-   and check the output text.
-
-All four are detailed in [TechnicalDebt.md](Documentation/TechnicalDebt.md).
+   (`CurLanguage`). Needs an IDE + lib rebuild and re-verification. Detailed in
+   [TechnicalDebt.md](Documentation/TechnicalDebt.md).
 
 ---
 
@@ -124,7 +110,9 @@ how the fault address was recovered from a core dump with no debugger installed,
   crash was fixed. The Rename dialog's `InputBox` title/prompt were swapped and its default carried
   the `.vfp` extension into what becomes a folder name; both corrected, and MFF's `InputBox` gained a
   **Cancel** button (it offered only OK).
-  **Done + verified since:** `frmNewProject` — see the handoff section above. **Still to port:**
+  **Done + verified since:** `frmNewProject` (New Project dialog — see [HISTORY.md](HISTORY.md)) and
+  the Console Application template rewrite that made every offered project type build (T14/T15 PASS —
+  see the DONE section above). **Still to port:**
   `OpenProjectTemplate`/`Recent Project`; the Options panels
   (remove the "When the IDE starts" radio group, Code Editor grouping into Display/Completion/
   IntelliSense/History); and `Show Holiday Frame` → `Show Indent Guides`, which is a *feature* port

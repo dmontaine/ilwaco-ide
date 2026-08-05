@@ -11,6 +11,40 @@ for the classified port backlog, [Documentation/AstoriaParity.md](Documentation/
 
 ---
 
+## ✅ DONE (2026-08-04) — `frmNewProject` works end to end; the `FileCopy`/`UString` trap found
+
+New Project (`src/frmNewProject.{bi,frm}`, registered in `ilwaco.vfp`, included from `Main.bas`) is
+**verified creating projects on disk**: GUI Application → `Project1/` with `Main.frm` +
+`Project1.vfp`, Console Application → `Project2/` with `Main.bas`; the manifest's template path
+prefix is stripped (`*File=GUI Application/Main.frm` → `*File=Main.frm`), the offered name advances to
+the first free `ProjectN`, and the project opens with a populated tree.
+
+**What was wrong was not the dialog.** The previous session's *"Selected folder exists"* was the
+second press of OK; the real failure was an empty project folder and *"Could not create the
+project"*. Instrumenting the running IDE showed every path correct and both template files present —
+`FileCopy` simply returned 1 and copied nothing. **FreeBASIC's `FileCopy` takes `ZString Ptr`, so a
+`UString` argument binds through `UString.Cast() As Any Ptr` and the wide buffer is read as a narrow
+path, ending at the first zero byte.** `&` with a `UString` operand propagates it. All copies now go
+through a `FileCopy_(ByRef … As WString)` wrapper (`Main.bas`) and no raw `FileCopy` call remains, so
+it cannot recur — see CLAUDE.md's trap list, [TechnicalDebt.md](Documentation/TechnicalDebt.md), and
+[UpstreamFixes.md](Documentation/UpstreamFixes.md): `FolderCopy`'s GTK branch is upstream
+VisualFBEditor code, so **folder copying has never worked on that build**.
+
+**What the dialog does:** copies `Templates/Projects/<Type>/` into the chosen folder, copies
+`<Type>.vfp` straight to `<FolderName>.vfp` (no rename step — FB's `Name` fails silently, see
+Main.bi), then rewrites the manifest to strip the `<Type>/` path prefix, because the template's paths
+are relative to `Templates/Projects` and the copied files land at the top of the new project folder.
+
+**Design decisions already made (owner):**
+- No icons; a pick-only combo, matching Astoria's current dialog.
+- An explicit **whitelist**, not "everything in the folder": GUI Application (default), Console
+  Application, GTK Application, Dynamic Library, Static Library, Control Library. **Windows
+  Application, Android Project, Addin Project and Empty Project are deliberately not offered** —
+  a Win32 GUI app cannot work on this build. Their template files are still on disk; deleting them
+  is an open question.
+- Not ported from Astoria's current dialog: the Author and License fields, and its "no
+  auto-generated project name" rule. Ilwaco still pre-fills the first free `ProjectN`.
+
 ## ✅ DONE (2026-08-04) — project templates: BOM fix + default file renamed to `Main`
 
 **Every shipped template source began with a UTF-8 BOM**, which makes FreeBASIC compile string

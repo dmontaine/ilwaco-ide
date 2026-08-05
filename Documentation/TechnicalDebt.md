@@ -41,26 +41,45 @@ as the durable register:
   project name — confusing for a beginner.
   Ilwaco re-opens the correct file (Astoria's version silently re-opened nothing), but making the
   rename coherent means moving the `.vfp` and updating `ProjectName` inside it. Found 2026-08-04.
-- **`mff/Console.bi` is Windows-only, so the Console Application template cannot build.** 84 Win32
-  console-API calls (`GetStdHandle`, `SetConsoleTextAttribute`, …), no Linux branch anywhere, and its
-  `#include once "windows.bi"` drags in `-lkernel32/-lgdi32/-luser32/…` so the link fails outright.
-  Found 2026-08-04 by TestPlan T14. **Nothing else in the repo includes it** — not one Example, not
-  another template — so the realistic choices are to rewrite the template in plain FreeBASIC (whose
-  `Print`/`Color`/`Locate` work natively on Linux) and delete the header as dead Windows code, or to
-  reimplement `Console.bi` over ANSI escapes. **Decided (owner, 2026-08-04): the plain-FreeBASIC
-  rewrite plus deleting the header**, with execution deferred to a fresh session — see PROJECT_STATUS
-  "Start here next session". Until then a beginner picking "Console Application" gets a project that
-  will not build, which breaches the product standard.
 - **Every GUI app built with Ilwaco prints `Open file failure! in function Application.CurLanguage`
   at startup**, naming a `Languages/<locale>.lng` beside the executable. Ilwaco is English-only with
   `ML()` as a passthrough, so MFF should not be loading language files at all. Observed 2026-08-04
   running the GUI template's binary. User-visible in *every* program a student builds.
-- **Stale `VisualFBEditor` branding in shipped templates.** `Templates/Projects/Console
-  Application/Main.bas` sets `Console.Title = "VisualFBEditor - Console"` and
-  `Templates/Files/Form_3D.frm` sets `.Text = "VisualFBEditor-3D"` — both survive into user projects,
-  against the rebrand directive. Found 2026-08-04.
 - **AppImage packaging is unbuilt.** Read-only bundle + external writable Projects/Examples/Docs is
   the plan; still open.
+
+**Paid down 2026-08-05 — Run's terminal launcher defaulted to `gnome-terminal`, absent on many Linux
+boxes.** The shipped `[Terminals]` list held only gnome-terminal/mate-terminal/xterm (xterm with a
+broken `-bc`), and `DefaultTerminal=gnome-terminal`, so on a box without gnome-terminal (this one has
+`xfce4-terminal`) Run compiled and linked, then died `sh: gnome-terminal: not found` with no window —
+a beginner saw their program "do nothing". Fixed in `LoadSettings` (`src/Main.bas`): the nine terminals
+Ilwaco knows about (gnome-terminal, konsole, xfce4-terminal, mate-terminal, lxterminal, terminator,
+terminology, qterminal, xterm) are seeded into the list if missing, and when the configured default is
+not on `PATH` a new default is auto-picked from the first **installed** one — any real terminal
+preferred over `xterm` (xterm last). The shipped `Settings/ilwaco.ini` `[Terminals]` block now carries
+all nine with correct keep-open args (e.g. `xfce4-terminal --hold -x`). Tools > Options > Terminals
+gained **Installed** and **Default** columns (installed detected via `g_find_program_in_path`; the
+Default column tracks the "Default Terminal" combo live via a new `cboTerminal_Change` handler), and
+the dialog was widened to show them. Verified end to end: on this box the default auto-resolved to
+`xfce4-terminal`, Run launched `"xfce4-terminal" --hold -x "…/Main"`, and the program's output showed
+in the terminal held open. The user can override the default in that combo, including to a not-installed
+terminal (the Installed column then warns it is absent).
+
+**Paid down 2026-08-04 — the Console Application template could not build (Windows-only `Console.bi`).**
+The template pulled in MFF's `mff/Console.bi`, which was pure Win32 (84 console-API calls, no Linux
+branch, and a `windows.bi` include dragging in `-lkernel32/-lgdi32/-luser32/…`), so a beginner picking
+"Console Application" got a project that would not link. Nothing else in the repo included that header.
+Per the owner decision, the template was **rewritten in plain FreeBASIC** — `Print` for output and
+`Color` for colour, both native on Linux — and `mff/Console.bi` was **deleted** as dead Windows code
+(a `REMOVED_FEATURES` guard for `ConsoleType` was added to `Tools/DocCheck.py`). Verified by effect:
+the new `Templates/Projects/Console Application/Main.bas` compiles clean with the bundled `fbc` + shim
+and prints single-byte ASCII (the BOM regression check), no wide-literal garble.
+
+**Paid down 2026-08-04 — stale `VisualFBEditor` branding in shipped templates.** The Console template's
+`Console.Title = "VisualFBEditor - Console"` went away with the rewrite above, and
+`Templates/Files/Form_3D.frm`'s form caption was changed from `"VisualFBEditor-3D"` to `"Form1"`,
+matching the plain `Form.frm` template. (The remaining `VisualFBEditor` strings live only in the
+not-offered Windows templates — Android/Addin — whose deletion is a separate open question.)
 
 **Paid down 2026-08-04 — `FileCopy` silently copied nothing when handed a `UString`.** New Project
 created an empty folder and then reported *"Could not create the project"*. Every path involved was

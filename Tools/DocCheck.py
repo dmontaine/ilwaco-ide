@@ -83,6 +83,7 @@ REMOVED_FEATURES = [
     (r"\bDefault Debuggers\b",          "the Default Debuggers group (removed: Integrated engine only)"),
     (r"Integrated GDB Debugger",        "the GDB debugger engine (removed: Integrated engine only)"),
     (r"Limit debug to the directory",   "the Limit debug option (removed: it was never functional)"),
+    (r"\bConsoleType\b",                 "the MFF console wrapper (removed: Console.bi deleted; the Console template is plain FreeBASIC)"),
 ]
 
 # Files whose absence should be reported when a document still names them, written as an
