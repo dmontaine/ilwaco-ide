@@ -687,6 +687,11 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 	End Select
 End Sub
 
+'' Agent MCP command server implementation -- included here, last, so its handlers see
+'' every IDE symbol (project model, tabs, output pane). The declarations came in early via
+'' AgentPipe.bi (Main.bas), which is what frmMain_Show/frmMain_Close call.
+#include once "AgentPipe.bas"
+
 pApp->MainForm = @frmMain
 pApp->Run
 

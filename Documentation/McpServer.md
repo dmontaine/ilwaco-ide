@@ -53,11 +53,11 @@ MCP client  ──MCP/JSON-RPC over stdio──►  ilwaco-mcp  ──line-JSON 
 | Task | What | Status |
 | --- | --- | --- |
 | 0 | Socket + `g_idle_add` marshal skeleton + `ping` | **DONE + verified (2026-08-05)** |
-| 1 | Read-only tools: `get_status`, `list_files`, `read_file`, `get_active_file`, `get_build_output` | not started |
+| 1 | Read-only tools: `get_status`, `list_files`, `read_file`, `get_active_file`, `get_build_output` | **DONE + verified (2026-08-05)** |
 | 2 | The sidecar `ilwaco-mcp` (`AgentMcp.bas`), wired to Task 1 from a real MCP client | not started |
 | 3 | Mutations: `write_file`, `add_file`, `set_active_file_content`, `open_in_editor` + path guard | not started |
 | 4 | Build/run/errors: `build`, `syntax_check`, `run`, `get_errors` (async completion; save-dirty-first) | not started |
-| 5 | Project ops: `create_project` (plain template), `open_project` | not started |
+| 5 | Project ops: `create_project` (plain template); `open_project` **DONE (brought forward for Task 1 verification)** | partial |
 | 6 | Security/opt-in + packaging: Options toggle (default ON), INI key, ship `ilwaco-mcp`, setup doc | not started |
 | 7 | End-to-end verify: drive the create → build → read-errors → fix → run loop from a real MCP client | not started |
 | — | (later) `designer_list_controls` / `designer_double_click` — deferred by owner | deferred |
@@ -74,7 +74,39 @@ harmless `AppAddin`/`AppConsole` resource warnings.
 
 Wiring: [src/Main.bas](src/Main.bas) includes `AgentPipe.bi`, starts the listener in `frmMain_Show`
 (with a `--mcp-agent` guard that suppresses the New Project / Tip-of-the-Day startup modals for an
-agent-driven launch), and stops it in `frmMain_Close`.
+agent-driven launch), and stops it in `frmMain_Close`. The implementation (`AgentPipe.bas`) is
+included **late**, at the end of [src/ilwaco.bas](src/ilwaco.bas), because its handlers reference IDE
+symbols (`MainNode`, `TabPanels`, `txtOutput`, `ProjectElement`, …) that only exist after every
+`.bi`/`.bas` has been pulled in; `AgentPipe.bi` (Main.bas) carries just the declarations the startup
+hooks call.
+
+### Task 1 — DONE + verified (2026-08-05)
+
+`get_status`, `list_files`, `read_file`, `get_active_file`, `get_build_output`, plus `open_project`
+(brought forward from Task 5, because loading a project is what every project-scoped tool needs, and
+Ilwaco's command-line project-open does not populate `MainNode`). All handlers run on the UI thread via
+`g_idle_add`, reading the live project model:
+
+- **open project** = the global `MainNode` (its `Tag` is a `ProjectElement`); **active tab** =
+  `ptabCode->SelectedTab` cast to `TabWindow`; **full tab text** = `EditControl.Text`; **build output**
+  = `txtOutput.Text` (a `TextBox`).
+- **`list_files` walks the explorer tree** under `MainNode`, not `ProjectElement.Files` — the latter is
+  only rebuilt from the tree at compile time, so it is empty after a plain open.
+- **Path-traversal guard (security).** `read_file` resolves the client path and rejects anything
+  escaping the project folder. The first cut prefix-checked the raw `GetFullPath` result, which does
+  **not** collapse `..`, so `Project/../../etc/passwd` text-matched the project folder and leaked
+  outside files (verified: it returned `/etc/hostname`). Fixed with a lexical `..`/`.` normalizer
+  (`AgentNormalizePath`) applied before the containment check; re-verified that an absolute
+  `/etc/hostname`, a plain `..`-relative escape, and a project-anchored `..`-laden escape all return
+  `bad_path` with zero bytes, while absolute-in-project and relative-in-project reads (main `.frm`
+  6746 bytes; `.vfp` 1067 bytes) succeed.
+  Lexical only — a symlink inside the project could still point out; acceptable for the opt-in,
+  local, single-user model.
+
+Verified by effect against the live IDE: `open_project` a sample `.vfp` → `get_status`/`list_files`
+reflect it → `read_file` returns correct content → the five traversal probes above are all blocked.
+`get_active_file`'s happy path (a focused tab) waits on `open_in_editor` (Task 3); its no-tab error
+path is verified.
 
 ## Verification recipe
 

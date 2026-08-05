@@ -57,6 +57,9 @@ Dim Shared gCmdResult As JsonValue Ptr          '' owned; set by the UI thread o
 Dim Shared gCmdErrCode As String
 Dim Shared gCmdErrMsg As String
 
+'' Build-in-progress flag reported by get_status; the async build path (a later task) drives it.
+Dim Shared gAgentBuilding As Boolean
+
 '' ---------------------------------------------------------------- socket path
 
 '' Prefer the per-user runtime dir (auto-cleaned on logout); fall back to /tmp.
@@ -66,18 +69,230 @@ Private Function AgentSocketPath() As String
 	Return "/tmp/ilwaco-agent-" & Str(c_getuid()) & ".sock"
 End Function
 
+'' ---------------------------------------------------------------- IDE model helpers (UI thread)
+'' All of these run on the GTK UI thread (called from AgentDispatch), so touching
+'' controls and the project tree is safe. The IDE stores text as WString; the pipe
+'' speaks UTF-8, so ToUtf8/FromUtf8 (MFF) convert at the boundary.
+
+'' The open project's ProjectElement, or 0 if none is open. MainNode is the global
+'' project tree node; its Tag is an ExplorerElement that Is a ProjectElement.
+Private Function AgentProject() As ProjectElement Ptr
+	If MainNode = 0 OrElse MainNode->Tag = 0 Then Return 0
+	Dim As ExplorerElement Ptr ee = MainNode->Tag
+	If *ee Is ProjectElement Then Return Cast(ProjectElement Ptr, ee)
+	Return 0
+End Function
+
+'' The focused code editor tab, or 0 if none. ptabCode is the active code TabControl.
+Private Function AgentActiveTab() As TabWindow Ptr
+	If ptabCode = 0 Then Return 0
+	Return Cast(TabWindow Ptr, ptabCode->SelectedTab)
+End Function
+
+'' Collapse "." and ".." segments on an absolute Linux path -- LEXICALLY, no filesystem
+'' access. This is the load-bearing half of the containment guard: without it a path like
+'' ".../Project/../../etc/passwd" still text-starts with the project folder and would pass a
+'' naive prefix check while the OS resolves it outside. GetFullPath does NOT collapse "..",
+'' so we do it here. (Lexical only: a symlink inside the project could still point out; that
+'' residual matches the opt-in, local, single-user threat model.)
+Private Function AgentNormalizePath(ByRef p As UString) As UString
+	If Len(p) = 0 OrElse Left(p, 1) <> "/" Then Return p     '' only meaningful for absolute paths
+	Dim As UString segs(0 To 1023)
+	Dim As Integer cnt = 0
+	Dim As UString work = p & "/"                            '' sentinel so the last segment flushes
+	Dim As UString cur = ""
+	For i As Integer = 2 To Len(work)                        '' 1-based; skip the leading "/"
+		Dim As UString ch = Mid(work, i, 1)
+		If ch = "/" Then
+			If cur = "" OrElse cur = "." Then
+				'' skip empty ("//") and "."
+			ElseIf cur = ".." Then
+				If cnt > 0 Then cnt -= 1
+			ElseIf cnt <= UBound(segs) Then
+				segs(cnt) = cur : cnt += 1
+			End If
+			cur = ""
+		Else
+			cur &= ch
+		End If
+	Next
+	Dim As UString result = ""
+	For j As Integer = 0 To cnt - 1
+		result &= "/" & segs(j)
+	Next
+	If result = "" Then result = "/"
+	Return result
+End Function
+
+'' Resolve a client-supplied path (project-relative or absolute) and reject anything that
+'' escapes the open project's folder. Returns "" and sets err* on rejection. Linux paths are
+'' relative unless they start with "/"; containment is on the CANONICALIZED path.
+Private Function AgentResolveProjectPath(ByRef rawUtf8 As String, ByRef errCode As String, ByRef errMsg As String) As UString
+	errCode = "" : errMsg = ""
+	Dim As ProjectElement Ptr ppe = AgentProject()
+	If ppe = 0 Then errCode = "no_project" : errMsg = "No project is open." : Return ""
+	Dim As UString root = GetFolderName(WGet(ppe->FileName))   '' project folder, trailing slash, absolute
+	If root = "" Then errCode = "no_project" : errMsg = "Project folder not found." : Return ""
+	Dim As WString Ptr rawW = FromUtf8(StrPtr(rawUtf8))
+	Dim As UString candidate
+	If rawW <> 0 AndAlso Len(*rawW) > 0 AndAlso Left(*rawW, 1) = "/" Then
+		candidate = *rawW                                      '' absolute as given
+	Else
+		candidate = root & *rawW                               '' relative -> against the project folder
+	End If
+	If rawW <> 0 Then WDeAllocate(rawW)
+	Dim As UString nres = AgentNormalizePath(candidate)
+	Dim As UString nroot = AgentNormalizePath(root)            '' also strips the trailing slash
+	If (nres <> nroot) AndAlso (Left(nres, Len(nroot) + 1) <> nroot & "/") Then
+		errCode = "bad_path" : errMsg = "Path escapes the project folder: " & rawUtf8
+		Return ""
+	End If
+	Return nres
+End Function
+
+'' Read a whole file as raw bytes (UTF-8 on disk); strips a BOM if present. Empty on
+'' open failure -- callers check FileExists first to distinguish "missing" from "empty".
+Private Function AgentReadFileBytes(ByRef path As UString) As String
+	Dim As Integer fn = FreeFile_
+	If Open(path For Binary Access Read As #fn) <> 0 Then Return ""
+	Dim As LongInt sz = LOF(fn)
+	Dim As String buf
+	If sz > 0 Then
+		buf = String(sz, 0)
+		Get #fn, 1, buf
+	End If
+	Close #fn
+	If Len(buf) >= 3 AndAlso buf[0] = &HEF AndAlso buf[1] = &HBB AndAlso buf[2] = &HBF Then buf = Mid(buf, 4)
+	Return buf
+End Function
+
+'' ---------------------------------------------------------------- read-only handlers (UI thread)
+
+Private Function AgentCmdGetStatus() As JsonValue Ptr
+	Dim As JsonValue Ptr r = JsonNewObject()
+	Dim As ProjectElement Ptr ppe = AgentProject()
+	If ppe Then
+		r->SetMember("project", JsonNewString(ToUtf8(WGet(ppe->FileName))))
+		r->SetMember("main_file", JsonNewString(ToUtf8(WGet(ppe->MainFileName))))
+	Else
+		r->SetMember("project", JsonNewNull())
+		r->SetMember("main_file", JsonNewNull())
+	End If
+	Dim As JsonValue Ptr arr = JsonNewArray()
+	For j As Integer = 0 To TabPanels.Count - 1
+		Dim As TabPanel Ptr tp = Cast(TabPanel Ptr, TabPanels.Item(j))
+		If tp = 0 Then Continue For
+		Dim As TabControl Ptr tc = @tp->tabCode
+		For i As Integer = 0 To tc->TabCount - 1
+			Dim As TabWindow Ptr tb = Cast(TabWindow Ptr, tc->Tabs[i])
+			If tb Then arr->Append(JsonNewString(ToUtf8(tb->FileName)))
+		Next i
+	Next j
+	r->SetMember("open_files", arr)
+	r->SetMember("building", JsonNewBool(gAgentBuilding))
+	r->SetMember("running", JsonNewBool(False))
+	Return r
+End Function
+
+'' Collect every file under a project tree node into the JSON array. The explorer tree
+'' is the source of truth for the open project's files (ProjectElement.Files is only
+'' rebuilt from it at compile time). File nodes carry an ExplorerElement with a non-empty
+'' FileName; folder nodes carry none, so we recurse through them.
+Private Sub AgentCollectFiles(ByVal tn As TreeNode Ptr, ByVal arr As JsonValue Ptr, ByVal depth As Integer)
+	If tn = 0 OrElse depth > 8 Then Exit Sub
+	For j As Integer = 0 To tn->Nodes.Count - 1
+		Dim As TreeNode Ptr child = tn->Nodes.Item(j)
+		If child = 0 Then Continue For
+		Dim As ExplorerElement Ptr ee = child->Tag
+		If ee <> 0 AndAlso ee->FileName <> 0 AndAlso *ee->FileName <> "" Then
+			arr->Append(JsonNewString(ToUtf8(*ee->FileName)))
+		End If
+		If child->Nodes.Count > 0 Then AgentCollectFiles(child, arr, depth + 1)   '' folder node
+	Next j
+End Sub
+
+Private Function AgentCmdListFiles(ByRef ecode As String, ByRef emsg As String) As JsonValue Ptr
+	Dim As ProjectElement Ptr ppe = AgentProject()
+	If ppe = 0 Then ecode = "no_project" : emsg = "No project is open." : Return 0
+	Dim As JsonValue Ptr r = JsonNewObject()
+	Dim As JsonValue Ptr arr = JsonNewArray()
+	AgentCollectFiles(MainNode, arr, 0)
+	r->SetMember("files", arr)
+	r->SetMember("main_file", JsonNewString(ToUtf8(WGet(ppe->MainFileName))))
+	Return r
+End Function
+
+Private Function AgentCmdReadFile(ByVal args As JsonValue Ptr, ByRef ecode As String, ByRef emsg As String) As JsonValue Ptr
+	If args = 0 Then ecode = "bad_args" : emsg = "read_file requires { path }." : Return 0
+	Dim As String path = args->GetStr("path")
+	If path = "" Then ecode = "bad_args" : emsg = "read_file requires a path." : Return 0
+	Dim As UString resolved = AgentResolveProjectPath(path, ecode, emsg)
+	If ecode <> "" Then Return 0
+	If Not FileExists(resolved) Then ecode = "not_found" : emsg = "File not found: " & path : Return 0
+	Dim As JsonValue Ptr r = JsonNewObject()
+	r->SetMember("content", JsonNewString(AgentReadFileBytes(resolved)))
+	Return r
+End Function
+
+Private Function AgentCmdGetActiveFile(ByRef ecode As String, ByRef emsg As String) As JsonValue Ptr
+	Dim As TabWindow Ptr tb = AgentActiveTab()
+	If tb = 0 Then ecode = "no_active_file" : emsg = "No editor tab is focused." : Return 0
+	Dim As JsonValue Ptr r = JsonNewObject()
+	r->SetMember("path", JsonNewString(ToUtf8(tb->FileName)))
+	r->SetMember("content", JsonNewString(ToUtf8(tb->txtCode.Text)))
+	Return r
+End Function
+
+Private Function AgentCmdGetBuildOutput() As JsonValue Ptr
+	Dim As JsonValue Ptr r = JsonNewObject()
+	r->SetMember("text", JsonNewString(ToUtf8(txtOutput.Text)))
+	Return r
+End Function
+
+'' Open an existing .vfp project (brought forward from the project-ops task: it is the
+'' agent's mechanism for loading a project, and every project-scoped tool needs one open).
+'' OpenFiles routes a .vfp to AddProject, which sets MainNode; we assert that afterwards so
+'' a project that fails to load reports open_failed rather than a misleading success.
+Private Function AgentCmdOpenProject(ByVal args As JsonValue Ptr, ByRef ecode As String, ByRef emsg As String) As JsonValue Ptr
+	If args = 0 Then ecode = "bad_args" : emsg = "open_project requires { path }." : Return 0
+	Dim As String path = args->GetStr("path")
+	If path = "" Then ecode = "bad_args" : emsg = "open_project requires a path." : Return 0
+	Dim As WString Ptr pw = FromUtf8(StrPtr(path))
+	Dim As UString vfp = GetFullPath(*pw)
+	If pw <> 0 Then WDeAllocate(pw)
+	If LCase(Right(vfp, 4)) <> ".vfp" Then ecode = "bad_args" : emsg = "Not a .vfp project file: " & path : Return 0
+	If Not FileExists(vfp) Then ecode = "not_found" : emsg = "Project file not found: " & path : Return 0
+	OpenFiles vfp
+	Dim As ProjectElement Ptr ppe = AgentProject()
+	If ppe = 0 Then ecode = "open_failed" : emsg = "Project did not load: " & path : Return 0
+	Dim As JsonValue Ptr r = JsonNewObject()
+	r->SetMember("project", JsonNewString(ToUtf8(WGet(ppe->FileName))))
+	r->SetMember("main_file", JsonNewString(ToUtf8(WGet(ppe->MainFileName))))
+	Return r
+End Function
+
 '' ---------------------------------------------------------------- command dispatch (UI thread)
 
-'' Runs the mapped command on the GTK UI thread. Task 0 knows only `ping`; later
-'' tasks add the read-only, mutation, build/run and project handlers here.
+'' Runs the mapped command on the GTK UI thread. Read-only surface so far; later
+'' tasks add the mutation, build/run and project handlers here.
 Private Sub AgentDispatch(ByRef cmd As String, ByVal args As JsonValue Ptr, _
 		ByRef ok As Boolean, ByRef res As JsonValue Ptr, ByRef ecode As String, ByRef emsg As String)
 	ok = False : res = 0 : ecode = "" : emsg = ""
 	Select Case cmd
 	Case "ping"
-		ok = True
-		res = JsonNewObject()
-		res->SetMember("pong", JsonNewBool(True))
+		res = JsonNewObject() : res->SetMember("pong", JsonNewBool(True)) : ok = True
+	Case "get_status"
+		res = AgentCmdGetStatus() : ok = True
+	Case "list_files"
+		res = AgentCmdListFiles(ecode, emsg) : ok = (res <> 0)
+	Case "read_file"
+		res = AgentCmdReadFile(args, ecode, emsg) : ok = (res <> 0)
+	Case "get_active_file"
+		res = AgentCmdGetActiveFile(ecode, emsg) : ok = (res <> 0)
+	Case "get_build_output"
+		res = AgentCmdGetBuildOutput() : ok = True
+	Case "open_project"
+		res = AgentCmdOpenProject(args, ecode, emsg) : ok = (res <> 0)
 	Case Else
 		ecode = "unknown_cmd" : emsg = "Unknown command: " & cmd
 	End Select

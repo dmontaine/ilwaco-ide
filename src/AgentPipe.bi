@@ -32,4 +32,7 @@ Declare Function AgentPipeActive() As Boolean
 '' and the worker waits on it, so a prompt nobody can answer stalls the agent.
 Declare Function AgentClientConnected() As Boolean
 
-#include once "AgentPipe.bas"
+'' NOTE: the implementation (AgentPipe.bas) is included LATE, at the end of ilwaco.bas,
+'' because its command handlers reference IDE symbols (MainNode, TabPanels, txtOutput,
+'' ProjectElement, ...) that are only defined once every .bi/.bas has been pulled in.
+'' This header carries just the declarations so frmMain_Show/frmMain_Close can call them.

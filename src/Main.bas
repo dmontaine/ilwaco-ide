@@ -37,7 +37,7 @@
 #include once "mff/HTTP.bi"
 #include once "fbthread.bi"
 #include once "vbcompat.bi"
-#include once "AgentPipe.bi"   ' Agent MCP command server (Unix socket + g_idle_add marshal)
+#include once "AgentPipe.bi"   ' Agent MCP server -- declarations only; impl included late in ilwaco.bas
 
 Using My.Sys.Forms
 Using My.Sys.Drawing
