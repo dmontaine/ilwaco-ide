@@ -119,7 +119,36 @@ Ilwaco rewrites** (Astoria's shipped as Windows-process and would be *wrong* her
   sections accumulate, so this stays a regular habit.
 - **Finish the whole job, not the code.** A change is done when it builds, its effect has been
   observed, PROJECT_STATUS + AstoriaParity match it, and `DocCheck` is green.
-- **Commit and push only when asked.**
+
+## Git sync — this repo is worked on from multiple sandboxes that reconcile ONLY through `origin`
+
+Each session runs in its own snapshot/VM copy of the repo; GitHub `origin` is the only shared state.
+A session once started against a 2-day-stale snapshot and unknowingly redid a full day of already-pushed
+work. So:
+
+- **Pull at the start of every session.** A `SessionStart` hook in the committed `.claude/settings.json`
+  runs `git pull --ff-only`. If it didn't run (added mid-session, or a fresh checkout), `git fetch &&
+  git status` and reconcile **before** doing any work — never assume `local == origin`.
+- **Push only on the owner's signal — never after every commit or on your own initiative.** The signals:
+  **end of every major task** (owner asks); **end of session**, phrased **"document, commit, push"** — do
+  all three in order (update PROJECT_STATUS / affected docs, commit, push); and as a **fallback**, if the
+  owner says they've **run out of credits** or that a **handoff** is happening, push then too. Before any
+  push, `git fetch` and confirm a clean fast-forward (`git merge-base --is-ancestor origin/main HEAD`).
+- **Commit** to capture completed, verified work is fine (it doesn't touch `origin`); the *push* is what
+  waits for the signal.
+
+## Working practices — delegation & build verification
+
+- **Delegate mechanical work to a Sonnet subagent** (Agent tool, `model: "sonnet"`) to save the owner's
+  credits — standing authorization on this hobby project. Keep *judgment* on Opus (scope against Astoria's
+  final state, map the full reference set, make product calls); hand Sonnet a *precise, pre-specified* edit
+  set with exact files/lines. **The worker never runs the build — it returns to Opus for compilation**
+  (the Linux toolchain shim is non-trivial to load; **retain the shim, never delete it**).
+- **Build-verify without false "green":** run `./build-linux.sh …` from the repo root **in-line** (the
+  Bash tool's cwd persists between calls) and capture `$?` from a redirect — `> log 2>&1; echo $?` — never
+  from a `… | tail`/`grep` pipe, whose exit code masks a build failure. The whole-program compile is
+  ~3–4 min: background it. **Don't `pkill -f ilwaco`** (it self-matches the caller) — use `pkill -x ilwaco`
+  or kill by PID; `git checkout Settings/` after any launch (the IDE writes session state on exit).
 
 ## Product standard
 
