@@ -57,7 +57,7 @@ MCP client  ──MCP/JSON-RPC over stdio──►  ilwaco-mcp  ──line-JSON 
 | 2 | The sidecar `ilwaco-mcp` (`AgentMcp.bas`), wired to Task 1 from a real MCP client | **DONE + verified (2026-08-05)** |
 | 3 | Mutations: `write_file`, `add_file`, `set_active_file_content`, `open_in_editor` + path guard | **DONE + verified (2026-08-05)** |
 | 4 | Build/run/errors: `build`, `syntax_check`, `run`, `get_errors` (async completion; save-dirty-first) | **DONE + verified (2026-08-06)** |
-| 5 | Project ops: `create_project` (plain template); `open_project` **DONE (brought forward for Task 1 verification)** | partial |
+| 5 | Project ops: `create_project` (plain template); `open_project` **DONE (brought forward for Task 1 verification)** | **DONE + verified (2026-08-06)** |
 | 6 | Security/opt-in + packaging: Options toggle (default ON), INI key, ship `ilwaco-mcp`, setup doc | not started |
 | 7 | End-to-end verify: drive the create → build → read-errors → fix → run loop from a real MCP client | not started |
 | — | (later) `designer_list_controls` / `designer_double_click` — deferred by owner | deferred |
@@ -201,6 +201,44 @@ same. No `DebugInfo.log`, clean shutdown.
 - **Pre-existing MFF noise:** when the Problems ListView is drawn with items, MFF's column iteration
   reads one past the end and prints `List.Item … Out of Index boundary. Index = 3 of 3` to stderr
   (benign, `List.bas:41` returns 0). Render-only; not from the agent path. Fix belongs in MFF ListView.
+
+### Task 5 — DONE + verified (2026-08-06)
+
+`create_project` (`open_project` was already done, brought forward for Task 1). `AgentCmdCreateProject`
+in [src/AgentPipe.bas](src/AgentPipe.bas) mirrors the New Project dialog's proven copy flow
+(`frmNewProject.frm`) so the two paths stay in step:
+
+- Args `{ name, template? }` (`template` default "Console Application"). `name` must be a **bare** folder
+  name — no `/`, `\`, or `..` — so it can only land under `ProjectsPath`.
+- `Templates/Projects/<Template>.vfp` is the manifest; `Templates/Projects/<Template>/` holds its files.
+  `FolderCopy` flattens the template folder into the new project folder; the manifest's `<Template>/…`
+  path prefixes are then stripped (`Replace`), and it's written as `<name>.vfp` beside the files. Reuses
+  `AgentReadFileBytes`/`AgentWriteFileBytes`, so the written `.vfp` is **BOM-less** (verified).
+- Errors: `bad_args` (missing/path-y name, unknown template), `exists` (folder present), `write_failed`,
+  `open_failed`.
+
+**Bug found & fixed — a create/open while another project is open must switch the active project.**
+`AddProject` only auto-sets `MainNode` **when none is open** (`Main.bas:1282` `If MainNode = 0 Then
+SetMainNode tn`), so opening a second project left the *first* one "main" and `AgentProject()` (hence
+every project-scoped tool and the returned `project`) kept pointing at it. Fixed with a shared helper
+**`AgentOpenProjectNode`** (`AddProject` + **`SetMainNode`** + `WLet(RecentProject,…)` — everything
+`OpenFiles`' `.vfp` branch does, plus the `SetMainNode`); **both `create_project` and `open_project`**
+now use it. Verified: creating a 2nd project switches `get_status` to it.
+
+**AI extension point (deferred, not dropped):** where Astoria's `create_project` stamps AI-friendliness
+(`AIFriendly`/`AITool` + the AI template), Ilwaco has a marked comment. Ilwaco's AI features are coming
+back later (owner, 2026-08-06); when they land, this handler and `frmNewProject` should stamp the same
+keys so the two creation paths never drift.
+
+**Verified by effect** over the socket: `create_project` (default Console template) → `{project,
+main_file}`; `get_status`/`list_files`/`read_file` reflect it; `syntax_check` on the created project
+`success=true`; the three error paths return the right codes; a second `create_project` switches the
+active project. No `DebugInfo.log`.
+
+**Pre-existing issue surfaced (not Task 5, tracked separately):** project `.vfp` files get a UTF-8 **BOM**
+from the IDE's `SaveProjectFile` (`Open … For Output Encoding "utf-8"`, `Main.bas:2048/2058`) and from the
+template `.vfp` files themselves — violating the no-BOM directive. `create_project` writes BOM-less, but
+the first `SaveProject` re-adds it. Fix belongs in the project writer + template data.
 
 ### Notes for the next session (facts learned this session)
 

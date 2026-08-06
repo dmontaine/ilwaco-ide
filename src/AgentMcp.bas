@@ -198,7 +198,7 @@ Type McpTool
 	schema As String     '' inputSchema (JSON Schema), embedded verbatim
 End Type
 
-Dim Shared gTools(0 To 13) As McpTool
+Dim Shared gTools(0 To 14) As McpTool
 
 Sub InitTools()
 	Dim As String noArgs = "{""type"":""object"",""properties"":{}}"
@@ -245,6 +245,9 @@ Sub InitTools()
 	gTools(13).name = "get_errors"
 	gTools(13).description = "Get the structured diagnostics from the most recent build: a list of {severity, message, file, line} plus error/warning counts."
 	gTools(13).schema = noArgs
+	gTools(14).name = "create_project"
+	gTools(14).description = "Create a new project from a template under the configured Projects folder and open it. The project is named after its folder."
+	gTools(14).schema = "{""type"":""object"",""properties"":{""name"":{""type"":""string"",""description"":""Project name (also the folder name); no path or extension.""},""template"":{""type"":""string"",""enum"":[""Console Application"",""GTK Application"",""GUI Application"",""Dynamic Library"",""Static Library"",""Control Library""],""description"":""Default Console Application.""}},""required"":[""name""]}"
 End Sub
 
 Function ToolsListJson() As String

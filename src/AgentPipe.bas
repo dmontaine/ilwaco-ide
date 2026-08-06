@@ -293,6 +293,19 @@ Private Function AgentCmdGetBuildOutput() As JsonValue Ptr
 	Return r
 End Function
 
+'' Add a .vfp to the explorer, make it the active (main) project, and track it as recent -- what
+'' OpenFiles' .vfp branch does (AddProject + RecentProject) PLUS SetMainNode. AddProject only
+'' auto-sets MainNode when none is open, so without the SetMainNode a create/open while another
+'' project is already open would leave the OLD project "main" and every project-scoped tool would
+'' keep acting on it. Returns the new project node, or 0 if it did not load. UI thread.
+Private Function AgentOpenProjectNode(ByRef vfp As UString) As TreeNode Ptr
+	Dim As TreeNode Ptr ptn = AddProject(vfp)
+	If ptn = 0 Then Return 0
+	SetMainNode ptn
+	WLet(RecentProject, vfp)
+	Return ptn
+End Function
+
 '' Open an existing .vfp project (brought forward from the project-ops task: it is the
 '' agent's mechanism for loading a project, and every project-scoped tool needs one open).
 '' OpenFiles routes a .vfp to AddProject, which sets MainNode; we assert that afterwards so
@@ -306,9 +319,64 @@ Private Function AgentCmdOpenProject(ByVal args As JsonValue Ptr, ByRef ecode As
 	If pw <> 0 Then WDeAllocate(pw)
 	If LCase(Right(vfp, 4)) <> ".vfp" Then ecode = "bad_args" : emsg = "Not a .vfp project file: " & path : Return 0
 	If Not FileExists(vfp) Then ecode = "not_found" : emsg = "Project file not found: " & path : Return 0
-	OpenFiles vfp
+	If AgentOpenProjectNode(vfp) = 0 Then ecode = "open_failed" : emsg = "Project did not load: " & path : Return 0
 	Dim As ProjectElement Ptr ppe = AgentProject()
 	If ppe = 0 Then ecode = "open_failed" : emsg = "Project did not load: " & path : Return 0
+	Dim As JsonValue Ptr r = JsonNewObject()
+	r->SetMember("project", JsonNewString(ToUtf8(WGet(ppe->FileName))))
+	r->SetMember("main_file", JsonNewString(ToUtf8(WGet(ppe->MainFileName))))
+	Return r
+End Function
+
+'' Create a new project from a template under ProjectsPath, then open it. Headless equivalent of
+'' the New Project dialog (frmNewProject.frm), mirroring its copy flow so the two paths stay in step:
+''   Templates/Projects/<Template>.vfp is the manifest; Templates/Projects/<Template>/ holds its files.
+'' FolderCopy flattens the template folder into the new project folder, so the manifest's
+'' "<Template>/…" path prefixes are stripped. The project is named after its folder.
+'' AI EXTENSION POINT: when Ilwaco's AI features return, this is where the "Make project AI friendly"
+'' stamping goes (AIFriendly/AITool keys + the AI template), matching what the dialog will write. It is
+'' deferred, not dropped -- keep this handler and frmNewProject writing the same keys so they never drift.
+Private Function AgentCmdCreateProject(ByVal args As JsonValue Ptr, ByRef ecode As String, ByRef emsg As String) As JsonValue Ptr
+	If args = 0 Then ecode = "bad_args" : emsg = "create_project requires { name }." : Return 0
+	Dim As String nm = Trim(args->GetStr("name"))
+	If nm = "" Then ecode = "bad_args" : emsg = "create_project requires a name." : Return 0
+	'' The name is a bare folder name: no path separators, no "..", so it can only land under ProjectsPath.
+	If InStr(nm, "/") > 0 OrElse InStr(nm, "\") > 0 OrElse InStr(nm, "..") > 0 Then
+		ecode = "bad_args" : emsg = "Project name must be a bare name, not a path." : Return 0
+	End If
+	Dim As String template = Trim(args->GetStr("template", "Console Application"))
+	If template = "" Then template = "Console Application"
+
+	Dim As UString templatesDir = ExePath & Slash & "Templates" & Slash & "Projects" & Slash
+	Dim As UString templateFolder = templatesDir & template
+	Dim As UString templateVfp = templatesDir & template & ".vfp"
+	If Not FileExists(templateVfp) Then ecode = "bad_args" : emsg = "Unknown project template: " & template : Return 0
+
+	Dim As UString projectsRoot = GetFullPath(*ProjectsPath)
+	If Not FolderExists(projectsRoot) Then MkDir projectsRoot     '' first project on a fresh install
+	Dim As UString newFolder = GetFullPath(*ProjectsPath & Slash & nm)
+	If FolderExists(newFolder) Then ecode = "exists" : emsg = "A project folder named '" & nm & "' already exists." : Return 0
+
+	'' Copy the template's files (if it ships a folder), then its manifest to <name>.vfp beside them.
+	If FolderExists(templateFolder) Then
+		FolderCopy(templateFolder, newFolder)
+	Else
+		MkDir newFolder
+	End If
+	If Not FolderExists(newFolder) Then ecode = "write_failed" : emsg = "Could not create the project folder." : Return 0
+	Dim As UString newVfp = newFolder & Slash & GetFileName(newFolder) & ".vfp"
+	FileCopy_(templateVfp, newVfp)
+	If Not FileExists(newVfp) Then ecode = "write_failed" : emsg = "Could not create the project file." : Return 0
+
+	'' Strip the "<Template>/" prefix FolderCopy flattened away, or the manifest points at nothing.
+	Dim As String manifest = AgentReadFileBytes(newVfp)
+	manifest = Replace(manifest, template & Slash, "")
+	If Not AgentWriteFileBytes(newVfp, manifest) Then ecode = "write_failed" : emsg = "Could not write the project file." : Return 0
+
+	'' Open it and make it the active project (same helper open_project uses).
+	If AgentOpenProjectNode(newVfp) = 0 Then ecode = "open_failed" : emsg = "Project created but did not load: " & nm : Return 0
+	Dim As ProjectElement Ptr ppe = AgentProject()
+	If ppe = 0 Then ecode = "open_failed" : emsg = "Project created but did not load: " & nm : Return 0
 	Dim As JsonValue Ptr r = JsonNewObject()
 	r->SetMember("project", JsonNewString(ToUtf8(WGet(ppe->FileName))))
 	r->SetMember("main_file", JsonNewString(ToUtf8(WGet(ppe->MainFileName))))
@@ -522,6 +590,8 @@ Private Sub AgentDispatch(ByRef cmd As String, ByVal args As JsonValue Ptr, _
 		res = AgentCmdGetBuildOutput() : ok = True
 	Case "open_project"
 		res = AgentCmdOpenProject(args, ecode, emsg) : ok = (res <> 0)
+	Case "create_project"
+		res = AgentCmdCreateProject(args, ecode, emsg) : ok = (res <> 0)
 	Case "write_file"
 		res = AgentCmdWriteFile(args, ecode, emsg) : ok = (res <> 0)
 	Case "add_file"
