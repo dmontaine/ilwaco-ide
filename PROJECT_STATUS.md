@@ -22,7 +22,9 @@ CLAUDE.md "Working practices".
 
 ---
 
-## ✅ DONE (2026-08-06) — MCP Task 6: the agent listener is opt-out, visible, and documented
+## ✅ DONE (2026-08-06) — MCP Tasks 6 + 7: the agent server is finished, opt-in, and proven end to end
+
+### Task 6 — the listener is opt-out, visible, and documented
 
 The Agent MCP server stopped being a thing only we knew how to switch on. Five pieces, all live-verified:
 
@@ -52,17 +54,38 @@ full `initialize` → `tools/list` (**15 tools**) → `tools/call get_status` ro
 restart with the key false binds nothing at startup. Both closes exited 139 — the known intermittent
 shutdown SIGSEGV, which also fired on the run where the listener was never started.
 
+### Task 7 — the whole loop, driven by a real MCP client
+
+`create_project` → `write_file` (broken) → `build` → `get_errors` → `write_file` (fixed) → `build` →
+`run`, driven from one long-lived `ilwaco-mcp` process over its stdio **with no IDE running beforehand**.
+20 checks, all pass: the sidecar auto-launched exactly one IDE; a sieve of Eratosthenes with a deliberate
+typo built to `success=false, error_count=1` with `Variable not declared, composit in 'composit(j) = 1'`
+at **line 10**; `get_errors` matched byte for byte; the one-character fix rebuilt clean; the executable
+printed **`Primes below 1000000 = 78498`**, exit 0.
+
+**A real bug fell out: `run` never returned.** `Compile("Run")` calls `RunPr`, whose `Shell()` is
+synchronous — and every terminal Ilwaco ships stays open (`--hold`), so it blocked forever and the agent's
+request hung (the first attempt burned a 10-minute timeout). The agent path now builds plainly and
+`AgentBuildFinalize` launches the program with `ThreadCreate_(@RunProgram)` — the same call the Run menu
+makes — when the build is clean, then completes the slot. `run` returns in **0.1 s**. Details in
+TechnicalDebt "Paid down 2026-08-06".
+
+**Found, not ours, but it matters:** the terminal Run opens shows **no program output** on this box —
+`xfce4-terminal --hold -x /bin/echo TEST` reproduces it with no IDE involved (so does `-e`/`--command`),
+while a plain `xfce4-terminal` renders fine. The program runs and exits 0; the user just sees an empty
+window. This supersedes the 2026-08-05 "greeting rendered in the held-open terminal" observation. Tracked
+in TechnicalDebt "Known gaps"; settle it before the testing phase.
+
 ### Start here next session
 
-**Resume the MCP thread at Task 7** — the end-to-end loop from a real MCP client: create a project →
-build → read errors → fix → run, asserted against a program with a known answer (McpServer.md suggests
-primes below 1,000,000 = 78498). Tasks 0–6 are DONE and verified; the designer tools stay deferred.
-Known v1 limits (shutdown-during-build hang, locationless linker errors) and a spawned side-task
-(project `.vfp` BOMs from `SaveProject` and the template data) are in
-[Documentation/McpServer.md](Documentation/McpServer.md).
+**The Agent MCP server is COMPLETE** — Tasks 0–7 all done and verified; only the `designer_*` tools stay
+deferred (owner). So the active thread returns to the **Astoria→Ilwaco changelog walk**: the
+menu-taxonomy / Options-panel cluster below (`OpenProjectTemplate`/`Recent Project`, the Options-panel
+restructure, `Show Holiday Frame` → `Show Indent Guides`), plus the deferred Examples BOM sweep.
 
-Secondary (only if the MCP thread stalls): the **Astoria→Ilwaco changelog walk** — the menu-taxonomy /
-Options-panel cluster below, plus the deferred Examples BOM sweep.
+Two things worth doing before the testing phase, both in TechnicalDebt "Known gaps": the **blank-terminal
+finding** above (a beginner pressing Run would see an empty window), and the **project `.vfp` BOMs** written
+by `SaveProjectFile` and carried by the template `.vfp` data, which violate the no-BOM directive.
 
 ---
 
@@ -101,17 +124,17 @@ prints nothing), then the lib **and** editor were rebuilt. Both fixes are detail
 
 ---
 
-## IN FLIGHT — Agent MCP server
+## COMPLETE — Agent MCP server (Tasks 0–7)
 
-Port Astoria's Agent MCP server to Linux/GTK so an MCP client can drive the live IDE. Design, the three
-Win32→Linux substitutions, the owner decisions, and the Task 0–7 progress table live in
-[Documentation/McpServer.md](Documentation/McpServer.md). **Tasks 0–6 verified end-to-end:** a real MCP
-client → `ilwaco-mcp` sidecar → Unix socket → live IDE, auto-launching the IDE, running the read-only,
-project (`open_project`/`create_project`), mutation, and **build/run/errors** tools against an opened
-project, with the project-root path guard blocking `..` escapes — and the listener now gated by the
-Tools ▸ Options opt-in (default ON) with its state in the status bar, set up for a user by
-[Documentation/AgentMcpSetup.md](Documentation/AgentMcpSetup.md). **Next: Task 7** (the end-to-end
-create → build → fix → run loop). Read the McpServer.md task narratives before starting a task.
+Astoria's Agent MCP server is ported to Linux/GTK and finished: a real MCP client → `ilwaco-mcp` sidecar →
+Unix socket → the live IDE, auto-launching it, with the read-only, project (`open_project`/`create_project`),
+mutation and build/run/errors tools all verified against a real project, the project-root path guard blocking
+`..` escapes, the listener gated by the Tools ▸ Options opt-in (default ON) with its state in the status bar,
+and the whole create → build → fix → run loop driven end to end. Design, the three Win32→Linux substitutions,
+the owner decisions, the per-task narratives and the v1 limits are in
+[Documentation/McpServer.md](Documentation/McpServer.md); the user-facing setup is
+[Documentation/AgentMcpSetup.md](Documentation/AgentMcpSetup.md). Only the `designer_*` tools remain deferred
+(owner) — revisit as Ilwaco's designer matures.
 
 ---
 

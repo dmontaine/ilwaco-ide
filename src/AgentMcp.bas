@@ -240,7 +240,7 @@ Sub InitTools()
 	gTools(11).description = "Syntax-check the open project (compile with -c, no executable) and wait for it to finish. Returns success plus error/warning counts and the diagnostics list."
 	gTools(11).schema = noArgs
 	gTools(12).name = "run"
-	gTools(12).description = "Build the open project and, if it succeeds, run it in a terminal. Waits for the build to finish; returns success plus error/warning counts and the diagnostics list."
+	gTools(12).description = "Build the open project and, if it succeeds, launch it in a terminal. Waits for the build, not for the program: it returns as soon as the program has been started, with the build's success plus error/warning counts and the diagnostics list. The program's own output appears in its terminal window, not in this reply."
 	gTools(12).schema = noArgs
 	gTools(13).name = "get_errors"
 	gTools(13).description = "Get the structured diagnostics from the most recent build: a list of {severity, message, file, line} plus error/warning counts."

@@ -1,6 +1,6 @@
 # Agent MCP server — design & progress (Ilwaco, Linux/GTK)
 
-Ilwaco is gaining an **Agent MCP server**: a small console sidecar (`ilwaco-mcp`) that speaks MCP /
+Ilwaco has an **Agent MCP server** (Tasks 0–7 complete, 2026-08-06): a small console sidecar (`ilwaco-mcp`) that speaks MCP /
 JSON-RPC 2.0 over stdio to an MCP client (Claude Code/Desktop) and forwards each `tools/call` to the
 running IDE over a **local Unix-domain socket**. Inside the IDE, a worker thread marshals each command
 onto the GTK UI thread and runs the *same* code the menus call — letting an agent drive the live IDE:
@@ -59,7 +59,7 @@ MCP client  ──MCP/JSON-RPC over stdio──►  ilwaco-mcp  ──line-JSON 
 | 4 | Build/run/errors: `build`, `syntax_check`, `run`, `get_errors` (async completion; save-dirty-first) | **DONE + verified (2026-08-06)** |
 | 5 | Project ops: `create_project` (plain template); `open_project` **DONE (brought forward for Task 1 verification)** | **DONE + verified (2026-08-06)** |
 | 6 | Security/opt-in + packaging: Options toggle (default ON), INI key, ship `ilwaco-mcp`, setup doc | **DONE + verified (2026-08-06)** |
-| 7 | End-to-end verify: drive the create → build → read-errors → fix → run loop from a real MCP client | not started |
+| 7 | End-to-end verify: drive the create → build → read-errors → fix → run loop from a real MCP client | **DONE + verified (2026-08-06)** |
 | — | (later) `designer_list_controls` / `designer_double_click` — deferred by owner | deferred |
 
 ### Task 0 — DONE + verified (2026-08-05)
@@ -278,6 +278,51 @@ screenshots + the socket):
 Both window-closes during this run exited 139 — the known intermittent shutdown SIGSEGV, not an
 agent regression: it also fired on the run where the listener was never started, and `StopAgentPipe`
 had already removed the socket in the run where it was.
+
+### Task 7 — DONE + verified (2026-08-06)
+
+The whole loop was driven from a real MCP client — one long-lived `ilwaco-mcp` process, newline-delimited
+JSON-RPC 2.0 over its stdio, **with no IDE running beforehand** — asserting 20 checks. All pass:
+
+| Step | Result |
+| --- | --- |
+| `initialize` → `serverInfo.name = ilwaco-ide`; `tools/list` → **15 tools** | PASS |
+| `create_project` (Console Application) → **auto-launched exactly one IDE** (0 processes before, 1 after, 1.6 s) and returned `{project, main_file}` | PASS |
+| `write_file` a sieve-of-Eratosthenes `Main.bas` carrying a deliberate typo (`composit`) | PASS |
+| `build` → `success=false, error_count=1`, and the diagnostic is structured and *precise*: `Variable not declared, composit in 'composit(j) = 1'`, **line 10** | PASS |
+| `get_errors` → byte-identical to the build's `errors` | PASS |
+| `write_file` the one-character fix → `build` → `success=true, error_count=0` | PASS |
+| the produced executable prints **`Primes below 1000000 = 78498`**, exit 0 | PASS |
+| `run` → returns in **0.1 s** with the build result, program launched in its own terminal window | PASS |
+| `get_status` / `list_files` reflect the created project throughout | PASS |
+
+**Bug found and fixed — `run` never returned.** `AgentStartBuild` mapped the command to `Compile("Run")`,
+and `Compile`'s Run branch calls `RunPr`, whose `Result = Shell(CommandLine)` is **synchronous**: it blocks
+until the launched program's terminal closes. With a keep-open terminal (`--hold`) that is *never*, so the
+build thread never returned, the finalizer never ran, and the agent's request hung forever (the first Task 7
+run burned a 10-minute timeout on exactly this). For a human this shape is right — Run is on its own thread
+and the Output panel prints "Application finished. Returned code" when the program ends — but the agent's
+`run` has to complete when the program *starts*. So the agent path now builds plainly (`Compile("")`) and
+**`AgentBuildFinalize` launches the program with `ThreadCreate_(@RunProgram)` — exactly what the Run menu
+item does — when the build came back clean**, then completes the slot. New flag `gAgentRunAfterBuild`
+replaces the `"Run"` compile parameter; the sidecar's `run` description now says it waits for the build, not
+for the program.
+
+**Environment finding, not an Ilwaco defect: the launched terminal shows no program output on this box.**
+The window opens and the child exits 0 ("The child process exited normally with status 0"), but its content
+area is blank. It reproduces with **`xfce4-terminal --hold -x /bin/echo TEST`** — no Ilwaco involved — and
+equally with `-e` and `--command`, while a plain `xfce4-terminal` *and* `xfce4-terminal --hold` render text
+normally; the child's output does not reach the parent's stdout either. So it is this xfce4-terminal (1.1.4,
+Xfce 4.20) spawning a command, not the IDE's argument choice. It does mean the 2026-08-05 observation
+("the greeting rendered in the held-open terminal") no longer reproduces here — tracked in
+[TechnicalDebt.md](TechnicalDebt.md); worth settling before the testing phase, since a user pressing Run
+would see an empty window.
+
+**Dev-box note:** the loop was run with the vendored shim added to the *global* compiler arguments
+(`[Parameters] Compiler64Arguments`), because `ld` does not consult `LD_LIBRARY_PATH` — a console link needs
+`-p <shim> -l tinfo` on the linker command line. That is the same dev-shim gap tracked elsewhere (the
+AppImage will ship the libraries); it is a property of this machine, not of the agent path, and the setting
+was reverted afterwards.
 
 ### Notes for the next session (facts learned this session)
 

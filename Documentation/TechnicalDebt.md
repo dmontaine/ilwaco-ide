@@ -43,6 +43,30 @@ as the durable register:
   rename coherent means moving the `.vfp` and updating `ProjectName` inside it. Found 2026-08-04.
 - **AppImage packaging is unbuilt.** Read-only bundle + external writable Projects/Examples/Docs is
   the plan; still open.
+- **The launched terminal shows no program output on this box (found 2026-08-06).** Run opens the
+  terminal and the program runs to completion — the window's own banner says "The child process exited
+  normally with status 0" — but its content area is blank, so a user sees an empty window instead of
+  their output. **It is not Ilwaco:** `xfce4-terminal --hold -x /bin/echo TEST` reproduces it with no
+  IDE involved, as do `-e` and `--command`, and the child's output does not reach the parent's stdout
+  either; meanwhile a plain `xfce4-terminal` *and* `xfce4-terminal --hold` render text normally. So it
+  is this xfce4-terminal (1.1.4, Xfce 4.20) spawning a command, not the argument Ilwaco passes. This
+  **supersedes the 2026-08-05 observation below** that the greeting rendered in the held-open terminal
+  — that no longer reproduces here. Settle it before the testing phase (try another installed terminal,
+  and check whether a newer/older xfce4-terminal behaves differently) — an empty window is exactly the
+  "beginner cannot tell a broken tool from their own mistake" case.
+
+**Paid down 2026-08-06 — the agent's `run` tool never returned.** `AgentStartBuild` mapped `run` to
+`Compile("Run")`, whose Run branch calls `RunPr`, whose `Result = Shell(CommandLine)` is **synchronous**:
+it blocks until the launched program's terminal closes. Every terminal Ilwaco ships is configured to stay
+open (`--hold` and friends), so that is never — the build thread never returned, the finalizer never ran,
+and an agent's `run` request hung forever (it burned a 10-minute timeout the first time Task 7 was driven).
+The shape is right for a *human*: Run has its own thread and the Output panel reports the exit code when
+the program ends. For the agent, `run` must complete when the program *starts*. Fixed in
+[src/AgentPipe.bas](../src/AgentPipe.bas): the agent path builds plainly and `AgentBuildFinalize` launches
+the program with `ThreadCreate_(@RunProgram)` — the same call the Run menu item makes — when the build came
+back clean, then completes the command slot. New `gAgentRunAfterBuild` flag replaces the `"Run"` compile
+parameter, and the sidecar's tool description now says `run` waits for the build, not for the program.
+Verified: `run` returns in **0.1 s** after the build, with the program live in its own terminal.
 
 **Paid down 2026-08-05 — every GUI app built with Ilwaco printed `Open file failure! in function
 Application.CurLanguage` at startup.** The templates' form bootstrap runs `App.CurLanguage =

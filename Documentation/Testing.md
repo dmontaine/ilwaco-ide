@@ -84,6 +84,13 @@ necessary but not sufficient — "it compiled" is not "it works".
   `ilwaco-mcp`'s stdio: `initialize` → `tools/list` (15 tools) → `tools/call get_status` all succeed
   with the toggle on. With it off the tool call returns `isError` and names the checkbox to tick, and
   no second IDE is launched. TestPlan T17.
+- **An agent drives the whole loop (2026-08-06).** From one long-lived `ilwaco-mcp` process with no IDE
+  running beforehand: `create_project` auto-launched exactly one IDE; a sieve of Eratosthenes with a
+  deliberate typo built to `success=false, error_count=1` with the diagnostic `Variable not declared,
+  composit in 'composit(j) = 1'` at **line 10**; `get_errors` returned the same rows; the one-character
+  fix rebuilt clean; the produced executable printed **`Primes below 1000000 = 78498`**, exit 0; and
+  `run` returned in **0.1 s** with the program launched in its own terminal. 20 checks, all passed.
+  `run` used to hang forever (TechnicalDebt "Paid down 2026-08-06"). TestPlan T18.
 
 ## Not proven (known gaps)
 - **Six of the eight `FileCopy_` call sites are build-verified only.** New Project exercised the two
@@ -97,6 +104,11 @@ necessary but not sufficient — "it compiled" is not "it works".
 - **Control behaviour at large.** No systematic control sweep has been run on the GTK build — see
   [ControlTesting.md](ControlTesting.md). Compiles-and-opens is not properties-events-and-docked.
 - **GTK dark mode.** Never exercised — the styling branch does not fire on GTK yet (TechnicalDebt).
+- **A program's output in the terminal Run launches.** As of 2026-08-06 the launched terminal on this
+  box shows a blank content area, though the program runs and exits 0 — reproducible with
+  `xfce4-terminal --hold -x /bin/echo TEST`, i.e. without Ilwaco. So "Run shows the user their output"
+  is currently **unproven on this machine** and supersedes the 2026-08-05 observation above
+  (TechnicalDebt "Known gaps").
 
 ---
 

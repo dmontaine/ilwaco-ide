@@ -59,10 +59,15 @@ Dim Shared gCmdErrMsg As String
 
 '' Build-in-progress flag reported by get_status; the async build path drives it.
 Dim Shared gAgentBuilding As Boolean
-'' The Compile() parameter for the pending async build ("" build / "Check" syntax / "Run" build+run).
+'' The Compile() parameter for the pending async build ("" build / "Check" syntax check).
 '' Set on the UI thread before the build thread is spawned; the single-slot model guarantees no
 '' other command runs until the build completes, so the build thread reads it safely at start.
 Dim Shared gAgentCompileParam As String
+'' Set for the "run" command: launch the program once the build finishes clean. NOT done by passing
+'' "Run" to Compile() -- that calls RunPr on the build thread, whose Shell() blocks for the whole
+'' lifetime of the launched program (with a --hold terminal, until the user closes the window), so
+'' the agent's request would never complete. The finalizer starts it on its own thread instead.
+Dim Shared gAgentRunAfterBuild As Boolean
 
 '' ---------------------------------------------------------------- socket path
 
@@ -467,6 +472,7 @@ End Function
 ''                                 async=True so AgentIdleExec does NOT complete the slot yet.
 ''   build thread (AgentBuildThread): run Compile(param); when it returns, g_idle_add the finalizer.
 ''   UI thread (AgentBuildFinalize):  read the Problems list into the result, clear gAgentBuilding,
+''                                    launch the program if this was "run" and the build was clean,
 ''                                    complete the command slot and wake the still-waiting pipe worker.
 '' The single-slot model means no other agent command runs meanwhile, so gAgentCompileParam and the
 '' slot are ours exclusively until the finalizer signals gCmdDone.
@@ -528,6 +534,13 @@ Private Function AgentBuildFinalize(ByVal user As Any Ptr) As Long
 	r->SetMember("warning_count", JsonNewNumber(nwarn))
 	r->SetMember("errors", arr)
 	gAgentBuilding = False
+	'' "run" = build, then launch on its own thread -- exactly what the Run menu item does
+	'' (ThreadCreate_(@RunProgram)). Launching from here rather than from Compile("Run") is what
+	'' lets the agent's request complete now, while the program keeps running in its terminal.
+	If gAgentRunAfterBuild Then
+		gAgentRunAfterBuild = False
+		If nerr = 0 Then ThreadCounter(ThreadCreate_(@RunProgram, NULL))
+	End If
 	MutexLock(gCmdMutex)
 	gCmdOk = True : gCmdResult = r : gCmdErrCode = "" : gCmdErrMsg = ""
 	gCmdDone = True
@@ -537,8 +550,8 @@ Private Function AgentBuildFinalize(ByVal user As Any Ptr) As Long
 End Function
 
 '' Build worker thread: run the compile (same call the menu makes), then schedule the finalizer on
-'' the UI thread. Compile() manages its own widget marshalling; for "Run" it also launches the built
-'' program in a terminal before returning.
+'' the UI thread. Compile() manages its own widget marshalling. A "run" is a plain build here; the
+'' launch happens in the finalizer, so this thread never waits on the launched program.
 Private Sub AgentBuildThread(ByVal param As Any Ptr)
 	Compile(gAgentCompileParam)
 	g_idle_add(Cast(GSourceFunc, @AgentBuildFinalize), NULL)
@@ -553,13 +566,14 @@ Private Sub AgentStartBuild(ByRef cmd As String, ByRef ecode As String, ByRef em
 	If AgentProject() = 0 Then ecode = "no_project" : emsg = "No project is open." : Exit Sub
 	Dim As String p = ""
 	If cmd = "syntax_check" Then p = "Check"
-	If cmd = "run" Then p = "Run"
 	SaveAll()
 	gAgentCompileParam = p
+	gAgentRunAfterBuild = (cmd = "run")
 	gAgentBuilding = True
 	Dim As Any Ptr th = ThreadCreate_(@AgentBuildThread, NULL)
 	If th = 0 Then
 		gAgentBuilding = False
+		gAgentRunAfterBuild = False
 		ecode = "build_failed" : emsg = "Could not start the build thread."
 		Exit Sub
 	End If
