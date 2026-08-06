@@ -10,9 +10,9 @@ scaffolding over speed.
 See also: [HISTORY.md](HISTORY.md) (past session narratives, extracted from this file),
 [Documentation/AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md) (the pruned port
 backlog), [Documentation/AstoriaParity.md](Documentation/AstoriaParity.md) (what we ported and what we
-couldn't, and why), and [CLAUDE.md](CLAUDE.md) (orientation for the Linux/GTK build). Still to be created
-as work proceeds: `CHANGELOG.md` (milestones) and `Documentation/UpstreamFixes.md` (our GTK fixes useful
-to VisualFBEditor upstream, where Astoria's Win64-only ones cannot apply).
+couldn't, and why), [CHANGELOG.md](CHANGELOG.md) (milestones),
+[Documentation/UpstreamFixes.md](Documentation/UpstreamFixes.md) (our GTK fixes that are really upstream
+bugs) and [CLAUDE.md](CLAUDE.md) (orientation for the Linux/GTK build).
 
 **Keep this file pruned.** It holds only the **most-recent session handoff**, the **NEXT** actions, and
 the **standing facts** below — not an archive. When a session's work is done and committed, move its dated
@@ -22,105 +22,42 @@ CLAUDE.md "Working practices".
 
 ---
 
-## ✅ DONE (2026-08-06) — MCP Tasks 6 + 7: the agent server is finished, opt-in, and proven end to end
+## ✅ DONE (2026-08-06) — MCP server finished; menu-taxonomy cluster closed; workspace replaces sessions
 
-### Task 6 — the listener is opt-out, visible, and documented
+A long session. Six pieces of work, each built, verified **by effect** on `:0`, documented and
+committed separately; the per-change narratives are in [HISTORY.md](HISTORY.md) and the per-item
+classifications in [AstoriaParity.md](Documentation/AstoriaParity.md).
 
-The Agent MCP server stopped being a thing only we knew how to switch on. Five pieces, all live-verified:
+1. **Agent MCP server Tasks 6 + 7 — the server is COMPLETE.** Task 6 made the listener a
+   user-controlled opt-out: `AllowAgentControl` (default ON), the Tools ▸ Options checkbox,
+   `ReconcileAgentPipe` so the toggle needs no restart, the status bar reading **"MCP Agent: On/Off"**
+   in the panel that used to be the always-"UTF-8" encoding readout, and
+   [AgentMcpSetup.md](Documentation/AgentMcpSetup.md) for users. Task 7 drove the whole
+   create → build → read-errors → fix → run loop from a real MCP client (20 checks, all pass;
+   `Primes below 1000000 = 78498`) and **found a real bug**: `run` never returned, because
+   `Compile("Run")` blocks in `RunPr`'s synchronous `Shell()` until the launched program's terminal
+   closes — which, with a keep-open terminal, is never. The agent path now builds plainly and
+   launches from the finalizer; `run` returns in 0.1 s.
+2. **Recent Projects became a dialog** (`src/frmRecentProjects.{bi,frm}`) listing file + path and
+   skipping entries whose `.vfp` is gone.
+3. **The Options panels**: the "When Ilwaco IDE starts" radio group removed with everything only it
+   fed, and the Code Editor page grouped **Display / Editing / Completion / IntelliSense / History**.
+4. **`Show Holiday Frame` → `Show Indent Guides`, done as a feature.** Astoria only relabelled the
+   caption while the checkbox still drove a seasonal decoration; Ilwaco deleted the decoration and
+   implemented real indent guides in `EditControl.PaintControlPriv`. **The menu-taxonomy cluster
+   `49ec5ccd`/`37ba31ea` is COMPLETE.**
+5. **`b9735e8e` — the workspace replaces `.vfs` sessions.** `SaveWorkspace`/`LoadWorkspace` write
+   `Settings/Workspace.ini` (BOM-less, paths relative to the exe, gitignored) on close and restore it
+   on start; the whole Sessions UX is gone. `CloseSession` was never about `.vfs` files — it is the
+   batched save-prompt run before the IDE will exit — so it was **renamed `CloseWorkspace` and kept**,
+   and that prompt was re-verified against a modified tab.
+6. **`cc9e7dd5` classified N/A**, with evidence rather than assumption: two GUI projects opened in one
+   session both render their form in the designer and the Toolbox populates — closing **TestPlan T3**,
+   which had stood unrecorded since the plan was written. The MFF library manifest was pruned to the
+   one variant that ships.
 
-- **`AllowAgentControl`** — a `[Options]` key in `Settings/ilwaco.ini`, **default True** (Ilwaco is
-  agent-first), read in `LoadSettings`. `frmMain_Show` now starts the socket only `If AllowAgentControl`,
-  so the sidecar's `--mcp-agent` auto-launch no longer grants access by itself.
-- **Tools ▸ Options ▸ General ▸ "Allow AI agent control (MCP)"** — the checkbox, wired through the same
-  five points every General checkbox uses.
-- **`ReconcileAgentPipe()`** (`src/Main.bas`), called at the end of `cmdApply_Click`, starts/stops the
-  listener to match the setting — **the toggle takes effect without a restart**.
-- **Status-bar panel 3 now reads "MCP Agent: On/Off"** (`UpdateMcpAgentStatusBar`). It was the
-  file-encoding readout, which under the UTF-8-only directive could only ever say "UTF-8"; the agent
-  state varies and matters. `ChangeFileEncoding` and its two call sites are **deleted**, not left as an
-  empty hook.
-- **[Documentation/AgentMcpSetup.md](Documentation/AgentMcpSetup.md)** — the user-facing "connect Claude
-  to this" page: registering `ilwaco-mcp` with Claude Code/Desktop, the shim's `LD_LIBRARY_PATH` for a
-  source build, the 15 tools, security notes, troubleshooting. Added to TestPlan's rule table; DocCheck
-  green. Packaging needed nothing new — `./build-linux.sh sidecar` already builds `ilwaco-mcp` and both
-  binaries are tracked.
-
-**Verified by effect** on `:0`, driving the real dialog with `xdotool` and reading state from the socket
-and screenshots: default-ON launch binds the socket and shows **"MCP Agent: On"**; untick + OK removes
-the socket file, flips the panel to **"MCP Agent: Off"** and fails `ping`, with no restart; the setting
-persists and the reopened dialog reflects it; the sidecar then reports *"…make sure Tools > Options >
-Allow AI agent control is ticked"* and does **not** launch a second IDE; re-tick + OK re-binds live and a
-full `initialize` → `tools/list` (**15 tools**) → `tools/call get_status` round-trip succeeds; and a
-restart with the key false binds nothing at startup. Both closes exited 139 — the known intermittent
-shutdown SIGSEGV, which also fired on the run where the listener was never started.
-
-### Task 7 — the whole loop, driven by a real MCP client
-
-`create_project` → `write_file` (broken) → `build` → `get_errors` → `write_file` (fixed) → `build` →
-`run`, driven from one long-lived `ilwaco-mcp` process over its stdio **with no IDE running beforehand**.
-20 checks, all pass: the sidecar auto-launched exactly one IDE; a sieve of Eratosthenes with a deliberate
-typo built to `success=false, error_count=1` with `Variable not declared, composit in 'composit(j) = 1'`
-at **line 10**; `get_errors` matched byte for byte; the one-character fix rebuilt clean; the executable
-printed **`Primes below 1000000 = 78498`**, exit 0.
-
-**A real bug fell out: `run` never returned.** `Compile("Run")` calls `RunPr`, whose `Shell()` is
-synchronous — and every terminal Ilwaco ships stays open (`--hold`), so it blocked forever and the agent's
-request hung (the first attempt burned a 10-minute timeout). The agent path now builds plainly and
-`AgentBuildFinalize` launches the program with `ThreadCreate_(@RunProgram)` — the same call the Run menu
-makes — when the build is clean, then completes the slot. `run` returns in **0.1 s**. Details in
-TechnicalDebt "Paid down 2026-08-06".
-
-**Found, not ours, but it matters:** the terminal Run opens shows **no program output** on this box —
-`xfce4-terminal --hold -x /bin/echo TEST` reproduces it with no IDE involved (so does `-e`/`--command`),
-while a plain `xfce4-terminal` renders fine. The program runs and exits 0; the user just sees an empty
-window. This supersedes the 2026-08-05 "greeting rendered in the held-open terminal" observation. Tracked
-in TechnicalDebt "Known gaps"; settle it before the testing phase.
-
-### Start here next session
-
-**The Agent MCP server is COMPLETE** — Tasks 0–7 all done and verified; only the `designer_*` tools stay
-deferred (owner). So the active thread returns to the **Astoria→Ilwaco changelog walk**: the
-menu-taxonomy / Options-panel cluster below (`OpenProjectTemplate`/`Recent Project`, the Options-panel
-restructure, `Show Holiday Frame` → `Show Indent Guides`), plus the deferred Examples BOM sweep.
-
-Two things worth doing before the testing phase, both in TechnicalDebt "Known gaps": the **blank-terminal
-finding** above (a beginner pressing Run would see an empty window), and the **project `.vfp` BOMs** written
-by `SaveProjectFile` and carried by the template `.vfp` data, which violate the no-BOM directive.
-
----
-
-## ✅ DONE (2026-08-05) — terminal-launcher detection + the `.lng` startup error
-
-Run used to shell out to `gnome-terminal` unconditionally, so on a box without it (this one has
-`xfce4-terminal`) a compiled program "did nothing" — `sh: gnome-terminal: not found`, no window. Fixed
-and verified end to end:
-
-- **`LoadSettings` (`src/Main.bas`)** seeds the nine terminals Ilwaco knows about — gnome-terminal,
-  konsole, xfce4-terminal, mate-terminal, lxterminal, terminator, terminology, qterminal, xterm — into
-  the list if absent, then, when the configured default is not on `PATH`, auto-picks the first
-  **installed** one. Any real terminal is preferred over `xterm` (xterm last). An installed default the
-  user has chosen is always kept, so the override sticks.
-- **`Settings/ilwaco.ini` `[Terminals]`** now ships all nine with correct keep-open args
-  (`xfce4-terminal --hold -x`, `konsole --hold -e`, `xterm -hold -e`, …), replacing the old
-  three-entry block whose `xterm` arg (`-bc`) was broken.
-- **Tools > Options > Terminals** gained **Installed** and **Default** columns (installed via
-  `g_find_program_in_path`; Default tracks the "Default Terminal" combo live through a new
-  `cboTerminal_Change` handler in `frmOptions`), and the dialog was widened (`810×640`) so those
-  columns show. The combo is the override control and lists all nine.
-
-**Verified by effect:** the default auto-resolved to `xfce4-terminal`; the Options list showed all nine
-with `xfce4-terminal` marked Installed + Default; selecting `xterm` moved the Default mark live (and its
-blank Installed cell warned it is absent); and Run launched `"xfce4-terminal" --hold -x "…/Main"`, the
-program's greeting rendering in the held-open terminal.
-
-**The `.lng` startup error is also fixed.** Every GUI app built with Ilwaco used to print
-`Open file failure! in function Application.CurLanguage` at startup, because the templates run
-`App.CurLanguage = My.Sys.Language` (the OS locale, `C.UTF-8` here) and MFF's `CurLanguage` setter
-tried to open a `Languages/<locale>.lng` that isn't there. English-only + `ML()` passthrough means a
-missing translation file is normal, so the setter's `Else … Print` was dropped — a file that won't open
-now silently keeps English. A/B-verified (pre-fix app printed `…/Languages/C.UTF-8.lng`; fixed app
-prints nothing), then the lib **and** editor were rebuilt. Both fixes are detailed in
-[TechnicalDebt.md](Documentation/TechnicalDebt.md) "Paid down 2026-08-05".
+**Everything is committed and pushed** (through `2ab9c4f`); the working tree is clean and
+`python3 Tools/DocCheck.py` is green.
 
 ---
 
@@ -138,25 +75,21 @@ the owner decisions, the per-task narratives and the v1 limits are in
 
 ---
 
-## NEXT — the changelog walk: `b9735e8e` (workspace) and onward
+## NEXT — resume the changelog walk at `e5e10808`
 
-**`b9735e8e` — replace `.vfs` sessions with an automatic workspace — is DONE (2026-08-06).**
-Stage 1: `SaveWorkspace`/`LoadWorkspace` (`src/Main.bas`) write `Settings/Workspace.ini` on close and
-restore it on start. Stage 2: the whole Sessions UX is gone — File ▸ Open/Save/Close Session, Recent
-Sessions, the `AutoSaveSession` option, `RecentSession`/`MRUSessions`, `frmTemplates`' Sessions
-category, the `.vfs` file-dialog filters and icon. `CloseSession` — which was never about `.vfs`
-files but is the batched save-prompt the IDE runs before it will exit — was **renamed
-`CloseWorkspace`** and kept.
+**Start here:** `e5e10808` — Astoria's Edit-menu review (flat checkmark toggles for bubble help,
+autocomplete and parameter info; it also carried Open Project and PathUtils fixes for example
+discovery). Then the `13.3.A` approachability passes (`0eaa8806`, `93bbfa28`, …). The pruned backlog
+with the walk order is [AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md);
+classify each item in [AstoriaParity.md](Documentation/AstoriaParity.md) as you go, and skip the pure
+GTK/Linux/32-bit stripping commits (`e139c2cc`, `c494207f`, `7baebd1e`, `add4642a`, `76abaa5a`,
+`15e66cc5`).
 
-**`cc9e7dd5` (designer grey panel) is classified N/A (2026-08-06)** — the folder-vs-file
-`Library.Path` bug it fixes cannot arise here (Ilwaco resolves the library file from the library's own
-`Settings.ini`), and the designer demonstrably renders forms across two sequential projects with a
-populated Toolbox — which also closes TestPlan **T3** and adds **T24**. Reasoning and evidence in
-[AstoriaParity.md](Documentation/AstoriaParity.md).
-
-**Next in the walk:** `e5e10808` (Edit-menu review: flat checkmark toggles for bubble help,
-autocomplete and parameter info), then the `13.3.A` approachability passes — see
-[AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md).
+**Method that has been working:** read Astoria's commit *and* what its code actually does before
+classifying — twice this session the commit message and the shipped behaviour disagreed
+(`Show Indent Guides` was only a relabel; `OpenProjectTemplate` is dead code), and once a "likely
+N/A" turned out to need real evidence to confirm (`cc9e7dd5`). Build with `./build-linux.sh editor`
+in the background, verify on `:0`, then document and commit per item.
 
 **Two items to settle before the testing phase** (both in TechnicalDebt "Known gaps"): the
 **blank-terminal finding** (a user pressing Run sees an empty window — reproducible with
@@ -189,6 +122,12 @@ is the **Astoria→Ilwaco changelog walk** (backlog: [AstoriaDetailedChangeLog.m
 classified in [AstoriaParity.md](Documentation/AstoriaParity.md)). Past session narratives now live in
 [HISTORY.md](HISTORY.md).
 
+**The Agent MCP server is live and ON by default.** `./ilwaco-mcp` (sidecar) → a per-user Unix socket →
+the running IDE; it auto-launches the IDE if needed. It is genuinely useful as a *test instrument* — this
+session used it to open projects and files and to read `get_status` back while verifying UI work. Turn it
+off in Tools ▸ Options ▸ General; the status bar shows which. See
+[AgentMcpSetup.md](Documentation/AgentMcpSetup.md).
+
 **Build / run (self-contained — shim is vendored).**
 - Build: `./build-linux.sh` — `editor` | `lib` | `all`.
 - Run: `LD_LIBRARY_PATH="$(./build-linux.sh --print-shim)" DISPLAY=:0 ./ilwaco`.
@@ -199,18 +138,22 @@ classified in [AstoriaParity.md](Documentation/AstoriaParity.md)). Past session 
 - A whole-program editor compile is ~3–4 min — run it in the background (a 2-min foreground limit kills it).
 
 **Operational cautions.**
-- **`git checkout Settings/` after any IDE launch** — it writes window/session state into `ilwaco.ini` on exit.
+- **`git checkout Settings/` after any IDE launch** — it writes window state into `ilwaco.ini` on exit.
+  Careful: that also reverts *uncommitted* deliberate edits to `ilwaco.ini`, so commit those first (it bit
+  twice on 2026-08-06). `Settings/Workspace.ini`, written on every exit, is gitignored and can be deleted
+  freely to start the IDE empty.
 - **`pkill -f ilwaco` matches its own caller** — use `pkill -x ilwaco` or kill by PID.
 - **Intermittent startup/shutdown SIGSEGV** is a known Astoria-fixed threading issue — don't chase it as a
   new regression (memory `project-known-segfault-threading`).
 - Harmless startup warnings: resources `AppAddin`/`AppConsole` "do not exist".
 
 **Known gaps (tracked, not blockers).**
-- **Packaging/shim:** the dev shim has `libtinfo.so.5` but no `libncurses.so`, so fbc's *default* console
-  link fails here. Work around it per-project with `CompilationArguments64Linux="-p <shim> -l tinfo"` — the
-  IDE then compiles, links and debugs a console project end-to-end (verified 2026-08-04). Add a
-  `libncurses` dev symlink when building the AppImage. AppImage packaging itself is still open (memory
-  `project-packaging`).
+- **Packaging/shim:** the vendored shim *does* carry `libncurses.so` and `libtinfo.so` under
+  `Compilers/shim/gtk-dev/`, but the linker only sees them when they are on its command line — `ld` does
+  **not** consult `LD_LIBRARY_PATH`. So a console link needs `-p <shim> -l tinfo`, either per-project via
+  `CompilationArguments64Linux` or globally via `[Parameters] Compiler64Arguments`; without it fbc stops at
+  `ld: cannot find -lncurses` (measured again 2026-08-06). The AppImage should ship the libraries so users
+  need neither. AppImage packaging itself is still open (memory `project-packaging`).
 - **GTK dark mode (REIMPLEMENT):** MFF ships a real GTK3 `SetDarkMode`, but `g_darkModeSupported` was only
   ever set by the deleted Win32 `InitDarkMode`, so the dark-styling branches never fire on GTK. Track with
   Astoria's dark-mode commits (`56f6d180`/`b3633bc5`/`a7c7839d`).

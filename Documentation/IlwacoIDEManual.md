@@ -17,8 +17,12 @@ rewritten, not adapted line-by-line:
   external writable Projects/Examples/Docs area — see the packaging notes in
   [PROJECT_STATUS.md](../PROJECT_STATUS.md). Building from source uses `./build-linux.sh`.
 - **Opinionated surface.** Sections describing removed features (compiler picker, multiple UI
-  languages, the AI assistants, encoding/newline pickers) must **not** be carried over — see
+  languages, the AI assistants, encoding/newline pickers, `.vfs` sessions, the "when the IDE starts"
+  choice, the holiday frame) must **not** be carried over — see
   [IlwacoIDESignificantChanges.md](IlwacoIDESignificantChanges.md) for what is gone.
+- **Two behaviours to describe that Astoria's manual does not have.** Ilwaco reopens the project and
+  tabs it had when it was last closed (no session file to manage), and its Code Editor options are
+  grouped Display / Editing / Completion / IntelliSense / History rather than one flat list.
 - **GTK behaviour.** The collapsible vertical-text tool-panel rails, dark mode (once it fires), and
   keyboard/menu specifics need to be documented from the GTK build, not from Astoria's Win32 one.
 - **The AI-agent chapter already exists** as [AgentMcpSetup.md](AgentMcpSetup.md) — connecting a

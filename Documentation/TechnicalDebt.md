@@ -15,11 +15,13 @@ an argument.
 These are the standing items from [PROJECT_STATUS.md](../PROJECT_STATUS.md) "Known gaps", kept here
 as the durable register:
 
-- **Packaging / dev shim — no `libncurses`.** The in-repo shim under `Compilers/shim/` provides
-  `libtinfo.so.5` but no `libncurses.so`, so `fbc`'s *default* console link fails in this dev
-  environment. Not a blocker: a console project links and runs once it carries
-  `CompilationArguments64Linux="-p <shim> -l tinfo"` (TestPlan T4 passes that way, 2026-08-04). Add a
-  `libncurses` dev symlink when building the AppImage so users need no per-project arguments.
+- **Packaging / dev shim — the linker needs the shim on its command line.** The in-repo shim under
+  `Compilers/shim/gtk-dev/` *does* provide `libncurses.so` and `libtinfo.so` (the earlier "no
+  libncurses" note is obsolete), but `ld` does **not** read `LD_LIBRARY_PATH`, so a console link still
+  fails with `ld: cannot find -lncurses` unless `-p <shim> -l tinfo` is passed — per-project via
+  `CompilationArguments64Linux` (TestPlan T4) or globally via `[Parameters] Compiler64Arguments`
+  (used for the MCP Task 7 run). Re-measured 2026-08-06. The AppImage should ship the libraries so
+  users need neither.
 - **GTK dark mode never fires (REIMPLEMENT).** MFF ships a real GTK3 `SetDarkMode`, but
   `g_darkModeSupported` was only ever set by the deleted Win32 `InitDarkMode`, so the dark-styling
   branches never run on GTK. Track with Astoria's dark-mode commits (`56f6d180`/`b3633bc5`/
