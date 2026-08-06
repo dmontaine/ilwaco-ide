@@ -140,15 +140,15 @@ the owner decisions, the per-task narratives and the v1 limits are in
 
 ## NEXT — the changelog walk: `b9735e8e` (workspace) and onward
 
-**In flight: `b9735e8e` — replace `.vfs` sessions with an automatic workspace.** Stage 1 is **done and
-verified (2026-08-06)**: `SaveWorkspace`/`LoadWorkspace` (`src/Main.bas`) write `Settings/Workspace.ini`
-on close and restore it on start, so the IDE reopens the project and tabs it had. **Stage 2 is the
-removal**: the Sessions UX (File ▸ Open/Save/Close Session, Recent Sessions, the `AutoSaveSession`
-option, `RecentSession`/`MRUSessions`, `frmTemplates`' Sessions tab and the `.vfs` handling in
-`OpenFiles`) — about 72 references across six files. Astoria took sessions out of the UX entirely;
-Ilwaco should too, once the workspace has carried a few sessions without complaint.
+**`b9735e8e` — replace `.vfs` sessions with an automatic workspace — is DONE (2026-08-06).**
+Stage 1: `SaveWorkspace`/`LoadWorkspace` (`src/Main.bas`) write `Settings/Workspace.ini` on close and
+restore it on start. Stage 2: the whole Sessions UX is gone — File ▸ Open/Save/Close Session, Recent
+Sessions, the `AutoSaveSession` option, `RecentSession`/`MRUSessions`, `frmTemplates`' Sessions
+category, the `.vfs` file-dialog filters and icon. `CloseSession` — which was never about `.vfs`
+files but is the batched save-prompt the IDE runs before it will exit — was **renamed
+`CloseWorkspace`** and kept.
 
-After that, continue the walk from `b9735e8e` in
+Continue the walk from `b9735e8e` in
 [AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md): `cc9e7dd5` (designer grey-panel
 fix — likely N/A, Win32 DLL resolution), `e5e10808` (Edit-menu review: flat checkmark toggles), then the
 `13.3.A` approachability passes.

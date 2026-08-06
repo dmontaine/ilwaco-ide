@@ -225,7 +225,7 @@ Sub frmFindInFiles.Find(ByRef lvSearchResult As ListView Ptr, ByRef Path As WStr
 		ElseIf EndsWith(LCase(f), ".bas") OrElse EndsWith(LCase(f), ".bi") OrElse EndsWith(LCase(f), ".rc") _
 			OrElse EndsWith(LCase(f), ".inc") OrElse EndsWith(LCase(f), ".frm") OrElse EndsWith(LCase(f), ".ini") OrElse EndsWith(LCase(f), ".md") OrElse EndsWith(LCase(f), ".htm")  OrElse EndsWith(LCase(f), ".html") _ _
 			OrElse EndsWith(LCase(f), ".txt") OrElse EndsWith(LCase(f), ".log") OrElse EndsWith(LCase(f), ".lng") _
-			OrElse EndsWith(LCase(f), ".vfp") OrElse EndsWith(LCase(f), ".vfs") OrElse EndsWith(LCase(f), ".xml") _
+			OrElse EndsWith(LCase(f), ".vfp") OrElse EndsWith(LCase(f), ".xml") _
 			OrElse EndsWith(LCase(f), ".c") OrElse EndsWith(LCase(f), ".cxx") OrElse EndsWith(LCase(f), ".h") OrElse EndsWith(LCase(f), ".idl") OrElse EndsWith(LCase(f), ".cpp") OrElse EndsWith(LCase(f), ".java") Then
 			Fn = FreeFile_
 			Result = Open(Path & Slash & f For Input Encoding "utf-8" As #Fn)
@@ -394,7 +394,7 @@ Private Sub frmFindInFiles.ReplaceInFile(ByRef Path As WString ="", ByRef tSearc
 		ElseIf EndsWith(LCase(f), ".bas") OrElse EndsWith(LCase(f), ".bi") OrElse EndsWith(LCase(f), ".rc") _
 			OrElse EndsWith(LCase(f), ".inc") OrElse EndsWith(LCase(f), ".frm") OrElse EndsWith(LCase(f), ".ini") OrElse EndsWith(LCase(f), ".md") OrElse EndsWith(LCase(f), ".htm")  OrElse EndsWith(LCase(f), ".html") _
 			OrElse EndsWith(LCase(f), ".txt") OrElse EndsWith(LCase(f), ".log") OrElse EndsWith(LCase(f), ".lng") _
-			OrElse EndsWith(LCase(f), ".vfp") OrElse EndsWith(LCase(f), ".vfs") OrElse EndsWith(LCase(f), ".xml") _
+			OrElse EndsWith(LCase(f), ".vfp") OrElse EndsWith(LCase(f), ".xml") _
 			OrElse EndsWith(LCase(f), ".c") OrElse EndsWith(LCase(f), ".cxx") OrElse EndsWith(LCase(f), ".h") OrElse EndsWith(LCase(f), ".idl") OrElse EndsWith(LCase(f), ".cpp") OrElse EndsWith(LCase(f), ".java") Then
 			If LCase(tML) <> LCase(tReplace) Then
 				FNameOpen = GetBakFileName(Path & f)

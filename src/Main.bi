@@ -100,7 +100,6 @@ Common Shared As Boolean AutoComplete
 Common Shared As Boolean AutoSuggestions, ProjectAutoSuggestions
 Common Shared As Boolean AutoCreateRC
 Common Shared As Boolean AutoCreateBakFiles, gLocalProperties
-Common Shared As Boolean AutoSaveSession, SessionOpened
 Common Shared As Boolean AddRelativePathsToRecent
 Common Shared As Boolean AllowAgentControl   ' Tools > Options: let the ilwaco-mcp sidecar drive the IDE (MCP)
 Common Shared As Boolean UseMakeOnStartWithCompile
@@ -203,7 +202,6 @@ Declare Sub AddMRUList(ByRef FileFolderName As WString, ByRef MRUFilesFolders As
 Declare Sub AddMRUFile(ByRef FileName As WString)
 Declare Sub AddMRUProject(ByRef FileName As WString) '
 Declare Sub AddMRUFolder(ByRef FolderName As WString)
-Declare Sub AddMRUSession(ByRef FileName As WString) '
 Declare Sub AddFromTemplates
 Declare Sub AddFilesToProject
 Declare Sub RemoveFileFromProject
@@ -218,7 +216,6 @@ Declare Function RenameProject() As Boolean
 Declare Sub SetMainNode(tn As TreeNode Ptr)
 Declare Sub OpenProjectFolder
 Declare Sub OpenFiles(ByRef FileName As WString)
-Declare Sub OpenSession
 Declare Sub OpenProgram()
 Declare Sub PrintThis()
 Declare Sub PrintPreview()
@@ -246,7 +243,6 @@ Declare Function FileCopy_(ByRef Source As WString, ByRef Destination As WString
 Declare Function FolderCopy(FromDir As UString, ToDir As UString) As Integer
 Declare Sub Save
 Declare Function SaveAllBeforeCompile() As Boolean
-Declare Function SaveSession(WithoutQuestion As Boolean = False) As Boolean
 Declare Sub SaveWorkspace()
 Declare Function LoadWorkspace() As Boolean
 Declare Sub CompileProgram(Param As Any Ptr)

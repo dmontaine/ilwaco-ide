@@ -99,10 +99,6 @@ Sub mClickMRU(ByRef Designer As My.Sys.Object, Sender As My.Sys.Object)
 		miRecentFolders->Clear
 		miRecentFolders->Enabled = False
 		MRUFolders.Clear
-	Case "ClearSessions"
-		miRecentSessions->Clear
-		miRecentSessions->Enabled = False
-		MRUSessions.Clear
 	Case Else
 		OpenFiles GetFullPath(Sender.ToString)
 	End Select
@@ -154,10 +150,8 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 	Case "RenameProject":                       RenameProject
 	Case "DeleteProject":                       DeleteProject
 	Case "OpenFolder":                          OpenFolder
-	Case "OpenSession":                         OpenSession
 	Case "SaveProject":                         SaveProject ptvExplorer->SelectedNode
 	Case "SaveProjectAs":                       SaveProject ptvExplorer->SelectedNode, True
-	Case "SaveSession":                         SaveSession
 	Case "CloseProject":                        CloseProject GetParentNode(ptvExplorer->SelectedNode)
 	Case "New":                                 Dim As TabWindow Ptr tb = AddTab(ExePath & "/Templates/Files/Module.bas", False) : If tb <> 0 Then tb->FileName = ML("Untitled") : tb->Caption = tb->FileName + "*"
 	Case "Open":                                OpenProgram
@@ -486,7 +480,6 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 		End Select
 	Case "SaveAll":                         SaveAll
 	Case "CloseAll":                        CloseAllTabs
-	Case "CloseSession":                    CloseSession
 	Case "CloseAllWithoutCurrent":          CloseAllTabs(True)
 	Case "Exit":                            pfrmMain->CloseForm
 	Case "Find":                            pfFind->mFormFind = True: pfFind->Show *pfrmMain

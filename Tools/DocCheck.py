@@ -86,6 +86,9 @@ REMOVED_FEATURES = [
     (r"\bConsoleType\b",                 "the MFF console wrapper (removed: Console.bi deleted; the Console template is plain FreeBASIC)"),
     (r"When (?:Ilwaco IDE|VisualFBEditor) starts", "the startup-behaviour radio group (removed: Ilwaco always starts empty)"),
     (r"Show Holiday Frame",              "the seasonal holiday-frame decoration (removed: replaced by real indent guides)"),
+    (r"\.vfs\b",                         "the .vfs session files (removed: the workspace restores automatically)"),
+    (r"(?:Open|Save|Close) Session",     "the Session commands (removed: the workspace restores automatically)"),
+    (r"Recent Sessions",                 "the Recent Sessions menu (removed with .vfs sessions)"),
     (r"\bWithFrame\b",                  "the holiday-frame December/January flag (removed with the decoration)"),
     (r"\bWhenVisualFBEditorStarts\b", "the startup-behaviour setting (removed with its radio group)"),
 ]

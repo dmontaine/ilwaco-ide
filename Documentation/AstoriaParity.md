@@ -648,11 +648,14 @@ Detail in [HISTORY.md](../HISTORY.md).
 (2026-08-06):** `SaveWorkspace`/`LoadWorkspace` in `src/Main.bas` write `Settings/Workspace.ini` on
 close and restore it on start, so the IDE reopens the project and tabs it had — BOM-less, with paths
 stored relative to the executable so a workspace survives the repo moving between machines, and the
-file removed rather than left stale when nothing is open. **Stage 2** is taking the Sessions UX out
-(File ▸ Open/Save/Close Session, Recent Sessions, `AutoSaveSession`, `RecentSession`/`MRUSessions`,
-`frmTemplates`' Sessions tab, `.vfs` handling in `OpenFiles`) — ~72 references across six files.
-Astoria's `LoadWorkspace` also prompts New Project when there is nothing to reopen; Ilwaco leaves the
-IDE empty for now, which is what it did before.
+file removed rather than left stale when nothing is open. **Stage 2 done + verified (2026-08-06):** the Sessions UX is gone —
+File ▸ Open/Save/Close Session, Recent Sessions, `AutoSaveSession`, `RecentSession`/`MRUSessions`,
+`frmTemplates`' Sessions category (its remaining three renumbered), the `.vfs` file-dialog filters
+and the `Session` icon. **`CloseSession` was never about `.vfs` files** — it is the batched
+save-prompt `frmMain_Close` runs before the IDE will exit — so it was renamed **`CloseWorkspace`**
+and kept, and the exit prompt was re-verified against a modified tab. Astoria's `LoadWorkspace` also
+prompts New Project when there is nothing to reopen; Ilwaco leaves the IDE empty, which is what it
+did before.
 
 ## Foundation status (2026-08-02)
 

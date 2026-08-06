@@ -73,9 +73,9 @@ Dim Shared As Boolean bBottomRailReady              ' True once btnBottomRail() 
 Dim Shared As GtkWidget Ptr overlayLeft, overlayRight  ' the GTK overlays hosting the left/right pins; re-laid-out in Show{Left,Right} so the pin repaints after re-show
 Dim Shared As TrackBar trLeft
 Dim Shared As MainMenu mnuMain
-Dim Shared As MenuItem Ptr mnuStartWithCompile, mnuStart, mnuBreak, mnuEnd, mnuRestart, mnuStandardToolBar, mnuEditToolBar, mnuProjectToolBar, mnuFormatToolBar, mnuBuildToolBar, mnuDebugToolBar, mnuRunToolBar, mnuSplit, mnuSplitHorizontally, mnuSplitVertically, mnuWindowSeparator, miRecentFiles, miRecentFolders, miRecentSessions, miSetAsMain, miClearStartUp, miTabSetAsMain, miTabReloadHistoryCode, miRemoveFiles, miToolBars
+Dim Shared As MenuItem Ptr mnuStartWithCompile, mnuStart, mnuBreak, mnuEnd, mnuRestart, mnuStandardToolBar, mnuEditToolBar, mnuProjectToolBar, mnuFormatToolBar, mnuBuildToolBar, mnuDebugToolBar, mnuRunToolBar, mnuSplit, mnuSplitHorizontally, mnuSplitVertically, mnuWindowSeparator, miRecentFiles, miRecentFolders, miSetAsMain, miClearStartUp, miTabSetAsMain, miTabReloadHistoryCode, miRemoveFiles, miToolBars
 Dim Shared As MenuItem Ptr miRenameProject, miDeleteProject
-Dim Shared As MenuItem Ptr miSaveProject, miSaveProjectAs, miCloseProject, miSave, miSaveAs, miSaveAll, miClose, miCloseAll, miCloseSession, miPrint, miPrintPreview, miPageSetup, miOpenProjectFolder, miProjectProperties, miExplorerOpenProjectFolder, miExplorerRename, miExplorerProjectProperties, miExplorerCloseProject, miRename, miRemoveFileFromProject
+Dim Shared As MenuItem Ptr miSaveProject, miSaveProjectAs, miCloseProject, miSave, miSaveAs, miSaveAll, miClose, miCloseAll, miPrint, miPrintPreview, miPageSetup, miOpenProjectFolder, miProjectProperties, miExplorerOpenProjectFolder, miExplorerRename, miExplorerProjectProperties, miExplorerCloseProject, miRename, miRemoveFileFromProject
 Dim Shared As MenuItem Ptr miUndo, miRedo, miCutCurrentLine, miCut, miCopy, miPaste, miSingleComment, miBlockComment, miUncommentBlock, miDuplicate, miSelectAll, miIndent, miOutdent, miFormat, miUnformat, miFormatProject, miUnformatProject, miAddSpaces, miDeleteBlankLines, miSuggestions, miCompleteWord, miParameterInfo, miStepInto, miStepOver, miStepOut, miRunToCursor, miAddWatch, miToggleBreakpoint, miClearAllBreakpoints, miSetNextStatement, miShowNextStatement
 Dim Shared As MenuItem Ptr dmiMake, dmiMakeClean
 Dim Shared As MenuItem Ptr miCode, miForm, miCodeAndForm, miGotoCodeForm, miCollapseCurrent, miCollapseAllProcedures, miCollapseAll, miUnCollapseCurrent, miUnCollapseAllProcedures, miUnCollapseAll, miImageManager, miAddProcedure, miAddType, miFind, miReplace, miFindNext, miFindPrevious, miGoto, miDefine, miToggleBookmark, miNextBookmark, miPreviousBookmark, miClearAllBookmarks, miSyntaxCheck, miCompile, miCompileAll, miBuildBundle, miBuildAPK, miGenerateSignedBundle, miGenerateSignedAPK, miMake, miMakeClean
@@ -88,8 +88,8 @@ Dim Shared As ReBar MainReBar, rbLeft, rbRight, rbBottom
 Dim Shared As List Tools, TabPanels, ControlLibraries
 Dim Shared As WStringOrStringList Comps, GlobalAsmFunctionsHelp, GlobalFunctionsHelp, Snippets, TypesInFunc, EnumsInFunc
 'Dim Shared As WStringOrStringList GlobalNamespaces, GlobalTypes, GlobalEnums, GlobalDefines, GlobalFunctions, GlobalTypeProcedures, GlobalArgs
-Dim Shared As WStringList AddIns, IncludeFiles, LoadPaths, IncludePaths, LibraryPaths, MRUFiles, MRUFolders, MRUProjects, MRUSessions, ProfilingFunctions ' add Sessions
-Dim Shared As WString Ptr RecentFiles, RecentFile, RecentProject, RecentFolder, RecentSession
+Dim Shared As WStringList AddIns, IncludeFiles, LoadPaths, IncludePaths, LibraryPaths, MRUFiles, MRUFolders, MRUProjects, ProfilingFunctions
+Dim Shared As WString Ptr RecentFiles, RecentFile, RecentProject, RecentFolder
 Dim Shared As Dictionary Helps, HotKeys, MakeTools, Terminals, OtherEditors, BuildConfigurations, mlCompiler, mlTemplates, mpKeys, mcKeys
 Dim Shared As ListView lvProblems, lvSuggestions, lvSearch, lvToDo, lvMemory
 Dim Shared As ProgressBar prProgress
@@ -110,7 +110,7 @@ Dim Shared As TabPage Ptr tpProject, tpToolbox, tpProperties, tpEvents, tpOutput
 Dim Shared As Form frmMain
 Dim Shared As Integer tabItemHeight
 Dim Shared As Integer miRecentMax =20 'David Changed
-Dim Shared As Boolean mLoadLog, mLoadToDo, mChangeLogEdited, mStartLoadSession = True, ManifestIcoCopy
+Dim Shared As Boolean mLoadLog, mLoadToDo, mChangeLogEdited, mStartupLoading = True, ManifestIcoCopy
 Dim Shared As WString * MAX_PATH mChangelogName  'David Changed
 pApp = @VisualFBEditorApp
 pfrmMain = @frmMain
@@ -375,7 +375,7 @@ End Sub
 
 ' Output/Problems/Suggestions/Find/ToDo/Change Log hold results scoped to whichever
 ' project or file produced them; stale entries from a closed project are misleading
-' once a different project is open. Cleared on CloseProject/CloseSession.
+' once a different project is open. Cleared on CloseProject/CloseWorkspace.
 Sub ClearAnalysisPanels()
 	ClearMessages()
 	lvProblems.ListItems.Clear
@@ -1183,8 +1183,6 @@ Function GetIconName(ByRef FileName As WString, ppe As ProjectElement Ptr = 0) A
 	End If
 	If EndsWith(LCase(FileName), ".rc") OrElse EndsWith(LCase(FileName), ".res") OrElse EndsWith(LCase(FileName), ".xpm") Then
 		Return sMain & "Resource"
-	ElseIf EndsWith(LCase(FileName), ".vfs") Then
-		Return sMain & "Session"
 	ElseIf EndsWith(LCase(FileName), ".vfp") Then
 		Return sMain & "Project"
 	ElseIf EndsWith(LCase(FileName), ".frm") Then
@@ -1618,112 +1616,6 @@ Sub OpenUrl(ByVal url As String)
 	PipeCmd "", cmd
 End Sub
 
-Function AddSession(ByRef FileName As WString) As Boolean
-	'Dim As ExplorerElement Ptr ee
-	If Not FileExists(FileName) Then
-		MsgBox ML("File not found") & ": " & FileName
-		Return False
-	End If
-	SessionOpened = True
-	Dim As TreeNode Ptr tn
-	AddMRUSession FileName
-	Dim Buff As WString * 2048 ' for V1.07 Line Input not working fine
-	Dim As WStringList Files
-	Dim As Integer Fn = FreeFile_
-	Dim Result As Integer = -1 '
-	Result = Open(FileName For Input Encoding "utf-8" As #Fn)
-	If Result <> 0 Then Result = Open(FileName For Input Encoding "utf-16" As #Fn)
-	If Result <> 0 Then Result = Open(FileName For Input Encoding "utf-32" As #Fn)
-	If Result <> 0 Then Result = Open(FileName For Input As #Fn)
-	If Result = 0 Then
-		Dim As WString Ptr filn
-		Dim As Boolean bMain, bTabs
-		Dim As Integer Pos1, n = 0
-		MainNode = 0 '
-		Dim CurrentPath As WString * 255
-		CurrentPath = GetFolderName(FileName)
-		Do Until EOF(Fn)
-			Line Input #Fn, Buff
-			If StartsWith(LCase(Buff), "[tabs]") Then
-				bTabs = True
-				n = 0
-			ElseIf StartsWith(LCase(Buff), "file=") OrElse StartsWith(LCase(Buff), "*file=") Then
-				Pos1 = InStr(Buff, "=")
-				If Pos1 <> 0 Then
-					n += 1
-					bMain = StartsWith(Buff, "*")
-					WLet(filn, Replace(Mid(Buff, Pos1 + 1), BackSlash, Slash))
-					If CInt(InStr(*filn, ":") = 0) OrElse CInt(StartsWith(*filn, Slash)) Then
-						WLetEx(filn, CurrentPath & *filn)
-						If EndsWith(*filn, Slash) Then WLetEx(filn, Left(*filn, Len(*filn) - 1))
-					End If
-					Dim tn As TreeNode Ptr
-					If bTabs Then
-						Var tb = AddTab(*filn, , , Not bMain)
-						If tb AndAlso tb->Index <> n - 1 Then ptabCode->ReorderTab(tb, n - 1, True)
-					Else
-						If EndsWith(LCase(*filn), ".vfp") Then
-							tn = AddProject(*filn, @Files)
-							If tn = 0 Then Continue Do
-						ElseIf Len(Dir(*filn, fbDirectory)) Then
-							tn = AddFolder(*filn)
-							If tn = 0 Then Continue Do
-						Else
-							Var tb = AddTab(*filn)
-							If tb Then tn = tb->tn
-						End If
-						If bMain Then
-							SetMainNode tn
-						End If
-					End If
-				End If
-			End If
-		Loop
-		WDeAllocate(filn)
-		If MainNode = 0 AndAlso tn > 0 Then SetMainNode tn ' For No MainFIle
-		For i As Integer = 0 To Files.Count - 1
-			ThreadCounter(ThreadCreate_(@LoadOnlyIncludeFiles, @LoadPaths.Item(LoadPaths.IndexOf(Files.Item(i)))))
-		Next
-		If ProjectAutoSuggestions Then
-			For i As Integer = 0 To Files.Count - 1
-				Var ecc = _New(EditControlContent)
-				ecc->FileName = Files.Item(i)
-				ecc->Globals = @Cast(ProjectElement Ptr, Files.Object(i))->Globals
-				ecc->Tag = Files.Object(i)
-				Cast(ProjectElement Ptr, Files.Object(i))->Contents.Add ecc
-				If Not LoadPaths.Contains(Files.Item(i)) Then LoadPaths.Add Files.Item(i)
-				ThreadCounter(ThreadCreate_(@LoadOnlyFilePathOverwriteWithContent, ecc))
-			Next
-		End If
-		CloseFile_(Fn)
-		Return True
-	End If
-	CloseFile_(Fn)
-	Return False
-End Function
-
-Sub OpenSession()
-	Dim As OpenFileDialog OpenD
-	OpenD.Filter = ML("Ilwaco IDE Session") & " (*.vfs)|*.vfs|" & ML("All Files") & "|*.*|"
-	If WGet(LastOpenPath) <> "" Then
-		OpenD.InitialDir = *LastOpenPath
-	Else
-		OpenD.InitialDir = GetFullPath(*ProjectsPath)
-	End If
-	If Not OpenD.Execute Then Exit Sub
-	'David Chang It is not allowed load two Sessions.
-	For i As Integer = tvExplorer.Nodes.Count - 1 To 0 Step -1
-		If tvExplorer.Nodes.Item(i)->ImageKey = "Project" Then
-			CloseProject(tvExplorer.Nodes.Item(i))
-		End If
-	Next i
-	WLet(LastOpenPath, GetFolderName(OpenD.FileName))
-	AddSession OpenD.FileName
-	WLet(RecentSession, OpenD.FileName)
-	tpProject->SelectTab
-	tpProject->Repaint
-End Sub
-
 '' Move a path to the head of an MRU list (adding it if new). Split out of AddMRU because Recent
 '' Projects is a dialog with no menu to rebuild -- it reads the list directly.
 Sub AddMRUList(ByRef FileFolderName As WString, ByRef MRUFilesFolders As WStringList)
@@ -1773,10 +1665,6 @@ Sub AddMRUFolder(ByRef FolderName As WString)
 	AddMRU FolderName, MRUFolders, miRecentFolders, "Folders"
 End Sub
 
-Sub AddMRUSession(ByRef FileName As WString)
-	AddMRU FileName, MRUSessions, miRecentSessions, "Sessions"
-End Sub
-
 '' FreeBASIC's FileCopy takes its paths as ZString Ptr, so a UString argument binds through
 '' UString's `Cast() As Any Ptr` and the raw wide buffer is read as a narrow path: it ends at the
 '' first zero byte, so the copy silently fails (returns 1) having copied nothing. A concatenation
@@ -1824,10 +1712,7 @@ Sub AddNew(ByRef Template As WString = "")
 End Sub
 
 Sub OpenFiles(ByRef FileName As WString)
-	If EndsWith(LCase(FileName), ".vfs") Then
-		AddSession FileName
-		WLet(RecentSession, FileName)
-	ElseIf EndsWith(LCase(FileName), ".vfp") Then
+	If EndsWith(LCase(FileName), ".vfp") Then
 		AddProject FileName
 		WLet(RecentProject, FileName)
 	ElseIf FolderExists(FileName) Then
@@ -1849,7 +1734,7 @@ Sub OpenProgram()
 		OpenD.InitialDir = GetFullPath(*ProjectsPath)
 	End If
 	'  Add *.inc
-	OpenD.Filter = ML("FreeBasic Files") & " (*.vfs, *.vfp, *.bas, *.frm, *.bi, *.inc, *.rc)|*.vfs;*.vfp;*.bas;*.frm;*.bi;*.inc;*.rc|" & ML("Ilwaco IDE Project Group") & " (*.vfs)|*.vfs|" & ML("Ilwaco IDE Project") & " (*.vfp)|*.vfp|" & ML("FreeBasic Module") & " (*.bas)|*.bas|" & ML("FreeBasic Form Module") & " (*.frm)|*.frm|" & ML("FreeBasic Include File") & " (*.bi)|*.bi|" & ML("Other Include File") & " (*.inc)|*.inc|" & ML("Resource File") & " (*.rc)|*.rc|" & ML("All Files") & "|*.*|"
+	OpenD.Filter = ML("FreeBasic Files") & " (*.vfp, *.bas, *.frm, *.bi, *.inc, *.rc)|*.vfp;*.bas;*.frm;*.bi;*.inc;*.rc|" & ML("Ilwaco IDE Project") & " (*.vfp)|*.vfp|" & ML("FreeBasic Module") & " (*.bas)|*.bas|" & ML("FreeBasic Form Module") & " (*.frm)|*.frm|" & ML("FreeBasic Include File") & " (*.bi)|*.bi|" & ML("Other Include File") & " (*.inc)|*.inc|" & ML("Resource File") & " (*.rc)|*.rc|" & ML("All Files") & "|*.*|"
 	If OpenD.Execute Then
 		WLet(LastOpenPath, GetFolderName(OpenD.FileName))
 		OpenFiles(GetFullPath(OpenD.FileName))
@@ -1951,92 +1836,6 @@ Function LoadWorkspace() As Boolean
 	CloseFile_(Fn)
 	If bHasUseDebugger Then ChangeUseDebugger bUseDebuggerSaved, 1
 	Return CBool(bProjectLoaded) OrElse CBool(ptabCode->TabCount > 0)
-End Function
-
-Function SaveSession(WithoutQuestion As Boolean = False) As Boolean
-	Dim As ExplorerElement Ptr ee
-	Dim As WString Ptr Temp, Temp2
-	If WithoutQuestion Then
-		SaveD.FileName = *RecentSession
-	Else
-		SaveD.Caption = ML("Save Session As")
-		SaveD.Filter = ML("Ilwaco IDE Session") & " (*.vfs)|*.vfs|"
-		If WGet(LastOpenPath) <> "" Then
-			SaveD.InitialDir = *LastOpenPath
-		Else
-			SaveD.InitialDir = GetFullPath(*ProjectsPath)
-		End If
-		If Not SaveD.Execute Then Return False
-		WLet(LastOpenPath, GetFolderName(SaveD.FileName))
-		WLet(RecentSession, *LastOpenPath)
-		If FileExists(SaveD.FileName) Then
-			Select Case MsgBox(ML("Are you sure you want to overwrite the session") & "?" & WChr(13,10) & SaveD.FileName, "Ilwaco IDE", mtWarning, btYesNo)
-			Case mrYes:
-			Case mrNo: Return SaveSession()
-			End Select
-		End If
-	End If
-	Dim As TreeNode Ptr tn1
-	Dim As Integer p
-	Dim As String Zv
-	Dim As Integer Fn = FreeFile_
-	Dim As TabWindow Ptr tb
-	If Open(SaveD.FileName For Output Encoding "utf-8" As #Fn) = 0 Then
-		For i As Integer = 0 To tvExplorer.Nodes.Count - 1
-			tn1 = tvExplorer.Nodes.Item(i)
-			ee = tn1->Tag
-			If ee = 0 Then
-				For j As Integer = 0 To TabPanels.Count - 1
-					Var ptabCode = @Cast(TabPanel Ptr, TabPanels.Item(j))->tabCode
-					For i As Integer = 0 To ptabCode->TabCount - 1
-						tb = Cast(TabWindow Ptr, ptabCode->Tabs[i])
-						If tb AndAlso tb->tn = tn1 Then
-							If tb->Modified Then
-								If (Not tb->Save) AndAlso Not FileExists(tb->FileName) Then
-									Continue For
-								End If
-							End If
-							Zv = IIf(tn1 = MainNode, "*", "")
-							If StartsWith(tb->FileName & Slash, GetFolderName(SaveD.FileName)) Then
-								Print #Fn, Zv & "File=" & Replace(Mid(tb->FileName, Len(GetFolderName(SaveD.FileName)) + 1), "\", "/")
-							Else
-								Print #Fn, Zv & "File=" & Replace(tb->FileName, "\", "/")
-							End If
-						End If
-					Next i
-				Next j
-			Else
-				Zv = IIf(tn1 = MainNode, "*", "")
-				If StartsWith(*ee->FileName & Slash, GetFolderName(SaveD.FileName)) Then
-					Print #Fn, Zv & "File=" & Replace(Mid(*ee->FileName, Len(GetFolderName(SaveD.FileName)) + 1), "\", "/")
-				Else
-					Print #Fn, Zv & "File=" & Replace(*ee->FileName, "\", "/")
-				End If
-			End If
-		Next
-		Print #Fn, "[Tabs]"
-		For j As Integer = 0 To TabPanels.Count - 1
-			Var ptabCode = @Cast(TabPanel Ptr, TabPanels.Item(j))->tabCode
-			For i As Integer = 0 To ptabCode->TabCount - 1
-				tb = Cast(TabWindow Ptr, ptabCode->Tabs[i])
-				If tb Then
-					If Not FileExists(tb->FileName) Then
-						Continue For
-					End If
-					Zv = IIf(tb->IsSelected, "*", "")
-					If StartsWith(tb->FileName & Slash, GetFolderName(SaveD.FileName)) Then
-						Print #Fn, Zv & "File=" & Replace(Mid(tb->FileName, Len(GetFolderName(SaveD.FileName)) + 1), "\", "/")
-					Else
-						Print #Fn, Zv & "File=" & Replace(tb->FileName, "\", "/")
-					End If
-				End If
-			Next i
-		Next j
-	End If
-	CloseFile_(Fn)
-	WDeAllocate(Temp)
-	WDeAllocate(Temp2)
-	Return True
 End Function
 
 Sub SetSaveDialogParameters(ByRef FileName As WString)
@@ -2348,7 +2147,11 @@ Sub CloseAllTabs(WithoutCurrent As Boolean = False)
 	Next jj
 End Sub
 
-Function CloseSession() As Boolean
+'' Close everything the workspace holds -- every project and every tab -- with ONE batched
+'' save prompt (frmSave), and answer False if the user cancels. This is the gate frmMain_Close
+'' runs before the IDE will exit; it was called CloseSession when Ilwaco still had `.vfs`
+'' sessions, which it no longer does.
+Function CloseWorkspace() As Boolean
 	Dim tb As TabWindow Ptr
 	Dim tn As TreeNode Ptr
 	Dim tnP As TreeNode Ptr
@@ -5625,7 +5428,6 @@ Sub LoadSettings
 	SnapToGridOption = iniSettings.ReadBool("Options", "SnapToGrid", True)
 	AutoIncrement = iniSettings.ReadBool("Options", "AutoIncrement", True)
 	AutoCreateRC = iniSettings.ReadBool("Options", "AutoCreateRC", True)
-	AutoSaveSession = iniSettings.ReadBool("Options", "AutoSaveSession", False)
 	AutoSaveBeforeCompiling = iniSettings.ReadInteger("Options", "AutoSaveBeforeCompiling", 1)
 	AutoCreateBakFiles = iniSettings.ReadBool("Options", "AutoCreateBakFiles", False)
 	AddRelativePathsToRecent = iniSettings.ReadBool("Options", "AddRelativePathsToRecent", True)
@@ -5918,7 +5720,6 @@ Sub CreateMenusAndToolBars
 	imgList.Add "Make", "Make"
 	imgList.Add "Book", "Book"
 	imgList.Add "About", "About"
-	imgList.Add "Session", "Session"
 	imgList.Add "File", "File"
 	imgList.Add "MainFile", "MainFile"
 	imgList.Add "Resource", "Resource"
@@ -6046,9 +5847,6 @@ Sub CreateMenusAndToolBars
 	miFile->Add(ML("&New") & HK("New", "Ctrl+N"), "New", "New", @mClick)
 	miFile->Add(ML("&Open") & "..." & HK("Open", "Ctrl+O"), "Open", "Open", @mClick)
 	miFile->Add("-")
-	miFile->Add(ML("Open Session") & HK("OpenSession", "Ctrl+Alt+O"), "", "OpenSession", @mClick)
-	miFile->Add(ML("Save Session") & HK("SaveFolder", "Ctrl+Alt+S"), "", "SaveSession", @mClick)
-	miFile->Add("-")
 	miFile->Add(ML("Open Folder") & HK("OpenFolder", "Alt+O"), "", "OpenFolder", @mClick)
 	miFile->Add("-")
 	miSave = miFile->Add(ML("&Save") & "..." & HK("Save", "Ctrl+S"), "Save", "Save", @mClick, , , False)
@@ -6057,26 +5855,13 @@ Sub CreateMenusAndToolBars
 	miFile->Add("-")
 	miClose = miFile->Add(ML("&Close") & HK("Close", "Ctrl+F4"), "Close", "Close", @mClick, , , False)
 	miCloseAll = miFile->Add(ML("Close All") & HK("CloseAll", "Ctrl+Shift+F4"), "", "CloseAll", @mClick, , , False)
-	miCloseSession = miFile->Add(ML("Close Session") & HK("CloseSession", "Ctrl+Alt+Shift+F4"), "", "CloseSession", @mClick, , , False)
 	miFile->Add("-")
 	miPrint = miFile->Add(ML("&Print") & HK("Print", "Ctrl+P"), "Print", "Print", @mClick, , , False)
 	miPrintPreview = miFile->Add(ML("Print P&review") & HK("PrintPreview"), "PrintPreview", "PrintPreview", @mClick, , , False)
 	miPageSetup = miFile->Add(ML("Page Set&up") & "..." & HK("PageSetup"), "", "PageSetup", @mClick, , , False)
 	miFile->Add("-")
 
-	'David Change  Add Recent Sessions
-	miRecentSessions = miFile->Add(ML("Recent Sessions"), "", "RecentSessions", @mClick)
 	Dim sTmp As WString * 1024
-	For i As Integer = 0 To miRecentMax
-		sTmp = iniSettings.ReadString("MRUSessions", "MRUSession_0" & WStr(i), "")
-		If Trim(sTmp) <> "" Then
-			MRUSessions.Add sTmp
-			miRecentSessions->Add(sTmp, "", sTmp, @mClickMRU)
-		End If
-	Next
-	miRecentSessions->Add("-")
-	miRecentSessions->Add(ML("Clear Recently Opened"),"","ClearSessions", @mClickMRU)
-	
 	miRecentFolders = miFile->Add(ML("Recent Folders"), "", "RecentFolders", @mClick)
 	For i As Integer = 0 To miRecentMax
 		sTmp = iniSettings.ReadString("MRUFolders", "MRUFolder_0" & WStr(i), "")
@@ -6995,7 +6780,7 @@ Sub tvExplorer_SelChange(ByRef Designer As My.Sys.Object, ByRef Sender As TreeVi
 			'miExplorerProjectProperties->Enabled = True
 			'			MainNode->ImageKey = "MainProject"
 			'			MainNode->Bold = True
-			If mStartLoadSession = False Then
+			If mStartupLoading = False Then
 				If tpChangeLog->IsSelected AndAlso Not mLoadLog Then
 					If mChangeLogEdited AndAlso mChangelogName<> "" Then
 						txtChangeLog.SaveToFile(mChangelogName)  ' David Change
@@ -9207,7 +8992,6 @@ Sub frmMain_Create(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	WLet(RecentFile, iniSettings.ReadString("MainWindow", "RecentFile", ""))
 	WLet(RecentProject, iniSettings.ReadString("MainWindow", "RecentProject", ""))
 	WLet(RecentFolder, iniSettings.ReadString("MainWindow", "RecentFolder", ""))
-	WLet(RecentSession, iniSettings.ReadString("MainWindow", "RecentSession", ""))
 	ShowStandardToolBar = iniSettings.ReadBool("MainWindow", "ShowStandardToolBar", True)
 	ShowEditToolBar = iniSettings.ReadBool("MainWindow", "ShowEditToolBar", True)
 	ShowProjectToolBar = iniSettings.ReadBool("MainWindow", "ShowProjectToolbar", True)
@@ -9278,7 +9062,7 @@ Sub frmMain_Create(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	
 	gLocalProperties = True
 	
-	mStartLoadSession = False
+	mStartupLoading = False
 	
 	'frmMain.RequestAlign
 End Sub
@@ -9439,22 +9223,12 @@ Sub SaveMRU
 	For i = i To miRecentMax
 		iniSettings.KeyRemove("MRUProjects", "MRUProject_0" & WStr(i))
 	Next
-	MRUStart = Max(MRUSessions.Count - miRecentMax, 0)
-	For i = MRUStart To MRUSessions.Count - 1
-		iniSettings.WriteString("MRUSessions", "MRUSession_0" & WStr(i - MRUStart), MRUSessions.Item(i))
-	Next
-	For i = i To miRecentMax
-		iniSettings.KeyRemove("MRUSessions", "MRUSession_0" & WStr(i))
-	Next
 End Sub
 
 Sub frmMain_Close(ByRef Designer As My.Sys.Object, ByRef Sender As Form, ByRef Action As Integer)
 	On Error Goto ErrorHandler
-	If AutoSaveSession AndAlso SessionOpened AndAlso Trim(*RecentSession) <> "" Then
-		SaveSession(True)
-	End If
 	SaveWorkspace()   '' remember the open project and tabs for the next start
-	If Not CloseSession Then Action = 0: Return
+	If Not CloseWorkspace Then Action = 0: Return
 	FormClosing = True
 	StopAgentPipe()   '' stop the agent listener before teardown so no command races the close
 	If frmMain.WindowState <> WindowStates.wsMaximized Then
@@ -9525,7 +9299,6 @@ Sub frmMain_Close(ByRef Designer As My.Sys.Object, ByRef Sender As Form, ByRef A
 	iniSettings.WriteString("MainWindow", "RecentFile", *RecentFile)
 	iniSettings.WriteString("MainWindow", "RecentProject", *RecentProject)
 	iniSettings.WriteString("MainWindow", "RecentFolder", *RecentFolder)
-	iniSettings.WriteString("MainWindow", "RecentSession", *RecentSession)
 	If mChangeLogEdited Then txtChangeLog.SaveToFile(ExePath & Slash & StringExtract(MainNode->Text, ".") & "_Change.log") '
 	UnLoadAddins
 	Exit Sub
@@ -9640,7 +9413,6 @@ Sub OnProgramQuit() Destructor
 	WDeAllocate(RecentFile)
 	WDeAllocate(RecentProject)
 	WDeAllocate(RecentFolder)
-	WDeAllocate(RecentSession)
 	WDeAllocate(DefaultHelp)
 	WDeAllocate(HelpPath)
 	WDeAllocate(DefaultBuildConfiguration)
