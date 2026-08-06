@@ -22,31 +22,47 @@ CLAUDE.md "Working practices".
 
 ---
 
-## ✅ DONE (2026-08-04, later) — Console template rewritten; T14/T15 now PASS; branding cleared
+## ✅ DONE (2026-08-06) — MCP Task 6: the agent listener is opt-out, visible, and documented
 
-The Console Application template no longer breaks. It pulled in MFF's `mff/Console.bi`, which was
-pure Win32 (84 console-API calls, a `windows.bi` include dragging in `-lkernel32/-lgdi32/-luser32/…`),
-so a beginner picking "Console Application" got a project that would not link. Per the owner decision:
+The Agent MCP server stopped being a thing only we knew how to switch on. Five pieces, all live-verified:
 
-- **`Templates/Projects/Console Application/Main.bas` rewritten in plain FreeBASIC** — `Print` for
-  output, `Color` for colour, both native on Linux; BOM-less, LF-only. It now prints a greeting
-  instead of the old empty template.
-- **`Controls/MyFbFramework/mff/Console.bi` deleted** as dead Windows code (nothing else in the repo
-  included it), with a `REMOVED_FEATURES` guard for `ConsoleType` added to `Tools/DocCheck.py`.
-- **Stale `VisualFBEditor` branding cleared:** the Console template's `Console.Title` went with the
-  rewrite, and `Templates/Files/Form_3D.frm`'s caption `"VisualFBEditor-3D"` → `"Form1"` (matching the
-  plain `Form.frm` template). The only `VisualFBEditor` strings left are in the *not-offered* Windows
-  templates (Android/Addin), whose deletion is a separate open question.
+- **`AllowAgentControl`** — a `[Options]` key in `Settings/ilwaco.ini`, **default True** (Ilwaco is
+  agent-first), read in `LoadSettings`. `frmMain_Show` now starts the socket only `If AllowAgentControl`,
+  so the sidecar's `--mcp-agent` auto-launch no longer grants access by itself.
+- **Tools ▸ Options ▸ General ▸ "Allow AI agent control (MCP)"** — the checkbox, wired through the same
+  five points every General checkbox uses.
+- **`ReconcileAgentPipe()`** (`src/Main.bas`), called at the end of `cmdApply_Click`, starts/stops the
+  listener to match the setting — **the toggle takes effect without a restart**.
+- **Status-bar panel 3 now reads "MCP Agent: On/Off"** (`UpdateMcpAgentStatusBar`). It was the
+  file-encoding readout, which under the UTF-8-only directive could only ever say "UTF-8"; the agent
+  state varies and matters. `ChangeFileEncoding` and its two call sites are **deleted**, not left as an
+  empty hook.
+- **[Documentation/AgentMcpSetup.md](Documentation/AgentMcpSetup.md)** — the user-facing "connect Claude
+  to this" page: registering `ilwaco-mcp` with Claude Code/Desktop, the shim's `LD_LIBRARY_PATH` for a
+  source build, the 15 tools, security notes, troubleshooting. Added to TestPlan's rule table; DocCheck
+  green. Packaging needed nothing new — `./build-linux.sh sidecar` already builds `ilwaco-mcp` and both
+  binaries are tracked.
 
-**Verified by effect, end to end through the IDE (T14/T15 now PASS).** Created a Console project via
-New Project → compiled + linked it from the IDE ("Layout succeeded, Elapsed 0.06s") → the built exe
-prints single-byte ASCII (`Hello, world!` …), exit 0 — the BOM regression check. The New Project type
-list showed exactly the six-item whitelist. All six offered types compile (Console needs
-`-p <shim> -l tinfo` on the dev box until the AppImage ships `libncurses`). **No IDE rebuild was
-needed** — only template/doc data and a header that was never on the IDE's build path changed.
+**Verified by effect** on `:0`, driving the real dialog with `xdotool` and reading state from the socket
+and screenshots: default-ON launch binds the socket and shows **"MCP Agent: On"**; untick + OK removes
+the socket file, flips the panel to **"MCP Agent: Off"** and fails `ping`, with no restart; the setting
+persists and the reopened dialog reflects it; the sidecar then reports *"…make sure Tools > Options >
+Allow AI agent control is ticked"* and does **not** launch a second IDE; re-tick + OK re-binds live and a
+full `initialize` → `tools/list` (**15 tools**) → `tools/call get_status` round-trip succeeds; and a
+restart with the key false binds nothing at startup. Both closes exited 139 — the known intermittent
+shutdown SIGSEGV, which also fired on the run where the listener was never started.
 
-Running that Console project also surfaced the terminal-launcher gap, now **fixed** — see the next
-section.
+### Start here next session
+
+**Resume the MCP thread at Task 7** — the end-to-end loop from a real MCP client: create a project →
+build → read errors → fix → run, asserted against a program with a known answer (McpServer.md suggests
+primes below 1,000,000 = 78498). Tasks 0–6 are DONE and verified; the designer tools stay deferred.
+Known v1 limits (shutdown-during-build hang, locationless linker errors) and a spawned side-task
+(project `.vfp` BOMs from `SaveProject` and the template data) are in
+[Documentation/McpServer.md](Documentation/McpServer.md).
+
+Secondary (only if the MCP thread stalls): the **Astoria→Ilwaco changelog walk** — the menu-taxonomy /
+Options-panel cluster below, plus the deferred Examples BOM sweep.
 
 ---
 
@@ -83,40 +99,19 @@ now silently keeps English. A/B-verified (pre-fix app printed `…/Languages/C.U
 prints nothing), then the lib **and** editor were rebuilt. Both fixes are detailed in
 [TechnicalDebt.md](Documentation/TechnicalDebt.md) "Paid down 2026-08-05".
 
-### Start here next session
-
-**In flight: the Agent MCP server** (owner asked 2026-08-05 for Astoria's MCP sidecar in Ilwaco). This
-is a phased Linux/GTK port tracked in [Documentation/McpServer.md](Documentation/McpServer.md) —
-**Tasks 0–5 are DONE and verified.** 0–3: the IDE-side socket server, read-only tools + path guard, the
-`ilwaco-mcp` sidecar (a real MCP client drives the IDE end-to-end, auto-launching it), and the mutation
-tools. **Task 4: build/run/errors** — `build`/`syntax_check`/`run`/`get_errors`, async so the GTK UI never
-freezes (save dirty tabs → build thread running the same `Compile()` the menu runs → a `g_idle` finalizer
-reads the Problems list and wakes the waiting pipe worker). **Task 5 (2026-08-06): `create_project`** — from
-a template under `ProjectsPath`, mirroring the New Project dialog's copy flow (BOM-less `.vfp`); also fixed
-a latent bug where opening/creating a *second* project didn't switch the active project (`AddProject` only
-auto-sets `MainNode` when none is open) — a new `AgentOpenProjectNode` helper adds `SetMainNode`, used by
-both `create_project` and `open_project`. The AI-friendly stamping is a marked extension point (AI features
-are coming back — owner 2026-08-06). Core files: [src/AgentPipe.bas](src/AgentPipe.bas)/`.bi`,
-[src/AgentMcp.bas](src/AgentMcp.bas) (→ `./ilwaco-mcp`), [src/JsonLite.bas](src/JsonLite.bas)/`.bi`.
-
-**Resume at Task 6** (Options opt-in toggle + INI key, ship `ilwaco-mcp`, setup doc), then **Task 7**
-(end-to-end create→build→fix→run loop from a real MCP client). Deferred designer tools stay deferred.
-Known v1 limits + a spawned side-task (project `.vfp` BOMs from `SaveProject`/templates) are in McpServer.md.
-
-Secondary (only if the MCP thread stalls): the **Astoria→Ilwaco changelog walk** — the menu-taxonomy /
-Options-panel cluster below, plus the deferred Examples BOM sweep.
-
 ---
 
 ## IN FLIGHT — Agent MCP server
 
 Port Astoria's Agent MCP server to Linux/GTK so an MCP client can drive the live IDE. Design, the three
 Win32→Linux substitutions, the owner decisions, and the Task 0–7 progress table live in
-[Documentation/McpServer.md](Documentation/McpServer.md). **Tasks 0–5 verified end-to-end:** a real MCP
+[Documentation/McpServer.md](Documentation/McpServer.md). **Tasks 0–6 verified end-to-end:** a real MCP
 client → `ilwaco-mcp` sidecar → Unix socket → live IDE, auto-launching the IDE, running the read-only,
 project (`open_project`/`create_project`), mutation, and **build/run/errors** tools against an opened
-project, with the project-root path guard blocking `..` escapes. **Next: Task 6** (options toggle +
-packaging), then 7 (end-to-end). Read the McpServer.md task narratives before starting a task.
+project, with the project-root path guard blocking `..` escapes — and the listener now gated by the
+Tools ▸ Options opt-in (default ON) with its state in the status bar, set up for a user by
+[Documentation/AgentMcpSetup.md](Documentation/AgentMcpSetup.md). **Next: Task 7** (the end-to-end
+create → build → fix → run loop). Read the McpServer.md task narratives before starting a task.
 
 ---
 

@@ -11,6 +11,34 @@ for the classified port backlog, [Documentation/AstoriaParity.md](Documentation/
 
 ---
 
+## ✅ DONE (2026-08-04, later) — Console template rewritten; T14/T15 now PASS; branding cleared
+
+The Console Application template no longer breaks. It pulled in MFF's `mff/Console.bi`, which was
+pure Win32 (84 console-API calls, a `windows.bi` include dragging in `-lkernel32/-lgdi32/-luser32/…`),
+so a beginner picking "Console Application" got a project that would not link. Per the owner decision:
+
+- **`Templates/Projects/Console Application/Main.bas` rewritten in plain FreeBASIC** — `Print` for
+  output, `Color` for colour, both native on Linux; BOM-less, LF-only. It now prints a greeting
+  instead of the old empty template.
+- **`Controls/MyFbFramework/mff/Console.bi` deleted** as dead Windows code (nothing else in the repo
+  included it), with a `REMOVED_FEATURES` guard for `ConsoleType` added to `Tools/DocCheck.py`.
+- **Stale `VisualFBEditor` branding cleared:** the Console template's `Console.Title` went with the
+  rewrite, and `Templates/Files/Form_3D.frm`'s caption `"VisualFBEditor-3D"` → `"Form1"` (matching the
+  plain `Form.frm` template). The only `VisualFBEditor` strings left are in the *not-offered* Windows
+  templates (Android/Addin), whose deletion is a separate open question.
+
+**Verified by effect, end to end through the IDE (T14/T15 now PASS).** Created a Console project via
+New Project → compiled + linked it from the IDE ("Layout succeeded, Elapsed 0.06s") → the built exe
+prints single-byte ASCII (`Hello, world!` …), exit 0 — the BOM regression check. The New Project type
+list showed exactly the six-item whitelist. All six offered types compile (Console needs
+`-p <shim> -l tinfo` on the dev box until the AppImage ships `libncurses`). **No IDE rebuild was
+needed** — only template/doc data and a header that was never on the IDE's build path changed.
+
+Running that Console project also surfaced the terminal-launcher gap, now **fixed** — see the next
+section.
+
+---
+
 ## ✅ DONE (2026-08-04) — `frmNewProject` works end to end; the `FileCopy`/`UString` trap found
 
 New Project (`src/frmNewProject.{bi,frm}`, registered in `ilwaco.vfp`, included from `Main.bas`) is

@@ -2929,8 +2929,28 @@ Sub ChangeLockControls(bLockControls As Boolean, ChangeObject As Integer = -1)
 	If ChangeObject <> 1 AndAlso miLockControls->Checked <> LockControls Then miLockControls->Checked = bLockControls: mnuDesigner.Item("LockControls")->Checked = bLockControls
 End Sub
 
-Sub ChangeFileEncoding(FileEncoding As FileEncodings)
-	If stBar.Count > 3 Then stBar.Panels[3]->Caption = "UTF-8"
+'' Reflect the agent socket's live state in status-bar panel 3. The panel used to be the
+'' file-encoding readout, but Ilwaco is UTF-8-only so it never varied; it now shows whether
+'' an AI agent can drive the IDE, which does vary and matters (MCP Task 6).
+Sub UpdateMcpAgentStatusBar()
+	If stBar.Count > 3 Then
+		If AgentPipeActive() Then
+			stBar.Panels[3]->Caption = "MCP Agent: On"
+		Else
+			stBar.Panels[3]->Caption = "MCP Agent: Off"
+		End If
+	End If
+End Sub
+
+'' Bring the agent socket into line with the AllowAgentControl setting. Called from
+'' Tools > Options (Apply/OK) so toggling the checkbox takes effect without a restart.
+Sub ReconcileAgentPipe()
+	If AllowAgentControl Then
+		If Not AgentPipeActive() Then StartAgentPipe()
+	Else
+		If AgentPipeActive() Then StopAgentPipe()
+	End If
+	UpdateMcpAgentStatusBar()
 End Sub
 
 Sub ChangeNewLineType(NewLineType As NewLineTypes)
@@ -5496,6 +5516,9 @@ Sub LoadSettings
 	AutoSaveBeforeCompiling = iniSettings.ReadInteger("Options", "AutoSaveBeforeCompiling", 1)
 	AutoCreateBakFiles = iniSettings.ReadBool("Options", "AutoCreateBakFiles", False)
 	AddRelativePathsToRecent = iniSettings.ReadBool("Options", "AddRelativePathsToRecent", True)
+	'' Agent MCP socket. Default ON -- Ilwaco is meant to be driven agent-first, so the listener
+	'' comes up unless the user unticks Tools > Options > "Allow AI agent control (MCP)".
+	AllowAgentControl = iniSettings.ReadBool("Options", "AllowAgentControl", True)
 	WhenVisualFBEditorStarts = iniSettings.ReadInteger("Options", "WhenVisualFBEditorStarts", 2)
 	WLet(DefaultProjectFile, iniSettings.ReadString("Options", "DefaultProjectFile", "Files/Form.frm"))
 	DefaultFileFormat = FileEncodings.Utf8
@@ -5724,7 +5747,7 @@ stBar.Align = DockStyle.alBottom
 stBar.Add ML("Press F1 for help"), tWidth * 25
 stBar.Add("", tWidth * 50) 'Row +Col 
 stBar.Add ML("IntelliSense fully loaded"), tWidth * 27
-stBar.Add "UTF-8", tWidth * 11
+stBar.Add "MCP Agent: Off", tWidth * 17   ' repurposed from the (always-UTF-8) encoding readout; set live by UpdateMcpAgentStatusBar
 stBar.Add "LF", tWidth * 6
 stBar.Add "NUM", tWidth * 4
 stBar.Panels[0]->Width = Max(stBar.Width - 50 - stBar.Panels[1]->Width - stBar.Panels[2]->Width - stBar.Panels[3]->Width  - stBar.Panels[4]->Width - stBar.Panels[5]->Width, 20)
@@ -8223,7 +8246,6 @@ Sub tabCode_SelChange(ByRef Designer As My.Sys.Object, ByRef Sender As TabContro
 	Else
 		frmMain.Caption = tb->FileName & " - " & App.Title
 	End If
-	ChangeFileEncoding tb->FileEncoding
 	ChangeNewLineType tb->NewLineType
 	tbOld = tb
 End Sub
@@ -9273,7 +9295,10 @@ Sub frmMain_Show(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	'' while the agent drives us over the socket. An agent launch never carries a file to open.
 	Dim As Boolean bAgentLaunched = (InStr(LCase(File), "--mcp-agent") > 0)
 	If bAgentLaunched Then File = ""
-	StartAgentPipe()
+	'' The listener is opt-out (default ON), so an --mcp-agent launch alone does not grant
+	'' access -- AllowAgentControl still governs. Tools > Options toggles it without a restart.
+	If AllowAgentControl Then StartAgentPipe()
+	UpdateMcpAgentStatusBar()
 	Var Pos1 = InStr(File, "2>CON")
 	Var bFileOpening = False
 	If Pos1 > 0 Then File = Left(File, Pos1 - 1)

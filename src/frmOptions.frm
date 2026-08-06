@@ -513,6 +513,18 @@ pfOptions = @fOptions
 			.SetBounds 0, 98, 190, 21
 			.Parent = @vbxGeneral
 		End With
+		' chkAllowAgentControl
+		With chkAllowAgentControl
+			.Name = "chkAllowAgentControl"
+			.Text = ML("Allow AI agent control (MCP)")
+			.TabIndex = 104
+			.ExtraMargins.Top = 0
+			.Align = DockStyle.alTop
+			.Constraints.Height = 21
+			.AutoSize = True
+			.SetBounds 0, 119, 380, 21
+			.Parent = @vbxGeneral
+		End With
 		' grbIncludePaths
 		With grbIncludePaths
 			.Name = "grbIncludePaths"
@@ -2793,6 +2805,7 @@ Sub frmOptions.LoadSettings()
 		.chkAutoCreateBakFiles.Checked = AutoCreateBakFiles
 		.chkAutoSaveSession.Checked = AutoSaveSession
 		.chkAddRelativePathsToRecent.Checked = AddRelativePathsToRecent
+		.chkAllowAgentControl.Checked = AllowAgentControl
 		.chkCreateNonStaticEventHandlers.Checked = CreateNonStaticEventHandlers
 		.chkPlaceStaticEventHandlersAfterTheConstructor.Checked = PlaceStaticEventHandlersAfterTheConstructor
 		.chkCreateStaticEventHandlersWithAnUnderscoreAtTheBeginning.Checked = CreateStaticEventHandlersWithAnUnderscoreAtTheBeginning
@@ -3349,6 +3362,7 @@ Private Sub frmOptions.cmdApply_Click(ByRef Designer As My.Sys.Object, ByRef Sen
 		AutoCreateBakFiles = .chkAutoCreateBakFiles.Checked
 		AutoSaveSession = .chkAutoSaveSession.Checked
 		AddRelativePathsToRecent = .chkAddRelativePathsToRecent.Checked
+		AllowAgentControl = .chkAllowAgentControl.Checked
 		CreateNonStaticEventHandlers = .chkCreateNonStaticEventHandlers.Checked
 		PlaceStaticEventHandlersAfterTheConstructor = .chkPlaceStaticEventHandlersAfterTheConstructor.Checked
 		CreateEventHandlersWithoutStaticEventHandlerIfEventAllowsIt = .chkCreateEventHandlersWithoutStaticEventHandlerIfEventAllowsIt.Checked
@@ -3519,6 +3533,7 @@ Private Sub frmOptions.cmdApply_Click(ByRef Designer As My.Sys.Object, ByRef Sen
 		piniSettings->WriteBool "Options", "AutoCreateBakFiles", AutoCreateBakFiles
 		piniSettings->WriteBool "Options", "AutoSaveSession", AutoSaveSession
 		piniSettings->WriteBool "Options", "AddRelativePathsToRecent", AddRelativePathsToRecent
+		piniSettings->WriteBool "Options", "AllowAgentControl", AllowAgentControl
 		piniSettings->WriteString "Options", "DefaultProjectFile", WGet(DefaultProjectFile)
 		piniSettings->WriteInteger "Options", "LastOpenedFileType", LastOpenedFileType
 		piniSettings->WriteInteger "Options", "WhenVisualFBEditorStarts", WhenVisualFBEditorStarts
@@ -3831,6 +3846,8 @@ Private Sub frmOptions.cmdApply_Click(ByRef Designer As My.Sys.Object, ByRef Sen
 			Next
 		Next
 	End With
+	'' Apply the AI-agent opt-in live so the socket starts/stops without a restart (MCP Task 6).
+	ReconcileAgentPipe()
 	Exit Sub
 	ErrorHandler:
 	MsgBox ErrDescription(Err) & " (" & Err & ") " & _

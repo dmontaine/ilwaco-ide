@@ -101,6 +101,7 @@ Common Shared As Boolean AutoCreateRC
 Common Shared As Boolean AutoCreateBakFiles, gLocalProperties
 Common Shared As Boolean AutoSaveSession, SessionOpened
 Common Shared As Boolean AddRelativePathsToRecent
+Common Shared As Boolean AllowAgentControl   ' Tools > Options: let the ilwaco-mcp sidecar drive the IDE (MCP)
 Common Shared As Boolean UseMakeOnStartWithCompile
 Common Shared As Boolean CreateNonStaticEventHandlers, CreateFormTypesWithoutTypeWord
 Common Shared As Boolean PlaceStaticEventHandlersAfterTheConstructor, CreateStaticEventHandlersWithAnUnderscoreAtTheBeginning, CreateEventHandlersWithoutStaticEventHandlerIfEventAllowsIt
@@ -232,7 +233,8 @@ Declare Sub ChangeEnabledDebug(bStart As Boolean, bBreak As Boolean, bEnd As Boo
 Declare Sub ClearThreadsWindow() ' Defined in ilwaco.bas; forward-declared here since Main.bi pulls in Main.bas before ilwaco.bas defines it
 Declare Sub ChangeLockControls(bLockControls As Boolean, ChangeObject As Integer = -1)
 Declare Sub ChangeUseDebugger(bUseDebugger As Boolean, ChangeObject As Integer = -1)
-Declare Sub ChangeFileEncoding(FileEncoding As FileEncodings)
+Declare Sub UpdateMcpAgentStatusBar()
+Declare Sub ReconcileAgentPipe()
 Declare Sub ChangeNewLineType(NewLineType As NewLineTypes)
 	Common Shared As Long CurrentTimer, CurrentTimerData
 	Declare Sub TimerProc()

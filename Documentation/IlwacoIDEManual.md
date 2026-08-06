@@ -21,6 +21,9 @@ rewritten, not adapted line-by-line:
   [IlwacoIDESignificantChanges.md](IlwacoIDESignificantChanges.md) for what is gone.
 - **GTK behaviour.** The collapsible vertical-text tool-panel rails, dark mode (once it fires), and
   keyboard/menu specifics need to be documented from the GTK build, not from Astoria's Win32 one.
+- **The AI-agent chapter already exists** as [AgentMcpSetup.md](AgentMcpSetup.md) — connecting a
+  client to `ilwaco-mcp`, the "Allow AI agent control (MCP)" opt-in, and the status-bar readout. Fold
+  it in (or link it) rather than rewriting it.
 
 Write this once the feature set stabilises. Until then, [PROJECT_STATUS.md](../PROJECT_STATUS.md) is
 the authoritative description of current behaviour.

@@ -74,6 +74,16 @@ necessary but not sufficient — "it compiled" is not "it works".
   against the pre-fix `mff/Application.bas` the app printed `Open file failure! … Application.CurLanguage.
   File Name: …/Languages/C.UTF-8.lng`; built against the fix it prints nothing. `ML()` still returns the
   untranslated (English) key. TechnicalDebt "Paid down 2026-08-05".
+- **The agent listener obeys its opt-in, live (2026-08-06).** With "Allow AI agent control (MCP)"
+  ticked the Unix socket is bound, `ping` answers, and the status bar reads "MCP Agent: On";
+  unticking it in Tools ▸ Options and pressing OK removes the socket file, fails the next connect and
+  flips the panel to "MCP Agent: Off" **without a restart**; the choice persists to
+  `Settings/ilwaco.ini` and the reopened dialog shows it; re-ticking re-binds live; and a restart with
+  the key false binds nothing at startup. TestPlan T16.
+- **An MCP client reaches the IDE, and is told what to do when it can't (2026-08-06).** Through
+  `ilwaco-mcp`'s stdio: `initialize` → `tools/list` (15 tools) → `tools/call get_status` all succeed
+  with the toggle on. With it off the tool call returns `isError` and names the checkbox to tick, and
+  no second IDE is launched. TestPlan T17.
 
 ## Not proven (known gaps)
 - **Six of the eight `FileCopy_` call sites are build-verified only.** New Project exercised the two

@@ -21,7 +21,8 @@ keeps only this Markdown.)
 - **Rebranded to Ilwaco IDE.** VisualFBEditor → **Ilwaco IDE** in the UI, `ilwaco` for files and the
   executable. The internal source namespace is kept to minimise churn against the base.
 - **UTF-8 + LF only.** New files are written UTF-8 without a BOM, newlines are LF; the encoding and
-  newline **selection** UI was removed.
+  newline **selection** UI was removed, and with it the status bar's encoding readout — a panel that
+  could only ever say "UTF-8". That panel now shows the MCP agent state (§4).
 - **English only.** The other interface languages were removed; `ML()` is a passthrough.
 
 ## 2. Features removed (opinionated by design)
@@ -73,6 +74,23 @@ Each of these was a *choice* in VisualFBEditor and is now made once, with the op
   user variable overriding the inherited one of the same name. Implemented for `fork`/`execve`: the
   block is built in the parent, because after `fork()` in a multithreaded process the child must not
   allocate.
+
+## 4. Added: an AI agent can drive the IDE (MCP, 2026-08-06)
+
+Ilwaco ships an **Agent MCP server** — nothing in VisualFBEditor corresponds to it. A small native
+sidecar, `ilwaco-mcp`, sits beside the `ilwaco` binary and speaks MCP/JSON-RPC over stdio to a client
+such as Claude Code or Claude Desktop, forwarding each tool call to the running IDE over a per-user
+Unix socket. The agent gets 15 tools — open/create a project, list/read/write files, open editor
+tabs, build, syntax-check, run, and read structured compile errors — and each one runs the *same*
+code the corresponding menu item runs, so the IDE the agent drives is the IDE you see. If Ilwaco is
+not running when the first tool call arrives, the sidecar starts it.
+
+It is **opt-out, not opt-in**: the listener is up by default (Ilwaco is meant to be driven this way),
+controlled by **Tools ▸ Options ▸ General ▸ "Allow AI agent control (MCP)"**, which starts and stops
+it without a restart. The status bar reads **"MCP Agent: On"** or **"MCP Agent: Off"** so the state
+is never a guess. File tools are confined to the open project's folder. Setting a client up is
+[AgentMcpSetup.md](AgentMcpSetup.md); the architecture and the task-by-task record are in
+[McpServer.md](McpServer.md).
 
 ---
 

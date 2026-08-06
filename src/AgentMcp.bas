@@ -191,7 +191,7 @@ End Function
 '' ---------------------------------------------------------------- tool table
 '' MCP tool name == socket cmd name 1:1. Adding a tool = one row here + a Case on the IDE side.
 '' Advertises the tools the IDE implements today: read-only + project + mutation + build/run/errors.
-'' (create_project and the deferred designer_* tools arrive with their IDE-side handlers later.)
+'' (the deferred designer_* tools arrive with their IDE-side handlers later.)
 Type McpTool
 	name As String
 	description As String

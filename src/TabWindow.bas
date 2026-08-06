@@ -425,7 +425,6 @@ Function AddTab(ByRef FileName As WString = "", bNew As Boolean = False, TreeN A
 				tb->NewLineType = DefaultNewLineFormat
 				tb->FileEncoding = DefaultFileFormat
 			End If
-			ChangeFileEncoding tb->FileEncoding
 			ChangeNewLineType tb->NewLineType
 			pstBar->Panels[1]->Caption = pstBar->Panels[1]->Caption & " FormDesign: " & Format((Timer - timeElapse), "0.000s")
 			timeElapse = Timer

@@ -58,7 +58,7 @@ MCP client  ──MCP/JSON-RPC over stdio──►  ilwaco-mcp  ──line-JSON 
 | 3 | Mutations: `write_file`, `add_file`, `set_active_file_content`, `open_in_editor` + path guard | **DONE + verified (2026-08-05)** |
 | 4 | Build/run/errors: `build`, `syntax_check`, `run`, `get_errors` (async completion; save-dirty-first) | **DONE + verified (2026-08-06)** |
 | 5 | Project ops: `create_project` (plain template); `open_project` **DONE (brought forward for Task 1 verification)** | **DONE + verified (2026-08-06)** |
-| 6 | Security/opt-in + packaging: Options toggle (default ON), INI key, ship `ilwaco-mcp`, setup doc | not started |
+| 6 | Security/opt-in + packaging: Options toggle (default ON), INI key, ship `ilwaco-mcp`, setup doc | **DONE + verified (2026-08-06)** |
 | 7 | End-to-end verify: drive the create → build → read-errors → fix → run loop from a real MCP client | not started |
 | — | (later) `designer_list_controls` / `designer_double_click` — deferred by owner | deferred |
 
@@ -240,6 +240,45 @@ from the IDE's `SaveProjectFile` (`Open … For Output Encoding "utf-8"`, `Main.
 template `.vfp` files themselves — violating the no-BOM directive. `create_project` writes BOM-less, but
 the first `SaveProject` re-adds it. Fix belongs in the project writer + template data.
 
+### Task 6 — DONE + verified (2026-08-06)
+
+The listener is now a user-controlled opt-out with a visible state, and the sidecar is documented
+for a user who is not us. Five pieces:
+
+- **`AllowAgentControl`** (`Main.bi`, read in `LoadSettings`, `Main.bas`), `[Options]` in
+  `Settings/ilwaco.ini`, **default True** — Ilwaco is agent-first, so the socket is up unless the
+  user unticks it. `frmMain_Show` now starts the listener only `If AllowAgentControl`, so an
+  `--mcp-agent` auto-launch does **not** by itself grant access.
+- **Tools ▸ Options ▸ General ▸ "Allow AI agent control (MCP)"** (`chkAllowAgentControl`), wired
+  through the same five points every General checkbox uses (declare / construct / load / apply /
+  persist).
+- **`ReconcileAgentPipe()`** (`Main.bas`) starts or stops the listener to match the setting, called
+  from the end of `cmdApply_Click`, so the toggle takes effect **without a restart**.
+- **Status bar panel 3 repurposed to "MCP Agent: On/Off"** (`UpdateMcpAgentStatusBar`). It was the
+  file-encoding readout, which under the UTF-8-only directive could only ever say "UTF-8"; the agent
+  state does vary and matters. `ChangeFileEncoding` and its two call sites (`Main.bas`,
+  `TabWindow.bas`) are deleted rather than left as an empty hook — no dead code.
+- **Setup doc [AgentMcpSetup.md](AgentMcpSetup.md)** — the user-facing "how do I connect Claude to
+  this?" page (client registration, the shim's `LD_LIBRARY_PATH` for a source build, the 15 tools,
+  security notes, troubleshooting), added to TestPlan's rule table. Packaging needed no new work:
+  `build-linux.sh sidecar` already builds `ilwaco-mcp` and both binaries are tracked in git.
+
+**Verified by effect** against the live IDE on `:0` (dialog driven with `xdotool`, states read from
+screenshots + the socket):
+
+| | Result |
+| --- | --- |
+| Default ON: launch → socket bound, `ping` → `{"pong":true}`, status bar **"MCP Agent: On"** | PASS |
+| Untick + OK → socket file **gone**, `ping` `FileNotFoundError`, status bar flips to **"MCP Agent: Off"**, no restart | PASS |
+| `AllowAgentControl=false` persisted to `Settings/ilwaco.ini`; the reopened dialog shows it unticked | PASS |
+| Sidecar with the toggle off → *"Ilwaco IDE is not reachable… make sure Tools > Options > Allow AI agent control is ticked"*, `isError`, and **no second IDE launched** (`pgrep -xc ilwaco` stayed 1) | PASS |
+| Re-tick + OK → socket re-bound live; `initialize` + `tools/list` (**15 tools**) + `tools/call get_status` all succeed through `ilwaco-mcp` | PASS |
+| Restart with `AllowAgentControl=false` → **no socket at startup**, status bar "MCP Agent: Off" | PASS |
+
+Both window-closes during this run exited 139 — the known intermittent shutdown SIGSEGV, not an
+agent regression: it also fired on the run where the listener was never started, and `StopAgentPipe`
+had already removed the socket in the run where it was.
+
 ### Notes for the next session (facts learned this session)
 
 - **Include ordering is load-bearing.** `AgentPipe.bi` (included in `Main.bas`) is **declarations only**;
@@ -260,6 +299,11 @@ the first `SaveProject` re-adds it. Fix belongs in the project writer + template
   Always `git checkout Settings/` after a launch (the IDE writes session state on exit), and remove any
   agent-created test files (from `Examples/`, or `Projects/` for `create_project` tests) before
   committing. Kill leftover instances with `pkill -x ilwaco` (not `-f` — it matches the caller).
+- **Driving the Options dialog with `xdotool` needs the window raised in the *same* command.** The
+  desktop's other windows can take the raise between two Bash calls, so a click aimed at the dialog
+  lands on whatever is on top and silently does nothing. Chain it:
+  `xdotool search --name "^Options$"` → `windowactivate` → `windowraise` → `mousemove` → `click`,
+  all in one invocation, then screenshot to confirm.
 - **Relaunch race (cost a cycle):** `pkill` doesn't run `StopAgentPipe`, so the **socket file lingers**.
   On relaunch, an `until [ -S <sock> ]` check passes instantly on the *stale* file while the new server
   hasn't bound yet → `ConnectionRefused`. `StartAgentPipe` unlinks+rebinds, so just wait a beat: gate on
