@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$(git rev-parse --show-toplevel 2>/dev/null || echo .)\" && echo '[session-start] git pull --ff-only:' && git pull --ff-only 2>&1 || true",
+            "timeout": 60,
+            "statusMessage": "Pulling latest from origin…"
+          }
+        ]
+      }
+    ]
+  }
+}
