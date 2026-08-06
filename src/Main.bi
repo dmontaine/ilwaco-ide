@@ -143,9 +143,6 @@ Type Library
 	HeadersFolder As UString
 	SourcesFolder As UString
 	IncludeFolder As UString
-	Lib32Folder As UString
-	Lib64Folder As UString
-	Lib64ArmFolder As UString
 	LibX64Folder As UString
 	Enabled As Boolean
 	Handle As Any Ptr

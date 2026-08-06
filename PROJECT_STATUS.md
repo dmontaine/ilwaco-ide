@@ -148,10 +148,15 @@ category, the `.vfs` file-dialog filters and icon. `CloseSession` — which was 
 files but is the batched save-prompt the IDE runs before it will exit — was **renamed
 `CloseWorkspace`** and kept.
 
-Continue the walk from `b9735e8e` in
-[AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md): `cc9e7dd5` (designer grey-panel
-fix — likely N/A, Win32 DLL resolution), `e5e10808` (Edit-menu review: flat checkmark toggles), then the
-`13.3.A` approachability passes.
+**`cc9e7dd5` (designer grey panel) is classified N/A (2026-08-06)** — the folder-vs-file
+`Library.Path` bug it fixes cannot arise here (Ilwaco resolves the library file from the library's own
+`Settings.ini`), and the designer demonstrably renders forms across two sequential projects with a
+populated Toolbox — which also closes TestPlan **T3** and adds **T24**. Reasoning and evidence in
+[AstoriaParity.md](Documentation/AstoriaParity.md).
+
+**Next in the walk:** `e5e10808` (Edit-menu review: flat checkmark toggles for bubble help,
+autocomplete and parameter info), then the `13.3.A` approachability passes — see
+[AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md).
 
 **Two items to settle before the testing phase** (both in TechnicalDebt "Known gaps"): the
 **blank-terminal finding** (a user pressing Run sees an empty window — reproducible with

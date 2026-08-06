@@ -95,6 +95,12 @@ necessary but not sufficient — "it compiled" is not "it works".
   Ilwaco IDE starts" radio group, and the Code Editor page is grouped into Display / Editing /
   Completion / IntelliSense / History with every control inside its frame, no overlaps, and the page
   scrolling to its last row at the dialog's default size. TestPlan T20.
+- **The form designer and toolbox work (2026-08-06).** A GUI Application project's `Main.frm` opens
+  in the design pane showing the live form — caption "Main", alignment grid — and a second project
+  opened in the same session renders too. The Toolbox lists the MFF controls with their icons. This
+  is what Astoria's `cc9e7dd5` had to fix on Win32 (`Designer.CreateControl("Form")` returning 0, an
+  empty grey panel, and every project after the first broken); neither symptom occurs here.
+  TestPlan T3, T24.
 - **Sessions removed without losing the exit prompt (2026-08-06).** The File menu carries no
   Open/Save/Close Session and no Recent Sessions. `CloseSession` — the batched save-prompt run before
   the IDE exits, which was never about `.vfs` files — is renamed `CloseWorkspace` and still fires:
@@ -122,9 +128,9 @@ necessary but not sufficient — "it compiled" is not "it works".
   save, `Resource.rc`/`Manifest.xml` creation, Find-and-Replace-in-project backups, Remove File From
   Project, and the `DebugInfo.log` rotation — were already working shapes and are unchanged in
   behaviour, but none was re-exercised at runtime.
-- **Designer control library load.** `Controls/MyFbFramework/libmff64_gtk3.so` must be built or the
-  toolbox errors at runtime; that it loads cleanly is relied upon but not formally recorded as a
-  scenario.
+- **Control behaviour beyond load-and-render.** The designer renders a form and the toolbox lists the
+  controls (proven above), but placing, configuring and wiring each control is still unswept — see
+  [ControlTesting.md](ControlTesting.md).
 - **Control behaviour at large.** No systematic control sweep has been run on the GTK build — see
   [ControlTesting.md](ControlTesting.md). Compiles-and-opens is not properties-events-and-docked.
 - **GTK dark mode.** Never exercised — the styling branch does not fire on GTK yet (TechnicalDebt).

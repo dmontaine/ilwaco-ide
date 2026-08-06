@@ -317,22 +317,12 @@ Private Sub frmComponentsType.cmdCancel_Click(ByRef Sender As Control)
 	This.CloseForm
 End Sub
 
+'' Which key in a control library's Settings.ini names the binary to load. Ilwaco is
+'' Linux/GTK3/x86_64 only, so there is exactly one: the 32-bit, GTK2/GTK4 and Windows-DLL
+'' variants this used to select between are not built and their keys are gone from the
+'' shipped Settings.ini.
 Function GetLibKey As String
-	Dim LibKey As String = "Lib"
-	#ifndef __FB_WIN32__
-		LibKey &= "X"
-	#endif
-	LibKey &= "64"
-	#ifdef __USE_GTK__
-		#ifdef __USE_GTK4__
-			LibKey &= "_gtk4"
-		#elseif defined(__USE_GTK3__)
-			LibKey &= "_gtk3"
-		#else
-			LibKey &= "_gtk2"
-		#endif
-	#endif
-	Return LibKey
+	Return "LibX64_gtk3"
 End Function
 
 Private Sub frmComponentsType.Form_Create(ByRef Sender As Control)

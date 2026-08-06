@@ -657,6 +657,22 @@ and kept, and the exit prompt was re-verified against a modified tab. Astoria's 
 prompts New Project when there is nothing to reopen; Ilwaco leaves the IDE empty, which is what it
 did before.
 
+**`cc9e7dd5` (designer grey panel) — N/A (2026-08-06).** Astoria's bug was Win32-shaped: a project's
+`ControlLibrary=Controls\MyFbFramework` left `Library.Path` as a *folder*, `DyLibLoad` on a directory
+returned 0, no symbols resolved, and `Designer.CreateControl("Form")` gave the empty grey panel — plus
+a refcount slip that broke every project after the first. Ilwaco cannot reach that state: the shipped
+`[ControlLibraries] Path_0` names the `.so` file and a project's folder-form `ControlLibrary=` is
+matched *folder-to-folder* against it, so the loaded library is reused; and the no-match branch builds
+the path from the library's own `Settings.ini` (`[Setup] LibX64_gtk3`), never from a bare folder.
+Astoria's second sub-fix, `GetControlLibraryVfpPath`, has no Ilwaco counterpart. **Verified by effect:**
+two GUI projects opened in one session both render their form in the designer, and the Toolbox lists
+the MFF controls (TestPlan T3/T24).
+
+Found while checking it: `Controls/MyFbFramework/Settings.ini` still advertised thirteen library
+variants (32-bit, GTK2, Windows DLLs) of which exactly one is reachable, plus three Windows lib-folder
+keys read into fields nothing uses. Pruned to `LibX64_gtk3`, and `GetLibKey` — whose `#ifdef` ladder
+could only ever pick that one — now returns it directly.
+
 ## Foundation status (2026-08-02)
 
 - **Build baseline:** Ilwaco builds + runs on Linux (PROJECT_STATUS).
