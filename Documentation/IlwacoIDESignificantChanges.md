@@ -74,6 +74,10 @@ Each of these was a *choice* in VisualFBEditor and is now made once, with the op
   user variable overriding the inherited one of the same name. Implemented for `fork`/`execve`: the
   block is built in the parent, because after `fork()` in a multithreaded process the child must not
   allocate.
+- **Recent Projects is a dialog, not a menu of paths (2026-08-06).** File ▸ Recent Projects… opens a
+  list showing each recent project's file name and full path with its icon, and quietly drops entries
+  whose `.vfp` is no longer on disk — a menu could show neither the path nor whether the project still
+  exists. Recent Files, Folders and Sessions remain submenus for now.
 
 ## 4. Added: an AI agent can drive the IDE (MCP, 2026-08-06)
 

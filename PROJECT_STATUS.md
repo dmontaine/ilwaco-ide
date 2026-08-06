@@ -163,10 +163,12 @@ how the fault address was recovered from a core dump with no debugger installed,
   crash was fixed. The Rename dialog's `InputBox` title/prompt were swapped and its default carried
   the `.vfp` extension into what becomes a folder name; both corrected, and MFF's `InputBox` gained a
   **Cancel** button (it offered only OK).
-  **Done + verified since:** `frmNewProject` (New Project dialog — see [HISTORY.md](HISTORY.md)) and
-  the Console Application template rewrite that made every offered project type build (T14/T15 PASS —
-  see the DONE section above). **Still to port:**
-  `OpenProjectTemplate`/`Recent Project`; the Options panels
+  **Done + verified since:** `frmNewProject` (New Project dialog — see [HISTORY.md](HISTORY.md)),
+  the Console Application template rewrite that made every offered project type build (T14/T15 PASS),
+  and **Recent Projects as a dialog (2026-08-06)** — `src/frmRecentProjects.{bi,frm}`, a File/Path list
+  replacing the MRU submenu, skipping entries whose `.vfp` is gone. `OpenProjectTemplate` needs no port:
+  it is dead code in Astoria (defined, called from nowhere) and Ilwaco's `frmTemplates` has no
+  `DialogMode` counterpart. **Still to port:** the Options panels
   (remove the "When the IDE starts" radio group, Code Editor grouping into Display/Completion/
   IntelliSense/History); and `Show Holiday Frame` → `Show Indent Guides`, which is a *feature* port
   needing real indent-guide rendering in `EditControl`, not a relabel.

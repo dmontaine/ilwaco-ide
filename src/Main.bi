@@ -198,7 +198,9 @@ End Enum
 
 Declare Sub NewProject
 Declare Sub OpenProject
+Declare Sub OpenRecentProject
 Declare Sub AddNew(ByRef Template As WString = "")
+Declare Sub AddMRUList(ByRef FileFolderName As WString, ByRef MRUFilesFolders As WStringList)
 Declare Sub AddMRUFile(ByRef FileName As WString)
 Declare Sub AddMRUProject(ByRef FileName As WString) '
 Declare Sub AddMRUFolder(ByRef FolderName As WString)

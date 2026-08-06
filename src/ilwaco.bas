@@ -95,10 +95,6 @@ Sub mClickMRU(ByRef Designer As My.Sys.Object, Sender As My.Sys.Object)
 		miRecentFiles->Clear
 		miRecentFiles->Enabled = False
 		MRUFiles.Clear
-	Case "ClearProjects"
-		miRecentProjects->Clear
-		miRecentProjects->Enabled = False
-		MRUProjects.Clear
 	Case "ClearFolders"
 		miRecentFolders->Clear
 		miRecentFolders->Enabled = False
@@ -154,6 +150,7 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 	Select Case Sender.ToString
 	Case "NewProject":                          NewProject
 	Case "OpenProject":                         OpenProject
+	Case "RecentProject":                       OpenRecentProject
 	Case "RenameProject":                       RenameProject
 	Case "DeleteProject":                       DeleteProject
 	Case "OpenFolder":                          OpenFolder

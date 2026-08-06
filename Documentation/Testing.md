@@ -91,6 +91,11 @@ necessary but not sufficient — "it compiled" is not "it works".
   fix rebuilt clean; the produced executable printed **`Primes below 1000000 = 78498`**, exit 0; and
   `run` returned in **0.1 s** with the program launched in its own terminal. 20 checks, all passed.
   `run` used to hang forever (TechnicalDebt "Paid down 2026-08-06"). TestPlan T18.
+- **Recent Projects opens from a dialog (2026-08-06).** File ▸ Recent Projects… is now a flat item, not
+  an MRU submenu; the dialog lists each recent project's file name and full path with its icon, shows
+  **only** entries whose `.vfp` still exists (the stale `VisualFBEditor.vfp` was filtered out), and OK
+  opened the selected project — confirmed by `get_status` reporting `MyFbFramework.vfp` as the open
+  project. TestPlan T19.
 
 ## Not proven (known gaps)
 - **Six of the eight `FileCopy_` call sites are build-verified only.** New Project exercised the two

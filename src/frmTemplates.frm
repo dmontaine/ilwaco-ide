@@ -546,9 +546,7 @@ Private Sub frmTemplates.cmdClear_Click(ByRef Sender As Control)
 		miRecentFolders->Enabled = False
 		MRUFolders.Clear
 	ElseIf NodeIdx = 2 Then
-		miRecentProjects->Clear
-		miRecentProjects->Enabled = False
-		MRUProjects.Clear
+		MRUProjects.Clear   '' Recent Projects is a dialog reading MRUProjects -- no menu to clear
 	ElseIf NodeIdx = 3 Then
 		miRecentFiles->Clear
 		miRecentFiles->Enabled = False
@@ -570,7 +568,6 @@ Private Sub frmTemplates.cmdRemove_Click(ByRef Sender As Control)
 			miRecentFolders->Remove miRecentFolders->Item(Idx)
 			MRUFolders.Remove Idx
 		ElseIf NodeIdx = 2 Then
-			miRecentProjects->Remove miRecentProjects->Item(Idx)
 			MRUProjects.Remove Idx
 		ElseIf NodeIdx = 3 Then
 			miRecentFiles->Remove miRecentFiles->Item(Idx)
@@ -606,7 +603,6 @@ Private Sub frmTemplates.cmdChange_Click(ByRef Sender As Control)
 			miRecentFolders->Item(Idx)->Caption = Path
 			MRUFolders.Item(Idx) = Path
 		ElseIf NodeIdx = 2 Then
-			miRecentProjects->Item(Idx)->Caption = Path
 			MRUProjects.Item(Idx) = Path
 		ElseIf NodeIdx = 3 Then
 			miRecentFiles->Item(Idx)->Caption = Path
@@ -642,7 +638,6 @@ Private Sub frmTemplates.cmdAdd_Click(ByRef Sender As Control)
 		miRecentFolders->Add Path, "", , @mClickMRU, , 0
 		MRUFolders.Insert 0, Path
 	ElseIf NodeIdx = 2 Then
-		miRecentProjects->Add Path, "", , @mClickMRU, , 0
 		MRUProjects.Insert 0, Path
 	ElseIf NodeIdx = 3 Then
 		miRecentFiles->Add Path, "", , @mClickMRU, , 0

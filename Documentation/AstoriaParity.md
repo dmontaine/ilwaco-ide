@@ -624,11 +624,14 @@ GTK/Linux/32-bit stripping commits (`e139c2cc`, `c494207f`, `7baebd1e`, `add4642
 **Menu-taxonomy progress (2026-08-04).** The label pass, the File-menu restructure, Open/Rename/Delete
 Project and the new **New Project dialog** (`frmNewProject`) are done and live-verified — New Project
 creates a project on disk from a whitelisted template, which needed the `FileCopy`/`UString` fix (see
-[TechnicalDebt.md](TechnicalDebt.md) and [UpstreamFixes.md](UpstreamFixes.md)). **Still to port in this
-cluster:** `OpenProjectTemplate`/`Recent Project`; the Options panels (drop the "When the IDE starts"
-radio group; group Code Editor into Display/Completion/IntelliSense/History); and `Show Holiday Frame`
-→ `Show Indent Guides`, which is a *feature* port needing real indent-guide rendering in `EditControl`,
-not a relabel. Detail in [PROJECT_STATUS.md](../PROJECT_STATUS.md).
+[TechnicalDebt.md](TechnicalDebt.md) and [UpstreamFixes.md](UpstreamFixes.md)). **Recent Projects is now the dialog (2026-08-06)** — Ilwaco's
+MRU submenu is replaced by Astoria's `frmRecentProjects`, a File/Path list that skips entries whose
+`.vfp` is no longer on disk. `OpenProjectTemplate` is **N/A**: it is defined in Astoria's `Main.bas`
+and called from nowhere (dead code), and Ilwaco's `frmTemplates` has no `DialogMode` counterpart, so
+there is nothing to port. **Still to port in this cluster:** the Options panels (drop the "When the
+IDE starts" radio group; group Code Editor into Display/Completion/IntelliSense/History); and
+`Show Holiday Frame` → `Show Indent Guides`, which is a *feature* port needing real indent-guide
+rendering in `EditControl`, not a relabel. Detail in [PROJECT_STATUS.md](../PROJECT_STATUS.md).
 
 ## Foundation status (2026-08-02)
 

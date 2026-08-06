@@ -73,7 +73,7 @@ Dim Shared As Boolean bBottomRailReady              ' True once btnBottomRail() 
 Dim Shared As GtkWidget Ptr overlayLeft, overlayRight  ' the GTK overlays hosting the left/right pins; re-laid-out in Show{Left,Right} so the pin repaints after re-show
 Dim Shared As TrackBar trLeft
 Dim Shared As MainMenu mnuMain
-Dim Shared As MenuItem Ptr mnuStartWithCompile, mnuStart, mnuBreak, mnuEnd, mnuRestart, mnuStandardToolBar, mnuEditToolBar, mnuProjectToolBar, mnuFormatToolBar, mnuBuildToolBar, mnuDebugToolBar, mnuRunToolBar, mnuSplit, mnuSplitHorizontally, mnuSplitVertically, mnuWindowSeparator, miRecentProjects, miRecentFiles, miRecentFolders, miRecentSessions, miSetAsMain, miClearStartUp, miTabSetAsMain, miTabReloadHistoryCode, miRemoveFiles, miToolBars
+Dim Shared As MenuItem Ptr mnuStartWithCompile, mnuStart, mnuBreak, mnuEnd, mnuRestart, mnuStandardToolBar, mnuEditToolBar, mnuProjectToolBar, mnuFormatToolBar, mnuBuildToolBar, mnuDebugToolBar, mnuRunToolBar, mnuSplit, mnuSplitHorizontally, mnuSplitVertically, mnuWindowSeparator, miRecentFiles, miRecentFolders, miRecentSessions, miSetAsMain, miClearStartUp, miTabSetAsMain, miTabReloadHistoryCode, miRemoveFiles, miToolBars
 Dim Shared As MenuItem Ptr miRenameProject, miDeleteProject
 Dim Shared As MenuItem Ptr miSaveProject, miSaveProjectAs, miCloseProject, miSave, miSaveAs, miSaveAll, miClose, miCloseAll, miCloseSession, miPrint, miPrintPreview, miPageSetup, miOpenProjectFolder, miProjectProperties, miExplorerOpenProjectFolder, miExplorerRename, miExplorerProjectProperties, miExplorerCloseProject, miRename, miRemoveFileFromProject
 Dim Shared As MenuItem Ptr miUndo, miRedo, miCutCurrentLine, miCut, miCopy, miPaste, miSingleComment, miBlockComment, miUncommentBlock, miDuplicate, miSelectAll, miIndent, miOutdent, miFormat, miUnformat, miFormatProject, miUnformatProject, miAddSpaces, miDeleteBlankLines, miSuggestions, miCompleteWord, miParameterInfo, miStepInto, miStepOver, miStepOut, miRunToCursor, miAddWatch, miToggleBreakpoint, miClearAllBreakpoints, miSetNextStatement, miShowNextStatement
@@ -163,6 +163,7 @@ LoadSettings
 #include once "frmOptions.bi"
 #include once "frmTemplates.bi"
 #include once "frmNewProject.bi"
+#include once "frmRecentProjects.bi"
 #include once "frmParameters.bi"
 #include once "frmProjectProperties.bi"
 #include once "frmSave.bi"
@@ -1724,7 +1725,9 @@ Sub OpenSession()
 	tpProject->Repaint
 End Sub
 
-Sub AddMRU(ByRef FileFolderName As WString, ByRef MRUFilesFolders As WStringList, miRecentFilesFolders As MenuItem Ptr, ByRef MRUType As String)
+'' Move a path to the head of an MRU list (adding it if new). Split out of AddMRU because Recent
+'' Projects is a dialog with no menu to rebuild -- it reads the list directly.
+Sub AddMRUList(ByRef FileFolderName As WString, ByRef MRUFilesFolders As WStringList)
 	Dim As UString FileFolderName_
 	If AddRelativePathsToRecent Then
 		FileFolderName_ = GetShortFileName(FileFolderName, ExePath & Slash & Slash)
@@ -1734,6 +1737,11 @@ Sub AddMRU(ByRef FileFolderName As WString, ByRef MRUFilesFolders As WStringList
 	Dim As Integer i = MRUFilesFolders.IndexOf(FileFolderName_)
 	If i <> -1 Then MRUFilesFolders.Remove i
 	MRUFilesFolders.Add FileFolderName_
+End Sub
+
+Sub AddMRU(ByRef FileFolderName As WString, ByRef MRUFilesFolders As WStringList, miRecentFilesFolders As MenuItem Ptr, ByRef MRUType As String)
+	AddMRUList FileFolderName, MRUFilesFolders
+	Dim As Integer i
 	miRecentFilesFolders->Clear
 	For i = 0 To MRUFilesFolders.Count - 1
 		miRecentFilesFolders->Add(MRUFilesFolders.Item(i), "", MRUFilesFolders.Item(i), @mClickMRU, , i)
@@ -1749,7 +1757,17 @@ Sub AddMRUFile(ByRef FileName As WString)
 End Sub
 
 Sub AddMRUProject(ByRef FileName As WString)
-	AddMRU FileName, MRUProjects, miRecentProjects, "Projects"
+	AddMRUList FileName, MRUProjects   '' no menu to rebuild -- Recent Projects is a dialog
+End Sub
+
+'' File > Recent Projects... -- pick a recent project from a list showing its name and full path.
+Sub OpenRecentProject()
+	Dim fRecentProjects As frmRecentProjects
+	pfRecentProjects = @fRecentProjects
+	If pfRecentProjects->ShowModal(frmMain) = ModalResults.OK Then
+		If pfRecentProjects->SelectedFile <> "" Then OpenFiles pfRecentProjects->SelectedFile
+	End If
+	pfRecentProjects = 0
 End Sub
 
 Sub AddMRUFolder(ByRef FolderName As WString)
@@ -5979,18 +5997,15 @@ Sub CreateMenusAndToolBars
 	miRecentFolders->Add("-")
 	miRecentFolders->Add(ML("Clear Recently Opened"),"","ClearFolders", @mClickMRU)
 	
-	' Add Recent Sessions
-	miRecentProjects = miFile->Add(ML("Recent Projects"), "", "RecentProjects", @mClick)
+	'' Recent Projects is a dialog, not an MRU submenu (Astoria parity): a project list wants a file
+	'' and a path column and enough room to read them, which a menu cannot give. The MRU list itself
+	'' is still loaded here -- frmRecentProjects reads it.
+	miFile->Add(ML("&Recent Projects") & "...", "", "RecentProject", @mClick)
 	For i As Integer = 0 To miRecentMax
 		sTmp = iniSettings.ReadString("MRUProjects", "MRUProject_0" & WStr(i), "")
-		If Trim(sTmp) <> "" Then
-			MRUProjects.Add sTmp
-			miRecentProjects->Add(sTmp, "", sTmp, @mClickMRU)
-		End If
+		If Trim(sTmp) <> "" Then MRUProjects.Add sTmp
 	Next
-	miRecentProjects->Add("-")
-	miRecentProjects->Add(ML("Clear Recently Opened"),"","ClearProjects", @mClickMRU)
-	
+
 	miRecentFiles = miFile->Add(ML("Recent Files"), "", "RecentFiles", @mClick)
 	For i As Integer = 0 To miRecentMax
 		sTmp = iniSettings.ReadString("MRUFiles", "MRUFile_0" & WStr(i), "")
