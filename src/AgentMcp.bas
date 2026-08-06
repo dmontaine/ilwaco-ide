@@ -190,15 +190,15 @@ End Function
 
 '' ---------------------------------------------------------------- tool table
 '' MCP tool name == socket cmd name 1:1. Adding a tool = one row here + a Case on the IDE side.
-'' This advertises only the tools the IDE currently implements; mutation/build/project tools
-'' arrive with their IDE-side handlers in later tasks.
+'' Advertises the tools the IDE implements today: read-only + project + mutation + build/run/errors.
+'' (create_project and the deferred designer_* tools arrive with their IDE-side handlers later.)
 Type McpTool
 	name As String
 	description As String
 	schema As String     '' inputSchema (JSON Schema), embedded verbatim
 End Type
 
-Dim Shared gTools(0 To 9) As McpTool
+Dim Shared gTools(0 To 13) As McpTool
 
 Sub InitTools()
 	Dim As String noArgs = "{""type"":""object"",""properties"":{}}"
@@ -233,6 +233,18 @@ Sub InitTools()
 	gTools(9).name = "open_in_editor"
 	gTools(9).description = "Open (or focus) an editor tab for a project file."
 	gTools(9).schema = "{""type"":""object"",""properties"":{""path"":{""type"":""string"",""description"":""Project-relative or absolute path inside the project folder.""}},""required"":[""path""]}"
+	gTools(10).name = "build"
+	gTools(10).description = "Compile the open project (saving dirty tabs first) and wait for it to finish. Returns success plus error/warning counts and the diagnostics list."
+	gTools(10).schema = noArgs
+	gTools(11).name = "syntax_check"
+	gTools(11).description = "Syntax-check the open project (compile with -c, no executable) and wait for it to finish. Returns success plus error/warning counts and the diagnostics list."
+	gTools(11).schema = noArgs
+	gTools(12).name = "run"
+	gTools(12).description = "Build the open project and, if it succeeds, run it in a terminal. Waits for the build to finish; returns success plus error/warning counts and the diagnostics list."
+	gTools(12).schema = noArgs
+	gTools(13).name = "get_errors"
+	gTools(13).description = "Get the structured diagnostics from the most recent build: a list of {severity, message, file, line} plus error/warning counts."
+	gTools(13).schema = noArgs
 End Sub
 
 Function ToolsListJson() As String

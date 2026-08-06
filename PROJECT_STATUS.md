@@ -87,14 +87,20 @@ prints nothing), then the lib **and** editor were rebuilt. Both fixes are detail
 
 **In flight: the Agent MCP server** (owner asked 2026-08-05 for Astoria's MCP sidecar in Ilwaco). This
 is a phased Linux/GTK port tracked in [Documentation/McpServer.md](Documentation/McpServer.md) —
-**Tasks 0–3 are DONE and verified** — the IDE-side socket server, read-only tools + path guard, the
+**Tasks 0–4 are DONE and verified.** 0–3: the IDE-side socket server, read-only tools + path guard, the
 `ilwaco-mcp` sidecar (a real MCP client drives the IDE end-to-end, auto-launching it), and the mutation
-tools (`write_file`, `add_file`, `set_active_file_content`, `open_in_editor`). Resume at **Task 4
-(build/run/errors: `build`, `syntax_check`, `run`, `get_errors`)** — the async part: kick the existing
-compile/run on its worker thread, save dirty tabs first, derive success from error-severity messages.
-Core files: [src/AgentPipe.bas](src/AgentPipe.bas)/`.bi` (IDE-side command server),
-[src/AgentMcp.bas](src/AgentMcp.bas) (the sidecar → `./ilwaco-mcp`), [src/JsonLite.bas](src/JsonLite.bas)/`.bi`
-(portable UTF-8 JSON).
+tools. **Task 4 (2026-08-06): build/run/errors** — `build`/`syntax_check`/`run`/`get_errors`, async so
+the GTK UI never freezes (save dirty tabs → spawn a build thread running the same `Compile()` the menu
+runs → a `g_idle` finalizer reads the Problems list and wakes the waiting pipe worker). Verified over the
+socket: clean project builds/checks/runs (`run` produced a working exe), a syntax error yields
+`success=false` + a structured `{error,file,line}`. Full narrative + the v1 known-limitations (shutdown-
+during-build hang; locationless linker errors; pre-existing MFF ListView stderr noise) in McpServer.md.
+Core files: [src/AgentPipe.bas](src/AgentPipe.bas)/`.bi`, [src/AgentMcp.bas](src/AgentMcp.bas)
+(→ `./ilwaco-mcp`), [src/JsonLite.bas](src/JsonLite.bas)/`.bi`.
+
+**Resume at Task 5** (`create_project` from a plain template; `open_project` already done), then **Task 6**
+(Options opt-in toggle + INI key, ship `ilwaco-mcp`, setup doc) and **Task 7** (end-to-end
+create→build→fix→run loop from a real MCP client).
 
 Secondary (only if the MCP thread stalls): the **Astoria→Ilwaco changelog walk** — the menu-taxonomy /
 Options-panel cluster below, plus the deferred Examples BOM sweep.
@@ -105,16 +111,11 @@ Options-panel cluster below, plus the deferred Examples BOM sweep.
 
 Port Astoria's Agent MCP server to Linux/GTK so an MCP client can drive the live IDE. Design, the three
 Win32→Linux substitutions, the owner decisions, and the Task 0–7 progress table live in
-[Documentation/McpServer.md](Documentation/McpServer.md). Tasks 0–2 verified end-to-end: a real MCP
-client → `ilwaco-mcp` sidecar → Unix socket → live IDE, auto-launching the IDE, running the read-only
-and mutation tools against an opened project, with the project-root path guard blocking `..` escapes.
-**Next: Task 4** — build/run/errors (`build`, `syntax_check`, `run`, `get_errors`): the async part —
-kick the existing compile/run on its worker thread, save dirty tabs first, and derive success from
-error-severity messages rather than the compiler's return. **The concrete approach, the GTK threading
-constraint, the entry points, and the session's learned gotchas are written up in
-[Documentation/McpServer.md](Documentation/McpServer.md) — read "Task 4 — NEXT" and "Notes for the next
-session" there before starting.** Then Task 5 (`create_project`), 6 (options toggle + packaging), 7
-(end-to-end).
+[Documentation/McpServer.md](Documentation/McpServer.md). **Tasks 0–4 verified end-to-end:** a real MCP
+client → `ilwaco-mcp` sidecar → Unix socket → live IDE, auto-launching the IDE, running the read-only,
+project, mutation, and **build/run/errors** tools against an opened project, with the project-root path
+guard blocking `..` escapes. **Next: Task 5** (`create_project`), then 6 (options toggle + packaging) and
+7 (end-to-end). Read the McpServer.md task narratives before starting a task.
 
 ---
 

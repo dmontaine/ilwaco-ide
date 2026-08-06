@@ -56,7 +56,7 @@ MCP client  ──MCP/JSON-RPC over stdio──►  ilwaco-mcp  ──line-JSON 
 | 1 | Read-only tools: `get_status`, `list_files`, `read_file`, `get_active_file`, `get_build_output` | **DONE + verified (2026-08-05)** |
 | 2 | The sidecar `ilwaco-mcp` (`AgentMcp.bas`), wired to Task 1 from a real MCP client | **DONE + verified (2026-08-05)** |
 | 3 | Mutations: `write_file`, `add_file`, `set_active_file_content`, `open_in_editor` + path guard | **DONE + verified (2026-08-05)** |
-| 4 | Build/run/errors: `build`, `syntax_check`, `run`, `get_errors` (async completion; save-dirty-first) | not started |
+| 4 | Build/run/errors: `build`, `syntax_check`, `run`, `get_errors` (async completion; save-dirty-first) | **DONE + verified (2026-08-06)** |
 | 5 | Project ops: `create_project` (plain template); `open_project` **DONE (brought forward for Task 1 verification)** | partial |
 | 6 | Security/opt-in + packaging: Options toggle (default ON), INI key, ship `ilwaco-mcp`, setup doc | not started |
 | 7 | End-to-end verify: drive the create → build → read-errors → fix → run loop from a real MCP client | not started |
@@ -151,34 +151,56 @@ is rejected `bad_path` → `add_file` creates a module and refuses a form. Note:
 reads back with `\r\n` — the EditControl normalizes to CRLF internally (whereas `write_file` to disk
 stays LF); harmless for compilation, noted against the LF-only directive.
 
-### Task 4 — NEXT: approach + gotchas (handoff 2026-08-05)
+### Task 4 — DONE + verified (2026-08-06)
 
-`build`, `syntax_check`, `run`, `get_errors`. This is the delicate one — the async build must not
-freeze the GTK UI. What the next session needs:
+`build`, `syntax_check`, `run`, `get_errors`, in [src/AgentPipe.bas](src/AgentPipe.bas) (+ 4 rows in the
+sidecar tool table, [src/AgentMcp.bas](src/AgentMcp.bas), now `gTools(0 To 13)`). How it landed:
 
-- **The threading shape (this differs from Astoria).** Astoria called `Compile()` straight from its
-  pipe-worker thread because Win32 tolerates it. On GTK, widgets must be touched **only on the main
-  thread**, and the build reads editor buffers and writes `txtOutput`. So do NOT run the build on the
-  pipe worker. Instead: marshal "save dirty tabs + kick the build" onto the UI thread (as every command
-  already does via `g_idle_add`), let the build run on Ilwaco's existing compile thread, and have the
-  **pipe worker wait for the build thread to finish** before the command completes — otherwise the
-  agent's `build` returns before the compile is done. The current single-slot flow (`AgentRunCommand`
-  → `g_idle_add` → `AgentDispatch` → `CondSignal`) completes synchronously; `build` needs the
-  completion signal deferred until the compile thread ends (add a build-done condition the compile
-  thread signals, or poll `gAgentBuilding`). Set the existing `gAgentBuilding` flag around it so
-  `get_status` reports it.
-- **Entry points** (declared in `Main.bi:245-249`): `SaveAllBeforeCompile()`, `CompileProgram` (run via
-  `ThreadCreate`), `CompileAndRun`, `Compile` (`Main.bi`). The menu build path is the pattern to copy —
-  find how the menu invokes `CompileProgram` and how it knows the build finished.
-- **Success is NOT the compiler's return.** Derive ok/errors from the **error-severity messages** in
-  `txtOutput` (parse `file(line) error N: msg` lines), exactly as Astoria did — `Compile("Check")`
-  returns success even with errors. `get_build_output` already reads `txtOutput.Text`; `get_errors`
-  parses it.
-- **Save dirty tabs first** — a `set_active_file_content` edit lives only in the EditControl buffer; the
-  menu build saves via `SaveAllBeforeCompile`, but the agent path must do the same before compiling or
-  it builds stale on-disk text.
-- **Console link on the dev box** needs `-p <shim> -l tinfo` (no `libncurses` in the shim yet); a
-  project sets it via `CompilationArguments64Linux`. Keep that in mind when verifying a console build.
+- **The build runs the SAME code the menu runs — `Compile()` — which is designed to run OFF the UI
+  thread** (it does its own `ThreadsEnter/ThreadsLeave` around every widget touch; running it inside the
+  `g_idle` callback would freeze the loop and deadlock `ThreadsEnter`). So the async shape is:
+  `AgentStartBuild` (UI thread) saves dirty tabs, sets `gAgentBuilding`, spawns a build thread via MFF's
+  `ThreadCreate_`, and returns **`async=True`** so `AgentIdleExec` does **not** complete the command slot.
+  `AgentBuildThread` runs `Compile(param)`; when it returns it `g_idle_add`s `AgentBuildFinalize`, which
+  (UI thread) reads the results, clears `gAgentBuilding`, fills the slot and signals the still-blocked
+  pipe worker. The single-slot model guarantees no other agent command runs meanwhile.
+- **`async` plumbed through `AgentDispatch`** as a by-ref out-param: build/syntax_check/run set it; a
+  synchronous failure (e.g. `no_project`) leaves it False and replies normally.
+- **Command → `Compile()` parameter:** `build` → `""`, `syntax_check` → `"Check"` (adds `-c`, no exe),
+  `run` → `"Run"` (builds, and on success `RunPr` launches the exe in a terminal). All three return
+  `{ success, error_count, warning_count, errors[] }`.
+- **Diagnostics from `lvProblems`, not text-parsing.** `Compile()` already fills the Problems ListView:
+  `Text(0)`=message, `Text(1)`=line, `Text(2)`=file. `AgentProblemsArray` reads them into
+  `{severity, message, file, line}`. Severity is re-derived from the message text (an fbc line contains
+  "error"/"warning") because the item's image-key severity isn't cleanly readable back — matching
+  `Compile`'s own fallback. **Locationless rows (no file, line ≤ 0) are skipped** — that drops fbc's
+  version banner and summary lines, the same effect as Astoria matching only `file(line) error/warning`.
+  A locationless failure (a bare linker error) is therefore not in this list; it stays visible via
+  `get_build_output`. `get_errors` is synchronous (reads the last build's Problems list).
+- **Save-dirty-first uses `SaveAll()` (silent), not `SaveAllBeforeCompile()`** — the latter's mode-3
+  "which files to save" **modal** would stall a headless agent (no user to answer). `SaveAll` writes all
+  modified tabs + projects with no dialog.
+- **Console link works now:** the vendored shim (`Compilers/shim/gtk-dev`) already carries
+  `libncurses.so` + `libtinfo.so` symlinks, so a console project that passes `-p <shim> -l tinfo` via
+  `CompilationArguments64Linux` links cleanly (the old `libncurses` gap is closed).
+
+**Verified by effect** against the live IDE over the socket (Python `AF_UNIX` client) with a minimal
+console project: `open_project` → `syntax_check`/`build`/`run` all `success=true, errors=[]` (banner
+filtered); `run` produced a working `Main` exe (`Sum 1..100 = 5050`); `get_status` reported
+`building=false` throughout; then `set_active_file_content` with a syntax error → `syntax_check`
+`success=false, error_count=1` with a structured `{error, file, line:1}`, and `get_errors` returned the
+same. No `DebugInfo.log`, clean shutdown.
+
+**Known limitations (v1, acceptable for opt-in single-user; track for hardening):**
+- **Closing the IDE while an agent build is in flight can hang shutdown** — `StopAgentPipe` joins the
+  worker, which is blocked waiting for the build finalizer that can't run once the closing UI thread is
+  in `ThreadWait`. This window is inherent to the marshal design (sync commands share it, microseconds
+  wide); builds widen it to seconds. A proper fix is an interruptible/abandoning shutdown.
+- **A locationless linker error reports `success=true`** (no file/line row to count) — matches Astoria;
+  the raw text is in `get_build_output`. Rare now that the shim resolves libs.
+- **Pre-existing MFF noise:** when the Problems ListView is drawn with items, MFF's column iteration
+  reads one past the end and prints `List.Item … Out of Index boundary. Index = 3 of 3` to stderr
+  (benign, `List.bas:41` returns 0). Render-only; not from the agent path. Fix belongs in MFF ListView.
 
 ### Notes for the next session (facts learned this session)
 

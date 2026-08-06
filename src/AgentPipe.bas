@@ -57,8 +57,12 @@ Dim Shared gCmdResult As JsonValue Ptr          '' owned; set by the UI thread o
 Dim Shared gCmdErrCode As String
 Dim Shared gCmdErrMsg As String
 
-'' Build-in-progress flag reported by get_status; the async build path (a later task) drives it.
+'' Build-in-progress flag reported by get_status; the async build path drives it.
 Dim Shared gAgentBuilding As Boolean
+'' The Compile() parameter for the pending async build ("" build / "Check" syntax / "Run" build+run).
+'' Set on the UI thread before the build thread is spawned; the single-slot model guarantees no
+'' other command runs until the build completes, so the build thread reads it safely at start.
+Dim Shared gAgentCompileParam As String
 
 '' ---------------------------------------------------------------- socket path
 
@@ -387,13 +391,122 @@ Private Function AgentCmdOpenInEditor(ByVal args As JsonValue Ptr, ByRef ecode A
 	Return r
 End Function
 
+'' ---------------------------------------------------------------- build / run / errors (async)
+'' The build runs the SAME code the menu runs -- Compile() -- which is designed to run OFF the UI
+'' thread (it does its own ThreadsEnter/ThreadsLeave around every widget touch). So we cannot run it
+'' inside the g_idle callback (that would freeze the GTK loop and deadlock ThreadsEnter). Instead:
+''   UI thread (AgentStartBuild):  save dirty tabs, set gAgentBuilding, spawn a build thread, return
+''                                 async=True so AgentIdleExec does NOT complete the slot yet.
+''   build thread (AgentBuildThread): run Compile(param); when it returns, g_idle_add the finalizer.
+''   UI thread (AgentBuildFinalize):  read the Problems list into the result, clear gAgentBuilding,
+''                                    complete the command slot and wake the still-waiting pipe worker.
+'' The single-slot model means no other agent command runs meanwhile, so gAgentCompileParam and the
+'' slot are ours exclusively until the finalizer signals gCmdDone.
+
+'' Read the live Problems list (lvProblems) into a JSON array of {severity,message,file,line}, and
+'' return the error/warning counts by ref. Compile() populates lvProblems: Text(0)=message,
+'' Text(1)=line, Text(2)=file; severity was set as the item's image key, which is not cleanly
+'' readable back, so we re-derive it from the message text exactly as Compile's own fallback does
+'' (an fbc diagnostic line contains "error" or "warning"). We skip locationless rows (no file and
+'' line <= 0): those are fbc's version banner and summary lines, not real diagnostics -- the same
+'' effect as Astoria matching only "file(line) error/warning" lines. A locationless failure (e.g. a
+'' bare linker error) is therefore not listed here; it is still visible via get_build_output. UI thread.
+Private Function AgentProblemsArray(ByRef nerr As Integer, ByRef nwarn As Integer) As JsonValue Ptr
+	nerr = 0 : nwarn = 0
+	Dim As JsonValue Ptr arr = JsonNewArray()
+	For i As Integer = 0 To lvProblems.ListItems.Count - 1
+		Dim As ListViewItem Ptr it = lvProblems.ListItems.Item(i)
+		If it = 0 Then Continue For
+		Dim As UString fileName = it->Text(2)
+		Dim As Integer lineNo = Val(it->Text(1))
+		If fileName = "" AndAlso lineNo <= 0 Then Continue For   '' banner / summary line, not a diagnostic
+		Dim As UString msg = it->Text(0)
+		Dim As UString sev = "info"
+		If InStr(LCase(msg), "error") > 0 Then
+			sev = "error" : nerr += 1
+		ElseIf InStr(LCase(msg), "warning") > 0 Then
+			sev = "warning" : nwarn += 1
+		End If
+		Dim As JsonValue Ptr e = JsonNewObject()
+		e->SetMember("severity", JsonNewString(ToUtf8(sev)))
+		e->SetMember("message", JsonNewString(ToUtf8(msg)))
+		e->SetMember("file", JsonNewString(ToUtf8(fileName)))
+		e->SetMember("line", JsonNewNumber(lineNo))
+		arr->Append(e)
+	Next i
+	Return arr
+End Function
+
+'' get_errors -- read-only, synchronous: the structured diagnostics from the most recent build.
+Private Function AgentCmdGetErrors() As JsonValue Ptr
+	Dim As Integer nerr, nwarn
+	Dim As JsonValue Ptr arr = AgentProblemsArray(nerr, nwarn)
+	Dim As JsonValue Ptr r = JsonNewObject()
+	r->SetMember("errors", arr)
+	r->SetMember("error_count", JsonNewNumber(nerr))
+	r->SetMember("warning_count", JsonNewNumber(nwarn))
+	Return r
+End Function
+
+'' g_idle_add finalizer -- runs on the UI thread after the build thread's Compile() returns.
+'' Builds the result from the Problems list, clears the building flag, and completes the slot the
+'' pipe worker is still blocked on. One-shot (returns G_SOURCE_REMOVE).
+Private Function AgentBuildFinalize(ByVal user As Any Ptr) As Long
+	Dim As Integer nerr, nwarn
+	Dim As JsonValue Ptr arr = AgentProblemsArray(nerr, nwarn)
+	Dim As JsonValue Ptr r = JsonNewObject()
+	r->SetMember("success", JsonNewBool(nerr = 0))
+	r->SetMember("error_count", JsonNewNumber(nerr))
+	r->SetMember("warning_count", JsonNewNumber(nwarn))
+	r->SetMember("errors", arr)
+	gAgentBuilding = False
+	MutexLock(gCmdMutex)
+	gCmdOk = True : gCmdResult = r : gCmdErrCode = "" : gCmdErrMsg = ""
+	gCmdDone = True
+	CondSignal(gCmdCond)
+	MutexUnlock(gCmdMutex)
+	Return 0        '' G_SOURCE_REMOVE
+End Function
+
+'' Build worker thread: run the compile (same call the menu makes), then schedule the finalizer on
+'' the UI thread. Compile() manages its own widget marshalling; for "Run" it also launches the built
+'' program in a terminal before returning.
+Private Sub AgentBuildThread(ByVal param As Any Ptr)
+	Compile(gAgentCompileParam)
+	g_idle_add(Cast(GSourceFunc, @AgentBuildFinalize), NULL)
+End Sub
+
+'' Kick an async build. UI thread. Maps the command to a Compile() parameter, saves dirty tabs
+'' silently (SaveAll, never the mode-3 save-picker modal that would stall a headless agent), flags
+'' building, and spawns the build thread. Sets async=True on success so the slot completes later in
+'' AgentBuildFinalize; on a synchronous failure leaves async=False and sets err* for a normal reply.
+Private Sub AgentStartBuild(ByRef cmd As String, ByRef ecode As String, ByRef emsg As String, ByRef async As Boolean)
+	async = False
+	If AgentProject() = 0 Then ecode = "no_project" : emsg = "No project is open." : Exit Sub
+	Dim As String p = ""
+	If cmd = "syntax_check" Then p = "Check"
+	If cmd = "run" Then p = "Run"
+	SaveAll()
+	gAgentCompileParam = p
+	gAgentBuilding = True
+	Dim As Any Ptr th = ThreadCreate_(@AgentBuildThread, NULL)
+	If th = 0 Then
+		gAgentBuilding = False
+		ecode = "build_failed" : emsg = "Could not start the build thread."
+		Exit Sub
+	End If
+	ThreadCounter(th)
+	async = True
+End Sub
+
 '' ---------------------------------------------------------------- command dispatch (UI thread)
 
 '' Runs the mapped command on the GTK UI thread. Read-only surface so far; later
 '' tasks add the mutation, build/run and project handlers here.
 Private Sub AgentDispatch(ByRef cmd As String, ByVal args As JsonValue Ptr, _
-		ByRef ok As Boolean, ByRef res As JsonValue Ptr, ByRef ecode As String, ByRef emsg As String)
-	ok = False : res = 0 : ecode = "" : emsg = ""
+		ByRef ok As Boolean, ByRef res As JsonValue Ptr, ByRef ecode As String, ByRef emsg As String, _
+		ByRef async As Boolean)
+	ok = False : res = 0 : ecode = "" : emsg = "" : async = False
 	Select Case cmd
 	Case "ping"
 		res = JsonNewObject() : res->SetMember("pong", JsonNewBool(True)) : ok = True
@@ -417,6 +530,13 @@ Private Sub AgentDispatch(ByRef cmd As String, ByVal args As JsonValue Ptr, _
 		res = AgentCmdSetActiveContent(args, ecode, emsg) : ok = (res <> 0)
 	Case "open_in_editor"
 		res = AgentCmdOpenInEditor(args, ecode, emsg) : ok = (res <> 0)
+	Case "get_errors"
+		res = AgentCmdGetErrors() : ok = True
+	Case "build", "syntax_check", "run"
+		AgentStartBuild(cmd, ecode, emsg, async)
+		'' async=True -> the slot completes later in AgentBuildFinalize (ok/res set there);
+		'' async=False -> a synchronous failure (ecode set), replied normally below.
+		ok = (ecode = "")
 	Case Else
 		ecode = "unknown_cmd" : emsg = "Unknown command: " & cmd
 	End Select
@@ -425,10 +545,13 @@ End Sub
 '' g_idle_add callback -- runs on the UI thread, executes the published slot,
 '' fills the result and signals the waiting worker. One-shot (returns FALSE).
 Private Function AgentIdleExec(ByVal user As Any Ptr) As Long
-	Dim As Boolean ok
+	Dim As Boolean ok, async
 	Dim As JsonValue Ptr res
 	Dim As String ecode, emsg
-	AgentDispatch(gCmdName, gCmdArgs, ok, res, ecode, emsg)
+	AgentDispatch(gCmdName, gCmdArgs, ok, res, ecode, emsg, async)
+	'' Async command (build/run): the slot is completed later by AgentBuildFinalize once the build
+	'' thread finishes. Leave gCmdDone False so the pipe worker keeps waiting; do not signal here.
+	If async Then Return 0
 	MutexLock(gCmdMutex)
 	gCmdOk = ok : gCmdResult = res : gCmdErrCode = ecode : gCmdErrMsg = emsg
 	gCmdDone = True
