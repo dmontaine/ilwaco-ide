@@ -11,6 +11,40 @@ for the classified port backlog, [Documentation/AstoriaParity.md](Documentation/
 
 ---
 
+## ✅ DONE (2026-08-06) — the menu-taxonomy cluster `49ec5ccd`/`37ba31ea` COMPLETE
+
+Owner directive was *"make the menu system as close to Astoria as possible; later changes will fill in
+the blanks — same with the options panels."* Closed out over 2026-08-04 → 08-06:
+
+- **2026-08-04:** the label pass (status bar "Press F1 for help", `Format`→`Designer`, "Not Set",
+  "Clear Output"/"Clear Immediate", numbered `Untitled1/2/…`, Goto "Go to line:", the Find dialog's
+  cryptic `Aa`/`W`/`.*`/`<`/`>` buttons); the **File-menu restructure** to Astoria's project-first
+  taxonomy; **Open Project** exposed (Ilwaco had the handler with the menu item commented out);
+  `Rename Project` + `Delete Project` added, the latter reimplemented for Linux (`rm -rf`,
+  path-guarded) — both verified once the Close Project crash was fixed. The Rename dialog's
+  `InputBox` title/prompt were swapped and its default carried `.vfp` into what becomes a folder
+  name; both corrected, and MFF's `InputBox` gained a **Cancel** button.
+- **Since:** `frmNewProject`, and the Console Application template rewrite that made every offered
+  project type build (T14/T15).
+- **2026-08-06:** **Recent Projects** became a dialog (`src/frmRecentProjects.{bi,frm}`) listing file +
+  path and skipping entries whose `.vfp` is gone; `OpenProjectTemplate` classified **N/A** (dead code
+  in Astoria). The **Options panels**: the "When Ilwaco IDE starts" radio group removed along with
+  `WhenVisualFBEditorStarts`/`LastOpenedFileType`/`DefaultProjectFile` and the never-read
+  `AutoReloadLastOpenFiles`; the Code Editor page grouped into **Display / Editing / Completion /
+  IntelliSense / History** (Astoria's four, with its `History` catch-all split so each name describes
+  its contents). Finally **`Show Holiday Frame` → `Show Indent Guides`**, done as a real feature:
+  Astoria only relabelled the caption while the checkbox still drove the seasonal frame bitmap, so
+  Ilwaco deleted the decoration and implemented actual indent guides in
+  `EditControl.PaintControlPriv`.
+
+Three GTK layout lessons came out of the Options work, all found by looking at the screen: a GroupBox
+draws its caption inside the frame (needs `Margins.Top`); the VerticalBox/ScrollControl sums children's
+`Constraints.Height` to size the scroll range (a group without one makes the page tail unreachable —
+caught by A/B against the previous tracked binary); and panels inside a height-constrained group need
+their own `Constraints.Height` or GTK compresses the rows into each other.
+
+---
+
 ## ✅ DONE (2026-08-04, later) — Console template rewritten; T14/T15 now PASS; branding cleared
 
 The Console Application template no longer breaks. It pulled in MFF's `mff/Console.bi`, which was

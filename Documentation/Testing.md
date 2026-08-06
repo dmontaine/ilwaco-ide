@@ -95,6 +95,11 @@ necessary but not sufficient — "it compiled" is not "it works".
   Ilwaco IDE starts" radio group, and the Code Editor page is grouped into Display / Editing /
   Completion / IntelliSense / History with every control inside its frame, no overlaps, and the page
   scrolling to its last row at the dialog's default size. TestPlan T20.
+- **The workspace round-trips (2026-08-06).** A project with two open tabs, closed and reopened:
+  `Settings/Workspace.ini` holds the project and both tabs with `*` on the selected one, paths
+  relative to the executable, no BOM; the relaunched IDE shows the same project tree and tabs. A
+  workspace pointing at a deleted project opens empty without an error, and an empty session deletes
+  the file rather than leaving it stale. TestPlan T22.
 - **Indent guides render and toggle (2026-08-06).** A four-level nested source shows a continuous
   vertical rule at each enclosing indent level — one at an 8-space indent, two at 12, three at 16,
   four at 20 — visually distinct from the ShowSpaces dots. Unticking Code Editor ▸ Display ▸ Show

@@ -138,48 +138,26 @@ the owner decisions, the per-task narratives and the v1 limits are in
 
 ---
 
-## NEXT — finish the menu-taxonomy cluster
+## NEXT — the changelog walk: `b9735e8e` (workspace) and onward
 
-**The Close Project crash is FIXED (2026-08-04)** — it was an MFF bug (`TabControl.DeleteTab` left a
-surviving `TabPage`'s `_Label` pointing at a finalised GTK widget), not the close path. `Rename
-Project` and `Delete Project` were blocked by it and are now verified working. Diagnosis, including
-how the fault address was recovered from a core dump with no debugger installed, is in
-[Controls.md](Documentation/Controls.md) and [TechnicalDebt.md](Documentation/TechnicalDebt.md).
+**In flight: `b9735e8e` — replace `.vfs` sessions with an automatic workspace.** Stage 1 is **done and
+verified (2026-08-06)**: `SaveWorkspace`/`LoadWorkspace` (`src/Main.bas`) write `Settings/Workspace.ini`
+on close and restore it on start, so the IDE reopens the project and tabs it had. **Stage 2 is the
+removal**: the Sessions UX (File ▸ Open/Save/Close Session, Recent Sessions, the `AutoSaveSession`
+option, `RecentSession`/`MRUSessions`, `frmTemplates`' Sessions tab and the `.vfs` handling in
+`OpenFiles`) — about 72 references across six files. Astoria took sessions out of the UX entirely;
+Ilwaco should too, once the workspace has carried a few sessions without complaint.
 
+After that, continue the walk from `b9735e8e` in
+[AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md): `cc9e7dd5` (designer grey-panel
+fix — likely N/A, Win32 DLL resolution), `e5e10808` (Edit-menu review: flat checkmark toggles), then the
+`13.3.A` approachability passes.
 
-- **The path-case cluster is closed (2026-08-04)** — all three findings fixed and live-verified; see
-  TechnicalDebt "Paid down". The cosmetic breakpoint-line report turned out to be a *symptom* of the
-  path-case bug (an empty tab conjured from the bad path), not a separate defect, proven by an A/B
-  against the pre-fix binary. `EqualPaths` is now a direct comparison with its Win32-isms removed.
-- **Menu-taxonomy cluster `49ec5ccd`/`37ba31ea` — partly done (2026-08-04).** Owner directive: *"make
-  the menu system as close to Astoria as possible; later changes will fill in the blanks — same with
-  the options panels, except cases like the debug flag entry we've already decided to keep."*
-  **Done + verified:** the label pass (status bar "Press F1 for help", `Format`→`Designer`,
-  "Not Set", "Clear Output"/"Clear Immediate", `tbDebug.Name`, numbered `Untitled1/2/…`, Goto
-  "Go to line:", and the Find dialog's cryptic `Aa`/`W`/`.*`/`<`/`>` buttons relabelled); the
-  **File-menu restructure** to Astoria's project-first taxonomy; **Open Project** exposed (Ilwaco had
-  the handler with the menu item commented out); `Rename Project` + `Delete Project` added, the latter
-  reimplemented for Linux (`rm -rf`, path-guarded) — both **verified working** once the Close Project
-  crash was fixed. The Rename dialog's `InputBox` title/prompt were swapped and its default carried
-  the `.vfp` extension into what becomes a folder name; both corrected, and MFF's `InputBox` gained a
-  **Cancel** button (it offered only OK).
-  **Done + verified since:** `frmNewProject` (New Project dialog — see [HISTORY.md](HISTORY.md)),
-  the Console Application template rewrite that made every offered project type build (T14/T15 PASS),
-  and **Recent Projects as a dialog (2026-08-06)** — `src/frmRecentProjects.{bi,frm}`, a File/Path list
-  replacing the MRU submenu, skipping entries whose `.vfp` is gone. `OpenProjectTemplate` needs no port:
-  it is dead code in Astoria (defined, called from nowhere) and Ilwaco's `frmTemplates` has no
-  `DialogMode` counterpart. **The Options panels are done (2026-08-06)** — the "When Ilwaco IDE
-  starts" radio group is gone (with `WhenVisualFBEditorStarts`, `LastOpenedFileType`,
-  `DefaultProjectFile` and the dead `AutoReloadLastOpenFiles` key), and the Code Editor page is
-  grouped into **Display / Editing / Completion / IntelliSense / History**
-  (Astoria's four groups, with its `History` catch-all split so each name describes its contents —
-  owner call 2026-08-06), and **`Show Holiday Frame` → `Show Indent Guides` is done** — as a real
-  feature, not Astoria's relabel: Astoria renamed the caption while the checkbox still drove the
-  seasonal holiday-frame bitmap. Ilwaco deletes that decoration (`WithFrame`, `EditControlFrame`,
-  `Resources/Frame.png`) and `EditControl.PaintControlPriv` now draws actual indent guides.
-  **The menu-taxonomy cluster is COMPLETE.**
-  Skip the pure 32-bit/GTK-strip entries (`e139c2cc` etc.). All owner directives (32-bit, UTF-8/LF,
-  AI, English-only) remain cleared.
+**Two items to settle before the testing phase** (both in TechnicalDebt "Known gaps"): the
+**blank-terminal finding** (a user pressing Run sees an empty window — reproducible with
+`xfce4-terminal --hold -x /bin/echo TEST`, so not ours, but it is what they would see), and the
+**project `.vfp` BOMs** written by `SaveProjectFile` and carried by the template `.vfp` data.
+
 - **Examples work — deferred to just before the testing phase (owner).** The two Astoria Examples
   items (`4bd02894`, `51441d7a`), **plus a BOM sweep**: 93 of 111 sources under `Examples/` start
   with a UTF-8 BOM, which makes FreeBASIC compile their string literals wide, so they build clean and
@@ -187,6 +165,8 @@ how the fault address was recovered from a core dump with no debugger installed,
   time. Do all three together so `Examples/` is touched once.
 - Unverified, low priority: **Ctrl+F5 did not resume** a stopped debuggee during this session's driving. May
   be an artefact of synthetic input rather than a defect — check by hand before treating it as a bug.
+- Cosmetic: the Tools menu still lists a stale **`VisualFBEditor64`** external-tool entry from
+  `Settings/Others/Tools.ini` — branding drift, found 2026-08-06.
 
 **Repo-hygiene note:** the `./ilwaco` binary is tracked **by owner directive (2026-08-04) — do not
 `.gitignore` it** (the repo moves between two machines and the built editor must travel with each push).

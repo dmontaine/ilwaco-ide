@@ -95,6 +95,11 @@ Each of these was a *choice* in VisualFBEditor and is now made once, with the op
   the nesting of FreeBASIC blocks is visible at a glance. Tabs and spaces count identically, so a
   file indented either way guides the same. (Astoria renamed the same checkbox to "Show Indent
   Guides" but left it driving the holiday frame; Ilwaco implements what the label says.)
+- **The IDE reopens where you left off (2026-08-06).** Closing Ilwaco records the open project and
+  editor tabs in `Settings/Workspace.ini`; starting it restores them. No session file to name, save or
+  remember — VisualFBEditor's `.vfs` sessions were a filing job handed to the user for something
+  everyone wants every time. (The session commands are still present while the workspace beds in;
+  they go next.)
 - **Recent Projects is a dialog, not a menu of paths (2026-08-06).** File ▸ Recent Projects… opens a
   list showing each recent project's file name and full path with its icon, and quietly drops entries
   whose `.vfp` is no longer on disk — a menu could show neither the path nor whether the project still

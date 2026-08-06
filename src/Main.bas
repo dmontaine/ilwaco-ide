@@ -1857,6 +1857,102 @@ Sub OpenProgram()
 	tpProject->SelectTab
 End Sub
 
+'' ---------------------------------------------------------------- workspace
+'' The workspace is what the IDE was showing when it was last closed -- the open project and the
+'' open editor tabs -- written automatically to Settings/Workspace.ini on close and restored on
+'' start. It replaces asking the user to manage `.vfs` session files by hand: reopening where you
+'' left off is what everyone wants every time, so it is not an option (Astoria `b9735e8e`).
+''
+'' Paths are stored relative to the executable where possible (the same GetShortFileName the recent
+'' lists use), so a workspace written on one machine still resolves on another -- this repo moves
+'' between two. The file is written WITHOUT an encoding clause on purpose: `Open ... For Output
+'' Encoding "utf-8"` emits a BOM, and a BOM is exactly what the UTF-8/LF directive forbids, so the
+'' lines are converted with ToUtf8 and written as bytes.
+Sub SaveWorkspace()
+	Dim As TabWindow Ptr tb
+	Dim As Integer nItems = 0
+	Dim As String Body
+	If MainNode <> 0 Then
+		Dim As ProjectElement Ptr ppe = Cast(ProjectElement Ptr, MainNode->Tag)
+		If ppe <> 0 AndAlso WGet(ppe->FileName) <> "" Then
+			Body &= ToUtf8("*File=" & GetShortFileName(WGet(ppe->FileName), ExePath & Slash & Slash)) & Chr(10)
+			nItems += 1
+		End If
+	End If
+	Body &= ToUtf8("UseDebugger=" & IIf(UseDebugger, "1", "0")) & Chr(10)
+	Body &= "[Tabs]" & Chr(10)
+	For j As Integer = 0 To TabPanels.Count - 1
+		Var ptabCode1 = @Cast(TabPanel Ptr, TabPanels.Item(j))->tabCode
+		For i As Integer = 0 To ptabCode1->TabCount - 1
+			tb = Cast(TabWindow Ptr, ptabCode1->Tabs[i])
+			If tb <> 0 AndAlso FileExists(tb->FileName) Then
+				Body &= ToUtf8(IIf(tb->IsSelected, "*", "") & "File=" & GetShortFileName(tb->FileName, ExePath & Slash & Slash)) & Chr(10)
+				nItems += 1
+			End If
+		Next i
+	Next j
+	'' Nothing open: remove the file rather than leave a stale one, so the next start is genuinely
+	'' empty instead of reopening what the user deliberately closed.
+	If nItems = 0 Then
+		If FileExists(WorkspacePath) Then Kill WorkspacePath
+		Exit Sub
+	End If
+	Dim As Integer Fn = FreeFile_
+	If Open(WorkspacePath For Output As #Fn) <> 0 Then Exit Sub
+	Print #Fn, Body;
+	CloseFile_(Fn)
+End Sub
+
+'' Restore the last workspace. Returns True if it opened anything, so the caller can tell an empty
+'' start (fresh install, or everything closed last time) from a restored one.
+Function LoadWorkspace() As Boolean
+	If Not FileExists(WorkspacePath) Then Return False
+	Dim As Integer Fn = FreeFile_
+	If Open(WorkspacePath For Input Encoding "utf-8" As #Fn) <> 0 Then
+		If Open(WorkspacePath For Input As #Fn) <> 0 Then Return False
+	End If
+	Dim Buff As WString * 2048
+	Dim As WStringList Files
+	Dim As WString Ptr filn
+	Dim As Boolean bMain, bTabs, bProjectLoaded, bUseDebuggerSaved, bHasUseDebugger
+	Dim As Integer Pos1, n
+	Do Until EOF(Fn)
+		Line Input #Fn, Buff
+		If StartsWith(LCase(Buff), "[tabs]") Then
+			bTabs = True
+			n = 0
+		ElseIf StartsWith(LCase(Buff), "usedebugger=") Then
+			Pos1 = InStr(Buff, "=")
+			If Pos1 <> 0 Then
+				bUseDebuggerSaved = (Val(Mid(Buff, Pos1 + 1)) <> 0)
+				bHasUseDebugger = True
+			End If
+		ElseIf StartsWith(LCase(Buff), "file=") OrElse StartsWith(LCase(Buff), "*file=") Then
+			Pos1 = InStr(Buff, "=")
+			If Pos1 <> 0 Then
+				n += 1
+				bMain = StartsWith(Buff, "*")
+				WLet(filn, GetFullPath(Mid(Buff, Pos1 + 1)))
+				If bTabs Then
+					If FileExists(*filn) Then AddTab(*filn, , , Not bMain)
+				ElseIf EndsWith(LCase(*filn), ".vfp") Then
+					If Not bProjectLoaded AndAlso FileExists(*filn) Then
+						AddProject(*filn, @Files)
+						If MainNode <> 0 Then WLet(RecentProject, *filn)
+						bProjectLoaded = True
+					End If
+				ElseIf FileExists(*filn) Then
+					AddTab(*filn)
+				End If
+			End If
+		End If
+	Loop
+	WDeAllocate(filn)
+	CloseFile_(Fn)
+	If bHasUseDebugger Then ChangeUseDebugger bUseDebuggerSaved, 1
+	Return CBool(bProjectLoaded) OrElse CBool(ptabCode->TabCount > 0)
+End Function
+
 Function SaveSession(WithoutQuestion As Boolean = False) As Boolean
 	Dim As ExplorerElement Ptr ee
 	Dim As WString Ptr Temp, Temp2
@@ -9307,6 +9403,10 @@ Sub frmMain_Show(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	End If
 	If bFileOpening Then
 		OpenFiles GetFullPath(File)
+	ElseIf Not bAgentLaunched Then
+		'' Reopen what was open last time. An agent launch skips it: the agent opens or creates
+		'' whatever project it wants, and restoring tabs underneath it only confuses get_status.
+		LoadWorkspace()
 	End If
 	If ShowTipoftheDay AndAlso Not bAgentLaunched Then frmTipOfDay.ShowModal *pfrmMain
 
@@ -9353,6 +9453,7 @@ Sub frmMain_Close(ByRef Designer As My.Sys.Object, ByRef Sender As Form, ByRef A
 	If AutoSaveSession AndAlso SessionOpened AndAlso Trim(*RecentSession) <> "" Then
 		SaveSession(True)
 	End If
+	SaveWorkspace()   '' remember the open project and tabs for the next start
 	If Not CloseSession Then Action = 0: Return
 	FormClosing = True
 	StopAgentPipe()   '' stop the agent listener before teardown so no command races the close

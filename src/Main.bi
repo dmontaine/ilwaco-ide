@@ -22,6 +22,7 @@
 #include once "mff/HTTP.bi"
 
 				#define SettingsPath ExePath & "/Settings/ilwaco.ini"
+				#define WorkspacePath ExePath & "/Settings/Workspace.ini"
 
 	#define Slash "/"
 	#define BackSlash "\"
@@ -246,6 +247,8 @@ Declare Function FolderCopy(FromDir As UString, ToDir As UString) As Integer
 Declare Sub Save
 Declare Function SaveAllBeforeCompile() As Boolean
 Declare Function SaveSession(WithoutQuestion As Boolean = False) As Boolean
+Declare Sub SaveWorkspace()
+Declare Function LoadWorkspace() As Boolean
 Declare Sub CompileProgram(Param As Any Ptr)
 Declare Sub CompileWithDebugger(Param As Any Ptr)
 Declare Sub CompileAndRun(Param As Any Ptr)

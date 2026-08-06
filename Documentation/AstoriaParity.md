@@ -642,7 +642,17 @@ over the editor in December and January (`WithFrame = Month(Now) = 12 OrElse Mon
 label describes something the code does not do. Ilwaco deletes the decoration (`WithFrame`,
 `EditControlFrame`, the PNG) and implements real guides in `EditControl.PaintControlPriv`, renaming
 the setting to `ShowIndentGuides`. **The menu-taxonomy cluster is COMPLETE.**
-Detail in [PROJECT_STATUS.md](../PROJECT_STATUS.md).
+Detail in [HISTORY.md](../HISTORY.md).
+
+**Next: `b9735e8e` — replace `.vfs` sessions with an automatic workspace.** **Stage 1 done + verified
+(2026-08-06):** `SaveWorkspace`/`LoadWorkspace` in `src/Main.bas` write `Settings/Workspace.ini` on
+close and restore it on start, so the IDE reopens the project and tabs it had — BOM-less, with paths
+stored relative to the executable so a workspace survives the repo moving between machines, and the
+file removed rather than left stale when nothing is open. **Stage 2** is taking the Sessions UX out
+(File ▸ Open/Save/Close Session, Recent Sessions, `AutoSaveSession`, `RecentSession`/`MRUSessions`,
+`frmTemplates`' Sessions tab, `.vfs` handling in `OpenFiles`) — ~72 references across six files.
+Astoria's `LoadWorkspace` also prompts New Project when there is nothing to reopen; Ilwaco leaves the
+IDE empty for now, which is what it did before.
 
 ## Foundation status (2026-08-02)
 

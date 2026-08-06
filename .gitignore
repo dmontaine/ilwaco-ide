@@ -9,3 +9,7 @@ DebugInfo.log
 # on-disk copy of an unsaved buffer. A runtime artifact, never source — Astoria committed
 # several of these by accident (Examples/*/Temp.bas).
 Temp.bas
+
+# What the IDE had open when it was last closed (SaveWorkspace). Per-machine session state
+# regenerated on every exit, not source — same call Astoria made.
+Settings/Workspace.ini
