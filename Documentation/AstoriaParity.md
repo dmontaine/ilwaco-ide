@@ -712,6 +712,39 @@ A large, mixed commit whose parts land very differently for Ilwaco:
 - **N/A: the MFF `#ifndef UNICODE` guards** (`Sys.bas`/`SysUtils.bi`/`UString.bi`) — those are the
   Windows MFF units that `#include "windows.bi"`; not part of the GTK build.
 
+**Menu-taxonomy cluster — COLLAPSED to Astoria's FINAL menu, not walked commit-by-commit (2026-08-06).**
+The Astoria menu is a ~15-commit evolution whose intermediate states rework each other, so walking it
+step-by-step would build UI only to delete it (memory `project-menu-collapse-to-final`). Downstream of
+`0eaa8806` in this backlog: `faaf0860` flattens the "More Build/Debug Options" submenus it creates,
+`6f933f43` removes the Tools "Advanced" submenu, `11c033d4` reverts its minimal-toolbar default,
+`4a112089` removes its Edit-menu toggles, and `b33a2f95`/`f3538e1c` add the Code/Form restructure.
+**Owner-agreed to jump to the final taxonomy in one designed pass.**
+
+- **Stage 1 (menu bar) — DONE + verified on `:0`.** Rewrote `CreateMenusAndToolBars`' menu-bar section
+  to Astoria's final top-level order **File · View · Project · Code · Code/Form · Form · Run · Tools ·
+  Window · Help**. Edit→**Code** (internal name `Tahrir` kept), Designer→**Form** (name `FormFormat`
+  kept), new **Code/Form** menu holding the shared Undo/Redo/Cut/Copy/Paste/Duplicate/Select All (kept
+  in its own never-greyed menu so its shortcuts survive contextual greying). **Search folded into Code**
+  as a submenu; **Build+Debug merged into a flattened Run** menu. Advanced submenus on File / Code /
+  Project; **Fold** and **Debug Windows** submenus; Split H/V and Convert/Lines moved onto Code; Command
+  Prompt moved to Tools; Add Procedure/Add Type moved from Tools to Code. S2 relabels applied
+  (Define→Go to Definition, Compile→Build, End→Stop, Start→Run Without Building, CompileAll→Rebuild All,
+  MakeClean→Clean, StartWithCompile→Run). **Linux adaptations:** no GDB Command and no Continue (Ilwaco's
+  Integrated engine has neither); one compiler (Astoria is one-compiler too). **Principle:** every
+  dispatch key / `mi*` var name preserved — only structure, grouping, captions, top-level names changed,
+  so `mClick` needed no rewiring. Verified by opening the Code and Run menus on `:0`; all submenus
+  populate; clean startup, no error dialog. Collapses `0eaa8806`/`93bbfa28`/`11c033d4`/`4a112089`/
+  `faaf0860`/`6f933f43`/`e1595a31` (menu-bar parts).
+- **Deferred to their own passes** (final menu also contains these, but they are separate features to
+  port when the walk reaches them): the **Code/Form contextual greying** (`UpdateCodeFormMenuEnabled`,
+  D1 Designer greying `a114ee5b`), the designer `@PopupClick` context items in the Form menu
+  (context-menu parity `b05fdacb`), the **Git menu** (`d61eb062`+), and the **toolbar** merge/
+  single-checkable simplification (S3 — Ilwaco keeps its current Toolbars submenu + bands for now).
+- **Android/APK — kept wired in the Run menu for now** (two submenus), to be removed in a dedicated
+  feature-removal pass (like GDB was): it spans `CompileBundle`/`CompileAPK`/`CreateKeyStore`/
+  `GenerateSignedBundleAPK` in `Main.bas`, `mClick` cases, four `mi*` vars + their `->Enabled` lines in
+  `TabWindow.bas`, and Project Properties fields. **This is the immediate NEXT task.**
+
 ## Foundation status (2026-08-02)
 
 - **Build baseline:** Ilwaco builds + runs on Linux (PROJECT_STATUS).

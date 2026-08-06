@@ -75,29 +75,37 @@ the owner decisions, the per-task narratives and the v1 limits are in
 
 ---
 
-## NEXT — resume the changelog walk at the `13.3.A` approachability passes
+## NEXT — remove Android/APK, then the deferred menu features + rest of the 13.3.A walk
 
-**`e5e10808` is classified (2026-08-06)** — see [AstoriaParity.md](Documentation/AstoriaParity.md).
-It was mostly INVERT/SKIP (its `Slash`→`WindowsSlash` sweep flips Ilwaco's already-correct `/`
-direction) and its headline Edit-menu "flat checkmark toggles" are **superseded by `4a112089`**
-(further down this same backlog, which moves those settings off the Edit menu into Options) — Ilwaco's
-menu is already in that post-reversal shape, so the toggles were not built. One durable bug was
-**ported**: `GetFileName`'s no-extension truncation, which corrupted dot-less project-folder names at
-Rename Project.
+**Just done (2026-08-06):** `e5e10808` classified (mostly INVERT/SKIP; its Edit-menu toggles are
+superseded by `4a112089`; `GetFileName` no-extension truncation bug ported), and — the big one — the
+**menu-taxonomy cluster was COLLAPSED to Astoria's final menu bar in one designed pass** rather than
+walked commit-by-commit. Ilwaco's menu bar is now **File · View · Project · Code · Code/Form · Form ·
+Run · Tools · Window · Help** (Edit→Code, Designer→Form, new Code/Form menu, Search folded into Code,
+Build+Debug merged into a flattened Run), verified by opening the Code and Run menus on `:0`. Full
+detail + what it collapses and what's deferred: [AstoriaParity.md](Documentation/AstoriaParity.md);
+strategy in memory `project-menu-collapse-to-final`.
 
-**Start here:** the `13.3.A` approachability passes (`0eaa8806`, `93bbfa28`, …). The pruned backlog
-with the walk order is [AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md);
-classify each item in [AstoriaParity.md](Documentation/AstoriaParity.md) as you go, and skip the pure
-GTK/Linux/32-bit stripping commits (`e139c2cc`, `c494207f`, `7baebd1e`, `add4642a`, `76abaa5a`,
-`15e66cc5`). When you reach **`4a112089`**, wire `ParameterInfoShow` up (INI load, the
-`If Not ParameterInfoShow Then Exit Sub` gate, the Options checkbox) — it is a latent global in Ilwaco.
+**Start here — remove the Android/APK feature** (a dedicated feature-removal pass, like GDB was; it is
+currently kept wired in the Run menu's two submenus). Footprint: `CompileBundle`/`CompileAPK`/
+`CreateKeyStore`/`GenerateSignedBundleAPK` in `Main.bas`; the `mClick` cases `BuildBundle`/`BuildAPK`/
+`CreateKeyStore`/`GenerateSignedBundle`/`GenerateSignedAPK` (`src/ilwaco.bas` ~229-234); the four
+`mi*` vars (`miBuildBundle`/`miBuildAPK`/`miGenerateSignedBundle`/`miGenerateSignedAPK`, `Main.bas:81`)
+and their `->Enabled` lines (`TabWindow.bas:266-269`); the two Run-menu submenus (`Main.bas` ~6125-6135);
+and any Project Properties / template Android fields. Remove menu + handlers + subs + vars together.
+
+**Then the deferred menu features** (each its own pass, in walk order): Code/Form contextual greying
+(`a114ee5b`/`e1595a31`/`f3538e1c`), designer `@PopupClick` context items in the Form menu (`b05fdacb`),
+the toolbar merge/single-checkable (S3), and the Git menu (`d61eb062`+). When you reach **`4a112089`**,
+wire `ParameterInfoShow` up (INI load, the `If Not ParameterInfoShow Then Exit Sub` gate, the Options
+checkbox) — it is a latent global in Ilwaco. Skip the pure GTK/Linux/32-bit stripping commits
+(`e139c2cc`, `c494207f`, `7baebd1e`, `add4642a`, `76abaa5a`, `15e66cc5`).
 
 **Method that has been working:** read Astoria's commit *and* what its code actually does before
-classifying — this session `e5e10808`'s headline feature turned out to be reversed 47 commits later
-(`4a112089`), so scoping against Astoria's *final* state avoided building UI only to tear it out; and
-twice before, the commit message and the shipped behaviour disagreed (`Show Indent Guides` was only a
-relabel; `OpenProjectTemplate` is dead code). Build with `./build-linux.sh editor` in the background,
-verify on `:0`, then document and commit per item.
+classifying, and **look downstream** — twice now a change was reworked later (`e5e10808`'s toggles by
+`4a112089`; the whole menu cluster by ~15 commits), so scoping against Astoria's *final* state avoided
+building UI only to tear it out. Build with `./build-linux.sh editor` in the background, verify on
+`:0`, then document and commit per item.
 
 **Two items to settle before the testing phase** (both in TechnicalDebt "Known gaps"): the
 **blank-terminal finding** (a user pressing Run sees an empty window — reproducible with
