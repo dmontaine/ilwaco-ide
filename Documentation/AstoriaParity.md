@@ -631,8 +631,11 @@ and called from nowhere (dead code), and Ilwaco's `frmTemplates` has no `DialogM
 there is nothing to port. **The Options panels are done (2026-08-06)**: the "When Ilwaco IDE
 starts" radio group is removed along with the settings only it fed (`WhenVisualFBEditorStarts`,
 `LastOpenedFileType`, `DefaultProjectFile`, plus the never-read `AutoReloadLastOpenFiles`), and the
-Code Editor page is grouped into **Display / Completion / IntelliSense / History** with Astoria's
-membership. **Still to port in this cluster:**
+Code Editor page is grouped into **Display / Editing / Completion / IntelliSense / History**:
+Astoria's four groups with its `History` catch-all split (there it also held Tab Size, Treat Tab as
+Spaces, the IntelliSense limit and the tooltip hover time). Tab settings → **Editing**, the two
+IntelliSense settings → **IntelliSense**, History keeps the history/autosave limits. A deliberate
+deviation from Astoria, owner call 2026-08-06. **Still to port in this cluster:**
 `Show Holiday Frame` → `Show Indent Guides`, which is a *feature* port needing real indent-guide
 rendering in `EditControl`, not a relabel. Detail in [PROJECT_STATUS.md](../PROJECT_STATUS.md).
 

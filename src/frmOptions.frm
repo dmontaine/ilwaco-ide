@@ -616,6 +616,22 @@ pfOptions = @fOptions
 			.Designer = @This
 			.Parent = @vbxCodeEditor
 		End With
+		' grbEditing
+		With grbEditing
+			.Name = "grbEditing"
+			.Text = ML("Editing")
+			.Align = DockStyle.alTop
+			.Margins.Top = 22
+			.Margins.Left = 10
+			.Margins.Right = 10
+			.Margins.Bottom = 8
+			.AutoSize = True
+			.Constraints.Height = 100
+			.TabIndex = 264
+			.SetBounds 0, 0, 420, 22
+			.Designer = @This
+			.Parent = @vbxCodeEditor
+		End With
 		' grbCompletion
 		With grbCompletion
 			.Name = "grbCompletion"
@@ -642,7 +658,7 @@ pfOptions = @fOptions
 			.Margins.Right = 10
 			.Margins.Bottom = 8
 			.AutoSize = True
-			.Constraints.Height = 212
+			.Constraints.Height = 280
 			.TabIndex = 262
 			.SetBounds 0, 0, 420, 22
 			.Designer = @This
@@ -658,7 +674,7 @@ pfOptions = @fOptions
 			.Margins.Right = 10
 			.Margins.Bottom = 8
 			.AutoSize = True
-			.Constraints.Height = 272
+			.Constraints.Height = 134
 			.TabIndex = 263
 			.SetBounds 0, 0, 420, 22
 			.Designer = @This
@@ -2143,7 +2159,7 @@ pfOptions = @fOptions
 			.AutoSize = True
 			.SetBounds 0, 256, 417, 23
 			.Designer = @This
-			.Parent = @grbHistory
+			.Parent = @grbEditing
 		End With
 		' pnlTabSize
 		With pnlTabSize
@@ -2156,7 +2172,7 @@ pfOptions = @fOptions
 			.AutoSize = True
 			.SetBounds 0, 279, 417, 20
 			.Designer = @This
-			.Parent = @grbHistory
+			.Parent = @grbEditing
 		End With
 		' pnlHistoryLimit
 		With pnlHistoryLimit
@@ -2182,7 +2198,7 @@ pfOptions = @fOptions
 			.AutoSize = True
 			.SetBounds 0, 319, 417, 20
 			.Designer = @This
-			.Parent = @grbHistory
+			.Parent = @grbIntelliSense
 		End With
 		' pnlHistoryFileSavingDays
 		With pnlHistoryFileSavingDays
@@ -2466,7 +2482,7 @@ pfOptions = @fOptions
 			.ControlIndex = 18
 			.SetBounds 0, 384, 72, 20
 			.Designer = @This
-			.Parent = @grbHistory
+			.Parent = @grbIntelliSense
 		End With
 		' lblCodeEditorHoverTime
 		With lblCodeEditorHoverTime

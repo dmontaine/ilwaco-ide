@@ -81,9 +81,13 @@ Each of these was a *choice* in VisualFBEditor and is now made once, with the op
   `LastOpenedFileType`, `DefaultProjectFile`), as did `AutoReloadLastOpenFiles`, which nothing had
   ever read. (Astoria reopens its saved workspace instead; Ilwaco has no workspace loader yet, so
   adopting that behaviour waits for one.)
-- **The Code Editor options page is grouped (2026-08-06)** into **Display**, **Completion**,
-  **IntelliSense** and **History**, matching Astoria — a flat list of twenty-five checkboxes gave a
-  beginner no way to guess where a setting lived.
+- **The Code Editor options page is grouped (2026-08-06)** into **Display**, **Editing**,
+  **Completion**, **IntelliSense** and **History** — a flat list of twenty-five checkboxes gave a
+  beginner no way to guess where a setting lived. Astoria uses four groups; Ilwaco splits its
+  "History" one, because there a group named History also held Tab Size, Treat Tab as Spaces, the
+  IntelliSense limit and the tooltip hover time. Tab settings moved to **Editing**, the two
+  IntelliSense settings to **IntelliSense**, and History keeps only the history/autosave limits, so
+  every group name now describes what is inside it.
 - **Recent Projects is a dialog, not a menu of paths (2026-08-06).** File ▸ Recent Projects… opens a
   list showing each recent project's file name and full path with its icon, and quietly drops entries
   whose `.vfp` is no longer on disk — a menu could show neither the path nor whether the project still

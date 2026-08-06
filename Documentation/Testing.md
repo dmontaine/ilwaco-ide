@@ -92,8 +92,8 @@ necessary but not sufficient — "it compiled" is not "it works".
   `run` returned in **0.1 s** with the program launched in its own terminal. 20 checks, all passed.
   `run` used to hang forever (TechnicalDebt "Paid down 2026-08-06"). TestPlan T18.
 - **The Options dialog matches Astoria's shape (2026-08-06).** General no longer carries the "When
-  Ilwaco IDE starts" radio group, and the Code Editor page is grouped into Display / Completion /
-  IntelliSense / History with every control inside its frame, no overlapping rows, and the page
+  Ilwaco IDE starts" radio group, and the Code Editor page is grouped into Display / Editing /
+  Completion / IntelliSense / History with every control inside its frame, no overlaps, and the page
   scrolling to its last row at the dialog's default size. TestPlan T20.
 - **Recent Projects opens from a dialog (2026-08-06).** File ▸ Recent Projects… is now a flat item, not
   an MRU submenu; the dialog lists each recent project's file name and full path with its icon, shows

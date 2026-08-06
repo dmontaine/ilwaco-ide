@@ -171,7 +171,9 @@ how the fault address was recovered from a core dump with no debugger installed,
   `DialogMode` counterpart. **The Options panels are done (2026-08-06)** — the "When Ilwaco IDE
   starts" radio group is gone (with `WhenVisualFBEditorStarts`, `LastOpenedFileType`,
   `DefaultProjectFile` and the dead `AutoReloadLastOpenFiles` key), and the Code Editor page is
-  grouped into **Display / Completion / IntelliSense / History**. **Still to port:**
+  grouped into **Display / Editing / Completion / IntelliSense / History**
+  (Astoria's four groups, with its `History` catch-all split so each name describes its contents —
+  owner call 2026-08-06). **Still to port:**
   `Show Holiday Frame` → `Show Indent Guides`, which is a *feature* port
   needing real indent-guide rendering in `EditControl`, not a relabel.
   Skip the pure 32-bit/GTK-strip entries (`e139c2cc` etc.). All owner directives (32-bit, UTF-8/LF,

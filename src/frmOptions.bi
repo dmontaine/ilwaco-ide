@@ -161,7 +161,7 @@ Using My.Sys.Forms
 		Dim As Boolean HotKeysChanged
 		Dim As Integer LibraryPathsCount
 		Dim As ListControl lstIncludePaths, lstLibraryPaths, lstColorKeys, lstInterfaceColorKeys
-		Dim As GroupBox grbDisplay, grbCompletion, grbIntelliSense, grbHistory, grbGrid, grbColors, grbThemes, grbFont, grbMakeToolPaths, grbDefaultMakeTool, grbDefaultTerminal, grbTerminalPaths, grbIncludePaths, grbLibraryPaths, grbDefaultHelp, grbHelpPaths, grbWhenCompiling, grbShortcuts, grbOtherEditors, grbCommandPromptOptions, grbDefaultConfiguration, grbConfigurations
+		Dim As GroupBox grbDisplay, grbEditing, grbCompletion, grbIntelliSense, grbHistory, grbGrid, grbColors, grbThemes, grbFont, grbMakeToolPaths, grbDefaultMakeTool, grbDefaultTerminal, grbTerminalPaths, grbIncludePaths, grbLibraryPaths, grbDefaultHelp, grbHelpPaths, grbWhenCompiling, grbShortcuts, grbOtherEditors, grbCommandPromptOptions, grbDefaultConfiguration, grbConfigurations
 		Dim As ListView lvMakeToolPaths, lvTerminalPaths, lvHelpPaths, lvShortcuts, lvOtherEditors, lvConfigurations
 		Dim As Label lblInterfaceFont
 		Dim As CommandButton cmdInterfaceFont
