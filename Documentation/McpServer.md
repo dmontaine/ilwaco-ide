@@ -258,8 +258,13 @@ the first `SaveProject` re-adds it. Fix belongs in the project writer + template
 - **Verify by effect.** Build the editor (~4 min, background it), launch on `:0`, drive the socket with a
   `socket.AF_UNIX` Python client (recipe below) or spawn `./ilwaco-mcp` and speak MCP over its stdio.
   Always `git checkout Settings/` after a launch (the IDE writes session state on exit), and remove any
-  agent-created test files from `Examples/` before committing. Kill leftover instances with `pkill -x
-  ilwaco` (not `-f` — it matches the caller).
+  agent-created test files (from `Examples/`, or `Projects/` for `create_project` tests) before
+  committing. Kill leftover instances with `pkill -x ilwaco` (not `-f` — it matches the caller).
+- **Relaunch race (cost a cycle):** `pkill` doesn't run `StopAgentPipe`, so the **socket file lingers**.
+  On relaunch, an `until [ -S <sock> ]` check passes instantly on the *stale* file while the new server
+  hasn't bound yet → `ConnectionRefused`. `StartAgentPipe` unlinks+rebinds, so just wait a beat: gate on
+  the new process being alive AND give it ~1–2s to bind (or `rm -f` the socket before launch), don't
+  trust the socket file's mere existence.
 
 ## Verification recipe
 
