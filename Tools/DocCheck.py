@@ -85,6 +85,8 @@ REMOVED_FEATURES = [
     (r"Limit debug to the directory",   "the Limit debug option (removed: it was never functional)"),
     (r"\bConsoleType\b",                 "the MFF console wrapper (removed: Console.bi deleted; the Console template is plain FreeBASIC)"),
     (r"When (?:Ilwaco IDE|VisualFBEditor) starts", "the startup-behaviour radio group (removed: Ilwaco always starts empty)"),
+    (r"Show Holiday Frame",              "the seasonal holiday-frame decoration (removed: replaced by real indent guides)"),
+    (r"\bWithFrame\b",                  "the holiday-frame December/January flag (removed with the decoration)"),
     (r"\bWhenVisualFBEditorStarts\b", "the startup-behaviour setting (removed with its radio group)"),
 ]
 

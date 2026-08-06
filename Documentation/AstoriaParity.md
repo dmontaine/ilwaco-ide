@@ -635,9 +635,14 @@ Code Editor page is grouped into **Display / Editing / Completion / IntelliSense
 Astoria's four groups with its `History` catch-all split (there it also held Tab Size, Treat Tab as
 Spaces, the IntelliSense limit and the tooltip hover time). Tab settings → **Editing**, the two
 IntelliSense settings → **IntelliSense**, History keeps the history/autosave limits. A deliberate
-deviation from Astoria, owner call 2026-08-06. **Still to port in this cluster:**
-`Show Holiday Frame` → `Show Indent Guides`, which is a *feature* port needing real indent-guide
-rendering in `EditControl`, not a relabel. Detail in [PROJECT_STATUS.md](../PROJECT_STATUS.md).
+deviation from Astoria, owner call 2026-08-06. **`Show Holiday Frame` → `Show Indent Guides` is
+done (2026-08-06) — as a feature, not Astoria's relabel.** Astoria changed that checkbox's caption to
+"Show Indent Guides" but left it driving `ShowHolidayFrame`, which still blits `Resources/Frame.png`
+over the editor in December and January (`WithFrame = Month(Now) = 12 OrElse Month(Now) = 1`) — the
+label describes something the code does not do. Ilwaco deletes the decoration (`WithFrame`,
+`EditControlFrame`, the PNG) and implements real guides in `EditControl.PaintControlPriv`, renaming
+the setting to `ShowIndentGuides`. **The menu-taxonomy cluster is COMPLETE.**
+Detail in [PROJECT_STATUS.md](../PROJECT_STATUS.md).
 
 ## Foundation status (2026-08-02)
 

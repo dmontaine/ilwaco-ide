@@ -173,9 +173,11 @@ how the fault address was recovered from a core dump with no debugger installed,
   `DefaultProjectFile` and the dead `AutoReloadLastOpenFiles` key), and the Code Editor page is
   grouped into **Display / Editing / Completion / IntelliSense / History**
   (Astoria's four groups, with its `History` catch-all split so each name describes its contents —
-  owner call 2026-08-06). **Still to port:**
-  `Show Holiday Frame` → `Show Indent Guides`, which is a *feature* port
-  needing real indent-guide rendering in `EditControl`, not a relabel.
+  owner call 2026-08-06), and **`Show Holiday Frame` → `Show Indent Guides` is done** — as a real
+  feature, not Astoria's relabel: Astoria renamed the caption while the checkbox still drove the
+  seasonal holiday-frame bitmap. Ilwaco deletes that decoration (`WithFrame`, `EditControlFrame`,
+  `Resources/Frame.png`) and `EditControl.PaintControlPriv` now draws actual indent guides.
+  **The menu-taxonomy cluster is COMPLETE.**
   Skip the pure 32-bit/GTK-strip entries (`e139c2cc` etc.). All owner directives (32-bit, UTF-8/LF,
   AI, English-only) remain cleared.
 - **Examples work — deferred to just before the testing phase (owner).** The two Astoria Examples

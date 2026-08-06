@@ -190,7 +190,6 @@ Globals.Functions.Sorted = True
 Globals.Args.Sorted = True
 GlobalAsmFunctionsHelp.Sorted = True
 GlobalFunctionsHelp.Sorted = True
-WithFrame = Month(Now) = 12 OrElse Month(Now) = 1
 
 Namespace VisualFBEditor
 	Function Application.ReadProperty(ByRef PropertyName As String) As Any Ptr
@@ -5548,7 +5547,7 @@ Sub LoadSettings
 	GlobalSettings.ShowSymbolsTooltipsOnMouseHover = iniSettings.ReadBool("Options", "ShowSymbolsTooltipsOnMouseHover", True)
 	GlobalSettings.ShowClassesExplorerOnOpenWindow = iniSettings.ReadBool("Options", "ShowClassesExplorerOnOpenWindow", True)
 	ShowHorizontalSeparatorLines = iniSettings.ReadBool("Options", "ShowHorizontalSeparatorLines", True)
-	ShowHolidayFrame = iniSettings.ReadBool("Options", "ShowHolidayFrame", True)
+	ShowIndentGuides = iniSettings.ReadBool("Options", "ShowIndentGuides", True)
 	HighlightBrackets = iniSettings.ReadBool("Options", "HighlightBrackets", True)
 	HighlightCurrentLine = iniSettings.ReadBool("Options", "HighlightCurrentLine", True)
 	HighlightCurrentWord = iniSettings.ReadBool("Options", "HighlightCurrentWord", True)
@@ -5603,7 +5602,6 @@ Sub LoadSettings
 	LoadKeyWords
 	LoadInterfaceTheme
 	LoadTheme
-	EditControlFrame.LoadFromFile(ExePath & "/Resources/Frame.png")
 End Sub
 
 Sub LoadLanguageTexts

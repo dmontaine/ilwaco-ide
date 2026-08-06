@@ -3545,7 +3545,6 @@ Namespace My.Sys.Forms
 	Sub EditControl.PaintControlPriv(Full As Boolean = False, OnlyCursor As Boolean = False)
 		'	On Error Goto ErrHandler
 		Dim As Boolean bFull = Full
-		If ShowHolidayFrame AndAlso WithFrame Then bFull = True
 		bFull = True
 		If FHoverTime <> CodeEditorHoverTime Then FHoverTime = CodeEditorHoverTime
 			If cr = 0 Then Exit Sub
@@ -3680,9 +3679,6 @@ Namespace My.Sys.Forms
 			OldCollapseIndex = 0
 			'ChangeCase = False
 			OldMatnLCase = ""
-			If ShowHolidayFrame AndAlso WithFrame Then
-					Canvas.DrawAlpha ScaleX(dwClientX - 10) - EditControlFrame.Width, 0, EditControlFrame.Width, EditControlFrame.Height, EditControlFrame
-			End If
 			For z As Integer = 0 To Content.Lines.Count - 1
 				FECLine = Content.Lines.Items[z]
 				Dim As WStringList Ptr pFiles = FECLine->FileList
@@ -4495,6 +4491,37 @@ Namespace My.Sys.Forms
 							End If
 							jj += 1
 						Loop
+					End If
+					'' Indent guides: a faint vertical rule at each tab stop inside a line's leading
+					'' whitespace, so the nesting of FreeBASIC blocks is visible at a glance. Columns
+					'' are counted exactly the way ShowSpaces counts them above, so one tab and
+					'' TabWidth spaces produce the same guides. Nothing is drawn for the outermost
+					'' level (column 0 is the text margin) or for a line with no indentation.
+					If ShowIndentGuides AndAlso TabWidth > 0 Then
+						Dim As Integer gCol = 0, gIdx = 1, gLen = Len(*s)
+						Dim As WString * 2 gChar
+						Do While gIdx <= gLen
+							gChar = Mid(*s, gIdx, 1)
+							If gChar = " " Then
+								gCol += 1
+							ElseIf gChar = !"\t" Then
+								gCol += TabWidth - (gCol + TabWidth) Mod TabWidth
+							Else
+								Exit Do
+							End If
+							gIdx += 1
+						Loop
+						If gCol > TabWidth Then
+							cairo_set_source_rgb(cr, SpaceIdentifiers.ForegroundRed, SpaceIdentifiers.ForegroundGreen, SpaceIdentifiers.ForegroundBlue)
+							For gStop As Integer = TabWidth To gCol - 1 Step TabWidth
+								Dim As Integer gX = LeftMargin + -HScrollPos * dwCharX + gStop * dwCharX + CodePaneX
+								If gX > LeftMargin Then
+									cairo_move_to(cr, ScaleX(gX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + CodePaneY) - 0.5)
+									cairo_line_to(cr, ScaleX(gX) - 0.5, ScaleY((i - VScrollPos) * dwCharY + dwCharY + CodePaneY) - 0.5)
+								End If
+							Next gStop
+							cairo_stroke (cr)
+						End If
 					End If
 				End If
 				If PaddedLCasePtr Then _Deallocate(PaddedLCasePtr)

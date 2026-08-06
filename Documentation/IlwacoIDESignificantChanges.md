@@ -88,6 +88,13 @@ Each of these was a *choice* in VisualFBEditor and is now made once, with the op
   IntelliSense limit and the tooltip hover time. Tab settings moved to **Editing**, the two
   IntelliSense settings to **IntelliSense**, and History keeps only the history/autosave limits, so
   every group name now describes what is inside it.
+- **Indent guides, and no more holiday frame (2026-08-06).** VisualFBEditor shipped a "Show Holiday
+  Frame" option that blitted a decorative PNG over the editor during December and January. It is
+  removed — decoration is not what an IDE for a classroom needs — and the option is replaced by a
+  real feature: **Show Indent Guides** draws a faint vertical rule at each enclosing indent level, so
+  the nesting of FreeBASIC blocks is visible at a glance. Tabs and spaces count identically, so a
+  file indented either way guides the same. (Astoria renamed the same checkbox to "Show Indent
+  Guides" but left it driving the holiday frame; Ilwaco implements what the label says.)
 - **Recent Projects is a dialog, not a menu of paths (2026-08-06).** File ▸ Recent Projects… opens a
   list showing each recent project's file name and full path with its icon, and quietly drops entries
   whose `.vfp` is no longer on disk — a menu could show neither the path nor whether the project still

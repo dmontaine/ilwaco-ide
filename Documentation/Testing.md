@@ -95,6 +95,10 @@ necessary but not sufficient — "it compiled" is not "it works".
   Ilwaco IDE starts" radio group, and the Code Editor page is grouped into Display / Editing /
   Completion / IntelliSense / History with every control inside its frame, no overlaps, and the page
   scrolling to its last row at the dialog's default size. TestPlan T20.
+- **Indent guides render and toggle (2026-08-06).** A four-level nested source shows a continuous
+  vertical rule at each enclosing indent level — one at an 8-space indent, two at 12, three at 16,
+  four at 20 — visually distinct from the ShowSpaces dots. Unticking Code Editor ▸ Display ▸ Show
+  Indent Guides removes them live and persists `ShowIndentGuides=false`. TestPlan T21.
 - **Recent Projects opens from a dialog (2026-08-06).** File ▸ Recent Projects… is now a flat item, not
   an MRU submenu; the dialog lists each recent project's file name and full path with its icon, shows
   **only** entries whose `.vfp` still exists (the stale `VisualFBEditor.vfp` was filtered out), and OK

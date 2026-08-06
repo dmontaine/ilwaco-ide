@@ -49,7 +49,6 @@ Common Shared As Boolean ChangeIdentifiersCase
 Common Shared As Boolean ChangeKeyWordsCase
 Common Shared As Boolean ChangeEndingType
 Common Shared As Boolean AddSpacesToOperators
-Common Shared As Boolean WithFrame
 Common Shared As WStringOrStringList Ptr pkeywordsAsm, pkeywords0, pkeywords1, pkeywords2 ', pkeywords3
 
 Type ECColorScheme
@@ -720,7 +719,6 @@ Namespace My.Sys.Forms
 	
 	Dim Shared Constructions() As Construction
 	Dim Shared ElementTypeNames() As ElementType
-	Dim Shared As My.Sys.Drawing.BitmapType EditControlFrame
 	Common As EditControl Ptr CurEC, ScrEC, FocusEC, DragEC
 	Common As Integer MiddleScrollIndexX, MiddleScrollIndexY
 	Dim Shared As Any Ptr DragSourceECPtr

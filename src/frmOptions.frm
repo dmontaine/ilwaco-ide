@@ -726,15 +726,15 @@ pfOptions = @fOptions
 		chkShowSpaces.SetBounds 0, 65, 118, 21
 		chkShowSpaces.ControlIndex = 3
 		chkShowSpaces.Parent = @grbDisplay
-		' chkShowHolidayFrame
-		With chkShowHolidayFrame
-			.Name = "chkShowHolidayFrame"
-			.Text = ML("Show Holiday Frame")
+		' chkShowIndentGuides
+		With chkShowIndentGuides
+			.Name = "chkShowIndentGuides"
+			.Text = ML("Show Indent Guides")
 			.TabIndex = 252
 			.Align = DockStyle.alTop
 			.AutoSize = True
 			.ControlIndex = 8
-			.Caption = ML("Show Holiday Frame")
+			.Caption = ML("Show Indent Guides")
 			.Constraints.Height = 21
 			.SetBounds 0, 86, 152, 21
 			.Designer = @This
@@ -2847,7 +2847,7 @@ Sub frmOptions.LoadSettings()
 		.chkShowSymbolsTooltipsOnMouseHover.Checked = GlobalSettings.ShowSymbolsTooltipsOnMouseHover
 		.chkShowClassesExplorerOnOpenWindow.Checked = GlobalSettings.ShowClassesExplorerOnOpenWindow
 		.chkShowHorizontalSeparatorLines.Checked = ShowHorizontalSeparatorLines
-		.chkShowHolidayFrame.Checked = ShowHolidayFrame
+		.chkShowIndentGuides.Checked = ShowIndentGuides
 		.chkHighlightBrackets.Checked = HighlightBrackets
 		.chkHighlightCurrentLine.Checked = HighlightCurrentLine
 		.chkHighlightCurrentWord.Checked = HighlightCurrentWord
@@ -3369,7 +3369,7 @@ Private Sub frmOptions.cmdApply_Click(ByRef Designer As My.Sys.Object, ByRef Sen
 		GlobalSettings.ShowSymbolsTooltipsOnMouseHover = .chkShowSymbolsTooltipsOnMouseHover.Checked
 		GlobalSettings.ShowClassesExplorerOnOpenWindow = .chkShowClassesExplorerOnOpenWindow.Checked
 		ShowHorizontalSeparatorLines = .chkShowHorizontalSeparatorLines.Checked
-		ShowHolidayFrame = .chkShowHolidayFrame.Checked
+		ShowIndentGuides = .chkShowIndentGuides.Checked
 		HighlightBrackets = .chkHighlightBrackets.Checked
 		HighlightCurrentLine = .chkHighlightCurrentLine.Checked
 		HighlightCurrentWord = .chkHighlightCurrentWord.Checked
@@ -3526,7 +3526,7 @@ Private Sub frmOptions.cmdApply_Click(ByRef Designer As My.Sys.Object, ByRef Sen
 		piniSettings->WriteBool "Options", "ShowSymbolsTooltipsOnMouseHover", GlobalSettings.ShowSymbolsTooltipsOnMouseHover
 		piniSettings->WriteBool "Options", "ShowClassesExplorerOnOpenWindow", GlobalSettings.ShowClassesExplorerOnOpenWindow
 		piniSettings->WriteBool "Options", "ShowHorizontalSeparatorLines", ShowHorizontalSeparatorLines
-		piniSettings->WriteBool "Options", "ShowHolidayFrame", ShowHolidayFrame
+		piniSettings->WriteBool "Options", "ShowIndentGuides", ShowIndentGuides
 		piniSettings->WriteBool "Options", "HighlightBrackets", HighlightBrackets
 		piniSettings->WriteBool "Options", "HighlightCurrentLine", HighlightCurrentLine
 		piniSettings->WriteBool "Options", "HighlightCurrentWord", HighlightCurrentWord
