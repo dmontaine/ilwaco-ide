@@ -115,16 +115,14 @@ Common Shared As Boolean mTabSelChangeByError
 Common Shared As Boolean DisplayMenuIcons, ShowMainToolBar, DarkMode, ShowStandardToolBar, ShowEditToolBar, ShowProjectToolBar, ShowFormatToolBar, ShowBuildToolBar, ShowDebugToolBar, ShowRunToolBar
 Common Shared As Boolean ShowKeywordsToolTip, ShowTooltipsAtTheTop, ShowHorizontalSeparatorLines, ShowHolidayFrame, ShowTipoftheDay
 Common Shared As Boolean OpenCommandPromptInMainFileFolder, ShowProjectFolders
-Common Shared As Integer WhenVisualFBEditorStarts, ShowTipoftheDayIndex
+Common Shared As Integer ShowTipoftheDayIndex
 Common Shared As Integer AutoSaveBeforeCompiling, HistoryCodeDays
 Common Shared As Double  HistoryCodeCleanDay
 Common Shared As Integer IncludeMFFPath
 Common Shared As Integer gSearchItemIndex
 Common Shared As Integer InterfaceFontSize
-Common Shared As Integer LastOpenedFileType
 Common Shared As Integer LoadFunctionsCount
 Common Shared As String  UseDefine
-Common Shared As WString Ptr DefaultProjectFile
 Common Shared As WString Ptr InterfaceFontName
 Common Shared As WString Ptr gSearchSave, EnvironmentVariables
 Common Shared As WString Ptr ProjectsPath, LastOpenPath, CommandPromptFolder

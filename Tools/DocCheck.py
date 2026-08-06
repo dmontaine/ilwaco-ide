@@ -84,6 +84,8 @@ REMOVED_FEATURES = [
     (r"Integrated GDB Debugger",        "the GDB debugger engine (removed: Integrated engine only)"),
     (r"Limit debug to the directory",   "the Limit debug option (removed: it was never functional)"),
     (r"\bConsoleType\b",                 "the MFF console wrapper (removed: Console.bi deleted; the Console template is plain FreeBASIC)"),
+    (r"When (?:Ilwaco IDE|VisualFBEditor) starts", "the startup-behaviour radio group (removed: Ilwaco always starts empty)"),
+    (r"\bWhenVisualFBEditorStarts\b", "the startup-behaviour setting (removed with its radio group)"),
 ]
 
 # Files whose absence should be reported when a document still names them, written as an

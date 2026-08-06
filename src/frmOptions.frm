@@ -600,6 +600,70 @@ pfOptions = @fOptions
 			.Designer = @This
 			.Parent = @pnlCodeEditor
 		End With
+		' grbDisplay
+		With grbDisplay
+			.Name = "grbDisplay"
+			.Text = ML("Display")
+			.Align = DockStyle.alTop
+			.Margins.Top = 22
+			.Margins.Left = 10
+			.Margins.Right = 10
+			.Margins.Bottom = 8
+			.AutoSize = True
+			.Constraints.Height = 162
+			.TabIndex = 260
+			.SetBounds 0, 0, 420, 22
+			.Designer = @This
+			.Parent = @vbxCodeEditor
+		End With
+		' grbCompletion
+		With grbCompletion
+			.Name = "grbCompletion"
+			.Text = ML("Completion")
+			.Align = DockStyle.alTop
+			.Margins.Top = 22
+			.Margins.Left = 10
+			.Margins.Right = 10
+			.Margins.Bottom = 8
+			.AutoSize = True
+			.Constraints.Height = 154
+			.TabIndex = 261
+			.SetBounds 0, 0, 420, 22
+			.Designer = @This
+			.Parent = @vbxCodeEditor
+		End With
+		' grbIntelliSense
+		With grbIntelliSense
+			.Name = "grbIntelliSense"
+			.Text = ML("IntelliSense")
+			.Align = DockStyle.alTop
+			.Margins.Top = 22
+			.Margins.Left = 10
+			.Margins.Right = 10
+			.Margins.Bottom = 8
+			.AutoSize = True
+			.Constraints.Height = 212
+			.TabIndex = 262
+			.SetBounds 0, 0, 420, 22
+			.Designer = @This
+			.Parent = @vbxCodeEditor
+		End With
+		' grbHistory
+		With grbHistory
+			.Name = "grbHistory"
+			.Text = ML("History")
+			.Align = DockStyle.alTop
+			.Margins.Top = 22
+			.Margins.Left = 10
+			.Margins.Right = 10
+			.Margins.Bottom = 8
+			.AutoSize = True
+			.Constraints.Height = 272
+			.TabIndex = 263
+			.SetBounds 0, 0, 420, 22
+			.Designer = @This
+			.Parent = @vbxCodeEditor
+		End With
 		' chkAutoIndentation
 		chkAutoIndentation.Name = "chkAutoIndentation"
 		chkAutoIndentation.Text = ML("Auto Indentation")
@@ -610,7 +674,7 @@ pfOptions = @fOptions
 		chkAutoIndentation.AutoSize = True
 		chkAutoIndentation.SetBounds 0, 2, 137, 21
 		chkAutoIndentation.ControlIndex = 0
-		chkAutoIndentation.Parent = @vbxCodeEditor
+		chkAutoIndentation.Parent = @grbCompletion
 		' chkEnableAutoComplete
 		chkEnableAutoComplete.Name = "chkEnableAutoComplete"
 		chkEnableAutoComplete.Text = ML("Enable Auto Complete")
@@ -621,7 +685,7 @@ pfOptions = @fOptions
 		chkEnableAutoComplete.AutoSize = True
 		chkEnableAutoComplete.SetBounds 0, 23, 161, 21
 		chkEnableAutoComplete.ControlIndex = 1
-		chkEnableAutoComplete.Parent = @vbxCodeEditor
+		chkEnableAutoComplete.Parent = @grbCompletion
 		' chkEnableAutoSuggestions
 		With chkEnableAutoSuggestions
 			.Name = "chkEnableAutoSuggestions"
@@ -633,7 +697,7 @@ pfOptions = @fOptions
 			.AutoSize = True
 			.SetBounds 0, 23, 174, 21
 			.Designer = @This
-			.Parent = @vbxCodeEditor
+			.Parent = @grbCompletion
 		End With
 		' chkShowSpaces
 		chkShowSpaces.Name = "chkShowSpaces"
@@ -645,7 +709,7 @@ pfOptions = @fOptions
 		chkShowSpaces.AutoSize = True
 		chkShowSpaces.SetBounds 0, 65, 118, 21
 		chkShowSpaces.ControlIndex = 3
-		chkShowSpaces.Parent = @vbxCodeEditor
+		chkShowSpaces.Parent = @grbDisplay
 		' chkShowHolidayFrame
 		With chkShowHolidayFrame
 			.Name = "chkShowHolidayFrame"
@@ -658,7 +722,7 @@ pfOptions = @fOptions
 			.Constraints.Height = 21
 			.SetBounds 0, 86, 152, 21
 			.Designer = @This
-			.Parent = @vbxCodeEditor
+			.Parent = @grbDisplay
 		End With
 			'.Caption = ML("Enable Auto Suggestions")
 		' chkShowKeywordsTooltip
@@ -672,7 +736,7 @@ pfOptions = @fOptions
 			.AutoSize = True
 			.SetBounds 0, 86, 166, 21
 			'.Caption = ML("Show Keywords Tooltip")
-			.Parent = @vbxCodeEditor
+			.Parent = @grbIntelliSense
 		End With
 		' chkShowTooltipsAtTheTop
 		With chkShowTooltipsAtTheTop
@@ -685,7 +749,7 @@ pfOptions = @fOptions
 			.AutoSize = True
 			.SetBounds 0, 107, 174, 21
 			.Designer = @This
-			.Parent = @vbxCodeEditor
+			.Parent = @grbIntelliSense
 		End With
 		' chkShowSymbolsTooltipsOnMouseHover
 		With chkShowSymbolsTooltipsOnMouseHover
@@ -698,7 +762,7 @@ pfOptions = @fOptions
 			.AutoSize = True
 			.SetBounds 0, 86, 166, 21
 			'.Caption = ML("Show Symbols Tooltips On Mouse Hover")
-			.Parent = @vbxCodeEditor
+			.Parent = @grbIntelliSense
 		End With
 		' chkShowSymbolsTooltipsOnMouseHover
 		With chkShowClassesExplorerOnOpenWindow
@@ -711,7 +775,7 @@ pfOptions = @fOptions
 			.AutoSize = True
 			.SetBounds 0, 86, 166, 21
 			'.Caption = ML("Show Classes Explorer On Open Window")
-			.Parent = @vbxCodeEditor
+			.Parent = @grbIntelliSense
 		End With
 		' chkShowHorizontalSeparatorLines
 		With chkShowHorizontalSeparatorLines
@@ -725,7 +789,7 @@ pfOptions = @fOptions
 			.AutoSize = True
 			.SetBounds 0, 128, 210, 21
 			.Designer = @This
-			.Parent = @vbxCodeEditor
+			.Parent = @grbDisplay
 		End With
 		' chkHighlightCurrentWord
 		With chkHighlightCurrentWord
@@ -737,7 +801,7 @@ pfOptions = @fOptions
 			.Constraints.Height = 21
 			.AutoSize = True
 			.SetBounds 0, 149, 165, 21
-			.Parent = @vbxCodeEditor
+			.Parent = @grbDisplay
 		End With
 		' chkHighlightCurrentLine
 		With chkHighlightCurrentLine
@@ -749,7 +813,7 @@ pfOptions = @fOptions
 			.Constraints.Height = 21
 			.AutoSize = True
 			.SetBounds 0, 170, 158, 21
-			.Parent = @vbxCodeEditor
+			.Parent = @grbDisplay
 		End With
 		' chkHighlightBrackets
 		With chkHighlightBrackets
@@ -761,7 +825,7 @@ pfOptions = @fOptions
 			.Constraints.Height = 21
 			.AutoSize = True
 			.SetBounds 0, 191, 140, 21
-			.Parent = @vbxCodeEditor
+			.Parent = @grbDisplay
 		End With
 		' chkAddSpacesToOperators
 		With chkAddSpacesToOperators
@@ -774,7 +838,7 @@ pfOptions = @fOptions
 			.AutoSize = True
 			.SetBounds 0, 212, 178, 21
 			'.Caption = ML("Add Spaces To Operators")
-			.Parent = @vbxCodeEditor
+			.Parent = @grbCompletion
 		End With
 		' chkSyntaxHighlightingIdentifiers
 		With chkSyntaxHighlightingIdentifiers
@@ -787,11 +851,12 @@ pfOptions = @fOptions
 			.AutoSize = True
 			.SetBounds 0, 233, 199, 21
 			.Designer = @This
-			.Parent = @vbxCodeEditor
+			.Parent = @grbIntelliSense
 		End With
 		' pnlChangeIdentifiersCase
 		With pnlChangeIdentifiersCase
 			.Name = "pnlChangeIdentifiersCase"
+			.Constraints.Height = 36
 			.Text = "Panel1"
 			.AutoSize = True
 			.TabIndex = 206
@@ -799,7 +864,7 @@ pfOptions = @fOptions
 			.AutoSize = True
 			.SetBounds 0, 233, 417, 23
 			.Designer = @This
-			.Parent = @vbxCodeEditor
+			.Parent = @grbIntelliSense
 		End With
 		' chkChangeIdentifiersCase
 		With chkChangeIdentifiersCase
@@ -1777,17 +1842,6 @@ pfOptions = @fOptions
 			'.Caption = "Change"
 			'.Caption = "Remove"
 			'.Caption = "Clear"
-		' grbWhenVFBEStarts
-		With grbWhenVFBEStarts
-			.Name = "grbWhenVFBEStarts"
-			.Text = ML("When Ilwaco IDE starts") & ":"
-			.Align = DockStyle.alTop
-			.ExtraMargins.Top = 5
-			'.Caption = ML("When Ilwaco IDE starts") & ":"
-			.TabIndex = 168
-			.SetBounds 0, 97, 417, 120
-			.Parent = @vbxGeneral
-		End With
 		' grbWhenCompiling
 		With grbWhenCompiling
 			.Name = "grbWhenCompiling"
@@ -1830,57 +1884,6 @@ pfOptions = @fOptions
 		cmdProjectsPath.SetBounds 394, -1, 24, 22
 		cmdProjectsPath.OnClick = @cmdProjectsPath_Click
 		cmdProjectsPath.Parent = @pnlProjectsPath
-		' optPromptForProjectAndFile
-		With optPromptForProjectAndFile
-			.Name = "optPromptForProjectAndFile"
-			.Text = ML("Prompt for Project / File")
-			.TabIndex = 171
-			.SetBounds 18, 22, 184, 16
-			'.Caption = ML("Prompt for Project / File")
-			.Designer = @This
-			.OnClick = @optPromptForProjectAndFiles_Click
-			.Parent = @grbWhenVFBEStarts
-		End With
-		' optCreateProjectFile
-		With optCreateProjectFile
-			.Name = "optCreateProjectFile"
-			.Text = ML("Create Project / File")
-			.TabIndex = 172
-			.SetBounds 18, 45, 184, 16
-			'.Caption = ML("Create Project / File")
-			.Designer = @This
-			.OnClick = @optCreateProjectFile_Click
-			.Parent = @grbWhenVFBEStarts
-		End With
-		' optOpenLastSession
-		With optOpenLastSession
-			.Name = "optOpenLastSession"
-			.Text = ML("Open Last Opened File")
-			.TabIndex = 173
-			.SetBounds 19, 67, 184, 16
-			.Designer = @This
-			.OnClick = @optOpenLastSession_Click
-			.Parent = @grbWhenVFBEStarts
-		End With
-		' optDoNotNothing
-		With optDoNotNothing
-			.Name = "optDoNotNothing"
-			.Text = ML("Don't Nothing")
-			.TabIndex = 174
-			.SetBounds 19, 90, 184, 16
-			'.Caption = ML("Don't Nothing")
-			.Designer = @This
-			.OnClick = @optDoNotNothing_Click
-			.Parent = @grbWhenVFBEStarts
-		End With
-		' cboDefaultProjectFile
-		With cboDefaultProjectFile
-			.Name = "cboDefaultProjectFile"
-			.Text = "ComboBoxEdit1"
-			.TabIndex = 175
-			.SetBounds 222, 41, 175, 21
-			.Parent = @grbWhenVFBEStarts
-		End With
 		' optPromptToSave
 		With optPromptToSave
 			.Name = "optPromptToSave"
@@ -1889,14 +1892,6 @@ pfOptions = @fOptions
 			.SetBounds 18, 68, 184, 16
 			'.Caption = ML("Prompt To Save")
 			.Parent = @grbWhenCompiling
-		End With
-		' cboOpenedFile
-		With cboOpenedFile
-			.Name = "cboOpenedFile"
-			.Text = "ComboBoxEdit1"
-			.TabIndex = 179
-			.SetBounds 222, 65, 175, 21
-			.Parent = @grbWhenVFBEStarts
 		End With
 		' chkCreateFormTypesWithoutTypeWord
 		With chkCreateFormTypesWithoutTypeWord
@@ -2100,13 +2095,14 @@ pfOptions = @fOptions
 		' pnlChangeKeywordsCase
 		With pnlChangeKeywordsCase
 			.Name = "pnlChangeKeywordsCase"
+			.Constraints.Height = 36
 			.Text = "Panel1"
 			.TabIndex = 206
 			.Align = DockStyle.alTop
 			.AutoSize = True
 			.SetBounds 0, 233, 417, 23
 			.Designer = @This
-			.Parent = @vbxCodeEditor
+			.Parent = @grbIntelliSense
 		End With
 		' lblHistoryDay
 		With lblHistoryDay
@@ -2126,6 +2122,7 @@ pfOptions = @fOptions
 		' pnlChangeEndingType
 		With pnlChangeEndingType
 			.Name = "pnlChangeEndingType"
+			.Constraints.Height = 36
 			.Text = "Panel1"
 			.AutoSize = True
 			.TabIndex = 266
@@ -2133,11 +2130,12 @@ pfOptions = @fOptions
 			.ControlIndex = 17
 			.SetBounds 0, 361, 250, 21
 			.Designer = @This
-			.Parent = @vbxCodeEditor
+			.Parent = @grbCompletion
 		End With
 		' pnlTreatTabAsSpaces
 		With pnlTreatTabAsSpaces
 			.Name = "pnlTreatTabAsSpaces"
+			.Constraints.Height = 36
 			.Text = "Panel1"
 			.AutoSize = True
 			.TabIndex = 207
@@ -2145,11 +2143,12 @@ pfOptions = @fOptions
 			.AutoSize = True
 			.SetBounds 0, 256, 417, 23
 			.Designer = @This
-			.Parent = @vbxCodeEditor
+			.Parent = @grbHistory
 		End With
 		' pnlTabSize
 		With pnlTabSize
 			.Name = "pnlTabSize"
+			.Constraints.Height = 34
 			.Text = "Panel1"
 			.AutoSize = True
 			.TabIndex = 208
@@ -2157,11 +2156,12 @@ pfOptions = @fOptions
 			.AutoSize = True
 			.SetBounds 0, 279, 417, 20
 			.Designer = @This
-			.Parent = @vbxCodeEditor
+			.Parent = @grbHistory
 		End With
 		' pnlHistoryLimit
 		With pnlHistoryLimit
 			.Name = "pnlHistoryLimit"
+			.Constraints.Height = 34
 			.Text = "Panel1"
 			.AutoSize = True
 			.TabIndex = 211
@@ -2169,11 +2169,12 @@ pfOptions = @fOptions
 			.AutoSize = True
 			.SetBounds 0, 299, 417, 20
 			.Designer = @This
-			.Parent = @vbxCodeEditor
+			.Parent = @grbHistory
 		End With
 		' pnlIntellisenseLimit
 		With pnlIntellisenseLimit
 			.Name = "pnlIntellisenseLimit"
+			.Constraints.Height = 34
 			.Text = "Panel1"
 			.AutoSize = True
 			.TabIndex = 215
@@ -2181,11 +2182,12 @@ pfOptions = @fOptions
 			.AutoSize = True
 			.SetBounds 0, 319, 417, 20
 			.Designer = @This
-			.Parent = @vbxCodeEditor
+			.Parent = @grbHistory
 		End With
 		' pnlHistoryFileSavingDays
 		With pnlHistoryFileSavingDays
 			.Name = "pnlHistoryFileSavingDays"
+			.Constraints.Height = 34
 			.Text = "Panel1"
 			.AutoSize = True
 			.TabIndex = 218
@@ -2193,7 +2195,7 @@ pfOptions = @fOptions
 			.AutoSize = True
 			.SetBounds 0, 339, 417, 20
 			.Designer = @This
-			.Parent = @vbxCodeEditor
+			.Parent = @grbHistory
 		End With
 		lvShortcuts.Columns.Add ML("Action"), , 250
 		lvShortcuts.Columns.Add ML("Shortcut"), , 100
@@ -2295,6 +2297,7 @@ pfOptions = @fOptions
 		' pnlAutoSaveCharMax
 		With pnlAutoSaveCharMax
 			.Name = "pnlAutoSaveCharMax"
+			.Constraints.Height = 34
 			.Text = "Panel1"
 			.TabIndex = 230
 			.Align = DockStyle.alTop
@@ -2302,7 +2305,7 @@ pfOptions = @fOptions
 			.ControlIndex = 18
 			.SetBounds 0, 337, 420, 20
 			.Designer = @This
-			.Parent = @vbxCodeEditor
+			.Parent = @grbHistory
 		End With
 		' lbAutoSaveCharMax
 		With lbAutoSaveCharMax
@@ -2455,6 +2458,7 @@ pfOptions = @fOptions
 		' pnlCodeEditorHoverTime
 		With pnlCodeEditorHoverTime
 			.Name = "pnlCodeEditorHoverTime"
+			.Constraints.Height = 34
 			.Text = "Panel1"
 			.AutoSize = True
 			.TabIndex = 254
@@ -2462,7 +2466,7 @@ pfOptions = @fOptions
 			.ControlIndex = 18
 			.SetBounds 0, 384, 72, 20
 			.Designer = @This
-			.Parent = @vbxCodeEditor
+			.Parent = @grbHistory
 		End With
 		' lblCodeEditorHoverTime
 		With lblCodeEditorHoverTime
@@ -2815,12 +2819,6 @@ Sub frmOptions.LoadSettings()
 		.optMainFileFolder.Checked = OpenCommandPromptInMainFileFolder
 		.optInFolder.Checked = Not OpenCommandPromptInMainFileFolder
 		.txtInFolder.Text = *CommandPromptFolder
-		Select Case WhenVisualFBEditorStarts
-		Case 0: .optDoNotNothing.Checked = True
-		Case 1: .optPromptForProjectAndFile.Checked = True
-		Case 2: .optCreateProjectFile.Checked = True
-		Case 3: .optOpenLastSession.Checked = True
-		End Select
 		Select Case AutoSaveBeforeCompiling
 		Case 0: .optDoNotSave.Checked = True
 		Case 1: .optSaveCurrentFile.Checked = True
@@ -2850,21 +2848,6 @@ Sub frmOptions.LoadSettings()
 		Dim Buff As WString * 2048 '
 		Dim As UString FileName
 		'On Error Resume Next
-		.cboDefaultProjectFile.Clear
-		f = Dir(ExePath & "/Templates/Projects/*.vfp")
-		While f <> ""
-			.cboDefaultProjectFile.AddItem ..Left(f, IfNegative(InStr(f, ".") - 1, Len(f)))
-			Templates.Add "Projects/" & f
-			f = Dir()
-		Wend
-		f = Dir(ExePath & "/Templates/Files/*")
-		While f <> ""
-			.cboDefaultProjectFile.AddItem ..Left(f, IfNegative(InStr(f, ".") - 1, Len(f)))
-			Templates.Add "Files/" & f
-			f = Dir()
-		Wend
-		.cboDefaultProjectFile.ItemIndex = Templates.IndexOf(WGet(DefaultProjectFile))
-		.cboOpenedFile.ItemIndex = LastOpenedFileType
 		HotKeysChanged = False
 		'On Error Goto 0
 		'WDeAllocate(s) '
@@ -3182,17 +3165,10 @@ Private Sub frmOptions.Form_Create(ByRef Designer As My.Sys.Object, ByRef Sender
 		.lstInterfaceColorKeys.ItemIndex = 0
 		ReDim .Colors(.lstColorKeys.Items.Count - 1, 7)
 		.lstColorKeys.ItemIndex = 0
-		.cboOpenedFile.Clear
-		.cboOpenedFile.AddItem ML("All file types")
-		.cboOpenedFile.AddItem ML("Session file")
-		.cboOpenedFile.AddItem ML("Folder")
-		.cboOpenedFile.AddItem ML("Project file")
-		.cboOpenedFile.AddItem ML("Other file types")
 		For i As Integer = 0 To pfrmMain->Menu->Count - 1
 			AddShortcuts(pfrmMain->Menu->Item(i))
 		Next
 		.LoadSettings
-		cboDefaultProjectFileCheckEnable
 	End With
 End Sub
 
@@ -3370,13 +3346,6 @@ Private Sub frmOptions.cmdApply_Click(ByRef Designer As My.Sys.Object, ByRef Sen
 		CreateFormTypesWithoutTypeWord = .chkCreateFormTypesWithoutTypeWord.Checked
 		OpenCommandPromptInMainFileFolder = .optMainFileFolder.Checked
 		WLet(CommandPromptFolder, .txtInFolder.Text)
-		If .cboDefaultProjectFile.ItemIndex = -1 Then
-			WLet(DefaultProjectFile, "")
-		Else
-			WLet(DefaultProjectFile, .Templates.Item(.cboDefaultProjectFile.ItemIndex))
-		End If
-		LastOpenedFileType = .cboOpenedFile.ItemIndex
-		WhenVisualFBEditorStarts = IIf(.optPromptForProjectAndFile.Checked, 1, IIf(.optCreateProjectFile.Checked, 2, IIf(.optOpenLastSession.Checked, 3, 0)))
 		AutoSaveBeforeCompiling = IIf(.optSaveCurrentFile.Checked, 1, IIf(.optSaveAllFiles.Checked, 2, IIf(.optPromptToSave.Checked, 3, 0)))
 		ShowSpaces = .chkShowSpaces.Checked
 		ShowKeywordsToolTip = .chkShowKeywordsTooltip.Checked
@@ -3534,9 +3503,6 @@ Private Sub frmOptions.cmdApply_Click(ByRef Designer As My.Sys.Object, ByRef Sen
 		piniSettings->WriteBool "Options", "AutoSaveSession", AutoSaveSession
 		piniSettings->WriteBool "Options", "AddRelativePathsToRecent", AddRelativePathsToRecent
 		piniSettings->WriteBool "Options", "AllowAgentControl", AllowAgentControl
-		piniSettings->WriteString "Options", "DefaultProjectFile", WGet(DefaultProjectFile)
-		piniSettings->WriteInteger "Options", "LastOpenedFileType", LastOpenedFileType
-		piniSettings->WriteInteger "Options", "WhenVisualFBEditorStarts", WhenVisualFBEditorStarts
 		piniSettings->WriteInteger "Options", "AutoSaveBeforeCompiling", AutoSaveBeforeCompiling
 		piniSettings->WriteBool "Options", "ShowSpaces", ShowSpaces
 		piniSettings->WriteBool "Options", "ShowKeywordsTooltip", ShowKeywordsToolTip
@@ -4706,27 +4672,6 @@ Private Sub frmOptions.cmdClearEditor_Click(ByRef Sender As Control)
 	lvOtherEditors.ListItems.Clear
 End Sub
 
-Sub cboDefaultProjectFileCheckEnable
-	fOptions.cboDefaultProjectFile.Enabled = fOptions.optCreateProjectFile.Checked
-	fOptions.cboOpenedFile.Enabled = fOptions.optOpenLastSession.Checked
-End Sub
-
-Private Sub frmOptions.optPromptForProjectAndFiles_Click(ByRef Designer As My.Sys.Object, ByRef Sender As RadioButton)
-	cboDefaultProjectFileCheckEnable
-End Sub
-
-Private Sub frmOptions.optCreateProjectFile_Click(ByRef Designer As My.Sys.Object, ByRef Sender As RadioButton)
-	cboDefaultProjectFileCheckEnable
-End Sub
-
-Private Sub frmOptions.optOpenLastSession_Click(ByRef Designer As My.Sys.Object, ByRef Sender As RadioButton)
-	cboDefaultProjectFileCheckEnable
-End Sub
-
-Private Sub frmOptions.optDoNotNothing_Click(ByRef Designer As My.Sys.Object, ByRef Sender As RadioButton)
-	cboDefaultProjectFileCheckEnable
-End Sub
-
 Dim Shared As Boolean bStop
 
 Sub HistoryCodeClean(ByRef Path As WString)
@@ -4955,4 +4900,4 @@ Private Sub frmOptions.chkInterfaceColor_Click(ByRef Sender As CheckBox)
 	Var i = lstInterfaceColorKeys.ItemIndex
 	If i = -1 Then Exit Sub
 	InterfaceColors(i) = IIf(chkInterfaceColor.Checked, -1, txtInterfaceColor.BackColor)
-End Sub
+End Sub

@@ -168,9 +168,11 @@ how the fault address was recovered from a core dump with no debugger installed,
   and **Recent Projects as a dialog (2026-08-06)** — `src/frmRecentProjects.{bi,frm}`, a File/Path list
   replacing the MRU submenu, skipping entries whose `.vfp` is gone. `OpenProjectTemplate` needs no port:
   it is dead code in Astoria (defined, called from nowhere) and Ilwaco's `frmTemplates` has no
-  `DialogMode` counterpart. **Still to port:** the Options panels
-  (remove the "When the IDE starts" radio group, Code Editor grouping into Display/Completion/
-  IntelliSense/History); and `Show Holiday Frame` → `Show Indent Guides`, which is a *feature* port
+  `DialogMode` counterpart. **The Options panels are done (2026-08-06)** — the "When Ilwaco IDE
+  starts" radio group is gone (with `WhenVisualFBEditorStarts`, `LastOpenedFileType`,
+  `DefaultProjectFile` and the dead `AutoReloadLastOpenFiles` key), and the Code Editor page is
+  grouped into **Display / Completion / IntelliSense / History**. **Still to port:**
+  `Show Holiday Frame` → `Show Indent Guides`, which is a *feature* port
   needing real indent-guide rendering in `EditControl`, not a relabel.
   Skip the pure 32-bit/GTK-strip entries (`e139c2cc` etc.). All owner directives (32-bit, UTF-8/LF,
   AI, English-only) remain cleared.

@@ -5537,11 +5537,8 @@ Sub LoadSettings
 	'' Agent MCP socket. Default ON -- Ilwaco is meant to be driven agent-first, so the listener
 	'' comes up unless the user unticks Tools > Options > "Allow AI agent control (MCP)".
 	AllowAgentControl = iniSettings.ReadBool("Options", "AllowAgentControl", True)
-	WhenVisualFBEditorStarts = iniSettings.ReadInteger("Options", "WhenVisualFBEditorStarts", 2)
-	WLet(DefaultProjectFile, iniSettings.ReadString("Options", "DefaultProjectFile", "Files/Form.frm"))
 	DefaultFileFormat = FileEncodings.Utf8
 	DefaultNewLineFormat = NewLineTypes.LinuxLF
-	LastOpenedFileType = iniSettings.ReadInteger("Options", "LastOpenedFileType", 0)
 	AutoComplete = iniSettings.ReadBool("Options", "AutoComplete", True)
 		AutoSuggestions = iniSettings.ReadBool("Options", "AutoSuggestions", False)
 	AutoIndentation = iniSettings.ReadBool("Options", "AutoIndentation", True)
@@ -9189,16 +9186,6 @@ Sub frmMain_Create(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	
 	mStartLoadSession = False
 	
-	Select Case WhenVisualFBEditorStarts
-	Case 3:
-		Select Case LastOpenedFileType
-		Case 0: OpenFiles GetFullPath(*RecentFiles)
-		Case 1: OpenFiles GetFullPath(*RecentSession)
-		Case 2: OpenFiles GetFullPath(*RecentFolder)
-		Case 3: OpenFiles GetFullPath(*RecentProject)
-		Case 4: OpenFiles GetFullPath(*RecentFile)
-		End Select
-	End Select
 	'frmMain.RequestAlign
 End Sub
 
@@ -9320,38 +9307,9 @@ Sub frmMain_Show(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	If File <> "" AndAlso Right(LCase(File), 4) <> ".exe" Then
 		bFileOpening = True
 	End If
-	If bSharedFind AndAlso Not bAgentLaunched Then
-		Select Case WhenVisualFBEditorStarts
-		Case 1: If Not bFileOpening Then NewProject 'pfTemplates->ShowModal
-		Case 2: If Not bFileOpening Then AddNew ExePath & Slash & "Templates" & Slash & WGet(DefaultProjectFile)
-		Case 3:
-			'Select Case LastOpenedFileType
-			'Case 0: OpenFiles GetFullPath(*RecentFiles)
-			'Case 1: OpenFiles GetFullPath(*RecentSession)
-			'Case 2: OpenFiles GetFullPath(*RecentFolder)
-			'Case 3: OpenFiles GetFullPath(*RecentProject)
-			'Case 4: OpenFiles GetFullPath(*RecentFile)
-			'End Select
-		End Select
-	End If
 	If bFileOpening Then
 		OpenFiles GetFullPath(File)
 	End If
-	'	Var FILE = Command(-1)
-	'	Var Pos1 = InStr(file, "2>CON")
-	'	If Pos1 > 0 Then file = Left(file, Pos1 - 1)
-	'	If FILE <> "" AndAlso Right(LCase(FILE), 4) <> ".exe" Then
-	'		OpenFiles GetFullPath(FILE)
-	'	ElseIf bFind Then
-	'		WLet RecentFiles, iniSettings.ReadString("MainWindow", "RecentFiles", "")
-	'		Select Case WhenVisualFBEditorStarts
-	'		Case 1: NewProject 'pfTemplates->ShowModal
-	'		Case 2: AddNew WGet(DefaultProjectFile)
-	'		Case 3: WLet RecentFiles, iniSettings.ReadString("MainWindow", "RecentFiles", "")
-	'			'Auto Load the last one.
-	'			OpenFiles GetFullPath(*RecentFiles)
-	'		End Select
-	'	End If
 	If ShowTipoftheDay AndAlso Not bAgentLaunched Then frmTipOfDay.ShowModal *pfrmMain
 
 End Sub
@@ -9591,7 +9549,6 @@ Sub OnProgramQuit() Destructor
 	WDeAllocate(AsmKeywordsHelpPath)
 	WDeAllocate(CurrentInterfaceTheme)
 	WDeAllocate(CurrentTheme)
-	WDeAllocate(DefaultProjectFile)
 	WDeAllocate(EditorFontName)
 	WDeAllocate(InterfaceFontName)
 	WDeAllocate(MFFPath)

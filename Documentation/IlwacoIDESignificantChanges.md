@@ -74,6 +74,16 @@ Each of these was a *choice* in VisualFBEditor and is now made once, with the op
   user variable overriding the inherited one of the same name. Implemented for `fork`/`execve`: the
   block is built in the parent, because after `fork()` in a multithreaded process the child must not
   allocate.
+- **The "When the IDE starts" option is gone (2026-08-06).** VisualFBEditor let you pick between
+  prompting for a project, creating one from a default template, reopening the last file, or doing
+  nothing. Ilwaco always does the last of those: it starts empty unless you passed a file on the
+  command line. The settings only that group fed were removed with it (`WhenVisualFBEditorStarts`,
+  `LastOpenedFileType`, `DefaultProjectFile`), as did `AutoReloadLastOpenFiles`, which nothing had
+  ever read. (Astoria reopens its saved workspace instead; Ilwaco has no workspace loader yet, so
+  adopting that behaviour waits for one.)
+- **The Code Editor options page is grouped (2026-08-06)** into **Display**, **Completion**,
+  **IntelliSense** and **History**, matching Astoria — a flat list of twenty-five checkboxes gave a
+  beginner no way to guess where a setting lived.
 - **Recent Projects is a dialog, not a menu of paths (2026-08-06).** File ▸ Recent Projects… opens a
   list showing each recent project's file name and full path with its icon, and quietly drops entries
   whose `.vfp` is no longer on disk — a menu could show neither the path nor whether the project still

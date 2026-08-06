@@ -628,8 +628,11 @@ creates a project on disk from a whitelisted template, which needed the `FileCop
 MRU submenu is replaced by Astoria's `frmRecentProjects`, a File/Path list that skips entries whose
 `.vfp` is no longer on disk. `OpenProjectTemplate` is **N/A**: it is defined in Astoria's `Main.bas`
 and called from nowhere (dead code), and Ilwaco's `frmTemplates` has no `DialogMode` counterpart, so
-there is nothing to port. **Still to port in this cluster:** the Options panels (drop the "When the
-IDE starts" radio group; group Code Editor into Display/Completion/IntelliSense/History); and
+there is nothing to port. **The Options panels are done (2026-08-06)**: the "When Ilwaco IDE
+starts" radio group is removed along with the settings only it fed (`WhenVisualFBEditorStarts`,
+`LastOpenedFileType`, `DefaultProjectFile`, plus the never-read `AutoReloadLastOpenFiles`), and the
+Code Editor page is grouped into **Display / Completion / IntelliSense / History** with Astoria's
+membership. **Still to port in this cluster:**
 `Show Holiday Frame` → `Show Indent Guides`, which is a *feature* port needing real indent-guide
 rendering in `EditControl`, not a relabel. Detail in [PROJECT_STATUS.md](../PROJECT_STATUS.md).
 
