@@ -673,6 +673,45 @@ variants (32-bit, GTK2, Windows DLLs) of which exactly one is reachable, plus th
 keys read into fields nothing uses. Pruned to `LibX64_gtk3`, and `GetLibKey` — whose `#ifdef` ladder
 could only ever pick that one — now returns it directly.
 
+**`e5e10808` (Edit-menu review) — mostly INVERT/SKIP + superseded; one bug fix PORTED (2026-08-06).**
+A large, mixed commit whose parts land very differently for Ilwaco:
+
+- **The slash-rename sweep is INVERT/SKIP.** Astoria renamed `Slash`→`WindowsSlash` (`"\"`) and
+  `BackSlash`→`UnixSlash` (`"/"`) across ~30 files to hard-code Windows path semantics. Ilwaco's
+  `Main.bi` already defines `Slash "/"` / `BackSlash "\"` — the Linux-correct direction — and every
+  call site already uses `Slash` correctly, so there is nothing to adopt (the rename would flip us
+  back to Windows). The same applies to Astoria's `WinOsPath`→`CanonicalWinPath` (normalise to `\`)
+  and `OsPathForDir`: Ilwaco's `WinOsPath`/`GetOSPath` normalise to `/`, which is what a Linux `Dir()`
+  needs. `IsIniPathDriveAvailable` (drive-letter + `GetFileAttributesW` probe) is Win-only and a no-op
+  on Linux — there are no drive roots to be unavailable. (The commit's sed rename even corrupted
+  comments, e.g. AIService's "Forward slash" → "Forward WindowsSlash"; not carried.)
+- **The headline "flat checkmark toggles" for Bubble Help / Suggest Options / Parameter Info are
+  SKIP — superseded by `4a112089`** (in this backlog), which four days later "Move[d] Bubble
+  Help/Suggest Options/Parameter Info off Edit menu (C2)": the toggles were deleted, those settings
+  moved to Options only, and Parameter Info became a plain invoke-now command. Ilwaco's Edit menu is
+  *already* in that post-reversal shape — `miSuggestions` runs the analyse action and `miParameterInfo`
+  invokes now — so building the intermediate toggle UI (the three `Change*` subs, the `mClick`
+  rewiring to `SuggestOptions`/`InvokeParameterInfo`/`AnalyzeSuggestions`, the `.Checked` styling)
+  only to tear it out at `4a112089` is exactly the churn the project forbids. `ParameterInfoShow` is a
+  latent global in Ilwaco (`Main.bi`, declared but never read/written); the `4a112089` Options-placement
+  port is where it gets wired up (INI load, the `If Not ParameterInfoShow Then Exit Sub` gate,
+  the Options checkbox). Handle it there.
+- **PORTED: the `GetFileName` no-extension truncation fix.** With `WithExtension = False` and a name
+  with no extension after the last separator, `nPos` was set to `Len(FileName)` and the extract length
+  `nPos - Posi - 1` dropped the final character — reachable in Ilwaco at Rename Project
+  (`Main.bas` ~2744: `GetFileName(OldFolder & Slash & tn->Text, False)`; a dot-less project-folder name
+  like `MyProject` became `MyProjec`, so the rename targeted the wrong `.vfp`). Ported Astoria's exact
+  fix (a `hasExt` guard). The residual no-separator/no-extension edge in the `Else` branch is left
+  matching Astoria.
+- **The `SanitizeIni*`/`CollapseRepeatedSlashes` path helpers are DEFERRED/low-value on Linux.** Their
+  substance is drive-availability fallback (Win-only) plus slash canonicalisation to `\` (wrong
+  direction here); what remains — trim + collapse `//` when reading MRU/tool paths from INI — is a
+  marginal robustness gain. Not worth the surface now; revisit only if a concrete Linux path-INI bug
+  appears. The MRU-list sanitising-on-load expansion (also pruning MRUFiles/MRUFolders) rides on those
+  helpers and is deferred with them.
+- **N/A: the MFF `#ifndef UNICODE` guards** (`Sys.bas`/`SysUtils.bi`/`UString.bi`) — those are the
+  Windows MFF units that `#include "windows.bi"`; not part of the GTK build.
+
 ## Foundation status (2026-08-02)
 
 - **Build baseline:** Ilwaco builds + runs on Linux (PROJECT_STATUS).

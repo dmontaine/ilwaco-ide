@@ -75,21 +75,29 @@ the owner decisions, the per-task narratives and the v1 limits are in
 
 ---
 
-## NEXT — resume the changelog walk at `e5e10808`
+## NEXT — resume the changelog walk at the `13.3.A` approachability passes
 
-**Start here:** `e5e10808` — Astoria's Edit-menu review (flat checkmark toggles for bubble help,
-autocomplete and parameter info; it also carried Open Project and PathUtils fixes for example
-discovery). Then the `13.3.A` approachability passes (`0eaa8806`, `93bbfa28`, …). The pruned backlog
+**`e5e10808` is classified (2026-08-06)** — see [AstoriaParity.md](Documentation/AstoriaParity.md).
+It was mostly INVERT/SKIP (its `Slash`→`WindowsSlash` sweep flips Ilwaco's already-correct `/`
+direction) and its headline Edit-menu "flat checkmark toggles" are **superseded by `4a112089`**
+(further down this same backlog, which moves those settings off the Edit menu into Options) — Ilwaco's
+menu is already in that post-reversal shape, so the toggles were not built. One durable bug was
+**ported**: `GetFileName`'s no-extension truncation, which corrupted dot-less project-folder names at
+Rename Project.
+
+**Start here:** the `13.3.A` approachability passes (`0eaa8806`, `93bbfa28`, …). The pruned backlog
 with the walk order is [AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md);
 classify each item in [AstoriaParity.md](Documentation/AstoriaParity.md) as you go, and skip the pure
 GTK/Linux/32-bit stripping commits (`e139c2cc`, `c494207f`, `7baebd1e`, `add4642a`, `76abaa5a`,
-`15e66cc5`).
+`15e66cc5`). When you reach **`4a112089`**, wire `ParameterInfoShow` up (INI load, the
+`If Not ParameterInfoShow Then Exit Sub` gate, the Options checkbox) — it is a latent global in Ilwaco.
 
 **Method that has been working:** read Astoria's commit *and* what its code actually does before
-classifying — twice this session the commit message and the shipped behaviour disagreed
-(`Show Indent Guides` was only a relabel; `OpenProjectTemplate` is dead code), and once a "likely
-N/A" turned out to need real evidence to confirm (`cc9e7dd5`). Build with `./build-linux.sh editor`
-in the background, verify on `:0`, then document and commit per item.
+classifying — this session `e5e10808`'s headline feature turned out to be reversed 47 commits later
+(`4a112089`), so scoping against Astoria's *final* state avoided building UI only to tear it out; and
+twice before, the commit message and the shipped behaviour disagreed (`Show Indent Guides` was only a
+relabel; `OpenProjectTemplate` is dead code). Build with `./build-linux.sh editor` in the background,
+verify on `:0`, then document and commit per item.
 
 **Two items to settle before the testing phase** (both in TechnicalDebt "Known gaps"): the
 **blank-terminal finding** (a user pressing Run sees an empty window — reproducible with

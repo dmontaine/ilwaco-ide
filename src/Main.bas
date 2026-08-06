@@ -521,10 +521,11 @@ End Function
 
 Function GetFileName(ByRef FileName As WString, WithExtension As Boolean = True) As UString
 	Dim As Long nPos, Posi = InStrRev(FileName, Any "\/:")
-	nPos = InStrRev(FileName, ".")
-	If nPos < 1 OrElse nPos < Posi Then nPos = Len(FileName)
+	Dim As Long dotPos = InStrRev(FileName, ".")
+	Dim As Boolean hasExt = (dotPos > 0 AndAlso dotPos > Posi)
+	nPos = IIf(hasExt, dotPos, Len(FileName))
 	If Posi > 0 Then
-		Return IIf(WithExtension, Mid(FileName, Posi + 1), Mid(FileName, Posi + 1, nPos - Posi - 1))
+		Return IIf(WithExtension, Mid(FileName, Posi + 1), Mid(FileName, Posi + 1, nPos - Posi - IIf(hasExt, 1, 0)))
 	Else
 		Return IIf(WithExtension, FileName, Mid(FileName, 1, nPos - 1))
 	End If
