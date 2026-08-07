@@ -218,6 +218,43 @@ nobody has felt on a real project.
 
 ---
 
+## ⏸ DEFERRED — the embedded VTE terminal (owner, 2026-08-07)
+
+**Why an embedded terminal at all:** retire the external-terminal blank-window bug (Run shows an empty
+window on some desktops — a beginner cannot tell it from their own program failing), remove the
+terminal-selection option entirely, give a Flatpak/sandboxed build a terminal it can shell into, and —
+the real point — provide a **true pty** so a student's `Input`/`Color`/`Locate`/`Cls` behaves as in any
+terminal. Full rationale is in the header of [src/Vte.bi](src/Vte.bi).
+
+**Foundation is committed and stands:** the hand-written `Vte.bi` binding (`515f42c`) and `libvte-2.91`
+in the build shim (`19fe3e2`). Every signature in `Vte.bi` is measured, not transcribed.
+
+**Wiring was attempted, worked, and was reverted (owner direction).** A `Terminal` tab was wired into
+the **bottom pane** and verified by effect: a live, colour-rendering interactive shell running in the
+projects folder, embedding + spawn + pty all real. **The owner deemed the bottom pane the wrong home:**
+the terminal belongs in the **Form/Editor (central) area**, which will change substantially with later
+UI work. So the wiring was reverted to this clean foundation; **pick it up again once that UI work is
+much further along.** Do not re-add it to the bottom pane.
+
+**Findings to make resumption cheap** (so the next attempt starts ahead):
+- The 4-step plan (create tab + embed → redirect `RunPr`'s `Shell()` → remove the terminal-picker
+  option → teach `Packaging/gen-gtk-links.sh` about libvte) is spelled out in `515f42c`'s commit message.
+- **Embed:** `gtk_container_add` the `VteTerminal` (a raw `GtkWidget`) into the host's GTK container,
+  then `vte_terminal_spawn_async`. **Pre-realize spawn is fine** (the `Vte.bi` probe proved it).
+- **The one unsolved detail is sizing.** An MFF `Panel`'s `.Handle` is a `gtk_layout_new` that places
+  children at (0,0) and never resizes them; a raw `size-allocate` hook on `->Handle` did **not**
+  reliably grow the VTE to fill (it stayed a narrow strip). When resuming, size the terminal from the
+  host control's MFF resize path (`OnResize` + `ScaleX`/`ScaleY`) or via `LayoutHandle` / MFF's own
+  `Control_SizeAllocate`/`RequestAlign` — not a bare `size-allocate` on the `GtkLayout`.
+- **Run-redirect is the hard increment:** `RunPr` (TabWindow.bas) runs on a worker thread and blocks on
+  `Shell()` for the exit code, while VTE spawn is async on the GTK main thread. Needs thread marshalling
+  and exit reporting via the `child-exited` signal. If a persistent shell + "type the command in" model
+  is chosen, `vte_terminal_feed_child` must be **probe-verified** before being added to the binding.
+- **Cleanup owed regardless:** an old commented-out VTE block squats in `src/TabWindow.bas` (~10780–11020)
+  — dead code to delete (strip-Windows-code hygiene), independent of when the terminal is picked up.
+
+---
+
 ### After that — the parity tail (deferred backlog + small items)
 
 **Backlog classification.** All **396** remaining entries in
