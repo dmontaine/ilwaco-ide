@@ -89,7 +89,23 @@ and **verified 20/20 clean close (exit 0), IDE renders correctly**:
 
 ---
 
-## ✅ DONE (2026-08-07) — the AppImage's toolchain, AppDir and AppRun
+## ✅ DONE (2026-08-07) — Ilwaco installs: release staging, installer, toolchain, AppDir
+
+**There is a single-file installer, and it works.** Following Astoria's two-step pattern:
+`Packaging/StageRelease.sh` exports a clean end-user tree (from `git archive HEAD`, never the working
+tree — Astoria's expensive lesson) to `../ilwaco-ide-release`; `Packaging/BuildInstaller.sh` stages
+then packages it into `../ilwaco-ide-installer/Ilwaco-IDE-1.3.8-x86_64.run`, 52 MB, self-extracting,
+no root and nothing installed. Verified end to end: **install → launch → compile a GUI example →
+run it → reinstall over the top with a user's project file and hand-edited INI left untouched.**
+
+A `.run` rather than a self-extracting zip because `unzip` is not guaranteed on a minimal Linux install
+while `tar`/`gzip` effectively are. The **AppImage** remains the better single-file answer and the
+chosen primary download; `BuildInstaller.sh` emits it when `appimagetool` is present, but that branch
+has never run — fetching the tool needs owner approval.
+
+The staged tree is laid out **exactly as an installed Ilwaco**, so both packaging routes fall out of
+one staging step and ship identical content. `ilwaco.sh` is the shared launcher; `AppRun` only
+materialises a writable copy and hands over to it.
 
 **The AppDir runs.** `Packaging/build-appdir.sh` assembles a 136 MB AppDir; `Packaging/AppRun` seeds a
 writable app home, patches the settings the shipped INI cannot carry, regenerates the GTK link targets,
@@ -137,12 +153,13 @@ single-file compiles, everything is a project.** So no code change was needed.
 The release blocker is gone, so the order is now feature/packaging work (owner: **no release until the
 whole parity list is complete**, so nothing here is release-gated — sequence by value):
 
-1. **Packaging** — the AppImage is the difference between a project and something people can install
-   (memory `project-packaging`). **The toolchain, the AppDir and `AppRun` are now DONE** (see the
-   section below). What remains: **wrapping the AppDir into a `.AppImage`** (needs `appimagetool`,
-   not on this machine — a download the owner has to approve), **a release build on an old-glibc
-   host**, and driving a build **from inside the IDE's UI** rather than reproducing its command line.
-   Full design and status table: [Documentation/Packaging.md](Documentation/Packaging.md).
+1. **Packaging** — **Ilwaco now installs.** `Packaging/StageRelease.sh` → `../ilwaco-ide-release`,
+   `Packaging/BuildInstaller.sh` → `../ilwaco-ide-installer/Ilwaco-IDE-1.3.8-x86_64.run` (52 MB),
+   following Astoria's `StageRelease.ps1`/`BuildInstaller.ps1` pattern. What remains: the
+   **`.AppImage`** output (branch is written, needs `appimagetool` — a download the owner has to
+   approve), **a release build on an old-glibc host**, and driving a build **from inside the IDE's
+   UI** rather than reproducing its command line. Full design and status table:
+   [Documentation/Packaging.md](Documentation/Packaging.md).
 2. **The two committed divergences**, in order: **Git integration** (build the ADD chain `d61eb062` →
    `fffee489` → `fd894173` → `95b04f70`, skip removal `9d277f28`), then the **three AI templates** (Claude
    Code, ChatGPT, Kun — ADD chain `987e8b7e`/`ef5a6252`/`72ea5980`/`de8c1e5a`, skip `6de0332f`). See the

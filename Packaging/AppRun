@@ -15,144 +15,68 @@
 # out the obvious trick of symlinking the binary into a writable directory —
 # only a *real file* there gives a writable ExePath.
 #
-# So: a writable app home (~/Ilwaco by default) holds real copies of the small
-# binaries and the directories the IDE writes to, and symlinks the bulk
-# read-only payload back into the mounted image. The user's own work lives
-# there too, visible and editable, which is what we want for the audience.
+# So AppRun's whole job is to materialise a writable copy of the release tree in
+# ~/Ilwaco (override with ILWACO_HOME) and hand over to ilwaco.sh, the same
+# launcher an ordinary installed copy uses. Everything below is about that
+# materialisation; the actual launch logic lives in ilwaco.sh.
 #
 #   ~/Ilwaco/
-#     ilwaco, ilwaco-mcp     real copies (ExePath must be writable), refreshed
-#                            when the image ships a newer build
-#     Settings/ Temp/        real, writable — the IDE writes these
-#     Projects/ Examples/    real, writable — the user's work, seeded once
-#     Documentation/
-#     Compilers/ Help/ …     symlinks into the mounted image
-#     .toolchain/            symlink to the image's bundled link toolchain
-#     .link-shim/            generated GTK link targets (see gen-gtk-links.sh)
+#     ilwaco, ilwaco-mcp,      real copies — ExePath() must be writable, and
+#     ilwaco.sh                ilwaco.sh must sit beside them
+#     Settings/ Temp/          real, writable — the IDE writes these
+#     Projects/ Examples/ …    the user's work, seeded once and never touched
+#     Compilers/ Help/ …       symlinks into the mounted image
+#     Toolchain/               symlink to the image's bundled link toolchain
 #
-# The image's mount point is different on every run (/tmp/.mount_XXXXXX), so
-# every symlink into it is stale by the next launch. They are therefore
-# *recreated on each start* — cheap, and it also picks up an upgraded image.
-# The two paths the IDE bakes into its settings ($APPHOME/.toolchain and
-# $APPHOME/.link-shim) are stable precisely because they live here rather than
-# in the image.
-#
-# Override the location with ILWACO_HOME=/some/path.
+# The image mounts at a different path every run (/tmp/.mount_XXXXXX), so every
+# symlink into it is stale by the next launch. They are therefore recreated on
+# each start — cheap, and it also picks up an upgraded image.
 #
 set -euo pipefail
 
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 APPDIR="${APPDIR:-$(dirname "$SELF")}"
-SHARE="$APPDIR/usr/share/ilwaco"
-TOOLCHAIN="$APPDIR/usr/toolchain"
+PAYLOAD="$APPDIR/usr/share/ilwaco"
 APPHOME="${ILWACO_HOME:-$HOME/Ilwaco}"
 
 die() { echo "Ilwaco: $*" >&2; exit 1; }
 
-[ -d "$SHARE" ] || die "broken package: $SHARE is missing"
+[ -d "$PAYLOAD" ] || die "broken package: $PAYLOAD is missing"
 
-# --- writable app home -------------------------------------------------------
 mkdir -p "$APPHOME" || die "cannot create $APPHOME"
-[ -w "$APPHOME" ] || die "$APPHOME is not writable"
+[ -w "$APPHOME" ]   || die "$APPHOME is not writable"
 
-# Directories the IDE writes into, and the user's own work. Seeded from the
-# image the first time and then left alone — a user's edits must survive an
-# upgrade, so these are never refreshed.
-seeded_settings=0
+# --- seeded once, then owned by the user -------------------------------------
+# Never refreshed: a user's settings, projects and edited examples must survive
+# an upgrade.
 for d in Settings Templates AddIns Projects Examples Documentation; do
-	if [ ! -e "$APPHOME/$d" ]; then
-		if [ -d "$SHARE/$d" ]; then
-			cp -a "$SHARE/$d" "$APPHOME/$d"
-		else
-			mkdir -p "$APPHOME/$d"
-		fi
-		[ "$d" = Settings ] && seeded_settings=1
-	fi
+	[ -e "$APPHOME/$d" ] && continue
+	if [ -d "$PAYLOAD/$d" ]; then cp -a "$PAYLOAD/$d" "$APPHOME/$d"; else mkdir -p "$APPHOME/$d"; fi
 done
 mkdir -p "$APPHOME/Temp"
 
-# Settings that can only be written once the app home's real path is known: the
-# bundled compiler's location, and the -p search paths for the bundled link
-# sysroot and the generated GTK link targets. Applied only on first seed, so a
-# user's later edits are never overwritten. Values only -- the [Compilers]
-# parser is fragile about the block being restructured.
-if [ "$seeded_settings" = 1 ] && [ -f "$APPHOME/Settings/.seed-patch" ]; then
-	ini="$APPHOME/Settings/ilwaco.ini"
-	section=""
-	while IFS= read -r line; do
-		case "$line" in
-			''|'#'*) continue ;;
-			'['*']') section="$line"; continue ;;
-		esac
-		key="${line%%=*}"
-		val="${line#*=}"
-		val="${val//@APPHOME@/$APPHOME}"
-		# Replace the key's value inside its own section only.
-		#
-		# ilwaco.ini starts with a UTF-8 BOM, so the first line is not literally
-		# "[Parameters]" and a naive string compare silently skips that whole
-		# section while later sections patch fine. Compare against a
-		# BOM-stripped copy, but print the original so the file is unchanged
-		# apart from the value being set.
-		awk -v sec="$section" -v key="$key" -v val="$val" '
-			{ line = $0 }
-			NR == 1 && substr(line, 1, 3) == "\357\273\277" { line = substr(line, 4) }
-			line ~ /^\[/ { insec = (line == sec) }
-			insec && index(line, key "=") == 1 { print key "=" val; next }
-			{ print }
-		' "$ini" > "$ini.tmp" && mv -f "$ini.tmp" "$ini"
-
-		# Confirm it landed. A miss here is invisible until the user's first
-		# build fails deep inside fbc, so it is worth failing loudly now.
-		grep -qF -- "$key=$val" "$ini" \
-			|| die "could not apply seed setting '$key' to $ini"
-	done < "$APPHOME/Settings/.seed-patch"
-	rm -f "$APPHOME/Settings/.seed-patch"
-fi
-
-# Bulk read-only payload: relink each launch, because the mount point moves.
-for d in Compilers Controls Resources Help CHMVIEW; do
-	[ -e "$SHARE/$d" ] || continue
+# --- bulk read-only payload: relinked every launch ---------------------------
+for d in Compilers Controls Resources Help CHMVIEW Toolchain; do
+	[ -e "$PAYLOAD/$d" ] || continue
 	rm -rf "$APPHOME/$d"          # may be a stale symlink from a previous mount
-	ln -s "$SHARE/$d" "$APPHOME/$d"
+	ln -s "$PAYLOAD/$d" "$APPHOME/$d"
 done
-rm -f "$APPHOME/.toolchain"
-ln -s "$TOOLCHAIN" "$APPHOME/.toolchain"
 
-# --- binaries ----------------------------------------------------------------
-# Real copies, not symlinks: ExePath() follows symlinks and would report the
-# read-only image. Refresh when the image carries a different build, so that
+# --- real copies -------------------------------------------------------------
+# ExePath() follows symlinks and would report the read-only image, so these must
+# be real files. Refreshed when the image carries a different build, so that
 # upgrading the AppImage upgrades the IDE.
-for exe in ilwaco ilwaco-mcp; do
-	src="$APPDIR/usr/bin/$exe"
+for f in ilwaco ilwaco-mcp ilwaco.sh license.txt; do
+	src="$PAYLOAD/$f"
 	[ -f "$src" ] || continue
-	if [ ! -f "$APPHOME/$exe" ] || [ "$src" -nt "$APPHOME/$exe" ] \
-	   || [ "$(stat -c %s "$src")" != "$(stat -c %s "$APPHOME/$exe")" ]; then
-		cp -f "$src" "$APPHOME/$exe.tmp$$" && mv -f "$APPHOME/$exe.tmp$$" "$APPHOME/$exe"
-		chmod +x "$APPHOME/$exe"
+	if [ ! -f "$APPHOME/$f" ] || [ "$src" -nt "$APPHOME/$f" ] \
+	   || [ "$(stat -c %s "$src")" != "$(stat -c %s "$APPHOME/$f")" ]; then
+		cp -f "$src" "$APPHOME/$f.tmp$$" && mv -f "$APPHOME/$f.tmp$$" "$APPHOME/$f"
 	fi
 done
-[ -x "$APPHOME/ilwaco" ] || die "broken package: no ilwaco binary in the image"
+chmod +x "$APPHOME/ilwaco" "$APPHOME/ilwaco.sh" 2>/dev/null || true
+[ -x "$APPHOME/ilwaco.sh" ] || die "broken package: no launcher in the image"
 
-# --- GTK link targets --------------------------------------------------------
-# Regenerated every launch: they point at the host's runtime libraries, which a
-# system update can renumber underneath us.
-if ! "$SHARE/Packaging/gen-gtk-links.sh" "$APPHOME/.link-shim"; then
-	die "cannot build GUI programs on this system without the GTK 3 runtime installed"
-fi
-
-# --- environment -------------------------------------------------------------
-# The bundled assembler/linker and the stub gcc must win over anything on the
-# host, so they go on the FRONT of PATH. fbc inherits this when the IDE spawns
-# it to compile the user's project.
-export PATH="$TOOLCHAIN/bin:$PATH"
-
-# Only fbc's own libtinfo.so.5 belongs here. Deliberately NOT the sysroot: it
-# holds libc.so.6 and the loader as link targets, and putting that directory on
-# the library path would resolve glibc against our bundled copy for the IDE and
-# every program it launches. See make-toolchain.sh.
-export LD_LIBRARY_PATH="$TOOLCHAIN/runtime${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-
-# The IDE writes into ExePath()-relative Temp/, so start there.
-cd "$APPHOME"
-exec "$APPHOME/ilwaco" "$@"
+# Everything machine-specific — the GTK link targets, the first-run settings,
+# PATH and LD_LIBRARY_PATH — is ilwaco.sh's job, shared with installed copies.
+exec "$APPHOME/ilwaco.sh" "$@"
