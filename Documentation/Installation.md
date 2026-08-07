@@ -180,6 +180,40 @@ computer's own screen, or reconnect with `ssh -X` so the display is forwarded.
 
 ---
 
+## For administrators — deploying to a lab or a classroom
+
+If you manage locked-down machines, students will not install Ilwaco themselves; you will deploy it.
+Use the `.deb` or the `.rpm` — they are ordinary packages with no interactive step, so whatever you
+already use (an apt/dnf repository, Ansible, an MDM, or a disk image) works unchanged.
+
+```bash
+sudo apt install -y ./ilwaco-ide_1.3.8_amd64.deb      # Debian, Ubuntu, Mint
+sudo dnf install -y ./ilwaco-ide-1.3.8-1.x86_64.rpm   # Fedora, RHEL
+```
+
+**There is no per-user setup step.** The package installs a read-only payload to `/opt/ilwaco-ide`;
+the first time each student launches Ilwaco, their own `~/ilwaco-ide` is created automatically.
+Nothing has to be run as, or for, each user.
+
+**Disk cost per user is about 9 MB** — a real copy of the IDE binary (4.4 MB, unavoidable: the IDE
+resolves its files relative to its own location, so it cannot run from the shared read-only copy),
+the settings and themes (3.5 MB), and the examples, templates and docs (~1 MB). Everything large —
+the FreeBASIC compiler, the link toolchain, the control libraries and the help — stays in `/opt` and
+is **shared by every user**. So a 30-seat lab costs roughly 270 MB across all home directories, plus
+one 112 MB system copy.
+
+Notes that matter on shared machines:
+
+- **Home directories must be writable and local-ish.** Ilwaco writes settings, temporary files and
+  build output under `~/ilwaco-ide`. It works on NFS-mounted homes, but compilation is disk-bound and
+  will feel slower.
+- **Upgrading is safe.** Replacing the package never touches any `~/ilwaco-ide`; students keep their
+  projects and settings. See "Upgrading" above.
+- **Removing the package leaves `~/ilwaco-ide` behind** for every user, because it contains their
+  work. Clean those up separately if you need the space back.
+- **A graphical desktop is required.** On a machine with no display Ilwaco exits immediately with a
+  message rather than starting; there is no headless or command-line mode.
+
 ## For maintainers
 
 How these three artefacts are built, and why the split is the way it is, is in `Documentation/

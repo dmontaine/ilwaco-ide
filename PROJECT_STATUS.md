@@ -181,7 +181,18 @@ the whole parity list is complete**, so nothing here is release-gated — sequen
    b. **Examples — DONE** (deleted the broken half, 54 build-verified through the shipped toolchain).
       Full detail in the DONE section above and [ExamplesAudit.md](Documentation/ExamplesAudit.md).
 
-1. **Fresh owner directives (2026-08-07) — all DONE.** The `projects` rename, the seed-patch
+1. **Flatpak — considered and REJECTED (owner, 2026-08-07).** Raised as the one technology that gives
+   a genuine two-double-click, no-root install. Rejected because the premise it serves is weak: **a
+   locked-down school machine means the student installs nothing at all — IT deploys it**, so the
+   no-root *download* experience matters far less than deployability, which `.deb`/`.rpm` already
+   give. Against it: Flatpak is not pre-installed on Debian, and although `flatpak` is in Ubuntu's
+   *universe* repo, Ubuntu dropped the GNOME Software Flatpak plugin from default installs, so the
+   double-click-to-install path needs setup anyway. Its real win is **immutable Fedora**
+   (Silverblue/Kinoite) — a small audience today. Revisit only if that audience grows. This
+   supersedes nothing: the AppImage-over-Flatpak reasoning in
+   [Packaging.md](Documentation/Packaging.md) still stands.
+
+2. **Fresh owner directives (2026-08-07) — all DONE.** The `projects` rename, the seed-patch
    hardening, and the download question (now answered with three artefacts). See the DONE sections.
    **What is left is verification we cannot do here: install the `.rpm` on a real Fedora system.**
    The owner is setting up a Fedora VM for exactly this. Until that passes, the RPM is *built and
