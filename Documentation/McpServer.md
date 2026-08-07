@@ -355,6 +355,31 @@ was reverted afterwards.
   the new process being alive AND give it ~1–2s to bind (or `rm -f` the socket before launch), don't
   trust the socket file's mere existence.
 
+## Write safety (2026-08-07)
+
+Found by reading the write path during a design discussion about MCP permissions, not by a failure
+report — both were live data-loss paths at the permission level already granted, which is why they
+were fixed before any permission model was designed.
+
+1. **`write_file` wrote to disk with no check for an open dirty tab.** CLAUDE.md warns humans never
+   to edit a file on disk while the IDE has it open, because the IDE holds its own copy; the MCP
+   server was doing exactly that programmatically. Whichever way the user answered the resulting
+   reload prompt, something was lost. Now refused with `dirty_buffer`. When the file is open and
+   *clean*, the write proceeds and the tab is refreshed in step, so no reload prompt appears.
+2. **`set_active_file_content` replaced the whole buffer with no version check**, so it could
+   silently discard anything typed since the caller last read. Now accepts an optional
+   `expected_version`, refusing with `version_mismatch`.
+
+`read_file` and `get_active_file` return a `version` token (FNV-1a over the exact bytes handed out —
+an optimistic-concurrency tag between cooperating local processes, not a security measure);
+`get_active_file` also returns `modified`. The check is opt-in, so existing clients are unaffected.
+
+Verified against a live IDE over the socket: stale version refused on both the file and the buffer
+with the content unchanged on disk and in the editor, correct version accepted, and a write onto a
+deliberately dirtied tab refused. One thing checked rather than assumed — the editor buffer reports
+CRLF even when given LF, but the IDE normalises to LF on save, so this is Scintilla's internal
+representation and not a corruption path.
+
 ## Verification recipe
 
 Build and run the editor (`./build-linux.sh editor`, then

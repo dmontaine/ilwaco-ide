@@ -84,13 +84,13 @@ The agent will use the tools below to do the work directly in the IDE.
 |------|--------------|
 | `get_status` | Whether a project is open, active file, build state |
 | `list_files` | Files in the current project |
-| `read_file` | Contents of a project file |
-| `get_active_file` | Path + contents of the file in the active editor |
+| `read_file` | Contents of a project file, plus a `version` token |
+| `get_active_file` | Path + contents of the file in the active editor, plus `version` and `modified` |
 | `get_build_output` | Text from the last build |
 | `get_errors` | Structured errors/warnings from the last build |
-| `write_file` | Overwrite a project file on disk |
+| `write_file` | Overwrite a project file on disk (refused if that file is open with unsaved changes) |
 | `add_file` | Add a new module or header to the project |
-| `set_active_file_content` | Replace the active editor's contents |
+| `set_active_file_content` | Replace the active editor's contents (accepts `expected_version`) |
 | `open_in_editor` | Open a project file in the editor |
 | `build` | Compile the current project (async) |
 | `syntax_check` | Syntax-check without producing an executable |
@@ -99,6 +99,30 @@ The agent will use the tools below to do the work directly in the IDE.
 | `open_project` | Open an existing project by path |
 
 Form-designer tools (`designer_*`) are deliberately not offered yet — see McpServer.md.
+
+## Not losing your work
+
+Two protections exist because an agent and a human can edit the same file at the same time, and the
+loser of that race is whoever does not notice.
+
+- **`write_file` will not write under a dirty tab.** If the file is open in the editor with unsaved
+  changes, the write is refused with **`dirty_buffer`** rather than going to disk behind the editor's
+  back — which would cost either your unsaved edits or the agent's write, depending on how you
+  answered the reload prompt. Edit the buffer with `set_active_file_content` instead, or save/close
+  the tab. If the file is open and *clean*, the write goes through and the tab is refreshed, so you
+  never get a reload prompt for a change you asked for.
+- **Optimistic concurrency.** `read_file` and `get_active_file` return a `version` token for the exact
+  content they handed you. Pass it back as `expected_version` to `write_file` or
+  `set_active_file_content` and the edit is refused with **`version_mismatch`** if anything changed in
+  between, instead of silently discarding it. `set_active_file_content` replaces the *whole* buffer,
+  so this matters most there. The check is opt-in: omit `expected_version` and the write proceeds as
+  before.
+
+`get_active_file` also reports `modified`, so an agent can see it is about to edit over unsaved work.
+
+Note for agent authors: the editor buffer reports line endings as CRLF regardless of what you wrote.
+That is Scintilla's internal representation — the IDE normalises to LF when it saves, and `version`
+is computed over what you were actually given, so a read-modify-write round trip is consistent.
 
 ## Security notes
 

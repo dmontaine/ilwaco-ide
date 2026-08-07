@@ -14,6 +14,15 @@ necessary but not sufficient — "it compiled" is not "it works".
 
 ## Proven
 
+- **MCP write safety (2026-08-07).** Driven against a live IDE over the agent socket, six behaviours:
+  `read_file`/`get_active_file` return a `version`; `write_file` with a stale `expected_version` is
+  refused (`version_mismatch`) with the file unchanged **on disk**; with the correct version it
+  succeeds; a `write_file` onto a deliberately dirtied editor tab is refused (`dirty_buffer`) with the
+  file unchanged on disk; `set_active_file_content` with a stale version is refused with the **buffer**
+  unchanged; with the current version it succeeds. Separately checked rather than assumed: the editor
+  buffer reports CRLF even when handed LF, but a build-triggered save writes **LF** to disk, so that is
+  Scintilla's internal representation and not a line-ending corruption path.
+
 - **The 53 examples ported from Astoria all build and run; 25 of the 28 GUI ones also look right
   (2026-08-07).** Built with Ilwaco's bundled Linux toolchain on Debian 13 x86_64: **25/25**
   `Learning/Console` programs compiled and ran to completion (exit 0), and all 28 GUI programs

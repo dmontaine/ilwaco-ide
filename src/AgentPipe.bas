@@ -98,6 +98,41 @@ Private Function AgentActiveTab() As TabWindow Ptr
 	Return Cast(TabWindow Ptr, ptabCode->SelectedTab)
 End Function
 
+'' The open editor tab for a path, or 0 if the file is not open. Every tab panel is
+'' searched, not just the focused one, because a split view puts tabs in several.
+'' The compare is case-SENSITIVE on purpose: Foo.bas and foo.bas are two files on Linux
+'' and the IDE opens them as two tabs.
+Private Function AgentFindTab(ByRef fullPath As UString) As TabWindow Ptr
+	If Len(fullPath) = 0 Then Return 0
+	For j As Integer = 0 To TabPanels.Count - 1
+		Dim As TabPanel Ptr tp = Cast(TabPanel Ptr, TabPanels.Item(j))
+		If tp = 0 Then Continue For
+		Dim As TabControl Ptr tc = @tp->tabCode
+		For i As Integer = 0 To tc->TabCount - 1
+			Dim As TabWindow Ptr tb = Cast(TabWindow Ptr, tc->Tabs[i])
+			If tb <> 0 AndAlso tb->FileName = fullPath Then Return tb
+		Next i
+	Next j
+	Return 0
+End Function
+
+'' A short token identifying an exact byte-for-byte content. Clients get one back from
+'' read_file/get_active_file and may hand it to a write as "expected_version", which lets
+'' the IDE refuse a write built on stale content instead of silently discarding whatever
+'' changed in between. FNV-1a: this is an optimistic-concurrency check between cooperating
+'' local processes, not a security measure, so speed matters and collision resistance does not.
+Private Function AgentContentVersion(ByRef utf8 As String) As String
+	Dim As ULongInt h = 14695981039346656037ull    '' FNV-1a 64-bit offset basis
+	Dim As UByte Ptr p = Cast(UByte Ptr, StrPtr(utf8))
+	If p <> 0 Then
+		For i As Integer = 0 To Len(utf8) - 1
+			h Xor= CULngInt(p[i])
+			h *= 1099511628211ull                  '' FNV prime
+		Next i
+	End If
+	Return Hex(h, 16)
+End Function
+
 '' Collapse "." and ".." segments on an absolute Linux path -- LEXICALLY, no filesystem
 '' access. This is the load-bearing half of the containment guard: without it a path like
 '' ".../Project/../../etc/passwd" still text-starts with the project folder and would pass a
@@ -278,17 +313,22 @@ Private Function AgentCmdReadFile(ByVal args As JsonValue Ptr, ByRef ecode As St
 	Dim As UString resolved = AgentResolveProjectPath(path, ecode, emsg)
 	If ecode <> "" Then Return 0
 	If Not FileExists(resolved) Then ecode = "not_found" : emsg = "File not found: " & path : Return 0
+	Dim As String body = AgentReadFileBytes(resolved)
 	Dim As JsonValue Ptr r = JsonNewObject()
-	r->SetMember("content", JsonNewString(AgentReadFileBytes(resolved)))
+	r->SetMember("content", JsonNewString(body))
+	r->SetMember("version", JsonNewString(AgentContentVersion(body)))
 	Return r
 End Function
 
 Private Function AgentCmdGetActiveFile(ByRef ecode As String, ByRef emsg As String) As JsonValue Ptr
 	Dim As TabWindow Ptr tb = AgentActiveTab()
 	If tb = 0 Then ecode = "no_active_file" : emsg = "No editor tab is focused." : Return 0
+	Dim As String body = ToUtf8(tb->txtCode.Text)
 	Dim As JsonValue Ptr r = JsonNewObject()
 	r->SetMember("path", JsonNewString(ToUtf8(tb->FileName)))
-	r->SetMember("content", JsonNewString(ToUtf8(tb->txtCode.Text)))
+	r->SetMember("content", JsonNewString(body))
+	r->SetMember("version", JsonNewString(AgentContentVersion(body)))
+	r->SetMember("modified", JsonNewBool(tb->Modified))
 	Return r
 End Function
 
@@ -397,7 +437,41 @@ Private Function AgentCmdWriteFile(ByVal args As JsonValue Ptr, ByRef ecode As S
 	Dim As String content = args->GetStr("content")
 	Dim As UString resolved = AgentResolveProjectPath(path, ecode, emsg)
 	If ecode <> "" Then Return 0
+
+	'' Never write to disk behind the editor's back. The IDE holds its own copy of an open
+	'' file, so writing under a tab with unsaved edits means one of the two is lost -- either
+	'' the user's work, or this write, depending on which way they answer the reload prompt.
+	Dim As TabWindow Ptr openTab = AgentFindTab(resolved)
+	If openTab <> 0 AndAlso openTab->Modified Then
+		ecode = "dirty_buffer"
+		emsg = "'" & path & "' is open in the editor with unsaved changes. Save or close that tab " & _
+		       "first, or use set_active_file_content to edit the buffer instead of the file."
+		Return 0
+	End If
+
+	'' Optimistic concurrency: if the caller says what it based this write on, verify it.
+	Dim As String expected = args->GetStr("expected_version")
+	If expected <> "" Then
+		Dim As String currentVer = ""
+		If FileExists(resolved) Then currentVer = AgentContentVersion(AgentReadFileBytes(resolved))
+		If currentVer <> expected Then
+			ecode = "version_mismatch"
+			emsg = "'" & path & "' changed since you read it. Read it again and re-apply your edit."
+			Return 0
+		End If
+	End If
+
 	If Not AgentWriteFileBytes(resolved, content) Then ecode = "write_failed" : emsg = "Could not write: " & path : Return 0
+
+	'' The file was open and clean, so the tab now shows stale text. Refresh it rather than
+	'' leaving the user a reload prompt for a change they asked for.
+	If openTab <> 0 Then
+		Dim As WString Ptr nw = FromUtf8(StrPtr(content))
+		openTab->txtCode.Text = *nw
+		If nw <> 0 Then WDeAllocate(nw)
+		openTab->Modified = False
+	End If
+
 	Dim As Boolean registered = False, opened = False
 	If args->GetBool("register") Then registered = AgentRegisterFileInProject(resolved)
 	If args->GetBool("open") Then AgentOpenTab(resolved) : opened = True
@@ -405,6 +479,7 @@ Private Function AgentCmdWriteFile(ByVal args As JsonValue Ptr, ByRef ecode As S
 	r->SetMember("path", JsonNewString(ToUtf8(resolved)))
 	r->SetMember("registered", JsonNewBool(registered))
 	r->SetMember("opened", JsonNewBool(opened))
+	r->SetMember("version", JsonNewString(AgentContentVersion(content)))
 	Return r
 End Function
 
@@ -442,12 +517,26 @@ Private Function AgentCmdSetActiveContent(ByVal args As JsonValue Ptr, ByRef eco
 	Dim As TabWindow Ptr tb = AgentActiveTab()
 	If tb = 0 Then ecode = "no_active_file" : emsg = "No editor tab is focused." : Return 0
 	Dim As String content = args->GetStr("content")
+
+	'' This replaces the WHOLE buffer, so without a check it silently discards anything the
+	'' user typed since the caller last read the file. If the caller passes the version it
+	'' read, refuse when the buffer has moved on.
+	Dim As String expected = args->GetStr("expected_version")
+	If expected <> "" Then
+		If AgentContentVersion(ToUtf8(tb->txtCode.Text)) <> expected Then
+			ecode = "version_mismatch"
+			emsg = "The editor buffer changed since you read it. Read it again and re-apply your edit."
+			Return 0
+		End If
+	End If
+
 	Dim As WString Ptr cw = FromUtf8(StrPtr(content))
 	tb->txtCode.Text = *cw
 	If cw <> 0 Then WDeAllocate(cw)
 	tb->Modified = True
 	Dim As JsonValue Ptr r = JsonNewObject()
 	r->SetMember("path", JsonNewString(ToUtf8(tb->FileName)))
+	r->SetMember("version", JsonNewString(AgentContentVersion(content)))
 	Return r
 End Function
 
