@@ -11,6 +11,72 @@ for the classified port backlog, [Documentation/AstoriaParity.md](Documentation/
 
 ---
 
+## ✅ DONE (2026-08-06) — Delete File shipped with deferred deletion; three GTK defects fixed
+
+`93bbfa28` S5 **plus** `331b5705` (B1), scoped against Astoria's *final* state rather than the handoff's
+note — that note described `93bbfa28`'s intermediate version, which Astoria reworked twice afterwards
+(`331b5705` deferred deletion, `273df0f5` merged "Remove" into "Delete File"). Owner chose **full
+parity**, superseding the earlier "keep both commands" product call.
+
+**Shipped:** one **Delete File** command (File menu, Project menu, tree context menu, explorer toolbar),
+confirmation defaulting to No, tree-selection based. A project member is queued — `(pending delete)`,
+project flagged `*` — and only `Kill`ed by `SaveProject` after the `.vfp` is written; **Cancel Deletion**
+undoes it; Close Project lists queued files as informational rows. **Removed:** the old unconfirmed
+`RemoveFileFromProject` (it silently deleted files off disk), and `frmSave`'s **10-second auto-Yes
+countdown**, which would have executed deletions with no user action.
+
+**Three pre-existing GTK defects found while verifying**, all fixed: the explorer context menu's state
+handler (`tvExplorer_MouseUp`) could never fire on GTK — MFF only raises `OnMouseUp` when the event
+window is the widget window, never true for a `GtkTreeView` — so the menu had shown stale captions and
+enablement since the port (logic moved to `UpdateExplorerMenuState`, driven from `tvExplorer_SelChange`
+plus an explicit refresh after delete/undo, since re-clicking the selected row fires no change);
+`node->Text &= "*"` never repainted, hiding the project dirty marker (five live sites, now explicit
+assignment); and `CloseProject`/`SaveAllBeforeCompile` read the save dialog *after* it was torn down
+(now `.SelectedItems`, with the window-X close treated as Cancel). Details in
+[UpstreamFixes.md](Documentation/UpstreamFixes.md) and [AstoriaParity.md](Documentation/AstoriaParity.md).
+
+**Owner direction (2026-08-06): Ilwaco is for project-based development only — files outside a project
+are not supported.** Astoria's `0c08fe5f` standalone-node `ExplorerElement` Tag was therefore ported and
+then **reverted**; it is recorded N/A. Two follow-ups this raises, neither actioned: **File ▸ Open still
+creates a root-level node for a file outside any project**, where Delete File is a no-op — constraining
+that entry point is a product question; and `DeleteEditorFile`'s non-project branch is consequently
+unreachable in supported use (Astoria's own code, kept as a guard, but a no-dead-code candidate).
+
+Verified by effect on `:0` throughout, using the MCP agent to open projects: confirm → pending → Close
+Project **Yes** deletes and rewrites the `.vfp`; **No** leaves file and `.vfp` untouched; Cancel Deletion
+reverts and the file then survives a real save.
+
+**Also this session — the whole remaining backlog was classified, and `13.71` was ported.** All **396**
+entries are now judged in [AstoriaParity.md](Documentation/AstoriaParity.md) "Full classification pass"
+(cluster-level, with its own confidence caveats; the backlog file was deliberately not pruned).
+**`13.71`** — the serial IntelliSense loader (`31a5e20`) — call the new `SpawnLoader` from all five loader
+sites (three in `AddProject`, `TabWindow.SaveTab`, `TabWindow.FormDesign`) running one at a time, with
+`ClearLoaderQueue()` from `CloseProject`/`CloseWorkspace`; Astoria's `ASTORIA_T70_SERIALLOAD` env gate was
+deliberately not ported (dead code). It is a correctness improvement (the race is real, the serial load is
+strictly safer), **not** a fix for the shutdown SIGSEGV — which was separately diagnosed and fixed on
+2026-08-07 (see PROJECT_STATUS). `13.72` (idle slices) stays deferred: it only removes a stall `13.71`
+introduces that nobody has felt on a real project.
+
+**Also this session — the product direction was set, and documented for users.** The owner recorded the
+project-only stance and the four divergences (the STANDING table in PROJECT_STATUS), and asked that the
+Ilwaco/Astoria differences be written down "in case users assume they are exactly the same". New
+**[IlwacoVsAstoria.md](Documentation/IlwacoVsAstoria.md)** does that, separating what **ships today** from
+what is **planned** (Git and the AI templates are in neither product yet) and correcting the comparison
+easiest to get wrong — there are **two** theme capabilities and Astoria removed neither. `README.md` now
+leads with the comparison and indexes the user-facing docs. One stale claim fixed:
+`IlwacoIDESignificantChanges.md` had the multi-assistant AI integration under "features removed", which the
+divergence decision reverses.
+
+**Method note worth keeping.** The handoff's scoping for S5 was written against `93bbfa28` alone and was
+wrong in two ways only a whole-log scan caught: Astoria reworked the feature twice afterwards, and the
+"keep both Remove and Delete File" call had been made without knowing Astoria later merged them. It also
+asserted `bNestedInProject = (tn->ParentNode <> 0)` was memory-safe "matching Win32" — true, but backwards:
+loose files are *root* nodes (`ParentNode = 0`), and it is `CloseTab` freeing exactly those that makes the
+final version's post-`CloseTab` node access unsafe. **Read the current source, not the previous session's
+summary of it.**
+
+---
+
 ## ✅ DONE (2026-08-06) — MCP server finished; menu-taxonomy cluster closed; workspace replaces sessions
 
 A long session. Six pieces of work, each built, verified **by effect** on `:0`, documented and
