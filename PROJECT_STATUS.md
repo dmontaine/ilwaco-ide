@@ -95,7 +95,11 @@ The release blocker is gone, so the order is now feature/packaging work (owner: 
 whole parity list is complete**, so nothing here is release-gated — sequence by value):
 
 1. **Packaging** — the AppImage is the difference between a project and something people can install
-   (memory `project-packaging`); it should ship the console-link libs so users need no shim.
+   (memory `project-packaging`). **Scope is bigger than the shim:** the bundled `fbc` ships no `as`/`ld`
+   and leans on the host's binutils + `-dev` link objects (`crt1.o`, `libc.so`/GTK/ncurses link targets),
+   which a fresh distro lacks — so a truly self-contained chain must bundle **binutils + a minimal C link
+   sysroot**, wired up by `AppRun` (measured 2026-08-07). Writable user data (Projects/Examples/Docs)
+   lives *outside* the read-only image.
 2. **The two committed divergences**, in order: **Git integration** (build the ADD chain `d61eb062` →
    `fffee489` → `fd894173` → `95b04f70`, skip removal `9d277f28`), then the **three AI templates** (Claude
    Code, ChatGPT, Kun — ADD chain `987e8b7e`/`ef5a6252`/`72ea5980`/`de8c1e5a`, skip `6de0332f`). See the
@@ -208,7 +212,11 @@ off in Tools ▸ Options ▸ General; the status bar shows which. See
   **not** consult `LD_LIBRARY_PATH`. So a console link needs `-p <shim> -l tinfo`, either per-project via
   `CompilationArguments64Linux` or globally via `[Parameters] Compiler64Arguments`; without it fbc stops at
   `ld: cannot find -lncurses` (measured again 2026-08-06). The AppImage should ship the libraries so users
-  need neither. AppImage packaging itself is still open (memory `project-packaging`).
+  need neither. **And the shim is only part of it** — the bundled `Compilers/…/bin/` ships **only `fbc`**,
+  so compilation currently uses the host's `/usr/bin/as` + `/usr/bin/ld` and the host's `-dev` link
+  objects (`crt1.o`, `libc.so`/GTK/ncurses targets), none of which a fresh distro has. A self-contained
+  AppImage must bundle **binutils + a minimal C link sysroot** and wire them via `AppRun` (measured
+  2026-08-07; detail in memory `project-packaging`). AppImage packaging itself is still open.
 - **GTK dark mode (REIMPLEMENT):** MFF ships a real GTK3 `SetDarkMode`, but `g_darkModeSupported` was only
   ever set by the deleted Win32 `InitDarkMode`, so the dark-styling branches never fire on GTK. Track with
   Astoria's dark-mode commits (`56f6d180`/`b3633bc5`/`a7c7839d`).
