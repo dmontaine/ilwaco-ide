@@ -157,8 +157,8 @@ necessary but not sufficient — "it compiled" is not "it works".
 - **None of the 22 PRE-EXISTING examples builds on Linux (2026-08-07).** Measured, all 17 with a
   usable project file failing and 5 skipped for a manifest with no main file — they are Windows
   programs (`InvalidateRect`, `QueryPerformanceCounter`, `win/wininet.bi`, `ITaskbarList3`, Win32
-  `Point`/`Rect`). They **ship inside the AppImage**, so a beginner who opens one and presses Build
-  gets a wall of compiler errors. Audit-only by owner direction; the full catalogue, grouped by root
+  `Point`/`Rect`). They are **seeded into `~/ilwaco-ide/Examples` on first run**, so a beginner who
+  opens one and presses Build gets a wall of compiler errors. Audit-only by owner direction; the full catalogue, grouped by root
   cause, is in [ExamplesAudit.md](ExamplesAudit.md). The 53 ported from Astoria are currently the
   only examples that work.
 - **`Calculator`, `FiveInARow` and `Maze` had broken layouts on GTK (2026-08-07, owner-reported;

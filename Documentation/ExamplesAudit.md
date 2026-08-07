@@ -13,9 +13,11 @@ building each `.vfp` with Ilwaco's bundled toolchain, and it is not a marginal f
 Windows programs. Per the owner's direction this document is the **audit only** — nothing here has
 been fixed.
 
-Why it matters: these examples **ship inside the AppImage**. A beginner — the audience Ilwaco is
-built for — who opens one and presses Build gets a wall of compiler errors, and cannot tell a
-Windows-only example from a mistake of their own. That is precisely the failure the product
+Why it matters: these examples **are installed for the user**. They travel in the AppImage only as a
+seed, and `AppRun` copies them out to `~/ilwaco-ide/Examples` on first run — a writable copy the user
+owns, per the packaging decision that nothing user-facing runs from the read-only image. The effect is
+the same either way: a beginner — the audience Ilwaco is built for — opens one, presses Build, gets a
+wall of compiler errors, and cannot tell a Windows-only example from a mistake of their own. That is precisely the failure the product
 standard in [CLAUDE.md](../CLAUDE.md) exists to prevent.
 
 ## How the pre-existing examples fail

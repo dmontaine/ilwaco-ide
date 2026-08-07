@@ -136,8 +136,10 @@ the whole parity list is complete**, so nothing here is release-gated — sequen
       [ExamplesAudit.md](Documentation/ExamplesAudit.md). Cheapest first: the five whose manifest
       names no main file may be trivially recoverable, and `StageRelease.sh` already curates the
       release tree, so *not shipping* what cannot build is an exclusion list rather than a deletion.
-      **A beginner who opens one and presses Build gets a wall of compiler errors**, which is the
-      failure the product standard exists to prevent.
+      They are **seeded into `~/ilwaco-ide/Examples` on first run** (they travel in the image only as
+      a seed — nothing user-facing runs from the read-only mount), so **a beginner who opens one and
+      presses Build gets a wall of compiler errors**, which is the failure the product standard
+      exists to prevent.
 
 1. **Packaging** — **Ilwaco now ships as a single-file AppImage.** `Packaging/StageRelease.sh` →
    `../ilwaco-ide-release`, `Packaging/BuildInstaller.sh` →
