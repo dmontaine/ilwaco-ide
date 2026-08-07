@@ -32,18 +32,24 @@ Older systems — Ubuntu 20.04, Debian 11, RHEL 8 — are **too old** and Ilwaco
 ## Method 1 — `.tar.gz` (no admin password)
 
 1. Download `Ilwaco-IDE-1.3.8-x86_64.tar.gz`.
-2. **Right-click it and choose "Extract Here"** (on some desktops: "Extract to…" or "Open With
-   Archive Manager → Extract"). A file called `Ilwaco-IDE-1.3.8-x86_64.AppImage` appears next to it.
-3. **Double-click that `.AppImage`.** Ilwaco starts.
+2. **Extract it.** Right-click it and choose whichever extract option your desktop offers — the
+   wording varies (*Extract Here*, *Extract To…*, *Open With Archive Manager*). If it asks **where**,
+   choose somewhere inside your home folder such as `/home/<you>` — **not `/tmp`**, which is emptied
+   when the computer restarts.
+3. Open the folder you extracted into and **double-click `Ilwaco-IDE-1.3.8-x86_64.AppImage`**.
 
-**You do not need to make anything executable**: the file comes out of the archive ready to run,
-which is exactly why it is packed in a `.tar.gz` rather than offered on its own.
+Ilwaco starts. Normally **you do not need to make anything executable**, because the archive carries
+that permission and extracting restores it — which is exactly why Ilwaco is packed in a `.tar.gz`
+rather than offered as a bare `.AppImage`.
 
-> **If you double-click the `.tar.gz` instead**, an archive *viewer* opens and lists the AppImage
-> inside it. **Clicking the AppImage in that window does nothing** — a viewer shows you what is in an
-> archive, it does not run it. Use its **Extract** button (or close it and right-click → *Extract
-> Here*), then double-click the AppImage that appears in the folder. This trips people up; it is not
-> a sign anything is wrong.
+> **Double-clicking the `.tar.gz` does not install anything.** It opens an archive *viewer* that
+> lists the AppImage inside. **Clicking the AppImage in that window does nothing** — a viewer shows
+> you what an archive contains, it does not run it. Use that window's **Extract** button, then
+> double-click the AppImage in the folder it extracted to. This catches people out; nothing is wrong.
+
+> **If double-clicking the extracted AppImage still does nothing**, its executable permission was
+> dropped by the extraction tool. Right-click it → **Properties** → **Permissions** → tick **Allow
+> executing file as program**. Or in a terminal: `chmod +x Ilwaco-IDE-1.3.8-x86_64.AppImage`.
 
 After the first launch, Ilwaco adds itself to your applications menu, so from then on you can start it
 the same way as any other program. Keep the `.AppImage` file where you put it — the menu entry points
