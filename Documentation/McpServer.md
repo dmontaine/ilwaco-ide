@@ -342,7 +342,7 @@ was reverted afterwards.
 - **Verify by effect.** Build the editor (~4 min, background it), launch on `:0`, drive the socket with a
   `socket.AF_UNIX` Python client (recipe below) or spawn `./ilwaco-mcp` and speak MCP over its stdio.
   Always `git checkout Settings/` after a launch (the IDE writes session state on exit), and remove any
-  agent-created test files (from `Examples/`, or `Projects/` for `create_project` tests) before
+  agent-created test files (from `Examples/`, or `projects/` for `create_project` tests) before
   committing. Kill leftover instances with `pkill -x ilwaco` (not `-f` — it matches the caller).
 - **Driving the Options dialog with `xdotool` needs the window raised in the *same* command.** The
   desktop's other windows can take the raise between two Bash calls, so a click aimed at the dialog

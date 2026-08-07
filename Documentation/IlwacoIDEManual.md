@@ -14,7 +14,7 @@ or is not documented as working.
 rewritten, not adapted line-by-line:
 
 - **Install/launch is Linux.** No installer or `.exe`; Ilwaco ships as an AppImage (planned) with an
-  external writable Projects/Examples/Docs area — see the packaging notes in
+  external writable projects/Examples/Docs area — see the packaging notes in
   [PROJECT_STATUS.md](../PROJECT_STATUS.md). Building from source uses `./build-linux.sh`.
 - **Opinionated surface.** Sections describing removed features (compiler picker, multiple UI
   languages, the AI assistants, encoding/newline pickers, `.vfs` sessions, the "when the IDE starts"

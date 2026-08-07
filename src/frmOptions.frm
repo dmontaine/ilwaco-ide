@@ -1875,7 +1875,7 @@ pfOptions = @fOptions
 		lblProjectsPath.Parent = @vbxGeneral
 		' txtProjectsPath
 		txtProjectsPath.Name = "txtProjectsPath"
-		txtProjectsPath.Text = "./Projects"
+		txtProjectsPath.Text = "./projects"
 		txtProjectsPath.Align = DockStyle.alClient
 		txtProjectsPath.ExtraMargins.Bottom = 0
 		txtProjectsPath.ExtraMargins.Right = 0
@@ -1956,7 +1956,7 @@ pfOptions = @fOptions
 		' txtInFolder
 		With txtInFolder
 			.Name = "txtInFolder"
-			.Text = "./Projects"
+			.Text = "./projects"
 			.TabIndex = 185
 			.SetBounds 140, 58, 240, 20
 			.Parent = @grbCommandPromptOptions

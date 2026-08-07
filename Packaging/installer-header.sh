@@ -24,7 +24,7 @@ Ilwaco IDE $VERSION installer
   --force        reinstall over an existing installation
   --help         show this message
 
-Installing over an existing copy keeps your Settings, Projects, Examples,
+Installing over an existing copy keeps your Settings, projects, Examples,
 Documentation, Templates and AddIns, and replaces everything else.
 EOF
 }
@@ -67,7 +67,7 @@ if [ "$UPGRADE" = 1 ]; then
 	echo "Upgrading Ilwaco IDE $VERSION in $DEST (keeping your settings and work)..."
 	# Everything the user owns is excluded, so an upgrade never overwrites work.
 	tail -n +"$PAYLOAD_LINE" "$0" | tar -xzf - -C "$DEST" \
-		--exclude='./Settings' --exclude='./Projects' --exclude='./Examples' \
+		--exclude='./Settings' --exclude='./projects' --exclude='./Examples' \
 		--exclude='./Documentation' --exclude='./Templates' --exclude='./AddIns'
 else
 	echo "Installing Ilwaco IDE $VERSION into $DEST..."
@@ -98,7 +98,7 @@ fi
 echo ""
 echo "Ilwaco IDE $VERSION is installed."
 echo "  Start it from your applications menu, or run: $DEST/ilwaco.sh"
-echo "  Your projects live in $DEST/Projects"
+echo "  Your projects live in $DEST/projects"
 echo "  To uninstall, delete $DEST"
 exit 0
 

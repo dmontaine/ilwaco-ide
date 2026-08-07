@@ -11,6 +11,36 @@ for the classified port backlog, [Documentation/AstoriaParity.md](Documentation/
 
 ---
 
+## ✅ DONE (2026-08-07) — MCP write safety, then agent permission levels
+
+**Write safety first, because no permission tier makes an unversioned clobber safe.** Two live
+data-loss paths, found by reading the write path during the permissions discussion rather than from a
+failure report: `write_file` wrote to disk with no check for an open dirty tab (the very thing
+CLAUDE.md tells humans never to do), and `set_active_file_content` replaced the whole buffer with no
+version check. Now `dirty_buffer` and an opt-in `expected_version`/`version_mismatch`; `read_file` and
+`get_active_file` hand out the token. Detail in [McpServer.md](Documentation/McpServer.md).
+
+**Then five permission levels** — Off / Read-only / Edit / **Build & Run** / Trusted — replacing the
+`AllowAgentControl` boolean (owner-directed, 2026-08-07). **The default stays Build & Run**: Ilwaco is
+agent-first, and a default that let an agent edit but not build would break the edit-build-fix loop.
+So it is two opt-in restrictions below the old capability and one opt-in expansion above it. One combo
+in Tools ▸ Options ▸ General (the old checkbox became its `Off` value — an option removed, not added),
+the level shown in the status bar, `AllowAgentControl=true/false` migrating to `Build & Run`/`Off`, and
+**one gate at the dispatcher** so no handler can forget; unclassified commands fail **closed**.
+
+Verified by effect at four levels over the socket, plus the Options combo and status bar by screenshot.
+**Trusted gates nothing yet** — the designer tools and outside-the-project access it is meant to unlock
+are still to build, which is the point of landing the mechanism once.
+
+**Next on this thread, in order:** the activity log (agent actions into a pane — arguably the highest
+value of the three, since it is what makes the Edit level trustworthy), then the Trusted-level path
+relaxation, then the designer tools. Per-client pairing was considered and **rejected**: on a
+same-user Unix socket any process running as the user can already read the source or the pairing
+token, so it buys accountability the activity log gives more cheaply, at the cost of the "it just
+works" default.
+
+---
+
 ## ✅ DONE (2026-08-07) — Ilwaco installs: release staging, installer, toolchain, AppDir
 
 **There is a single-file AppImage, and it works.** Following Astoria's two-step pattern:

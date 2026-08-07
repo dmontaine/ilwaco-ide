@@ -104,33 +104,41 @@ the shipped path is sound.
 
 ---
 
-## ✅ DONE (2026-08-07) — MCP write safety, then agent permission levels
+## ✅ DONE (2026-08-07) — user-data dir is lowercase `projects`; the seed-patch can no longer break launch
 
-**Write safety first, because no permission tier makes an unversioned clobber safe.** Two live
-data-loss paths, found by reading the write path during the permissions discussion rather than from a
-failure report: `write_file` wrote to disk with no check for an open dirty tab (the very thing
-CLAUDE.md tells humans never to do), and `set_active_file_content` replaced the whole buffer with no
-version check. Now `dirty_buffer` and an opt-in `expected_version`/`version_mismatch`; `read_file` and
-`get_active_file` hand out the token. Detail in [McpServer.md](Documentation/McpServer.md).
+**The rename (owner directive: "keep 'projects' lower case").** Every producer and consumer moved
+together, because Linux is case-sensitive and a half-rename means the IDE writes to one directory
+while the packaging seeds another. Nine files: `Packaging/AppRun` (seed loop), `Packaging/ilwaco.sh`
+(`mkdir`), `Packaging/StageRelease.sh`, `Packaging/installer-header.sh` (the upgrade `--exclude` — a
+miss here would have made an upgrade **overwrite the user's work**), `Settings/ilwaco.ini`
+(`ProjectsPath`, `CommandPromptFolder`), `src/Main.bas` (both INI-read defaults), `src/frmOptions.frm`
+(two designer defaults), and the `ExePath & "Projects"` fallbacks in `src/TabWindow.bas` (×2) and
+`src/frmImageManager.frm`. The dev tree's own `Projects/` was `git mv`'d. **`Templates/Projects/` was
+deliberately left capitalised** — it is the shipped New-Project template store, not the user's work.
 
-**Then five permission levels** — Off / Read-only / Edit / **Build & Run** / Trusted — replacing the
-`AllowAgentControl` boolean (owner-directed, 2026-08-07). **The default stays Build & Run**: Ilwaco is
-agent-first, and a default that let an agent edit but not build would break the edit-build-fix loop.
-So it is two opt-in restrictions below the old capability and one opt-in expansion above it. One combo
-in Tools ▸ Options ▸ General (the old checkbox became its `Off` value — an option removed, not added),
-the level shown in the status bar, `AllowAgentControl=true/false` migrating to `Build & Run`/`Off`, and
-**one gate at the dispatcher** so no handler can forget; unclassified commands fail **closed**.
+**Verified by effect at all three layers**, not just compiled: `AppRun` against a stub payload seeds
+`projects/` and no capital `Projects/`; `ilwaco.sh` `mkdir`s `projects/`; and the **running IDE**,
+asked over the MCP socket for a new project, answered
+`/home/don/Projects/ilwaco-ide/projects/RenameProbe/RenameProbe.vfp` — so `ProjectsPath` resolves
+lowercase through the real code path.
 
-Verified by effect at four levels over the socket, plus the Options combo and status bar by screenshot.
-**Trusted gates nothing yet** — the designer tools and outside-the-project access it is meant to unlock
-are still to build, which is the point of landing the mechanism once.
+**One adjacent defect fixed while in there:** `src/ilwaco.bas:74` built its no-main-file fallback as
+`*ProjectsPath & "\1"` — a **Windows** separator. `GetFolderName` never finds a `\` on Linux, so
+Run ▸ command prompt opened in the exe directory instead of the projects directory. Now uses `Slash`.
 
-**Next on this thread, in order:** the activity log (agent actions into a pane — arguably the highest
-value of the three, since it is what makes the Edit level trustworthy), then the Trusted-level path
-relaxation, then the designer tools. Per-client pairing was considered and **rejected**: on a
-same-user Unix socket any process running as the user can already read the source or the pairing
-token, so it buys accountability the activity log gives more cheaply, at the cost of the "it just
-works" default.
+**The seed-patch is insert-if-missing (was replace-only).** `ilwaco.sh`'s first-run patch rewrote only
+*existing* keys and `die`d if one was absent — so any future rename or reorder of `Compiler64Arguments`
+or the `[Compilers]` keys would have broken **launch**, not merely a build. The awk now appends a
+missing key to its section, and a missing section to the file. Six fixtures pass (replace; insert into
+an existing section; append an absent section; BOM on line 1 preserved byte-for-byte; our section last
+in the file; and a same-named key in a *different* section left untouched).
+
+**FUSE was measured and is not the problem people assume.** Our AppImage carries the modern static-pie
+[type2-runtime](https://github.com/AppImage/type2-runtime) — `readelf -d` shows **no `NEEDED` entries
+at all**, so the widely-repeated "AppImages need `libfuse2`" is about the *old* AppImageKit runtime, not
+ours. It wants a `fusermount` **binary** (`fuse3`, present on desktop Debian 13), and
+`APPIMAGE_EXTRACT_AND_RUN=1` works with `fusermount` deliberately broken. What remains is the
+executable bit, which is a packaging-format decision — see NEXT 1.
 
 ---
 
@@ -151,32 +159,19 @@ the whole parity list is complete**, so nothing here is release-gated — sequen
    b. **Examples — DONE** (deleted the broken half, 54 build-verified through the shipped toolchain).
       Full detail in the DONE section above and [ExamplesAudit.md](Documentation/ExamplesAudit.md).
 
-1. **⭐ FRESH owner directives (2026-08-07) — interrupted before starting; do these first.** Came out of
-   the seeded-examples / AppImage investigation (which itself confirmed 54/54 seeded examples build via
-   the bundled toolchain — the compile path is *not* the problem). The owner asked to:
+1. **Fresh owner directives (2026-08-07) — (a) and (b-iii) DONE; one product decision left in (b).**
+   See the DONE section below for what landed. What remains is a single owner call:
 
-   a. **Rename the user-data `Projects` directory to lowercase `projects`.** Owner directive, verbatim:
-      "keep 'projects' lower case." The AppImage seeds `~/ilwaco-ide/Projects` (capital P) today; the
-      owner wants `~/ilwaco-ide/projects`. Touch every producer/consumer of the name together (they
-      must agree, and Linux is case-sensitive): `Packaging/AppRun` (the seed loop list), `Packaging/
-      ilwaco.sh` (`mkdir -p "$HERE/Projects"`), `Packaging/StageRelease.sh` (`mkdir -p "$RELEASE/
-      Projects"`), and **grep `src/` for `Projects`** — the IDE has a default project/output path and
-      likely a `Projects`-relative default in `ilwaco.ini`; find and lower-case those too, or the IDE
-      writes to `Projects` while the seed makes `projects`. Verify by effect: seed a clean
-      `ILWACO_HOME`, confirm `projects/` is what's created and what New Project defaults into.
-
-   b. **Dig into / harden the "run straight from Downloads" caveats.** Confirmed this session that a
-      fresh run *does* install into `~/ilwaco-ide` and creates a user-owned, writable `Projects/`
-      (reproduced AppRun's seed loop by effect). The gaps a beginner hits are upstream of AppRun:
-      **(i)** the downloaded `.AppImage` is not executable — needs `chmod +x` / "allow executing";
-      **(ii)** **FUSE** — Debian 13 and other recent distros lack `libfuse2`, so a double-click fails to
-      mount; fallbacks are `--appimage-extract-and-run`, installing `libfuse2`, or shipping the `--run`
-      self-extracting variant (which sidesteps FUSE). Decide what the product does about these (docs? a
-      launcher note? default to the self-extracting build?). **(iii)** A real fragility found while
-      tracing: `ilwaco.sh`'s first-run seed-patch only *rewrites existing* keys in `ilwaco.ini` and
-      `die`s at launch if a target key is absent (`Compiler64Arguments`, `[Compilers] DefaultCompiler64/
-      Version_0/Path_0`) — they exist today, but a future `[Compilers]` reorder/rename breaks *launch*,
-      not just a build. Make the patch **insert-if-missing** instead of replace-only.
+   **How is Ilwaco downloaded?** FUSE turned out to be a non-issue (measured — see below), so the only
+   real beginner trap is the **executable bit**: a browser saves a download mode 644, so a double-click
+   cannot run it. **No self-extracting format fixes this** — a self-extractor is itself a program that
+   needs `+x`, which is why our existing `.run` has the same trap. Only a *plain* archive fixes it,
+   because the extractor is already installed and executable. Measured carrier comparison in
+   [Packaging.md](Documentation/Packaging.md) "What the AppImage needs on the USER's machine":
+   `.tar.gz` keeps mode 755 through `tar`; `.zip` keeps it through the `unzip` CLI but **loses it**
+   through other common extractors, because Unix modes are an extension in zip and core in tar.
+   So the options are: ship the AppImage inside a **`.tar.gz`** as the primary download (a few lines in
+   `BuildInstaller.sh`), or keep the bare `.AppImage` and document `chmod +x`. Not yet decided.
 
 2. **Packaging** — **Ilwaco now ships as a single-file AppImage.** `Packaging/StageRelease.sh` →
    `../ilwaco-ide-release`, `Packaging/BuildInstaller.sh` →

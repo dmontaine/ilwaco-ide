@@ -24,7 +24,7 @@
 #     ilwaco, ilwaco-mcp,      real copies — ExePath() must be writable, and
 #     ilwaco.sh                ilwaco.sh must sit beside them
 #     Settings/ Temp/          real, writable — the IDE writes these
-#     Projects/ Examples/ …    the user's work, seeded once and never touched
+#     projects/ Examples/ …    the user's work, seeded once and never touched
 #     Compilers/ Help/ …       symlinks into the mounted image
 #     Toolchain/               symlink to the image's bundled link toolchain
 #
@@ -49,7 +49,7 @@ mkdir -p "$APPHOME" || die "cannot create $APPHOME"
 # --- seeded once, then owned by the user -------------------------------------
 # Never refreshed: a user's settings, projects and edited examples must survive
 # an upgrade.
-for d in Settings Templates AddIns Projects Examples Documentation; do
+for d in Settings Templates AddIns projects Examples Documentation; do
 	[ -e "$APPHOME/$d" ] && continue
 	if [ -d "$PAYLOAD/$d" ]; then cp -a "$PAYLOAD/$d" "$APPHOME/$d"; else mkdir -p "$APPHOME/$d"; fi
 done

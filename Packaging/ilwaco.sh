@@ -27,7 +27,7 @@ die() { echo "Ilwaco: $*" >&2; exit 1; }
 [ -d "$TOOLCHAIN" ]    || die "the bundled compiler toolchain is missing from $HERE"
 [ -w "$HERE" ]         || die "$HERE is not writable — Ilwaco stores its settings beside itself"
 
-mkdir -p "$HERE/Temp" "$HERE/Projects"
+mkdir -p "$HERE/Temp" "$HERE/projects"
 
 # --- first-run settings ------------------------------------------------------
 # Two things the shipped Settings/ilwaco.ini cannot carry, because both depend
@@ -51,12 +51,27 @@ if [ -f "$patch_file" ] && [ -f "$ini" ]; then
 		# "[Parameters]". Comparing raw makes that whole section silently fail to
 		# patch while later sections succeed — compare BOM-stripped, but print
 		# the original so nothing else about the file changes.
+		#
+		# Insert-if-missing, not replace-only: a replace-only patch turns any
+		# future rename or reorder of these keys into a failure to LAUNCH (the
+		# check below dies), not merely a failed build. Missing key → appended to
+		# its section; missing section → appended to the file.
 		awk -v sec="$section" -v key="$key" -v val="$val" '
+			function emit() { print key "=" val; done = 1 }
 			{ line = $0 }
 			NR == 1 && substr(line, 1, 3) == "\357\273\277" { line = substr(line, 4) }
-			line ~ /^\[/ { insec = (line == sec) }
-			insec && index(line, key "=") == 1 { print key "=" val; next }
+			line ~ /^\[/ {
+				if (insec && !done) emit()	# our section ended without the key
+				insec = (line == sec)
+				if (insec) seen = 1
+				print; next
+			}
+			insec && !done && index(line, key "=") == 1 { emit(); next }
 			{ print }
+			END {
+				if (insec && !done) emit()		# our section ran to end of file
+				else if (!seen) { print sec; emit() }	# no such section at all
+			}
 		' "$ini" > "$ini.tmp" && mv -f "$ini.tmp" "$ini"
 
 		# A miss here stays invisible until the user's first build fails deep

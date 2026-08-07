@@ -11191,7 +11191,7 @@ Function GetResourceFile(WithoutMainNode As Boolean = False, ByRef FirstLine As 
 				If EndsWith(LCase(*File), ".rc") Then
 					ResourceFile = *File
 					FolderNameRes = GetFolderName(ResourceFile)
-					If FolderNameRes = "" Then ResourceFile = IIf(FolderName = "", ExePath & Slash & "Projects" & Slash, FolderName) & ResourceFile
+					If FolderNameRes = "" Then ResourceFile = IIf(FolderName = "", ExePath & Slash & "projects" & Slash, FolderName) & ResourceFile
 					Exit For
 				End If
 			End If
@@ -11206,7 +11206,7 @@ Function GetResourceFile(WithoutMainNode As Boolean = False, ByRef FirstLine As 
 		Var Pos1 = InStrRev(MainFile, ".")
 		ResourceFile = IIf(Pos1 = 0, MainFile & ".rc", ..Left(MainFile, Pos1 - 1) & ".rc")
 		FolderNameRes = GetFolderName(ResourceFile)
-		If FolderNameRes = "" Then ResourceFile = IIf(FolderName = "", ExePath & Slash & "Projects" & Slash, FolderName) & ResourceFile
+		If FolderNameRes = "" Then ResourceFile = IIf(FolderName = "", ExePath & Slash & "projects" & Slash, FolderName) & ResourceFile
 	End If
 	Return ResourceFile
 End Function

@@ -65,8 +65,11 @@ as the durable register:
   project name — confusing for a beginner.
   Ilwaco re-opens the correct file (Astoria's version silently re-opened nothing), but making the
   rename coherent means moving the `.vfp` and updating `ProjectName` inside it. Found 2026-08-04.
-- **AppImage packaging is unbuilt.** Read-only bundle + external writable Projects/Examples/Docs is
-  the plan; still open.
+- **The download's executable bit is unsolved.** AppImage packaging itself is **done** (read-only
+  bundle + external writable `projects`/Examples/Docs, seeded into `~/ilwaco-ide`), but a browser
+  saves the downloaded file mode 644, so a beginner's first double-click does nothing. No
+  self-extracting format fixes it — the self-extractor needs `+x` too. Measured carrier comparison and
+  the open decision: [Packaging.md](Packaging.md) and PROJECT_STATUS NEXT 1.
 - **The launched terminal shows no program output on this box (found 2026-08-06).** Run opens the
   terminal and the program runs to completion — the window's own banner says "The child process exited
   normally with status 0" — but its content area is blank, so a user sees an empty window instead of

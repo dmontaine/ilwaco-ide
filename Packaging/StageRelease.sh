@@ -104,7 +104,7 @@ chmod +x "$RELEASE/ilwaco" "$RELEASE/ilwaco-mcp" 2>/dev/null || true
 for d in Compilers Controls Templates Resources Help AddIns Examples Settings CHMVIEW Documentation; do
 	copy "$d"
 done
-mkdir -p "$RELEASE/Projects" "$RELEASE/Temp"
+mkdir -p "$RELEASE/projects" "$RELEASE/Temp"
 
 # --- prunes ------------------------------------------------------------------
 # The compiler's own manual and samples duplicate our Help/ and Examples/.
@@ -174,7 +174,7 @@ EOF
 #   PROJECT_STATUS, HISTORY, CLAUDE, CHANGELOG, README, *_Change.log,
 #   changes_en.txt            maintainer-facing
 #   .claude .vscode *.code-workspace   dev tooling
-#   Projects/ Temp/           local scratch — recreated empty above
+#   projects/ Temp/           local scratch — recreated empty above
 
 echo ""
 echo "StageRelease.sh: staged $RELEASE from commit $HEAD_SHORT"

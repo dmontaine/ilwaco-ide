@@ -71,7 +71,9 @@ Sub RunCmd(Param As Any Ptr)
 	Dim As UString MainFile = GetMainFile()
 	Dim As UString cmd
 	Dim As WString Ptr Workdir, CmdL
-	If Trim(MainFile) = "" OrElse Trim(MainFile) = ML("Untitled") Then MainFile = GetFullPath(*ProjectsPath & "\1", pApp->FileName)
+	'' No main file: fall back to the projects folder. GetFolderName wants a path with a
+	'' filename on it, so a dummy one is appended — with the platform separator, not "\".
+	If Trim(MainFile) = "" OrElse Trim(MainFile) = ML("Untitled") Then MainFile = GetFullPath(*ProjectsPath & Slash & "1", pApp->FileName)
 	If OpenCommandPromptInMainFileFolder Then
 		WLet(Workdir, GetFolderName(MainFile))
 	Else

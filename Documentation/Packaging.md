@@ -5,7 +5,7 @@ executable, and both *runs* Ilwaco and *compiles FreeBASIC* with it — nothing 
 `apt install`, no `-dev` packages. This document records what that costs, what is built so far,
 and the decisions taken along the way.
 
-Scripts live in [`Packaging/`](../Packaging). User-editable data (Projects, Examples,
+Scripts live in [`Packaging/`](../Packaging). User-editable data (projects, Examples,
 Documentation) lives **outside** the read-only image and is seeded on first run.
 
 ---
@@ -84,7 +84,7 @@ A self-extracting zip is the Windows idiom, and `unzip` is not guaranteed on a m
 install, whereas `tar` and `gzip` effectively are. So the default output is a self-extracting shell
 archive — a shell script with a `tar.gz` appended, the makeself pattern — which needs nothing
 installed either to build or to run. It takes `--dir` and `--force`, adds a per-user menu entry (no
-root anywhere), and on reinstall **keeps `Settings`, `Projects`, `Examples`, `Documentation`,
+root anywhere), and on reinstall **keeps `Settings`, `projects`, `Examples`, `Documentation`,
 `Templates` and `AddIns`** while replacing everything else, so an upgrade never eats a user's work.
 
 The better single-file answer on Linux, and the format chosen for the primary download, is an
@@ -96,6 +96,33 @@ does not vendor Inno Setup. Installed here at `~/.local/bin/appimagetool` from t
 [AppImage/appimagetool](https://github.com/AppImage/appimagetool) continuous release (build 295,
 2025-12-04, `sha256 a6d71e2b…cb9d13e0`). It needs FUSE at runtime. A build machine without it still
 produces the `.run`.
+
+### What the AppImage needs on the USER's machine (measured, 2026-08-07)
+
+Two things stand between a downloaded file and a running IDE, and only one of them is ours to fix.
+
+**FUSE — milder than it is usually reported.** Our AppImage carries the modern
+[type2-runtime](https://github.com/AppImage/type2-runtime) (commit `75849dc`), a **static-pie**
+binary with libfuse linked *in*. Checked with `readelf -d`: it has no `NEEDED` entries at all, so
+the widely-repeated "AppImages need `libfuse2`" does **not** apply here — that is the old
+AppImageKit runtime. What it actually needs is a **`fusermount` binary on `PATH`**, i.e. the
+`fuse3` package, which desktop installs of Debian 13 and its peers already have. Measured on this
+host: with `fusermount` reachable, `--appimage-mount` mounts at `/tmp/.mount_XXXXXX`; with it
+hidden, the runtime prints *"Cannot mount AppImage, please check your FUSE setup"* and points at
+`--appimage-extract`. The escape hatch is built in and verified working with `fusermount`
+deliberately broken:
+
+```bash
+APPIMAGE_EXTRACT_AND_RUN=1 ./Ilwaco-IDE-1.3.8-x86_64.AppImage
+```
+
+**The executable bit is the real beginner trap, and no runtime can fix it.** A browser writes a
+download as mode 644, so a double-click cannot run it whatever we embed; the user needs `chmod +x`
+or the file manager's *Allow executing file as program*. The `.run` fallback has exactly the same
+problem, so switching format does not dodge it. The one packaging move that does is shipping the
+AppImage **inside a `.tar.gz`** — tar restores mode bits, so extracting yields an already-executable
+file. Whether the primary download becomes that archive is an open product decision, not a
+settled one.
 
 ---
 
@@ -203,7 +230,7 @@ So `AppRun` maintains a writable **app home**, `~/Ilwaco` by default (`ILWACO_HO
 | --- | --- |
 | `ilwaco`, `ilwaco-mcp` | **real copies** — `ExePath()` must be writable. Refreshed when the image ships a different build, so upgrading the AppImage upgrades the IDE |
 | `Settings/`, `Temp/` | real and writable; the IDE writes these |
-| `Projects/`, `Examples/`, `Documentation/`, `Templates/`, `AddIns/` | the user's work — seeded once, then **never touched again**, so edits survive an upgrade |
+| `projects/`, `Examples/`, `Documentation/`, `Templates/`, `AddIns/` | the user's work — seeded once, then **never touched again**, so edits survive an upgrade |
 | `Compilers/`, `Controls/`, `Resources/`, `Help/`, `CHMVIEW/` | symlinks into the mounted image |
 | `.toolchain/`, `.link-shim/` | the bundled toolchain, and the generated GTK link targets |
 
@@ -240,7 +267,7 @@ directory laid out the tree, patched all three settings to the install path, and
 entry; `ilwaco.sh` launched the IDE (window opens, only the known-harmless `AppAddin`/`AppConsole`
 resource warnings). A real MFF GUI example (`Examples/Class Form Example.bas`) compiled from the
 installed tree and **the resulting program ran and opened its window**. Re-running the installer
-over that installation upgraded the binary while **leaving a user file in `Projects/` and a
+over that installation upgraded the binary while **leaving a user file in `projects/` and a
 hand-edited `Settings/ilwaco.ini` untouched**.
 
 **AppImage route:** `BuildInstaller.sh` produced a 49 MB `Ilwaco-IDE-1.3.8-x86_64.AppImage`.
