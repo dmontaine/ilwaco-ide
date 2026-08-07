@@ -6,7 +6,7 @@ The audit below found that **every pre-existing example failed to compile on Lin
 Windows programs. Per owner decision (2026-08-07) the **22 audited pre-existing projects were
 removed** (`git rm`), together with **6 stale Windows-era duplicates** of the ported `Calculator`,
 `FiveInARow` and `Maze` that lingered under `Examples/Game/`, and four empty placeholder dirs
-(`FreeBASIC Examples`, `MariaDBBox Examples`, `MyFbFramework Examples`, `SQLite3 Examples`). The two
+(`FreeBASIC Examples`, `MariaDBBox Examples`, `Framework Examples`, `SQLite3 Examples`). The two
 loose single-file examples at the `Examples/` root (`Class Form Example.bas`, and `try_catch_throw.bas`
 — Win32 SEH, also Linux-broken) were **kept as porting candidates** and each moved into its own
 directory; `Add-In/`, `Graphics/` and `Web Page/` likewise remain as un-audited candidates. Every

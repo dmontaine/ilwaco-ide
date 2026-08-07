@@ -1,10 +1,10 @@
-# Controls — the MyFbFramework control reference (GTK)
+# Controls — the Framework control reference (GTK)
 
 **Status: scaffold.** This is a tracked placeholder, not yet written for Ilwaco. It exists so the
 document has an analogue, is listed in the rule table, and is caught by `DocCheck` when it goes
 stale — see [TestPlan.md](TestPlan.md).
 
-**Purpose.** Describe each MyFbFramework control Ilwaco uses — what it is, its key properties and
+**Purpose.** Describe each Framework control Ilwaco uses — what it is, its key properties and
 events, and the constructor/idiom to create one — as it behaves on the **GTK3** build.
 
 **Source to adapt.** Astoria maintains a full `Controls.md` (~800 lines) for its Win64 build. Adapt

@@ -6,7 +6,7 @@ Small, complete programs for someone starting out. Every one is an Ilwaco projec
 | Folder | What it is |
 | --- | --- |
 | [Console](Console/) | 25 console programs covering an introductory programming course — output, variables, input, decisions, loops, arrays, procedures, files, sorting and searching. |
-| [GUI](GUI/) | The same ground again, as windowed programs built with MyFbFramework — controls, events, timers, dialogs, menus, drawing, and splitting a program across several files. |
+| [GUI](GUI/) | The same ground again, as windowed programs built with Framework — controls, events, timers, dialogs, menus, drawing, and splitting a program across several files. |
 
 ## Which to read first
 
@@ -25,7 +25,7 @@ they take the clear one — `24_BubbleSort` uses the slowest sort in common use 
 one you can follow by hand.
 
 They are **not** a reference. For that see [the manual](../../Documentation/IlwacoIDEManual.md) for
-the IDE and [the framework guide](../../Documentation/MyFbFrameworkGuide.md) for the controls.
+the IDE and [the framework guide](../../Documentation/FrameworkGuide.md) for the controls.
 
 The other folders under `Examples/` are real programs rather than teaching material — larger, and
 several need particular hardware. They are worth reading once these make sense; each carries a

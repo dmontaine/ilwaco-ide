@@ -62,6 +62,66 @@ name distinct and mapped in one place.
 
 ---
 
+## ⏳ HANDOFF (2026-08-07) — framework renamed to `Framework`; license headers + Stage A pending
+
+Mid-thread handoff (owner ran out of usage credits). Three interlocking pieces:
+
+**1. DONE this session — framework renamed `Controls/MyFbFramework` → `Controls/Framework`** (owner:
+"one project, Ilwaco; not tracking any upstream"; match Astoria). The `mff/` subdir and
+`libmff64_gtk3.so`/`mff` names are unchanged. Scope: the directory (`git mv`), `MyFbFramework.vfp` →
+`Framework.vfp`, the doc/help files named `MyFbFramework*`, and **all of Ilwaco's own** path/code/build/
+settings/template references (`src/Main.bas`, `src/TabWindow.bas`, `src/frmComponents.frm`,
+`build-linux.sh`, `Settings/ilwaco.ini`, `Templates/Projects/*.vfp`, `.vscode`, `ilwaco.vfp`, etc.).
+**Attribution deliberately preserved:** each framework file's header still reads *"This file is part of
+MyFBFramework"* (the original LGPL project + authors) — this matches Astoria, which renamed the *folder*
+but kept the file-header attribution. Binaries (stale Windows `.dll`/`.exe`) and the real upstream repo
+URLs (`github.com/XusinboyBekchanov/MyFbFramework`, attribution only) were left intact; the one
+historical Astoria changelog rename-entry was preserved. **This makes the 29 examples' designer path
+(`ControlLibrary="Controls/Framework"`) resolve** — they always pointed at Astoria's folder name.
+Build: the designer **lib rebuilt** into `Controls/Framework/`; the editor build was verified at handoff
+(see the commit). Memory `project-mff-is-our-fork` / `reference-linux-build` updated.
+
+**2. NEXT (owner-directed, NOT started) — add the LGPL/modification header block to every framework
+file**, exactly as Astoria did. The template (from Astoria's `Controls/Framework/mff/*.bi`) keeps the
+original attribution block, then appends:
+```
+'
+' Ilwaco IDE Modifications
+' copyright 2026 Donald Montaine
+'
+' This program is free software; you can redistribute it and/or modify
+' it under the terms of the GNU Lesser General Public License as published by
+' the Free Software Foundation; either version 3, or (at your option)
+' any later version.
+' ... (full LGPL v3 "no warranty" + FSF-address boilerplate — copy Astoria's verbatim,
+'      substituting "Ilwaco IDE" for "Astoria IDE") ...
+```
+Astoria used **"Astoria IDE Modifications"**; Ilwaco uses **"Ilwaco IDE Modifications"**, same owner
+(Donald Montaine). Apply to every `Controls/Framework/mff/*.bi` and `*.bas` (and the framework's other
+sources) that lacks it. Mechanical — a candidate for a Sonnet worker with the exact block; **the worker
+returns to Opus for the build.** Copy Astoria's exact wording so the LGPL text is verbatim.
+
+**3. IN-FLIGHT — Stage A (the tcView bottom button row) is STASHED** (`git stash` "Stage A: tcView
+button row (WIP, unverified crash)"). It builds and the **button row renders at the bottom**, but: (a)
+owner wants the order **Code · Code And Form · Form** with **text labels** (currently CodeAndForm/Code/
+Form, icon-only) — the fix is `FCaption` on each `tbrView.Buttons.Add` + `gtk_toolbar_set_style(...,
+GTK_TOOLBAR_BOTH_HORIZ)`, and reordering the three `Add` calls (handler/methods key off `Button.Name`,
+not index, so reordering is safe); (b) a **crash on switching views** on a *form* (GTK-CRITICAL
+`gtk_container_propagate_draw: GTK_IS_WIDGET(child) failed`) — isolated to the designer/form path (a
+plain module didn't crash), and it was entangled with the missing `Controls/Framework` designer library,
+which the rename (piece 1) now provides — so **re-test the crash on the renamed tree first**; it may have
+been the stale control-library fallback. There is also a benign warning to fix at `src/TabWindow.bas`
+(the `CurrentView() = "Code"` comparisons want a `CBool(...)` wrap). Full Stage-A design is in the
+`Docs: stage the remaining UI work` commit and [AstoriaParity.md](Documentation/AstoriaParity.md) "UI
+work — staged sequence".
+
+**Resume order:** (i) build-verify the renamed editor + confirm the designer loads a form (open
+`Examples/Calculator`); (ii) do the license-header block (piece 2); (iii) `git stash pop` Stage A,
+apply the order+text fix, rebuild, and re-test the view-switch crash against the now-present
+`Controls/Framework` library.
+
+---
+
 ## ✅ DONE (2026-08-07) — Ilwaco ships three ways: `.deb`, `.rpm` and a no-root `.tar.gz`
 
 Owner directive: ".deb and .rpm — between them they cover over 90% of the Linux market", then the
@@ -123,44 +183,6 @@ correct home → **the IDE opened on `:0`** with IntelliSense loaded, and the `/
 confirmed untouched afterwards. With no display the same launcher prints the message and exits 1. Glibc floor 2.34 gives Debian 12+, Ubuntu 22.04+, Mint 21+,
 Fedora 35+, RHEL 9+, openSUSE Leap 15.5+. **Not yet verified: installing the `.rpm` on real Fedora**
 — it is built and inspected only (see NEXT 1).
-
----
-
-## ✅ DONE (2026-08-07) — user-data dir is lowercase `projects`; the seed-patch can no longer break launch
-
-**The rename (owner directive: "keep 'projects' lower case").** Every producer and consumer moved
-together, because Linux is case-sensitive and a half-rename means the IDE writes to one directory
-while the packaging seeds another. Nine files: `Packaging/AppRun` (seed loop), `Packaging/ilwaco.sh`
-(`mkdir`), `Packaging/StageRelease.sh`, `Packaging/installer-header.sh` (the upgrade `--exclude` — a
-miss here would have made an upgrade **overwrite the user's work**), `Settings/ilwaco.ini`
-(`ProjectsPath`, `CommandPromptFolder`), `src/Main.bas` (both INI-read defaults), `src/frmOptions.frm`
-(two designer defaults), and the `ExePath & "Projects"` fallbacks in `src/TabWindow.bas` (×2) and
-`src/frmImageManager.frm`. The dev tree's own `Projects/` was `git mv`'d. **`Templates/Projects/` was
-deliberately left capitalised** — it is the shipped New-Project template store, not the user's work.
-
-**Verified by effect at all three layers**, not just compiled: `AppRun` against a stub payload seeds
-`projects/` and no capital `Projects/`; `ilwaco.sh` `mkdir`s `projects/`; and the **running IDE**,
-asked over the MCP socket for a new project, answered
-`/home/don/Projects/ilwaco-ide/projects/RenameProbe/RenameProbe.vfp` — so `ProjectsPath` resolves
-lowercase through the real code path.
-
-**One adjacent defect fixed while in there:** `src/ilwaco.bas:74` built its no-main-file fallback as
-`*ProjectsPath & "\1"` — a **Windows** separator. `GetFolderName` never finds a `\` on Linux, so
-Run ▸ command prompt opened in the exe directory instead of the projects directory. Now uses `Slash`.
-
-**The seed-patch is insert-if-missing (was replace-only).** `ilwaco.sh`'s first-run patch rewrote only
-*existing* keys and `die`d if one was absent — so any future rename or reorder of `Compiler64Arguments`
-or the `[Compilers]` keys would have broken **launch**, not merely a build. The awk now appends a
-missing key to its section, and a missing section to the file. Six fixtures pass (replace; insert into
-an existing section; append an absent section; BOM on line 1 preserved byte-for-byte; our section last
-in the file; and a same-named key in a *different* section left untouched).
-
-**FUSE was measured and is not the problem people assume.** Our AppImage carries the modern static-pie
-[type2-runtime](https://github.com/AppImage/type2-runtime) — `readelf -d` shows **no `NEEDED` entries
-at all**, so the widely-repeated "AppImages need `libfuse2`" is about the *old* AppImageKit runtime, not
-ours. It wants a `fusermount` **binary** (`fuse3`, present on desktop Debian 13), and
-`APPIMAGE_EXTRACT_AND_RUN=1` works with `fusermount` deliberately broken. What remains is the
-executable bit, which is a packaging-format decision — see NEXT 1.
 
 ---
 
@@ -311,7 +333,7 @@ document and commit per item.
 **Repo-hygiene note:** the `./ilwaco` binary is tracked **by owner directive (2026-08-04) — do not
 `.gitignore` it** (the repo moves between two machines). Rebuild it (`./build-linux.sh editor`) and commit
 it alongside source changes so the tracked blob stays current. Same for the designer lib
-`Controls/MyFbFramework/libmff64_gtk3.so` when framework source changes.
+`Controls/Framework/libmff64_gtk3.so` when framework source changes.
 
 ---
 
@@ -339,7 +361,7 @@ off in Tools ▸ Options ▸ General; the status bar shows which. See
 **Build / run (self-contained — shim is vendored).**
 - Build: `./build-linux.sh` — `editor` | `lib` | `all`.
 - Run: `LD_LIBRARY_PATH="$(./build-linux.sh --print-shim)" DISPLAY=:0 ./ilwaco`.
-- Source `src/ilwaco.bas` → binary `./ilwaco`; designer lib `Controls/MyFbFramework/libmff64_gtk3.so`
+- Source `src/ilwaco.bas` → binary `./ilwaco`; designer lib `Controls/Framework/libmff64_gtk3.so`
   (rebuild with `lib` or the toolbox errors); settings `Settings/ilwaco.ini`.
 - The shim is now **fully in-repo**: `Compilers/shim/libtinfo.so.5` + the GTK `-dev` symlinks under
   `Compilers/shim/gtk-dev/` — no per-session scratchpad shim needed. `build-linux.sh` wires them up.

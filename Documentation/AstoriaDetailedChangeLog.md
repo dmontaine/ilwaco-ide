@@ -75,7 +75,7 @@ Areas are: **IDE** (`src/`), **Framework/Controls** (`Controls/`), **Templates**
 **Docs**, **Settings**, **Build/Tools**.
 
 **Modifications of possible interest to upstream developers.** Astoria is a permanent fork of
-VisualFBEditor, built on MyFbFramework. Some of what we fixed are bugs in *their* code rather
+VisualFBEditor, built on Framework. Some of what we fixed are bugs in *their* code rather
 than ours — a control removal that leaves a dangling pointer and crashes the next `Form.Show`,
 a modal dialog that opens with nothing focused so `Tab` and `Escape` do nothing, a `WebBrowser`
 that cannot render on current Windows. Those are collected, with symptoms and commit hashes,
@@ -145,7 +145,7 @@ Everything above the **Total: 888 commits, 2026-07-02 to 2026-08-02.**
 ## 2026-07-06
 
 - **`cc9e7dd5`** — Fix form designer grey panel: resolve MFF control library by live module handle
-  Opening a .frm showed a brief flash then an empty grey pnlForm because Designer.CreateControl("Form") returned 0: Designer.Symbols resolved the MyFbFramework library via DyLibLoad on Library.Path, which had been left as the folder "Controls\MyFbFramework" (no mff64.dll) even though the DLL was...
+  Opening a .frm showed a brief flash then an empty grey pnlForm because Designer.CreateControl("Form") returned 0: Designer.Symbols resolved the Framework library via DyLibLoad on Library.Path, which had been left as the folder "Controls\Framework" (no mff64.dll) even though the DLL was...
   *Docs, Examples, Framework/Controls, IDE, Settings, Templates · 32 files*
 - **`e5e10808`** — Edit menu review: flat checkmark toggles for bubble help, autocomplete, and parameter info.
   Open Project and PathUtils fixes improve example discovery; PROJECT_STATUS records owner-approved File and Edit menu reviews.
@@ -216,7 +216,7 @@ Everything above the **Total: 888 commits, 2026-07-02 to 2026-08-02.**
   GetMainFile's scratch-save path (used to analyze an unsaved-to-disk tab) tried to save into ExePath/Temp/Untitled.bas without ensuring the Temp folder exists -- SaveToFile doesn't create missing parent directories, so it failed with "Save file failure!" (repeatedly, once per call site hit during a...
   *IDE · 3 files*
 - **`273df0f5`** — Update local editor state, examples, and build artifacts
-  Commit accumulated working-directory changes from local development sessions: compiled example binaries, temp/settings files, and source edits under src/ and Controls/MyFbFramework.
+  Commit accumulated working-directory changes from local development sessions: compiled example binaries, temp/settings files, and source edits under src/ and Controls/Framework.
   *Build/Tools, Docs, Examples, Framework/Controls, IDE, Settings · 69 files*
 - **`5240ad05`** — Make Projects/MFF path settings survive moving the install folder
   Settings/VisualFBEditor64.ini's ProjectsPath had a hard-coded absolute path from before the repo moved (C:\Users\dmont\VisualFBEditor\...), which broke New Project on startup ("Parent folder not exists") once the folder no longer existed at that location.
@@ -285,7 +285,7 @@ Everything above the **Total: 888 commits, 2026-07-02 to 2026-08-02.**
   T9 — Repo hygiene sweep: - Delete C:\Users\don\Downloads\AstoriaBridge.png reference from src/Temp.rc - Untrack + gitignore src/Temp.bas, src/Temp.rc, src/compile_out.txt (Designer-generated scratch files, not real source per prior decisions) - Add gitignore rules for Examples/**/*64.exe and...
   *Build/Tools, Docs, IDE, Settings · 10 files*
 - **`a132e23f`** — Complete Wave 1 finalization (T8, T12, T13): CI, README, identity/version
-  T8 — CI cleanup: - Delete .github/workflows/windows.bat and its three unverified downloads (7-Zip 9.20, FreeBASIC 1.10.0 from SourceForge, upstream MyFbFramework master.zip) -- the repo is self-contained by policy, CI should prove exactly that instead of re-fetching artifacts it mostly didn't use...
+  T8 — CI cleanup: - Delete .github/workflows/windows.bat and its three unverified downloads (7-Zip 9.20, FreeBASIC 1.10.0 from SourceForge, upstream Framework master.zip) -- the repo is self-contained by policy, CI should prove exactly that instead of re-fetching artifacts it mostly didn't use...
   *Build/Tools, Docs, IDE, Settings · 9 files*
 - **`4394ca2f`** — T3 done: rework PipeCmd -- drop clipboard clobber and blanket shell wrapper
   PipeCmd always ran every command through `cmd /c "..."|clip`, which silently overwrote the user's clipboard on ordinary actions (Open Containing Folder, external tools, Delete Project) and re-parsed filenames/args through cmd.exe's fragile quoting for no reason most callers needed.
@@ -396,7 +396,7 @@ Everything above the **Total: 888 commits, 2026-07-02 to 2026-08-02.**
   Pure removal of unreachable code (kill_debug, line_highlight's dead branch), no behavioral change to verify live.
   *IDE · 1 file*
 - **`4a0798bf`** — MFF cleanup: drop HTTPServer, Animate, and orphaned ListItemsOld
-  Widget/hygiene trim of the vendored MyFbFramework (T0 residual + F-H3), per the Fable MFF review.
+  Widget/hygiene trim of the vendored Framework (T0 residual + F-H3), per the Fable MFF review.
   *Docs, Framework/Controls, IDE · 13 files*
 - **`2aee0744`** — T-OPUS-1: resolve the ThreadsEnter/ThreadsLeave contract (F-M1)
   The framework's cross-thread-safety API (ThreadsEnter/ThreadsLeave, Component.bas) is a pair of empty no-op stubs on the WinAPI build -- the framework-level root cause of the IDE's DR-3/DR-7 debugger-hang class, since every "ThreadsEnter ... touch UI ...
@@ -437,7 +437,7 @@ Everything above the **Total: 888 commits, 2026-07-02 to 2026-08-02.**
   Non-debug RunProgram/RunPr now checks the target exe exists before launching, matching the pre-flight check the debug path already had.
   *Docs, IDE · 6 files*
 - **`f875fcc7`** — MFF hygiene: remove dead Chinese-language leftovers, close out the rest
-  Deleted README_CN.md and changes_cn.txt (dead Chinese translations no longer maintained), removing their two references: the File=README_CN.md entry in MyFbFramework.vfp, and the dead language-switcher link at the top of Controls/MyFbFramework/README.md.
+  Deleted README_CN.md and changes_cn.txt (dead Chinese translations no longer maintained), removing their two references: the File=README_CN.md entry in Framework.vfp, and the dead language-switcher link at the top of Controls/Framework/README.md.
   *Docs, Framework/Controls · 6 files*
 - **`472b4b24`** — Rename MFF DLL to astoria.dll, move it to the repo root
   Owner request: source file names stay the same, but the compiled MFF build artifact should be astoria.dll living next to astoria.exe, reflecting how much of MFF's own code is now locally owned/changed (Direct2D removal, H-1/H-4, the hot-path review).
@@ -446,7 +446,7 @@ Everything above the **Total: 888 commits, 2026-07-02 to 2026-08-02.**
   Owner decision: no more choosing which Controls\* libraries appear in the toolbox (matches the project's "no unnecessary options" posture).
   *Docs, IDE, Settings · 9 files*
 - **`cc319212`** — Rename Controls/MyFbFramework to Controls/Framework
-  Owner request: rename the MyFbFramework directory to Framework, and MyFbFramework.wiki/MyFbFramework.vfp to match inside it.
+  Owner request: rename the Framework directory to Framework, and Framework.wiki/Framework.vfp to match inside it.
   *Build/Tools, Docs, Examples, Framework/Controls, IDE, Settings, Templates · 725 files*
 - **`cac01fdf`** — Rename astoria.dll to framework.dll, move back into Controls/Framework
   Owner request, for consistency with the just-renamed folder.
@@ -458,7 +458,7 @@ Everything above the **Total: 888 commits, 2026-07-02 to 2026-08-02.**
   - AstoriaIDE.ico regenerated via new Resources/gen_step1.py script - Project4 rebuilt with New Project dialog (Module1.bas -> Main.bas, matching current default naming), .vfp picks up current schema fields - DeviceExplorer.vfp normalized to current .vfp schema from IDE open/save - astoria.exe...
   *Build/Tools, Examples, IDE · 9 files*
 - **`2e160bb6`** — Examples: English-only translation cleanup + dead code sweep
-  Extends the English-only mandate (a510b24/e83212f) from IDE chrome to Examples/, Controls/MyFbFramework/examples/, and Tools/, then removes dead code across the same trees.
+  Extends the English-only mandate (a510b24/e83212f) from IDE chrome to Examples/, Controls/Framework/examples/, and Tools/, then removes dead code across the same trees.
   *Build/Tools, Docs, Examples, Framework/Controls · 261 files*
 - **`e9bc31d3`** — Remove temporary project files and sync settings
   *Examples, Framework/Controls, Settings · 4 files*
@@ -1041,7 +1041,7 @@ Everything above the **Total: 888 commits, 2026-07-02 to 2026-08-02.**
 - **`0b8b87f2`** — Documentation: add the IDE user manual, with generated reference appendices
   There was no manual: the eight existing documents are developer- or tester-facing.
   *Build/Tools, Docs · 5 files*
-- **`bbc26819`** — Documentation: a MyFbFramework programmer's guide, with generated event signatures
+- **`bbc26819`** — Documentation: a Framework programmer's guide, with generated event signatures
   MFF is ~60,000 lines across 196 files and is the library USER PROGRAMS are built on, so a defect or a trap in it is a defect in their application.
   *Build/Tools, Docs · 4 files*
 - **`823c15a7`** — StageRelease: stop shipping this project's own working material
@@ -1322,7 +1322,7 @@ Everything above the **Total: 888 commits, 2026-07-02 to 2026-08-02.**
   The IDE's icon (Resources/AstoriaIDE.ico) was the 256px bridge scene at every size, so the title-bar/taskbar (16px) rendered as a muddy blue blob.
   *Build/Tools, IDE · 3 files*
 - **`12d298ca`** — IDE title bar: set ICON_SMALL to the 16px 'A' frame (frmMain_Show)
-  The multi-resolution icon alone did not fix the title bar: MyFbFramework's Form sets only WM_SETICON ICON_BIG (mff/Form.bas), so Windows drew the title-bar/taskbar small icon by shrinking the large (bridge) frame -- the 16px 'A' frame in the .ico was never used. frmMain_Show now loads the small...
+  The multi-resolution icon alone did not fix the title bar: Framework's Form sets only WM_SETICON ICON_BIG (mff/Form.bas), so Windows drew the title-bar/taskbar small icon by shrinking the large (bridge) frame -- the 16px 'A' frame in the .ico was never used. frmMain_Show now loads the small...
   *IDE · 3 files*
 ## 2026-08-02
 

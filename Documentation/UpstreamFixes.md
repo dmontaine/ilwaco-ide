@@ -2,7 +2,7 @@
 
 Ilwaco is a permanent Linux/GTK3 fork of
 [VisualFBEditor](https://github.com/XusinboyBekchanov/VisualFBEditor), built on
-[MyFbFramework](https://github.com/XusinboyBekchanov/MyFbFramework). We are not proposing patches or
+[Framework](https://github.com/XusinboyBekchanov/MyFbFramework). We are not proposing patches or
 asking for anything. This page exists because some of what we fix are bugs in the *upstream* code
 rather than in ours, and it seems unfriendly to fix them quietly and say nothing.
 
@@ -17,7 +17,7 @@ the diff.
 
 ---
 
-## Framework (MyFbFramework) — GTK
+## Framework (Framework) — GTK
 
 - **`TabControl` could not remove a tab without destroying its page.** Showing/hiding the debug
   tab-set needed a way to detach a `TabPage` from the bar and re-add it later without losing the

@@ -6,7 +6,7 @@ PassOneFile=ON
 TargetName=../ilwaco
 FocusOn=
 CompilerArgs=
-CompilerOption="ilwaco.rc" -i "..\MyFbFramework"
+CompilerOption="ilwaco.rc" -i "..\Framework"
 Comment=
 CompilerPath=
 [IncludeDirs]

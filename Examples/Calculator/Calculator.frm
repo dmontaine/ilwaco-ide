@@ -1,6 +1,6 @@
 '################################################################################
 '#  Calculator.frm                                                              #
-'#  An example program shipped with Ilwaco IDE (built on MyFbFramework).       #
+'#  An example program shipped with Ilwaco IDE (built on Framework).       #
 '#  Authors: Xusinboy Bekchanov, Liu XiaLin                                     #
 '################################################################################
 	#if defined(__FB_MAIN__) AndAlso Not defined(__MAIN_FILE__)

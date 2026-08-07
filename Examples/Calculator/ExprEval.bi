@@ -19,7 +19,7 @@
 '#  Supported functions (case-insensitive): sin cos tan atn sqr/sqrt exp        #
 '#  log/ln abs. Constants: pi, e. Angles are in radians; log/ln are natural.    #
 '#                                                                              #
-'#  Note: the status flag is named `valid`, not `ok` -- MyFbFramework defines a #
+'#  Note: the status flag is named `valid`, not `ok` -- Framework defines a #
 '#  global `Ok`, and FreeBASIC identifiers are case-insensitive (a documented   #
 '#  collision trap).                                                            #
 '################################################################################

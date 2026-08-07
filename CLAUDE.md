@@ -1,7 +1,7 @@
 # Ilwaco IDE — working on the IDE itself
 
 This orients an AI assistant working on **Ilwaco's own source**. Ilwaco is a 64-bit **Linux/GTK3**
-IDE for FreeBASIC, the **VisualFBEditor** codebase, written in FreeBASIC on the MyFbFramework (MFF)
+IDE for FreeBASIC, the **VisualFBEditor** codebase, written in FreeBASIC on the Framework (MFF)
 GUI library. Its Windows sibling is **Astoria** (`../astoria-ide`), a more-evolved fork of the same
 base; the mission is to bring Ilwaco toward parity with Astoria, adapting Win32 → GTK.
 
@@ -61,10 +61,10 @@ The full recipe and its rationale are in PROJECT_STATUS. In short, using the in-
 `libtinfo.so.5` and the GTK `-dev` symlinks — no sudo needed):
 
 - Editor (whole-program; output path set by a `#cmdline` in the source):
-  `cd src && fbc ilwaco.bas -i ../Controls/MyFbFramework -d __USE_GTK3__ -p <shim> -l tinfo`
+  `cd src && fbc ilwaco.bas -i ../Controls/Framework -d __USE_GTK3__ -p <shim> -l tinfo`
   → `ilwaco` (~5 MB, needs only GLIBC_2.34).
 - Designer control library (or the toolbox errors at runtime):
-  `cd Controls/MyFbFramework/mff && fbc -b mff.bi -dll -x ../libmff64_gtk3.so -d __USE_GTK3__ -p <shim> -l tinfo`
+  `cd Controls/Framework/mff && fbc -b mff.bi -dll -x ../libmff64_gtk3.so -d __USE_GTK3__ -p <shim> -l tinfo`
 
 Each whole-program compile is ~3–4 min — run it in the background (a 2-min foreground limit will kill
 it). Launch on the live X display with `LD_LIBRARY_PATH=<shim> DISPLAY=:0`; the spawned fbc inherits

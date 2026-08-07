@@ -135,7 +135,7 @@
 		' grbInformation
 		With grbInformation
 			.Name = "grbInformation"
-			.Text = "MyFbFramework"
+			.Text = "Framework"
 			.TabIndex = 6
 			.Align = DockStyle.alBottom
 			.ExtraMargins.Bottom = 10

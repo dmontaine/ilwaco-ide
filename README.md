@@ -1,7 +1,7 @@
 # ilwaco.ide
 
 **Ilwaco IDE** — a FreeBASIC IDE for **Linux** (GTK3, x86_64), forked from
-[VisualFBEditor](https://github.com/XusinboyBekchanov/VisualFBEditor) and built on MyFbFramework.
+[VisualFBEditor](https://github.com/XusinboyBekchanov/VisualFBEditor) and built on Framework.
 
 It has a Windows sibling, **Astoria IDE**, forked from the same base. The two look alike and mostly
 behave alike, but they are **separate programs and they do differ** — different platforms, a different

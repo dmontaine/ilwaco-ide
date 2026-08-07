@@ -4,7 +4,7 @@
 has an analogue, is listed in the rule table, and is caught by `DocCheck` when it goes stale — see
 [TestPlan.md](TestPlan.md).
 
-**Purpose.** The framework surface **beyond the toolbox controls** — the capabilities MyFbFramework
+**Purpose.** The framework surface **beyond the toolbox controls** — the capabilities Framework
 provides that are not a placeable control: settings/INI handling, the image list, dialogs, drawing
 (`Canvas`), theming/dark mode, clipboard, timers, and the like — as they behave on GTK3.
 

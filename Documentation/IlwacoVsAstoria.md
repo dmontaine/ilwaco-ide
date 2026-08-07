@@ -2,7 +2,7 @@
 
 **They are siblings, not the same program.** Both are forks of
 [VisualFBEditor](https://github.com/XusinboyBekchanov/VisualFBEditor), both are FreeBASIC IDEs built on
-MyFbFramework, and Ilwaco is deliberately being brought *toward* Astoria by walking Astoria's change
+Framework, and Ilwaco is deliberately being brought *toward* Astoria by walking Astoria's change
 history and translating each change. So they look alike and mostly behave alike — which is exactly why
 the places they diverge are worth stating plainly.
 

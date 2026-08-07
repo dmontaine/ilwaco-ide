@@ -1,4 +1,4 @@
-# GUI examples — learning MyFbFramework
+# GUI examples — learning Framework
 
 Twenty-five small windowed programs, each a complete Ilwaco project. They follow the same
 introductory path as [../Console](../Console/) — input, decisions, loops, arrays, procedures,

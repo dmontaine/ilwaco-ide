@@ -153,7 +153,7 @@ The structure and usage of the VisualFBEditor IDE menu are detailed below. Help 
 ### New Project
 **Shortcut:** Ctrl+Shift+N
 **Functionality:**
-This option allows you to create a new project in VisualFBEditor. A project is a container that holds all the files, settings, and configurations for your FreeBasic application. When you select this option, a wizard will guide you through the process of setting up your project, such as choosing the project type, selecting the framework (MyFbFramework), and specifying the project location.
+This option allows you to create a new project in VisualFBEditor. A project is a container that holds all the files, settings, and configurations for your FreeBasic application. When you select this option, a wizard will guide you through the process of setting up your project, such as choosing the project type, selecting the framework (Framework), and specifying the project location.
 **How to Use:**
 1. Click on File > New Project or press Ctrl+Shift+N.
 2. A project wizard will appear. Follow the prompts to select the project type (e.g., Console Application, GUI Application, Addin Project, GTK Application, Windows Application, Android Project, Static Library, Control Library, Dynamic Library).
@@ -199,7 +199,7 @@ This option allows you to open an existing project file. It is similar to the "O
 4. The project will be loaded into the IDE, and you can start editing.
 **Notes:**
     Make sure the project file is associated with VisualFBEditor.
-    If the project uses the MyFbFramework, ensure that the framework is properly configured.
+    If the project uses the Framework, ensure that the framework is properly configured.
 
 ### Save Project
 **Shortcut:** Ctrl+Shift+S
@@ -1332,7 +1332,7 @@ This option displays the code editor, allowing you to view and edit the source c
 
 **Notes:**  
 - This view is ideal for developers who prefer to work directly with code.  
-- The code editor supports syntax highlighting and IntelliSense for MyFbFramework.  
+- The code editor supports syntax highlighting and IntelliSense for Framework.  
 
 ### Form   
 **Shortcut:** "Shift+F7"  
@@ -1346,7 +1346,7 @@ This option displays the form designer, allowing you to design and edit the grap
 
 **Notes:**  
 - This view is essential for building the user interface of your application.  
-- The form designer supports drag-and-drop functionality for MyFbFramework controls.  
+- The form designer supports drag-and-drop functionality for Framework controls.  
 
 ### Code And Form   
 **Shortcut:** "Ctrl+Shift+F7"  
@@ -1515,7 +1515,7 @@ This option displays the Toolbox window, which contains all the available contro
 
 **Notes:**  
 - You can drag and drop controls from the Toolbox to the form designer.  
-- The Toolbox can be customized to include additional controls from MyFbFramework.  
+- The Toolbox can be customized to include additional controls from Framework.  
 
 ### Other Windows  
 
@@ -1568,7 +1568,7 @@ This option displays the Suggestions window, which provides code completion, qui
 
 **Notes:**  
 - The suggestions are context-sensitive and vary depending on the current location in the code.  
-- This feature is particularly useful for developers who are new to MyFbFramework.  
+- This feature is particularly useful for developers who are new to Framework.  
 
 ### Find Window  
 
@@ -1785,7 +1785,7 @@ This option allows you to add a new form to your project, which will serve as a 
 **Notes:**  
 - The new form will be named "Form1.frm" by default, but you can rename it in the Properties window.  
 - Forms are stored in the project directory and are listed in the Project Explorer.  
-- This feature is essential for building GUI applications with VisualFBEditor and MyFbFramework.  
+- This feature is essential for building GUI applications with VisualFBEditor and Framework.  
 
 ### Add Module  
 **Functionality:**  
@@ -2458,7 +2458,7 @@ This option allows you to split the editor window vertically, creating a dual-pa
 ### Content 
 **Shortcut:** "F1"
 **Functionality:**  
-This option opens the help content for the IDE, providing detailed documentation on using VisualFBEditor and the MyFbFramework. It is the primary resource for learning and troubleshooting within the IDE.  
+This option opens the help content for the IDE, providing detailed documentation on using VisualFBEditor and the Framework. It is the primary resource for learning and troubleshooting within the IDE.  
 
 **How to Use:**  
 1. Press "F1" or click "Help > Content F1".  
@@ -2565,36 +2565,36 @@ This option opens the discussion forum or community board for VisualFBEditor, wh
 - The discussion forum is a great place to connect with other developers who use the IDE.  
 - It is an excellent resource for getting help with specific issues or learning from others' experiences.  
 
-### MyFbFramework Repository  
+### Framework Repository  
 **Functionality:**  
-This option opens the GitHub repository for the MyFbFramework project, allowing you to explore the source code, report issues, or contribute to the framework.  
+This option opens the GitHub repository for the Framework project, allowing you to explore the source code, report issues, or contribute to the framework.  
 
 **How to Use:**  
-1. Click "Help > MyFbFramework Repository".  
-2. Your default web browser will open the [MyFbFramework GitHub repository](https://github.com/XusinboyBekchanov/MyFbFramework).  
+1. Click "Help > Framework Repository".  
+2. Your default web browser will open the [Framework GitHub repository](https://github.com/XusinboyBekchanov/MyFbFramework).  
 
 **Notes:**  
 - The repository provides access to the latest version of the framework and its documentation.  
 - You can use it to submit bug reports, feature requests, or pull requests.  
 
-### MyFbFramework WiKi  
+### Framework WiKi  
 **Functionality:**  
-This option opens the official Wiki for the MyFbFramework project, which contains documentation, tutorials, and reference materials specific to the framework.  
+This option opens the official Wiki for the Framework project, which contains documentation, tutorials, and reference materials specific to the framework.  
 
 **How to Use:**  
-1. Click "Help > MyFbFramework WiKi".  
-2. Your default web browser will open the [MyFbFramework Wiki homepage](https://github.com/XusinboyBekchanov/MyFbFramework/wiki) .  
+1. Click "Help > Framework WiKi".  
+2. Your default web browser will open the [Framework Wiki homepage](https://github.com/XusinboyBekchanov/MyFbFramework/wiki) .  
 
 **Notes:**  
 - The Wiki is an essential resource for learning how to use the framework effectively.  
 - It includes guides on integrating the framework into your projects, using its features, and troubleshooting common issues.  
 
-### MyFbFramework Discussions  
+### Framework Discussions  
 **Functionality:**  
-This option opens the discussion forum or community board for the MyFbFramework project, where you can engage with other developers, ask questions, and share knowledge.  
+This option opens the discussion forum or community board for the Framework project, where you can engage with other developers, ask questions, and share knowledge.  
 
 **How to Use:**  
-1. Click "Help > MyFbFramework Discussions".  
+1. Click "Help > Framework Discussions".  
 2. Your default web browser will open the [discussion page](https://www.freebasic.net/forum/viewtopic.php?t=27284&start=495).  
 
 **Notes:**  
@@ -2603,7 +2603,7 @@ This option opens the discussion forum or community board for the MyFbFramework 
 
 ### Tip of the Day  
 **Functionality:**  
-This option displays a helpful tip or trick for using the IDE or the MyFbFramework. Tips are displayed in a dialog box and can be closed or navigated through.  
+This option displays a helpful tip or trick for using the IDE or the Framework. Tips are displayed in a dialog box and can be closed or navigated through.  
 
 **How to Use:**  
 1. Click "Help > Tip of the Day".  

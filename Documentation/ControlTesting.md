@@ -1,6 +1,6 @@
 # Control testing — per-control results (GTK)
 
-Per-control test results for the MyFbFramework controls as they behave in Ilwaco's **GTK3** build.
+Per-control test results for the Framework controls as they behave in Ilwaco's **GTK3** build.
 The companion documents are [Controls.md](Controls.md) (what each control is) and
 [TestPlan.md](TestPlan.md) (scenarios to run). Results here are the record of what was actually
 observed on `DISPLAY=:0`.

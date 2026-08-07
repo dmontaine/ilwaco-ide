@@ -100,12 +100,12 @@ Sub OnConnection Alias "OnConnection"(VisualFBEditorApp As Any Ptr, ByRef AppPat
 	
 	#ifdef __FB_WIN32__
 		#ifdef __FB_64BIT__
-			VFBEditorLib = DyLibLoad(GetFolderPath(AppPath) & "/Controls/MyFbFramework/mff64.dll")
+			VFBEditorLib = DyLibLoad(GetFolderPath(AppPath) & "/Controls/Framework/mff64.dll")
 		#else
-			VFBEditorLib = DyLibLoad(GetFolderPath(AppPath) & "/Controls/MyFbFramework/mff32.dll")
+			VFBEditorLib = DyLibLoad(GetFolderPath(AppPath) & "/Controls/Framework/mff32.dll")
 		#endif
 	#else
-		VFBEditorLib = DyLibLoad(GetFolderPath(AppPath) & "/Controls/MyFbFramework/libmff" & Right(AppPath, 7) & ".so")
+		VFBEditorLib = DyLibLoad(GetFolderPath(AppPath) & "/Controls/Framework/libmff" & Right(AppPath, 7) & ".so")
 	#endif
 	If s <> 0 Then Deallocate s
 	

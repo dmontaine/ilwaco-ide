@@ -100,5 +100,5 @@ FreeBasicForums=
 GitHubWebSite=Ctrl+D
 FreeBasicRepository=
 VisualFBEditorRepository=
-MyFbFrameworkRepository=
+FrameworkRepository=
 About=

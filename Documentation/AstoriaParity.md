@@ -33,7 +33,7 @@ compiler crash — [TechnicalDebt.md](TechnicalDebt.md)), and the DirectShow / C
 - `mff/win/` (Windows headers dir) — now only reached via the excluded `SysUtils.bi` WINAPI includes
   (unreachable on our build) and the opaque `#ifdef GIFPlayOn` block in `Animate.bi`; inert. Delete once
   `SysUtils.bi`'s WINAPI includes are hand-stripped and `GIFPlayOn` is understood.
-- `Controls/MyFbFramework/inc/` (CopyArray/Thread/cJSON/mongoose/raylib/`pipe.bi`…) — **not on the build
+- `Controls/Framework/inc/` (CopyArray/Thread/cJSON/mongoose/raylib/`pipe.bi`…) — **not on the build
   path** (no include from `mff.bi` or `src/`), so not compiled; strip or drop wholesale later. Note
   `inc/pipe.bi` *unconditionally* `#define __USE_WINAPI__` — excluded from the eliminator.
 - Commented-out `'#ifdef` cruft (`Graphics.bas:15`, `Form.bas:672`, `Application.bas:239/250`,
@@ -123,7 +123,7 @@ runtime-verified both ways (screenshots): `UseDebugger=false` → bottom bar end
 **Framework dependency (REIMPLEMENT for GTK).** The feature needs a tab that can be removed from the bar
 *without destroying its `TabPage`* so it can be re-added. Astoria added a new MFF method `DetachTab` (Win32);
 Ilwaco's MFF had only `DeleteTab` (destroys). Ported `DetachTab` into our MFF fork
-(`Controls/MyFbFramework/mff/TabControl.bi` + `.bas`):
+(`Controls/Framework/mff/TabControl.bi` + `.bas`):
 - It clears `FDynamic` across the removal so `DeleteTab` doesn't free the page (same trick as Astoria), **and**
 - on GTK, `gtk_notebook_remove_page` (inside `DeleteTab`) drops the notebook's reference to the page widget,
   which would finalize it — so `DetachTab` takes an extra `g_object_ref(G_OBJECT(Value->widget))` first,
@@ -213,13 +213,13 @@ activated.
 empirically that it does not reproduce here:
 - Ilwaco's MFF source still contains the `#ifdef __EXPORT_PROCS__` blocks (`ppstrip.py` treated
   `__EXPORT_PROCS__` as opaque/defined and preserved every one).
-- The built `Controls/MyFbFramework/libmff64_gtk3.so` exports **469** text symbols, including all four
+- The built `Controls/Framework/libmff64_gtk3.so` exports **469** text symbols, including all four
   core dispatchers (`CreateComponent`, `CreateControl`, `ReadProperty`, `WriteProperty`).
 - **Definitive test:** all **36** symbols `src/Designer.bas` resolves via `DyLibSymbol()` are exported —
   `comm -23 <wanted> <exported>` is empty. (Astoria's broken build had only 56/58.)
 
 Verify command (re-runnable):
-`comm -23 <(grep -oE 'DyLibSymbol\([^,]*,\s*"[^"]*"' src/Designer.bas | grep -oE '"[^"]*"$' | tr -d '"' | sort -u) <(nm -D --defined-only Controls/MyFbFramework/libmff64_gtk3.so | awk '$2=="T"||$2=="W"{print $3}' | sort -u)`
+`comm -23 <(grep -oE 'DyLibSymbol\([^,]*,\s*"[^"]*"' src/Designer.bas | grep -oE '"[^"]*"$' | tr -d '"' | sort -u) <(nm -D --defined-only Controls/Framework/libmff64_gtk3.so | awk '$2=="T"||$2=="W"{print $3}' | sort -u)`
 
 Pruned from the changelog backlog. (Runtime end-to-end designer-activation — cboClass populates,
 Form/CodeAndForm buttons enabled, Properties panel renders — remains a general "verify by effect" item,
@@ -289,7 +289,7 @@ back to Opus for compilation, so it never has to load the toolchain shim (memory
 ## Done 2026-08-02 — removed the Help ▸ GitHub submenu (Astoria `d275dc93`)
 
 Astoria dropped the Help ▸ GitHub submenu (repo/wiki/discussions links for FreeBasic, VisualFBEditor,
-MyFbFramework). Removed the same from Ilwaco, build-verified clean. Scope was exactly as pre-scoped —
+Framework). Removed the same from Ilwaco, build-verified clean. Scope was exactly as pre-scoped —
 an all-files grep of the command strings found them only in the two edited locations (no `.lang`,
 HotKeys.txt, `.bi` decls, or enable-lines):
 - **`src/Main.bas`** — the whole `Var miGitHub = miHelp->Add(ML("GitHub"))` block (the submenu + its 8
@@ -376,7 +376,7 @@ the eliminator (`scratchpad/ppstrip.py`) was extended to a full recursive-descen
 __USE_GTK4__`), and files `WebView/WebView2.bi`, `DarkMode/IatHook.bi`, `DarkMode/UAHMenuBar.bi`.
 **Kept:** `WebView/WebKitWebView.bi` (GTK), `DarkMode/DarkMode.bas`+`.bi` (live GTK `SetDarkMode`),
 `fbsound/` (cross-platform), the `gtk/gtk.bi`+`glib-object.bi` GTK3 includes in `SysUtils.bas`.
-**Manifest:** removed 16 dangling `File=` entries from `MyFbFramework.vfp` (the deletions + 6
+**Manifest:** removed 16 dangling `File=` entries from `Framework.vfp` (the deletions + 6
 pre-existing dangling entries like `ColorDialog.bi`/`.gitignore`; it is a flat list, not index-keyed).
 
 Direct2D is fully retired from MFF too (the `D2D1/` tree + `Canvas` D2D branches went with the strip).
@@ -670,7 +670,7 @@ prompts New Project when there is nothing to reopen; Ilwaco leaves the IDE empty
 did before.
 
 **`cc9e7dd5` (designer grey panel) — N/A (2026-08-06).** Astoria's bug was Win32-shaped: a project's
-`ControlLibrary=Controls\MyFbFramework` left `Library.Path` as a *folder*, `DyLibLoad` on a directory
+`ControlLibrary=Controls\Framework` left `Library.Path` as a *folder*, `DyLibLoad` on a directory
 returned 0, no symbols resolved, and `Designer.CreateControl("Form")` gave the empty grey panel — plus
 a refcount slip that broke every project after the first. Ilwaco cannot reach that state: the shipped
 `[ControlLibraries] Path_0` names the `.so` file and a project's folder-form `ControlLibrary=` is
@@ -680,7 +680,7 @@ Astoria's second sub-fix, `GetControlLibraryVfpPath`, has no Ilwaco counterpart.
 two GUI projects opened in one session both render their form in the designer, and the Toolbox lists
 the MFF controls (TestPlan T3/T24).
 
-Found while checking it: `Controls/MyFbFramework/Settings.ini` still advertised thirteen library
+Found while checking it: `Controls/Framework/Settings.ini` still advertised thirteen library
 variants (32-bit, GTK2, Windows DLLs) of which exactly one is reachable, plus three Windows lib-folder
 keys read into fields nothing uses. Pruned to `LibX64_gtk3`, and `GetLibKey` — whose `#ifdef` ladder
 could only ever pick that one — now returns it directly.

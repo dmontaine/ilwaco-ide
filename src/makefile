@@ -1,5 +1,5 @@
-﻿MFF:=../MyFbFramework
-MFF=../MyFbFramework
+﻿MFF:=../Framework
+MFF=../Framework
 CFLAGS:= -d __USE_MAKE__ -i $(MFF) -d __USE_GTK3__ -d _NOT_AUTORUN_FORMS_ $(GFLAG) -exx
 CFLAGS= -d __USE_MAKE__ -i $(MFF) -d __USE_GTK3__ -d _NOT_AUTORUN_FORMS_ $(GFLAG) -exx
 ifeq ($(OS),Windows_NT)

@@ -100,8 +100,8 @@
 - Improved: AI Agent
 - Fixed: Opening AI Agent options form
 - Added: AI Agents dropdown list
-- Improved: MyFbFramework GUI Form Interface Guidelines
-- Added: AI promt for MyFbFramework GUI Form Interface Guidelines
+- Improved: Framework GUI Form Interface Guidelines
+- Added: AI promt for Framework GUI Form Interface Guidelines
 - Fixed: Wrong decodeing Json in some models
 - Added: AI Provider
 - Improved: Edit Functionality
@@ -354,7 +354,7 @@ Version 1.3.4 (March 5, 2023)
 - Fixed: Loading Unicode texts from files with Unicode name
 - Added: Loading and Saving files with Unicode in file name
 - Added: File not found message on load not existing file
-- Added: VisualFBEditor and MyFbFramework chm files
+- Added: VisualFBEditor and Framework chm files
 - Improved: On Select from Include Paths Intellisense automatic adds сlosing quote to the end of file name.
 - Fixed: Showing IntelliSense list with real height
 - Added: Include Paths IntelliSense with Backspace Slash
@@ -577,7 +577,7 @@ Version 1.3.3 (September 23, 2022)
 - Fixed: Find Control at Cursor in Designer on High DPI
 - Added: Syntax Highlighting Identifiers option
 - Changed: Macro identifier color
-- Added: VisualFBEditor and MyFbFramework Discussions menu item to Help menu
+- Added: VisualFBEditor and Framework Discussions menu item to Help menu
 - Added: Input the integer value of color to change color setting directly
 - Fixed: Syntax Highlighting Static Subs and Functions
 - Changed: Syntax Color of Shared and Common Variables on Dark theme

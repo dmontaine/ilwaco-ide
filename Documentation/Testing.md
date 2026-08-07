@@ -150,7 +150,7 @@ necessary but not sufficient — "it compiled" is not "it works".
 - **Recent Projects opens from a dialog (2026-08-06).** File ▸ Recent Projects… is now a flat item, not
   an MRU submenu; the dialog lists each recent project's file name and full path with its icon, shows
   **only** entries whose `.vfp` still exists (the stale `VisualFBEditor.vfp` was filtered out), and OK
-  opened the selected project — confirmed by `get_status` reporting `MyFbFramework.vfp` as the open
+  opened the selected project — confirmed by `get_status` reporting `Framework.vfp` as the open
   project. TestPlan T19.
 
 ## Not proven (known gaps)

@@ -11,6 +11,44 @@ for the classified port backlog, [Documentation/AstoriaParity.md](Documentation/
 
 ---
 
+## ✅ DONE (2026-08-07) — user-data dir is lowercase `projects`; the seed-patch can no longer break launch
+
+**The rename (owner directive: "keep 'projects' lower case").** Every producer and consumer moved
+together, because Linux is case-sensitive and a half-rename means the IDE writes to one directory
+while the packaging seeds another. Nine files: `Packaging/AppRun` (seed loop), `Packaging/ilwaco.sh`
+(`mkdir`), `Packaging/StageRelease.sh`, `Packaging/installer-header.sh` (the upgrade `--exclude` — a
+miss here would have made an upgrade **overwrite the user's work**), `Settings/ilwaco.ini`
+(`ProjectsPath`, `CommandPromptFolder`), `src/Main.bas` (both INI-read defaults), `src/frmOptions.frm`
+(two designer defaults), and the `ExePath & "Projects"` fallbacks in `src/TabWindow.bas` (×2) and
+`src/frmImageManager.frm`. The dev tree's own `Projects/` was `git mv`'d. **`Templates/Projects/` was
+deliberately left capitalised** — it is the shipped New-Project template store, not the user's work.
+
+**Verified by effect at all three layers**, not just compiled: `AppRun` against a stub payload seeds
+`projects/` and no capital `Projects/`; `ilwaco.sh` `mkdir`s `projects/`; and the **running IDE**,
+asked over the MCP socket for a new project, answered
+`/home/don/Projects/ilwaco-ide/projects/RenameProbe/RenameProbe.vfp` — so `ProjectsPath` resolves
+lowercase through the real code path.
+
+**One adjacent defect fixed while in there:** `src/ilwaco.bas:74` built its no-main-file fallback as
+`*ProjectsPath & "\1"` — a **Windows** separator. `GetFolderName` never finds a `\` on Linux, so
+Run ▸ command prompt opened in the exe directory instead of the projects directory. Now uses `Slash`.
+
+**The seed-patch is insert-if-missing (was replace-only).** `ilwaco.sh`'s first-run patch rewrote only
+*existing* keys and `die`d if one was absent — so any future rename or reorder of `Compiler64Arguments`
+or the `[Compilers]` keys would have broken **launch**, not merely a build. The awk now appends a
+missing key to its section, and a missing section to the file. Six fixtures pass (replace; insert into
+an existing section; append an absent section; BOM on line 1 preserved byte-for-byte; our section last
+in the file; and a same-named key in a *different* section left untouched).
+
+**FUSE was measured and is not the problem people assume.** Our AppImage carries the modern static-pie
+[type2-runtime](https://github.com/AppImage/type2-runtime) — `readelf -d` shows **no `NEEDED` entries
+at all**, so the widely-repeated "AppImages need `libfuse2`" is about the *old* AppImageKit runtime, not
+ours. It wants a `fusermount` **binary** (`fuse3`, present on desktop Debian 13), and
+`APPIMAGE_EXTRACT_AND_RUN=1` works with `fusermount` deliberately broken. What remains is the
+executable bit, which is a packaging-format decision — see NEXT 1.
+
+---
+
 ## ✅ DONE (2026-08-07) — Examples: 53 ported, broken half deleted, 54 build-verified through the SHIPPED toolchain
 
 Owner-requested, superseding the "defer Examples to the testing phase" note. Ported: the whole
@@ -357,7 +395,7 @@ so a beginner picking "Console Application" got a project that would not link. P
 - **`Templates/Projects/Console Application/Main.bas` rewritten in plain FreeBASIC** — `Print` for
   output, `Color` for colour, both native on Linux; BOM-less, LF-only. It now prints a greeting
   instead of the old empty template.
-- **`Controls/MyFbFramework/mff/Console.bi` deleted** as dead Windows code (nothing else in the repo
+- **`Controls/Framework/mff/Console.bi` deleted** as dead Windows code (nothing else in the repo
   included it), with a `REMOVED_FEATURES` guard for `ConsoleType` added to `Tools/DocCheck.py`.
 - **Stale `VisualFBEditor` branding cleared:** the Console template's `Console.Title` went with the
   rewrite, and `Templates/Files/Form_3D.frm`'s caption `"VisualFBEditor-3D"` → `"Form1"` (matching the
@@ -617,7 +655,7 @@ catches doc drift, a skill says what to update when, and CLAUDE.md points at bot
 - **Doc analogues** (all listed in the rule table): real content — `UpstreamFixes.md`,
   `TechnicalDebt.md`, `Testing.md`, `ControlTesting.md`, `IlwacoIDESignificantChanges.md`; honest
   scaffolds (purpose + Astoria source + "GTK review needed", per owner's choice) — `Controls.md`,
-  `MyFbFrameworkGuide.md`, `FrameworkFeatures.md`, `IlwacoIDEManual.md`; plus root `CHANGELOG.md`.
+  `FrameworkGuide.md`, `FrameworkFeatures.md`, `IlwacoIDEManual.md`; plus root `CHANGELOG.md`.
   `AstoriaParity.md` + `AstoriaDetailedChangeLog.md` are excluded from `DocCheck` as historical
   records (like Astoria excludes its `DetailedChangelog`).
 
@@ -1044,7 +1082,7 @@ was only ever set by the deleted Win32 `InitDarkMode`, so on GTK it stays `False
 dark-mode commits). See AstoriaParity NEXT ACTION.
 
 **Deferred strip sub-items (non-blocking, off the compiled path):** `mff/win/` (Windows headers, now inert),
-`Controls/MyFbFramework/inc/` (not on the build path — incl. the WINAPI-forcing `pipe.bi`), a few
+`Controls/Framework/inc/` (not on the build path — incl. the WINAPI-forcing `pipe.bi`), a few
 commented-out `'#ifdef` cruft lines, and `#define nullptr 0` in `DarkMode.bi`. Listed in AstoriaParity.
 
 **Build note:** the shim (`$SHIM` GTK dev-symlink dir + vendored `Compilers/shim/libtinfo.so.5`) is
@@ -1134,7 +1172,7 @@ later work much easier (memory `project-strip-windows-code`). **GTK-guard trap:*
   worker never rebuilds/loads the shim (memory `feedback-worker-returns-for-compilation`).
 
 **Build recipe (this session, working):**
-`cd src && LD_LIBRARY_PATH=$SHIM ../Compilers/FreeBASIC-1.10.1-linux-x86_64/bin/fbc VisualFBEditor.bas -i ../Controls/MyFbFramework -d __USE_GTK3__ -p $SHIM -l tinfo`
+`cd src && LD_LIBRARY_PATH=$SHIM ../Compilers/FreeBASIC-1.10.1-linux-x86_64/bin/fbc VisualFBEditor.bas -i ../Controls/Framework -d __USE_GTK3__ -p $SHIM -l tinfo`
 
 **NEXT (staged for a fresh session — see AstoriaParity "NEXT ACTION"):** strip **all non-target-platform
 code** (target = x86_64 Linux/GTK3; strip Windows, Android/JNI, GTK4, GTK2, Darwin, WASM, 32-bit — delete,
@@ -1188,14 +1226,14 @@ and it never reported a final status — I ran the confirming build. Next time i
 the build as a **surviving background job** and report the log.
 
 **Build/run env:** in-repo bundled `fbc` (`Compilers/FreeBASIC-1.10.1-linux-x86_64/bin/fbc`, tracked)
-and the GTK-capable MFF source (`Controls/MyFbFramework/`, now vendored as real files — the old
+and the GTK-capable MFF source (`Controls/Framework/`, now vendored as real files — the old
 submodule gitlink was dropped, commit `60015e4`), so the repo is self-contained **except** for a
 userspace shim for `libtinfo.so.5` and the GTK `-dev` symlinks, **currently in the assistant's
 scratchpad** (`/tmp/claude-.../scratchpad/fbclibs`) — NOT yet vendored into the repo (ephemeral;
 recreate per memory `reference-linux-build`). A durable
 `build-linux.sh` + vendored shim remains an open infra task (memory `reference-linux-build` has the
 exact recipe). Build command:
-`cd src && LD_LIBRARY_PATH=<shim> fbc VisualFBEditor.bas -i ../Controls/MyFbFramework -d __USE_GTK3__ -p <shim> -l tinfo`
+`cd src && LD_LIBRARY_PATH=<shim> fbc VisualFBEditor.bas -i ../Controls/Framework -d __USE_GTK3__ -p <shim> -l tinfo`
 
 ---
 
@@ -1213,16 +1251,16 @@ and the committed binary would not run. All three are resolved.
   symlinks for the GTK stack passed via `fbc -p`, plus `-l tinfo` on the link line. Full recipe is
   in the assistant's project memory (`reference-linux-build`); **it still needs to be captured as a
   repo build script** — see Next.
-- **Framework (MFF):** `Controls/MyFbFramework/` was empty. Vendored the **GTK-capable** MFF source
-  from the original download (`~/pCloudDrive/VisualFBEditor - original/Controls/MyFbFramework`) —
+- **Framework (MFF):** `Controls/Framework/` was empty. Vendored the **GTK-capable** MFF source
+  from the original download (`~/pCloudDrive/VisualFBEditor - original/Controls/Framework`) —
   *not* Astoria's copy, which has GTK stripped. Skipped its `lib/` (48M, Windows-only import libs),
   `examples/`, `help/`.
-- **Built, from `src/`:** `fbc VisualFBEditor.bas -i ../Controls/MyFbFramework -d __USE_GTK3__`
+- **Built, from `src/`:** `fbc VisualFBEditor.bas -i ../Controls/Framework -d __USE_GTK3__`
   (whole-program; output path is set by a `#cmdline` in the source) →
   `VisualFBEditor64_gtk3` (~5 MB, needs only **GLIBC_2.34**, far more portable than the committed
   binary's 2.42). Then the designer's control library:
-  `cd Controls/MyFbFramework/mff && fbc -b mff.bi -dll -x ../libmff64_gtk3.so -d __USE_GTK3__`
-  → `Controls/MyFbFramework/libmff64_gtk3.so` (~1.7 MB). Each whole-program compile is ~3–4 min.
+  `cd Controls/Framework/mff && fbc -b mff.bi -dll -x ../libmff64_gtk3.so -d __USE_GTK3__`
+  → `Controls/Framework/libmff64_gtk3.so` (~1.7 MB). Each whole-program compile is ~3–4 min.
 - **Verified by effect:** the IDE launches (splash "Visual FB Editor 1.3.8 64-bit", main window,
   live GTK event loop), and with the `.so` present the control-toolbox "libmff64_gtk3.so not found"
   error is gone.

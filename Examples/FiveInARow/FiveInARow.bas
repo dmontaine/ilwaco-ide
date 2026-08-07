@@ -2,7 +2,7 @@
 'https://zhuanlan.zhihu.com/p/551562016  Illustrated guide to 26 winning Gomoku formations
 ' Implementing Gomoku AI in VB.NET  http://www.west999.com/www/info/24067-1.htm
 ' Implementing Gomoku AI - design ideas for a Gomoku AI https://blog.csdn.net/elizabethxxy/article/details/103150370?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_title~default-8.pc_relevant_default&spm=1001.2101.3001.4242.5&utm_relevant_index=11
-' Translated to FreeBASIC by Avata. This program requires the MyFbFramework framework, with the visual form designed using VisualFBEditor
+' Translated to FreeBASIC by Avata. This program requires the Framework framework, with the visual form designed using VisualFBEditor
 ' You may copy, distribute, and modify any code in this program; contributions adding LAN multiplayer support are welcome
 '
 'Change history:
@@ -224,9 +224,9 @@
 			        ML("The objective of the game is to be the first player to create a sequence of five same-colored pieces vertically, horizontally, or diagonally.") & _
 			        ML("Pieces are never taken off the board, and once the whole board is filled, the game draws.") & Chr(13, 10)  & _
 			        ML("This APP made by Avata with") & "<a href=""https://www.freebasic.net/"">freeBasic</a>"  & Chr(13, 10)  & _
-			        ML("Compile the source code need the frame") & " <a href=""https://github.com/XusinboyBekchanov/MyFbFramework"">MyFbFramework</a>"  & Chr(13, 10)  & _
+			        ML("Compile the source code need the frame") & " <a href=""https://github.com/XusinboyBekchanov/MyFbFramework"">Framework</a>"  & Chr(13, 10)  & _
 			        ML("Edited by freeBasic visual design.") & " <a href=""https://github.com/XusinboyBekchanov/VisualFBEditor"">VisualFBEditor</a>" & Chr(13, 10)  & _
-			        ML("Download address:") & "<a href=""https://gitee.com/avata/MyFbFramework"">https://gitee.com/avata/MyFbFramework</a> "  & Chr(13, 10)  & _
+			        ML("Download address:") & "<a href=""https://gitee.com/avata/Framework"">https://gitee.com/avata/Framework</a> "  & Chr(13, 10)  & _
 			        "VisualFBEditor: <a href=""https://gitee.com/avata/VisualFBEditor""> https://gitee.com/avata/VisualFBEditor</a>"
 		
 			.TabIndex = 10

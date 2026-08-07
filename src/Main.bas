@@ -5142,10 +5142,10 @@ Sub LoadToolBox(ForLibrary As Library Ptr = 0)
 	Dim As UString MFF, Temp
 	Dim As UInteger Attr
 	Dim As Library Ptr MFFCtlLibrary
-					MFF = IIf(i = 0, "Controls/MyFbFramework/libmff64_gtk3.so", "")
+					MFF = IIf(i = 0, "Controls/Framework/libmff64_gtk3.so", "")
 	If ForLibrary = 0 Then
 		IncludeMFFPath = iniSettings.ReadBool("Options", "IncludeMFFPath", True)
-		WLet(MFFPath, iniSettings.ReadString("Options", "MFFPath", "./Controls/MyFbFramework"))
+		WLet(MFFPath, iniSettings.ReadString("Options", "MFFPath", "./Controls/Framework"))
 		Do Until iniSettings.KeyExists("ControlLibraries", "Path_" & WStr(i)) = -1
 			Dim As IniFile ini
 			Temp = iniSettings.ReadString("ControlLibraries", "Path_" & WStr(i), MFF)
@@ -8456,7 +8456,7 @@ txtImmediate.OnKeyDown = @txtImmediate_KeyDown
 '
 'txtImmediate.BackColor = NormalText.Background
 'txtImmediate.Font.Color = NormalText.Foreground
-txtImmediate.Text = "import #Include Once " + Chr(34) + ".." + Slash + "Controls" + Slash + "MyFbFramework"+ Slash + "mff" + Slash + "SysUtils.bas" + Chr(34) & Chr(13,10) & Chr(13,10)
+txtImmediate.Text = "import #Include Once " + Chr(34) + ".." + Slash + "Controls" + Slash + "Framework"+ Slash + "mff" + Slash + "SysUtils.bas" + Chr(34) & Chr(13,10) & Chr(13,10)
 txtImmediate.SetSel txtImmediate.GetTextLength, txtImmediate.GetTextLength
 
 Sub txtChangeLog_KeyDown(ByRef Designer As My.Sys.Object, ByRef Sender As Control, Key As Integer, Shift As Integer)

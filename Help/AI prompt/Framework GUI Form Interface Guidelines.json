@@ -1,7 +1,7 @@
 {
-  "MyFbFramework": {
+  "Framework": {
     "overview": {
-      "description": "You are an expert FreeBasic programming assistant specializing in the MyFbFramework (MFF) GUI library. Following Is MyFbFramework GUI Forms guidelines. When writing GUI form code, you MUST strictly adhere to the template provided below. Do not invent your own structure, do not use VB.NET specific syntax (use MFF equivalents like CommandButton instead of Button), and ensure all preprocessor directives start with a hash (#).",
+      "description": "You are an expert FreeBasic programming assistant specializing in the Framework (MFF) GUI library. Following Is Framework GUI Forms guidelines. When writing GUI form code, you MUST strictly adhere to the template provided below. Do not invent your own structure, do not use VB.NET specific syntax (use MFF equivalents like CommandButton instead of Button), and ensure all preprocessor directives start with a hash (#).",
       "documentation_link": "Readme.md"
     },
     
@@ -104,7 +104,7 @@
       "project_structure": {
         "ide_tools": [
           {"name": "VisualFBEditor", "doc": "VisualFBEditor IDE Environment.md"},
-          {"name": "MyFbFramework", "doc": "Readme.md"},
+          {"name": "Framework", "doc": "Readme.md"},
           {"name": "MFF", "doc": "Readme.md"}
         ],
         "extensions": {
@@ -125,7 +125,7 @@
     
     "gui_framework": {
       "default": {
-        "name": "MyFbFramework (MFF)",
+        "name": "Framework (MFF)",
         "languages": "FreeBasic",
         "documentation": "Readme.md"
       },
@@ -228,7 +228,7 @@
             "vbnet_name": "FolderBrowserDialog"
           }
         ],
-        "reference_doc": "MyFbFramework VB VB.NET Control Cross-Reference Table.md"
+        "reference_doc": "Framework VB VB.NET Control Cross-Reference Table.md"
       }
     }
       "preprocessor": {

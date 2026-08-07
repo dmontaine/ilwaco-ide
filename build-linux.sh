@@ -97,17 +97,17 @@ need_shim() { [ -e "$SHIM/libtinfo.so.5" ] && [ -e "$SHIM/libgtk-3.so" ] || buil
 build_lib() {
 	need_shim
 	echo "build-linux.sh: building libmff64_gtk3.so (MFF designer control lib)…"
-	( cd "$REPO/Controls/MyFbFramework/mff" \
+	( cd "$REPO/Controls/Framework/mff" \
 		&& LD_LIBRARY_PATH="$SHIM" "$FBC" -b mff.bi -dll -x ../libmff64_gtk3.so \
 			-d __USE_GTK3__ -p "$SHIM" -l tinfo )
-	echo "build-linux.sh: -> $REPO/Controls/MyFbFramework/libmff64_gtk3.so"
+	echo "build-linux.sh: -> $REPO/Controls/Framework/libmff64_gtk3.so"
 }
 
 build_editor() {
 	need_shim
 	echo "build-linux.sh: building ilwaco (editor, whole-program ~3-4 min)…"
 	( cd "$REPO/src" \
-		&& LD_LIBRARY_PATH="$SHIM" "$FBC" ilwaco.bas -i ../Controls/MyFbFramework \
+		&& LD_LIBRARY_PATH="$SHIM" "$FBC" ilwaco.bas -i ../Controls/Framework \
 			-d __USE_GTK3__ -p "$SHIM" -l tinfo )
 	echo "build-linux.sh: -> $REPO/ilwaco"
 }

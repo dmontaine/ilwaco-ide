@@ -1,14 +1,14 @@
-# MyFbFramework guide (GTK)
+# Framework guide (GTK)
 
 **Status: scaffold.** A tracked placeholder, not yet written for Ilwaco. It exists so the document
 has an analogue, is listed in the rule table, and is caught by `DocCheck` when it goes stale — see
 [TestPlan.md](TestPlan.md).
 
-**Purpose.** The working guide to MyFbFramework (MFF) for someone building or modifying Ilwaco's UI:
+**Purpose.** The working guide to Framework (MFF) for someone building or modifying Ilwaco's UI:
 the object model, how forms and controls are constructed and parented, the event-dispatch model, and
 the GTK interop patterns Ilwaco relies on.
 
-**Source to adapt.** Astoria maintains a full `MyFbFrameworkGuide.md` (~1300 lines) for its Win64
+**Source to adapt.** Astoria maintains a full `FrameworkGuide.md` (~1300 lines) for its Win64
 build. Adapt from it, but MFF is **our fork now** (diverged, GTK-only) — anything Win32-specific
 (uxtheme, Direct2D, `SendMessage`/`Perform` message plumbing) is either gone or reimplemented, so
 re-verify against the GTK source before stating it here.
