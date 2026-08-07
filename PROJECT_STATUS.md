@@ -89,17 +89,40 @@ and **verified 20/20 clean close (exit 0), IDE renders correctly**:
 
 ---
 
+## ✅ DONE (2026-08-07) — the AppImage's bundled link toolchain
+
+The hardest part of packaging is settled: **Ilwaco can now compile FreeBASIC with nothing from the host
+but the kernel and the GTK/libc runtime a normal desktop already has.** Three scripts in
+[`Packaging/`](Packaging), designed and verified this session; the full write-up, including the two
+decisions below, is [Documentation/Packaging.md](Documentation/Packaging.md).
+
+- **`make-toolchain.sh`** assembles ~12 MB: wrapped `as`/`ld` (with their private `libbfd` etc. kept off
+  the app's library path), a **stub `gcc`**, and a minimal C link sysroot. Run it on the release machine.
+- **`gen-gtk-links.sh`** generates the unversioned GTK `.so` link targets against the *host's runtime*
+  at startup. **GTK is deliberately not bundled** — the `ilwaco` binary already links host
+  `libgtk-3.so.0`, so a host GTK3 runtime is a hard requirement regardless; bundling would add ~19 MB
+  plus the pixbuf-loader/gio-module/theme tax and buy nothing.
+- **`verify-toolchain.sh`** compiles under `env -i` with only the bundled `bin` on `PATH`, runs the
+  result, and scans the link line for host reach-back. Green, and **confirmed falsifiable**: pointing the
+  gcc stub at `/usr/bin/gcc` and deleting the bundled `crt1.o` each turn it red.
+
+**Two findings that change the plan.** (1) fbc's *default* backend shells out to a real **`gcc`**, not
+just `as`/`ld` as previously recorded — and with no gcc present it fails **silently**, dropping every crt
+object from the `ld` line and dying later on `cannot find -lgcc`. (2) The escape is **`-gen gas64`**,
+which needs no C compiler — but the IDE does not yet pass it for user compiles, and gas64 is the
+less-tested backend. That is the one open decision blocking the rest (see Packaging.md, "The gcc question").
+
+---
+
 ## NEXT — packaging, then the two committed divergences, then the parity tail
 
 The release blocker is gone, so the order is now feature/packaging work (owner: **no release until the
 whole parity list is complete**, so nothing here is release-gated — sequence by value):
 
 1. **Packaging** — the AppImage is the difference between a project and something people can install
-   (memory `project-packaging`). **Scope is bigger than the shim:** the bundled `fbc` ships no `as`/`ld`
-   and leans on the host's binutils + `-dev` link objects (`crt1.o`, `libc.so`/GTK/ncurses link targets),
-   which a fresh distro lacks — so a truly self-contained chain must bundle **binutils + a minimal C link
-   sysroot**, wired up by `AppRun` (measured 2026-08-07). Writable user data (Projects/Examples/Docs)
-   lives *outside* the read-only image.
+   (memory `project-packaging`). **The bundled link toolchain is now DONE** (see the section below);
+   what remains is the AppDir + `AppRun`, the writable user-data dirs, and wrapping it into a
+   `.AppImage`. Full design and status table: [Documentation/Packaging.md](Documentation/Packaging.md).
 2. **The two committed divergences**, in order: **Git integration** (build the ADD chain `d61eb062` →
    `fffee489` → `fd894173` → `95b04f70`, skip removal `9d277f28`), then the **three AI templates** (Claude
    Code, ChatGPT, Kun — ADD chain `987e8b7e`/`ef5a6252`/`72ea5980`/`de8c1e5a`, skip `6de0332f`). See the
@@ -211,12 +234,11 @@ off in Tools ▸ Options ▸ General; the status bar shows which. See
   `Compilers/shim/gtk-dev/`, but the linker only sees them when they are on its command line — `ld` does
   **not** consult `LD_LIBRARY_PATH`. So a console link needs `-p <shim> -l tinfo`, either per-project via
   `CompilationArguments64Linux` or globally via `[Parameters] Compiler64Arguments`; without it fbc stops at
-  `ld: cannot find -lncurses` (measured again 2026-08-06). The AppImage should ship the libraries so users
-  need neither. **And the shim is only part of it** — the bundled `Compilers/…/bin/` ships **only `fbc`**,
-  so compilation currently uses the host's `/usr/bin/as` + `/usr/bin/ld` and the host's `-dev` link
-  objects (`crt1.o`, `libc.so`/GTK/ncurses targets), none of which a fresh distro has. A self-contained
-  AppImage must bundle **binutils + a minimal C link sysroot** and wire them via `AppRun` (measured
-  2026-08-07; detail in memory `project-packaging`). AppImage packaging itself is still open.
+  `ld: cannot find -lncurses` (measured again 2026-08-06). This is a *from-source dev build* caution only —
+  **for the shipped app it is solved**: `Packaging/make-toolchain.sh` bundles binutils, a stub `gcc` and a
+  minimal C link sysroot, verified self-contained (DONE section above,
+  [Packaging.md](Documentation/Packaging.md)). What is still open there is the AppDir/`AppRun`, the
+  writable user-data dirs, the `.AppImage` wrap, and the `-gen gas64` decision.
 - **GTK dark mode (REIMPLEMENT):** MFF ships a real GTK3 `SetDarkMode`, but `g_darkModeSupported` was only
   ever set by the deleted Win32 `InitDarkMode`, so the dark-styling branches never fire on GTK. Track with
   Astoria's dark-mode commits (`56f6d180`/`b3633bc5`/`a7c7839d`).
