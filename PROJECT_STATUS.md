@@ -106,11 +106,13 @@ decisions below, is [Documentation/Packaging.md](Documentation/Packaging.md).
   result, and scans the link line for host reach-back. Green, and **confirmed falsifiable**: pointing the
   gcc stub at `/usr/bin/gcc` and deleting the bundled `crt1.o` each turn it red.
 
-**Two findings that change the plan.** (1) fbc's *default* backend shells out to a real **`gcc`**, not
-just `as`/`ld` as previously recorded — and with no gcc present it fails **silently**, dropping every crt
-object from the `ld` line and dying later on `cannot find -lgcc`. (2) The escape is **`-gen gas64`**,
-which needs no C compiler — but the IDE does not yet pass it for user compiles, and gas64 is the
-less-tested backend. That is the one open decision blocking the rest (see Packaging.md, "The gcc question").
+**The finding that changes the plan:** fbc's *default* backend shells out to a real **`gcc`**, not just
+`as`/`ld` as previously recorded — and with no gcc present it fails **silently**, dropping every crt
+object from the `ld` line and dying later on `cannot find -lgcc`. The escape is **`-gen gas64`**, which
+needs no C compiler; **owner confirmed 2026-08-07, and the IDE already emits it** on every compile path
+(`GetFirstCompileLine` in `src/TabWindow.bas`, plus a redundant second append in `Compile` in
+`src/Main.bas`). Both are gated on there being a project, which is correct — **Ilwaco has no loose
+single-file compiles, everything is a project.** So no code change was needed.
 
 ---
 

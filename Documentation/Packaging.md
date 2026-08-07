@@ -16,7 +16,7 @@ Documentation) lives **outside** the read-only image and is seeded on first run.
 | --- | --- |
 | Bundled link toolchain (`as`, `ld`, gcc stub, C sysroot) | **Done** — `Packaging/make-toolchain.sh`, proven by `Packaging/verify-toolchain.sh` |
 | GTK link targets generated against the host runtime | **Done** — `Packaging/gen-gtk-links.sh` |
-| `-gen gas64` for user compiles | **Open decision** — see "The gcc question" below |
+| `-gen gas64` for user compiles | **Done** — already emitted by the IDE; see "The gcc question" below |
 | AppDir layout + `AppRun` | Not built |
 | Writable user-data dirs, seeded on first run | Not built (needs IDE source changes) |
 | Wrapping the AppDir into a `.AppImage` | Not built (needs `appimagetool`) |
@@ -92,16 +92,24 @@ flags as if it were host `/bin`, so owned prefixes are rewritten to markers firs
 green result by sabotage** — pointing the gcc stub at the host `/usr/bin/gcc`, or removing the
 bundled `crt1.o`, must both turn it red. Both were checked on 2026-08-07.
 
-## The gcc question — an open decision
+## The gcc question — settled: gas64
 
 Everything above depends on compiling user projects with **`-gen gas64`**, which needs no C
 compiler. FreeBASIC's default on x86_64 is `-gen gcc`, which shells out to a real `gcc` — bundling
-one would add well over 100 MB and a second sysroot.
+one would add well over 100 MB and a second sysroot. Confirmed by the owner on 2026-08-07: Ilwaco
+goes with gas64. It is also what the Integrated debugger was verified viable on.
 
-The IDE therefore has to pass `-gen gas64` when it compiles user projects, which is a settings /
-source change that has not been made yet. The trade-off to weigh before making it: gas64 is the
-less battle-tested of the two backends, so codegen differences would land on users. In its favour,
-Ilwaco's Integrated debugger was already verified viable on gas64/Linux.
+**This needs no change — the IDE already emits it**, in the two places that assemble an fbc command
+line, both gated on there being a project:
+
+- `GetFirstCompileLine` in [`src/TabWindow.bas`](../src/TabWindow.bas) — the shared builder;
+- `Compile` in [`src/Main.bas`](../src/Main.bas), which appends it again on top of the line the
+  builder already returned. Harmless (fbc takes the last `-gen`), but redundant.
+
+The project gating is correct and must stay: **Ilwaco has no loose single-file compiles — everything
+is a project**, so "no project" is not a case that needs covering. Ilwaco is therefore gas64-only,
+with no backend picker, which is why the GCC/CLANG-only optimization and `-Wc` warning options were
+removed from the UI.
 
 ## Glibc floor
 
