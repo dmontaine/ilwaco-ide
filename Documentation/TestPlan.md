@@ -39,6 +39,7 @@ came to describe a deleted Git menu for four days). Treat every row below as a t
 | `AstoriaParity.md` | a changelog-walk item is ported, deferred, or reclassified, or its current-status / next-action changes — the port backlog's classification + "Done" record |
 | `McpServer.md` | the Agent MCP server changes — a task lands or its status changes, a tool is added, or a design decision is revised |
 | `AgentMcpSetup.md` | the *user-facing* side of the MCP server changes — the opt-in toggle, how a client is registered, the advertised tool list, or the security notes |
+| `ExamplesAudit.md` | an example is ported, fixed, or found broken — the standing record of which examples build and run on Linux, and why the rest do not |
 | `Packaging.md` | anything about shipping Ilwaco changes — what the AppImage bundles, the `Packaging/` scripts, the writable user-data layout, or one of its open decisions is settled |
 
 These are **not** rows in the table above:

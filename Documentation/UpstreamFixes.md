@@ -104,6 +104,16 @@ the diff.
   Note the same trap bites any `&` concatenation with a `UString` operand, since `&` then resolves to
   MFF's `UString` operator and yields a `UString`.
 
+- **`StatusBar` did not dock to the bottom on GTK (2026-08-07).** Symptom: a form with a status bar
+  rendered it **top-left**, over the client area (`Examples/Learning/GUI/20_MenuAndStatusBar`).
+  Win32 gets this free — `msctls_statusbar32` positions itself at the bottom of its parent — whereas
+  `gtk_statusbar_new` returns an ordinary widget that MFF then places like any other control, at its
+  default position. MFF already had the machinery (`DockStyle.alBottom`, honoured by `Control.bas`);
+  the GTK `StatusBar` constructor simply never set it. Fixed in `mff/StatusBar.bas` with
+  `.Align = DockStyle.alBottom`. Benefits **every MFF app**, not just the IDE — which had been
+  papering over it by setting `stBar.Align` itself in `src/Main.bas`. Verified: the example now docks
+  correctly, and the IDE's own status bar is unchanged.
+
 ---
 
 ## Examples ported from Astoria (2026-08-07)

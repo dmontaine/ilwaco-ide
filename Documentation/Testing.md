@@ -20,12 +20,11 @@ necessary but not sufficient — "it compiled" is not "it works".
   compiled and opened a window.
 
   **"A window opened" was not enough, and the first version of this entry claimed too much.** Every
-  GUI example was subsequently screenshotted and inspected. That found layout defects in four of the
-  25 `Learning/GUI` examples — three where a label wrapped to two lines and misaligned
-  (`04_NumbersAndValidation`, `12_ProceduresInAModule`, `13_FunctionsAndReturn`; **fixed** by widening
-  the labels, re-verified by screenshot) and `20_MenuAndStatusBar`, where the status bar renders at
-  the **top** instead of docked at the bottom (**open**). `Calculator`, `FiveInARow` and `Maze` have
-  worse layout problems — see "Not proven" below.
+  GUI example was subsequently screenshotted and inspected, which found seven layout defects —
+  **all now fixed and re-verified by screenshot**: three wrapped labels (`04_NumbersAndValidation`,
+  `12_ProceduresInAModule`, `13_FunctionsAndReturn`), `20_MenuAndStatusBar`'s status bar rendering
+  at the top (fixed in MFF, see [UpstreamFixes.md](UpstreamFixes.md)), and the `Calculator`,
+  `FiveInARow` and `Maze` layouts. The catalogue is in [ExamplesAudit.md](ExamplesAudit.md).
 
   What is still *not* proven for any of them is that a handler does the right thing — nothing was
   clicked, and console output was spot-checked rather than diffed.
@@ -138,7 +137,15 @@ necessary but not sufficient — "it compiled" is not "it works".
   project. TestPlan T19.
 
 ## Not proven (known gaps)
-- **`Calculator`, `FiveInARow` and `Maze` have broken layouts on GTK (2026-08-07, owner-reported).**
+- **None of the 22 PRE-EXISTING examples builds on Linux (2026-08-07).** Measured, all 17 with a
+  usable project file failing and 5 skipped for a manifest with no main file — they are Windows
+  programs (`InvalidateRect`, `QueryPerformanceCounter`, `win/wininet.bi`, `ITaskbarList3`, Win32
+  `Point`/`Rect`). They **ship inside the AppImage**, so a beginner who opens one and presses Build
+  gets a wall of compiler errors. Audit-only by owner direction; the full catalogue, grouped by root
+  cause, is in [ExamplesAudit.md](ExamplesAudit.md). The 53 ported from Astoria are currently the
+  only examples that work.
+- **`Calculator`, `FiveInARow` and `Maze` had broken layouts on GTK (2026-08-07, owner-reported;
+  now FIXED — kept here as the record of what "it opened a window" missed).**
   They compile and open, but: `FiveInARow`'s settings panel has genuinely overlapping labels
   ("Chess Board Size" collides with "Background:") with clipped radio captions, and it opens at
   2560×1293; `Maze`'s "Maze Size:"/"Wall Size:" labels wrap into their text boxes and the Refresh

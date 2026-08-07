@@ -373,6 +373,11 @@ Namespace My.Sys.Forms
 			'#endif
 			.Height = ScaleY(Font.Size / 72 * 96 + 6)
 			.Width        = 175
+			' Dock to the bottom of the parent, which is what a status bar is.
+			' Win32 gets this free -- msctls_statusbar32 positions itself -- but
+			' gtk_statusbar_new is an ordinary widget, so without this it lands
+			' at the top-left like any other control.
+			.Align        = DockStyle.alBottom
 			.Child        = @This
 		End With
 	End Constructor
