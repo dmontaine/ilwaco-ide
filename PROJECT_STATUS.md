@@ -72,6 +72,13 @@ Verified by effect on `:0` throughout, using the MCP agent to open projects: con
 Project **Yes** deletes and rewrites the `.vfp`; **No** leaves file and `.vfp` untouched; Cancel Deletion
 reverts and the file then survives a real save.
 
+**Also this session — the whole remaining backlog was classified, and `13.71` was ported.** All **396**
+entries are now judged in [AstoriaParity.md](Documentation/AstoriaParity.md) "Full classification pass"
+(cluster-level, with its own confidence caveats; the backlog file was deliberately not pruned).
+**`13.71`** — the serial IntelliSense loader — is implemented and committed (`31a5e20`). Trying to
+*measure* it then overturned the priority this file had been asserting for weeks; that correction is in
+the NEXT section and is the more useful outcome of the two.
+
 **Also this session — the product direction below was set, and documented for users.** The owner recorded
 the project-only stance and the four divergences (next section), and asked that the Ilwaco/Astoria
 differences be written down "in case users assume they are exactly the same". New
@@ -110,7 +117,51 @@ name distinct and mapped in one place.
 
 ---
 
-## NEXT — the deferred menu features; the threading arc is DOWNGRADED (see below)
+## NEXT — settle the intermittent SIGSEGV first: measure it, then decide
+
+**Recommended next task (assistant recommendation, 2026-08-06; owner asked for it to be recorded here).**
+
+**Why this and not feature work.** It is the only outstanding item that could block a release — Git, the
+AI templates, `13.72` and the parity tail are all additive; a crashing IDE is not. It also just became
+the biggest known unknown: until this session the project believed this crash was diagnosed and merely
+awaiting a port, and that turned out to be an inherited assumption (see the correction below). The
+scariest defect we have moved from "handled" to "open" today.
+
+**Step 1 — MEASURE THE RATE. Do this before anything else; it decides how much the rest is worth.**
+The memory note says ~half of launches crash; this session launched the IDE roughly eight times with no
+crash. Both cannot be current. Launch it N times headless-ish on `:0`, count non-zero exits, and write
+the number down. Ten minutes, no build. This is the project's own "measure before theorising" rule, and
+it separates *release blocker* from *nuisance* from *already gone*.
+
+**Step 2 — only if it is real, diagnose it properly.**
+- **Get a backtrace, do not propose mechanisms.** Build with symbols and run under the bundled gdb.
+  Astoria's entire `13.6x`/`13.7x` method was to stop theorising and resolve the fault address; every
+  hypothesis-first attempt in that arc was refuted.
+- **Drive its REAL trigger — opening _large files_** — not project switching. That was this session's
+  mistake and it is now recorded: a harness paced by MCP round trips cannot reproduce a sub-second race,
+  and 0 deaths at that pacing means nothing (Astoria measured 0/60 at 1 s/switch on an *unfixed* build).
+- **Read `13.65` and `13.66` first.** A loader thread calling into the UI, and a project close freeing
+  the tree under a live worker, match "opening a large file trips it" far better than `13.70` ever did.
+- **A control arm is nearly free**: the previous binary is tracked, so `git show <rev>:ilwaco` gives an
+  A/B with no rebuild. Confirm the control actually fails before believing anything about a fix.
+
+**Then, in order:** packaging (the AppImage is the difference between a project and something people can
+install), then the two committed divergences (**Git**, then the **three AI templates**), then the parity
+tail.
+
+**Explicitly do NOT do next: `13.72` (idle slices).** It exists only to remove a stall `13.71`
+introduces, and nobody has yet felt that stall on a real project. Building an optimisation for an
+unmeasured cost is exactly how this session's threading detour began.
+
+**Caveat on this recommendation, so it can be overridden knowingly.** It weights *shipping something
+reliable* above *feature completeness*. If the goal for the next stretch is breadth rather than a
+release, Git and the AI templates are the better use of the time and the crash can wait — it has been
+tolerable for weeks. That is the owner's call; it is recorded this way only so it is made deliberately
+rather than inherited.
+
+---
+
+### After that — the deferred menu features; the threading arc is DOWNGRADED (see below)
 
 **A full classification pass over the whole remaining backlog was done on 2026-08-06** — all **396**
 entries in [AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md) are now grouped and
@@ -199,8 +250,9 @@ classifying, and **look downstream at the whole log** (now a CLAUDE.md rule) —
 reworked later (`e5e10808`'s toggles by `4a112089`; the menu cluster by ~15 commits; the toolbar breakpoint
 button by `d8a2e8fb`), so scoping against Astoria's *final* state avoids building what a later commit undoes.
 Build with `./build-linux.sh editor` in the background, verify on `:0`, then document and commit per item.
-**Note:** live `:0` verification is hampered by the **known intermittent startup/analysis SIGSEGV** — it
-hits opening *large* files (thread-heavy analysis); a small file opens first try. Not a regression; retry.
+**Note:** live `:0` verification is hampered by the **intermittent startup/analysis SIGSEGV** — it hits
+opening *large* files (thread-heavy analysis); a small file opens first try. Not a regression; retry. Its
+rate is unmeasured and it is undiagnosed — see NEXT.
 
 **Two items to settle before the testing phase** (both in TechnicalDebt "Known gaps"): the
 **blank-terminal finding** (a user pressing Run sees an empty window — reproducible with
@@ -260,8 +312,12 @@ off in Tools ▸ Options ▸ General; the status bar shows which. See
   twice on 2026-08-06). `Settings/Workspace.ini`, written on every exit, is gitignored and can be deleted
   freely to start the IDE empty.
 - **`pkill -f ilwaco` matches its own caller** — use `pkill -x ilwaco` or kill by PID.
-- **Intermittent startup/shutdown SIGSEGV** is a known Astoria-fixed threading issue — don't chase it as a
-  new regression (memory `project-known-segfault-threading`).
+- **Intermittent startup/shutdown SIGSEGV — UNDIAGNOSED (corrected 2026-08-06).** It is *not* a
+  regression you introduced, so don't chase it as one mid-task; but the long-standing claim that it was
+  "a known Astoria-fixed threading issue awaiting a port" was an inherited assumption, not a diagnosis,
+  and it is now retracted — Astoria's `13.70` has a different trigger (rapid project switching) and was
+  itself downgraded as not-a-blocker. Investigating it properly is the **NEXT** task above (memory
+  `project-known-segfault-threading`).
 - Harmless startup warnings: resources `AppAddin`/`AppConsole` "do not exist".
 
 **Known gaps (tracked, not blockers).**
