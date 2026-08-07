@@ -15,6 +15,28 @@ an argument.
 These are the standing items from [PROJECT_STATUS.md](../PROJECT_STATUS.md) "Known gaps", kept here
 as the durable register:
 
+- **fbc 1.10.1 `-gen gas64` segfaults when building a shared library from certain sources.** Found
+  2026-08-07 while porting Astoria's `Learning/DLL` examples: two of the four crash the *compiler*
+  (`Aborting due to runtime error 12 ("segmentation violation" signal)`, exit 12), and the same
+  sources compile cleanly under `-gen gcc`. Minimal reproduction — needs all three of a `ByRef …
+  As ZString` parameter, `Export`, and `-dll`; the two-line version does not crash, so the body
+  matters:
+
+  ```basic
+  Sub DescribeInto(ByRef Station As ZString, ByVal Buffer As ZString Ptr, ByVal N As Integer) Export
+      Dim As String text = Station
+      If Len(text) >= N Then text = Mid(text, 1, N - 1)
+      *Buffer = text
+  End Sub
+  ```
+  `fbc -gen gas64 -b t.bas -dll` → exit 12; `-gen gcc` → compiles.
+
+  **Why this matters beyond the examples:** Ilwaco compiles every project with `-gen gas64` (owner,
+  2026-08-07 — the AppImage bundles no C compiler, so `-gen gcc` is not available to users). A user
+  writing a shared library can therefore hit a compiler crash with no diagnostic. The whole
+  `Learning/DLL` series was **held back** from `Examples/` for this reason rather than shipping a
+  numbered course with lessons 2 and 3 missing. Not yet reported upstream.
+
 - **Packaging / dev shim — the linker needs the shim on its command line.** The in-repo shim under
   `Compilers/shim/gtk-dev/` *does* provide `libncurses.so` and `libtinfo.so` (the earlier "no
   libncurses" note is obsolete), but `ld` does **not** read `LD_LIBRARY_PATH`, so a console link still

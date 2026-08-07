@@ -126,6 +126,30 @@ single-file compiles, everything is a project.** So no code change was needed.
 
 ---
 
+## ✅ DONE (2026-08-07) — 53 Astoria examples ported and verified on Linux
+
+Owner-requested, superseding the "defer Examples to the testing phase" note. Ported: the whole
+`Learning` course except its DLL series — **`Console` 25 + `GUI` 25** (renamed from Astoria's
+`WinGUI`, a misnomer on GTK) — plus **`Calculator`, `FiveInARow`, `Maze`**. Every one was compiled
+with the bundled toolchain **and run**: console programs to completion (exit 0), GUI programs to a
+confirmed window on screen. All converted to UTF-8-no-BOM + LF on the way in.
+
+**Copying was not enough — four defects had to be fixed**, three of them the same class: a
+case-insensitive filesystem had hidden `mff/Textbox.bi`, `mff/sys.bi` and `maze.bi`, all of which are
+`error 23` here. The fourth was `crHand`, Win32-only (`LoadCursor(0, IDC_HAND)`), substituted with
+GTK's `crHandPoint`. Separately, **every** GUI example needed the `#ifdef __FB_WIN32__` guard restored
+around its `#cmdline "*.rc"` — an INVERT of Astoria's Win64-only stripping, without which fbc stops at
+`Executable not found: "windres"`. Detail in [UpstreamFixes.md](Documentation/UpstreamFixes.md).
+
+**Held back:** the `Learning/DLL` series, because **fbc 1.10.1 `-gen gas64 -dll` segfaults** on two of
+its four lessons (minimal repro in [TechnicalDebt.md](Documentation/TechnicalDebt.md)) — shipping a
+numbered course missing lessons 2 and 3 is worse than shipping none. **This is bigger than the
+examples:** Ilwaco compiles everything with `-gen gas64`, so a user building a shared library can hit
+a compiler crash with no diagnostic. Not yet reported upstream. Also not ported, as Windows by nature:
+the DirectShow, COM, SAPI and WLan sets, plus `Sudoku` and `MultipleDisplay`.
+
+---
+
 ## NEXT — packaging, then the two committed divergences, then the parity tail
 
 The release blocker is gone, so the order is now feature/packaging work (owner: **no release until the
@@ -185,10 +209,11 @@ document and commit per item.
 `xfce4-terminal --hold -x /bin/echo TEST`, so not ours, but it is what a user sees), and the **project
 `.vfp` BOMs** written by `SaveProjectFile` and carried by the template `.vfp` data.
 
-- **Examples work — deferred to just before the testing phase (owner).** The two Astoria Examples items
-  (`4bd02894`, `51441d7a`), **plus a BOM sweep**: 93 of 111 sources under `Examples/` start with a UTF-8
-  BOM, so FreeBASIC compiles their string literals wide (they build clean, then print UTF-32). Do all
-  three together so `Examples/` is touched once.
+- **Examples — 53 ported from Astoria and verified (2026-08-07); the BOM sweep of the PRE-EXISTING
+  examples is still open.** The newly ported ones are clean (UTF-8 no-BOM, LF), but the 93-of-111
+  older sources under `Examples/` that start with a UTF-8 BOM — so FreeBASIC compiles their string
+  literals wide, building clean then printing UTF-32 — are untouched. Do that sweep with the two
+  Astoria Examples items (`4bd02894`, `51441d7a`).
 - Unverified, low priority: **Ctrl+F5 did not resume** a stopped debuggee — may be a synthetic-input
   artefact; check by hand before treating it as a bug.
 - Cosmetic: the Tools menu still lists a stale **`VisualFBEditor64`** external-tool entry from

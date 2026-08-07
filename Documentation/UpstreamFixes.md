@@ -106,6 +106,28 @@ the diff.
 
 ---
 
+## Examples ported from Astoria (2026-08-07)
+
+Four defects found by actually building Astoria's examples on Linux. The first three are the same
+class of bug: **a case-insensitive filesystem hid them**, so they were invisible on Windows and fatal
+here.
+
+- **`#include once "mff/Textbox.bi"`** (`Examples/Calculator`) — the file is `TextBox.bi`.
+  `error 23: File not found`.
+- **`#include once "mff/sys.bi"`** (`Examples/FiveInARow`) — the file is `Sys.bi`. Same error.
+- **`#include once "maze.bi"`** (`Examples/Maze`) — the file is `Maze.bi`. Same error.
+- **`crHand` is Win32-only** (`Examples/FiveInARow`) — Astoria's MFF defines it as
+  `LoadCursor(0, IDC_HAND)` (`Controls/Framework/mff/Cursor.bi`), which has no GTK equivalent under
+  that name. Ilwaco's MFF calls the hand cursor **`crHandPoint`** (`"pointer"`), so the six uses were
+  changed to that. Not a bug in either fork — a genuine Win32→GTK substitution.
+
+A fifth is **not** a defect but the inverse of Astoria's Win64-only stripping, and is worth recording
+because it hits *every* GUI example: Astoria removed the `#ifdef __FB_WIN32__` around each example's
+`#cmdline "*.rc"`. That line runs the Windows resource compiler, so on Linux fbc stops with
+`Executable not found: "windres"`. The guard was put back in all 30 files that carry the line.
+
+---
+
 ## Why this is short
 
 Ilwaco is early in its Astoria-parity walk, and most work so far is **porting** Astoria's changes or

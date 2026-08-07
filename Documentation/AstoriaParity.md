@@ -12,8 +12,20 @@ English-only, and the Ilwaco rebrand. Per-task detail lives in the "Done" narrat
 **Active work: the changelog walk.** Bottom-panel collapse (`e212819d`/`ef3b43e9`) landed + live-verified
 2026-08-04; `5fa5cf25` (alt-compiler-backend + debugger-choice removal, inverted to keep the Integrated
 engine) **completed** 2026-08-04. For the current next item see **[Next action](#next-action)** at the foot of
-this file — short version: the two Examples items are deferred to just before the testing phase, so next up
-are two found debugger bugs, then the `49ec5ccd`/`37ba31ea` menu-taxonomy cluster.
+this file — short version: next up are two found debugger bugs, then the `49ec5ccd`/`37ba31ea`
+menu-taxonomy cluster.
+
+**Examples: 53 ported from Astoria and verified on Linux (2026-08-07, owner-requested).** The whole
+`Learning` course except its DLL series (`Console` 25 + `GUI` 25, the latter renamed from Astoria's
+`WinGUI`, which is a misnomer on GTK), plus `Calculator`, `FiveInARow` and `Maze`. Every one was
+compiled with the bundled toolchain **and run** — the console programs to completion, the GUI ones to
+a window on screen. Copying alone was not enough; see [UpstreamFixes.md](UpstreamFixes.md) for the four
+defects fixed on the way (three case-sensitivity bugs a case-insensitive filesystem had hidden, and
+`crHand` → `crHandPoint`) and for the `#ifdef __FB_WIN32__` guard that had to be restored around every
+example's `#cmdline "*.rc"` — an **INVERT** of Astoria's Win64-only stripping, without which no GUI
+example builds. **Not ported:** the `Learning/DLL` series (blocked by an fbc `-gen gas64 -dll`
+compiler crash — [TechnicalDebt.md](TechnicalDebt.md)), and the DirectShow / COM / SAPI / WLan /
+`Sudoku` / `MultipleDisplay` examples, which are Windows by nature.
 
 **Still-open, opportunistic (not blocking):**
 

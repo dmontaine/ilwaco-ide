@@ -14,6 +14,13 @@ necessary but not sufficient — "it compiled" is not "it works".
 
 ## Proven
 
+- **The 53 examples ported from Astoria all build, and all run (2026-08-07).** Built with Ilwaco's
+  bundled Linux toolchain on Debian 13 x86_64: **25/25** `Learning/Console` programs compiled and ran
+  to completion (exit 0), **25/25** `Learning/GUI` programs compiled and were each launched and
+  confirmed to put a window on screen, and `Calculator`, `FiveInARow` and `Maze` likewise opened
+  their windows. Running matters separately from compiling here: a form whose constructor fails half
+  way still builds, and then opens empty. What is *not* proven is that any handler does the right
+  thing — nothing was clicked, and console output was spot-checked rather than diffed.
 - **Editor builds from source and runs.** `./build-linux.sh editor` produces `ilwaco`; the window
   opens on `:0` with no error dialog (harmless `AppAddin`/`AppConsole` "does not exist" warnings
   aside). Standing result — see [PROJECT_STATUS.md](../PROJECT_STATUS.md).

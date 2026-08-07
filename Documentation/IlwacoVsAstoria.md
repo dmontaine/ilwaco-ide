@@ -75,7 +75,15 @@ gaps are:
 - **Dark mode does not apply on GTK.** The framework has a real GTK dark-mode path, but the flag that
   switches it on was only ever set by Windows-specific startup code, so Ilwaco's dark styling does not
   currently take effect. Editor colour themes are unaffected and work normally.
-- **No packaged release yet.** Ilwaco builds and runs from source; the AppImage is not done.
+- **The `Learning/DLL` series is missing.** Astoria's four DLL lessons are held back because two of
+  them crash the FreeBASIC compiler under `-gen gas64 -dll`, which is the only backend the AppImage
+  can offer — detail and a minimal reproduction in [TechnicalDebt.md](TechnicalDebt.md). The Console
+  and GUI halves of the course did come across, verified on Linux.
+- **A handful of Astoria examples are Windows-only by nature** and will not be ported: the DirectShow
+  capture and playback set (`CamGrab`, `PlayerGrab`, `amcap`, `playcap`, `sysenum`, and the `T*`
+  variants), the COM ones (`Com_VBA`, `Test_WellCOM`, `IFileDialog`), speech (`SapiTTS`,
+  `SapiRecognizer`), and `WLan`. `Sudoku` and `MultipleDisplay` also depend on Win32 types and
+  headers, so they would need real porting rather than copying.
 - **The form designer is less mature**, and the agent interface deliberately exposes no designer tools.
 - Assorted changelog items are still unported — the current backlog is in
   [AstoriaParity.md](AstoriaParity.md).
