@@ -1,24 +1,33 @@
 # Examples audit — what actually builds and runs on Linux
 
-Ilwaco's `Examples/` tree has two halves with opposite results, and the difference matters more
-than anything else in this document:
+## RESOLVED (2026-08-07) — the broken pre-existing examples were deleted
 
-| Half | Projects | Build | Run |
-| --- | --- | --- | --- |
-| **Ported from Astoria (2026-08-07)** — `Learning/Console`, `Learning/GUI`, `Calculator`, `FiveInARow`, `Maze` | 53 | **53 / 53** | **53 / 53** |
-| **Pre-existing** — inherited with the VisualFBEditor base | 22 | **0 / 17** (5 have no project file) | not reached |
+The audit below found that **every pre-existing example failed to compile on Linux** — they are
+Windows programs. Per owner decision (2026-08-07) the **22 audited pre-existing projects were
+removed** (`git rm`), together with **6 stale Windows-era duplicates** of the ported `Calculator`,
+`FiveInARow` and `Maze` that lingered under `Examples/Game/`, and four empty placeholder dirs
+(`FreeBASIC Examples`, `MariaDBBox Examples`, `MyFbFramework Examples`, `SQLite3 Examples`). The two
+loose single-file examples at the `Examples/` root (`Class Form Example.bas`, and `try_catch_throw.bas`
+— Win32 SEH, also Linux-broken) were **kept as porting candidates** and each moved into its own
+directory; `Add-In/`, `Graphics/` and `Web Page/` likewise remain as un-audited candidates. Every
+example now lives in its **own** directory.
 
-**Every pre-existing example fails to compile on Linux.** This was measured on 2026-08-07 by
-building each `.vfp` with Ilwaco's bundled toolchain, and it is not a marginal failure: they are
-Windows programs. Per the owner's direction this document is the **audit only** — nothing here has
-been fixed.
+`Examples/` therefore ships **only the 53 Astoria-ported projects, all of which build and run**, so a
+beginner no longer meets a wall of compiler errors on first Build. The failure catalogue below is
+retained as the **record of what was removed and why**.
 
-Why it matters: these examples **are installed for the user**. They travel in the AppImage only as a
-seed, and `AppRun` copies them out to `~/ilwaco-ide/Examples` on first run — a writable copy the user
-owns, per the packaging decision that nothing user-facing runs from the read-only image. The effect is
-the same either way: a beginner — the audience Ilwaco is built for — opens one, presses Build, gets a
-wall of compiler errors, and cannot tell a Windows-only example from a mistake of their own. That is precisely the failure the product
-standard in [CLAUDE.md](../CLAUDE.md) exists to prevent.
+| Half | Projects | Build | Run | State |
+| --- | --- | --- | --- | --- |
+| **Ported from Astoria (2026-08-07)** — `Learning/Console`, `Learning/GUI`, `Calculator`, `FiveInARow`, `Maze` | 53 | **53 / 53** | **53 / 53** | **ships** |
+| **Pre-existing** — inherited with the VisualFBEditor base | 22 | **0 / 17** (5 had no project file) | not reached | **deleted 2026-08-07** |
+
+Why it mattered: these examples **were installed for the user**. They travelled in the AppImage only
+as a seed, and `AppRun` copies the tree out to `~/ilwaco-ide/Examples` on first run — a writable copy
+the user owns, per the packaging decision that nothing user-facing runs from the read-only image. A
+beginner — the audience Ilwaco is built for — would open one, press Build, get a wall of compiler
+errors, and be unable to tell a Windows-only example from a mistake of their own. That is precisely
+the failure the product standard in [CLAUDE.md](../CLAUDE.md) exists to prevent, which is why they were
+removed rather than left to ship.
 
 ## How the pre-existing examples fail
 
@@ -48,15 +57,16 @@ those headers assume a Windows target.
 a manifest audit before anything can be said about them (see the `audit-project-manifest` skill);
 this may be the cheapest group to recover.
 
-## What this does not tell you
+## What the audit did not tell us (now moot — they were deleted)
 
 - **Nothing here was run**, because nothing built. The layout defects catalogued below were found
   in the *ported* half only.
-- **`Bass`, `MediaPlayer`, `SerialPort`, `USBView`, `Radar` and friends may also need hardware or
-  third-party libraries** even once ported. The build failure comes first, so that question is
-  untested.
-- Whether each example is *worth* porting is a separate judgement. Several teach Windows-specific
-  material (taskbar progress, COM automation) with no GTK counterpart.
+- **`Bass`, `MediaPlayer`, `SerialPort`, `USBView`, `Radar` and friends may also have needed hardware
+  or third-party libraries** even once ported. The build failure came first, so that question stayed
+  untested — and is now moot, as they were removed rather than ported.
+- Whether each example was *worth* porting was a separate judgement. Several taught Windows-specific
+  material (taskbar progress, COM automation) with no GTK counterpart, which is why the decision was
+  to delete rather than reimplement.
 
 ## Layout defects in the ported half
 
@@ -90,11 +100,29 @@ The status-bar case was a genuine framework bug rather than an example bug, and 
 Win32's `msctls_statusbar32` positions itself. The GTK `StatusBar` constructor now sets
 `Align = alBottom`. See [UpstreamFixes.md](UpstreamFixes.md).
 
-## Suggested order, when this is picked up
+## What was decided and done (2026-08-07)
 
-1. **Decide what ships.** The cheapest honest fix is to stop shipping examples that cannot build —
-   `Packaging/StageRelease.sh` already curates the release tree, so this is an exclusion list, not
-   a deletion.
-2. **Audit the five manifest-broken projects**, which may be trivially recoverable.
-3. **Port selectively**, cheapest first (group 1 needs API substitutions; group 3 is probably not
-   worth it), rather than attempting all 22.
+The owner chose **deletion over an exclusion list**: sources that cannot build are gone from the
+repo, not merely held back from the release tree. Sequence:
+
+1. **The 22 audited projects were `git rm`'d**, together with 6 stale Windows-era duplicates of the
+   ported `Calculator`/`FiveInARow`/`Maze` under `Examples/Game/`, and four empty placeholder dirs.
+2. **The remaining pre-existing bits were then re-evaluated** against a "delete unless the port is
+   trivial" bar — trivial meaning the class of fix the 53 needed (an `#ifdef __FB_WIN32__` guard on
+   `#cmdline "*.rc"`, a case-corrected include, a `crHand`→`crHandPoint` swap), not API substitution
+   or reimplementation. Each was **test-compiled**, not guessed:
+   - `try_catch_throw` — Win32 SEH (`windows.bi`, vectored handler): **deleted**.
+   - `Add-In` — an IDE-plugin `.so` (not a runnable example), two near-duplicate copies, and
+     `VisualFBEditor` branding: **deleted**.
+   - `Web Page` — an MFF HTTP client+server demo with a `__FB_JS__` split and a missing `Form1.rc`,
+     depending on unverified MFF `HTTP`/`HTTPServer` on GTK: **deleted**.
+   - `Graphics/CanvasDraw` — compiled past the trivial case-fix only to hit `CreateDoubleBuffer` /
+     `TransferDoubleBuffer` (Win32-GDI double-buffering absent from the GTK Canvas) and three
+     `Style()`/`StretchImage()` overload mismatches: **deleted**.
+   - `Class Form Example` — a minimal MFF form (CheckBox + CommandButton) that **compiled clean with
+     zero changes**: **kept**, and finished into a real project (BOM stripped, a `.vfp` added) so it
+     builds through the IDE.
+3. The orphaned `Examples/Manifest.xml` (a Windows app-manifest referenced by nothing) was removed.
+
+**Outcome:** `Examples/` ships **54 projects, every one build-verified** — the 53 Astoria-ported set
+plus `Class Form Example` — each in its own directory. Nothing that fails to build remains.

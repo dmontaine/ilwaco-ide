@@ -62,7 +62,7 @@ name distinct and mapped in one place.
 
 ---
 
-## ✅ DONE (2026-08-07) — 53 Astoria examples ported and verified on Linux
+## ✅ DONE (2026-08-07) — Examples: 53 ported, broken half deleted, 54 build-verified through the SHIPPED toolchain
 
 Owner-requested, superseding the "defer Examples to the testing phase" note. Ported: the whole
 `Learning` course except its DLL series — **`Console` 25 + `GUI` 25** (renamed from Astoria's
@@ -83,6 +83,24 @@ numbered course missing lessons 2 and 3 is worse than shipping none. **This is b
 examples:** Ilwaco compiles everything with `-gen gas64`, so a user building a shared library can hit
 a compiler crash with no diagnostic. Not yet reported upstream. Also not ported, as Windows by nature:
 the DirectShow, COM, SAPI and WLan sets, plus `Sudoku` and `MultipleDisplay`.
+
+**Then the broken half was deleted and every example put in its own directory** (owner). The 22 audited
+pre-existing projects, 6 stale Windows-era duplicates under `Examples/Game/`, four empty placeholder
+dirs and an orphaned `Examples/Manifest.xml` were `git rm`'d; the retained candidates were re-evaluated
+against a "delete unless the port is trivial" bar and **test-compiled** — `try_catch_throw`, `Add-In`,
+`Web Page`, `Graphics/CanvasDraw` deleted; `Class Form Example` compiled clean and was **kept and
+finished into a real project** (BOM stripped, `.vfp` added). `Examples/` now holds **54 projects, one
+per directory**. Detail and the per-candidate reasons in [ExamplesAudit.md](Documentation/ExamplesAudit.md).
+
+**Verified against the SHIPPED build path, not just the dev shim.** The earlier "compiled with the
+bundled toolchain" runs used the dev shim (`-p <shim> -l tinfo`); this session reproduced the *shipped*
+path — `Packaging/make-toolchain.sh` sysroot on PATH, only `libtinfo.so.5` on `LD_LIBRARY_PATH`, the
+seed-patch's `-p sysroot -p .link-shim` link args, the IDE-appended `-gen gas64`, and the main file via
+`-b "<file>"` (how `.frm` reaches fbc) — and swept **all 54: 54/54 build, 0 fail**. The one sharp edge:
+without `-gen gas64` the bundled `gcc` is a **stub** (crt-probe only) and fbc's default `-gen gcc`
+backend dies `no C compiler in the image` — but the IDE appends `-gen gas64` for **every project**
+build (`src/Main.bas:714`, `src/TabWindow.bas:11546`), and seeded examples are all `.vfp` projects, so
+the shipped path is sound.
 
 ---
 
@@ -116,12 +134,12 @@ works" default.
 
 ---
 
-## NEXT — the agent thread, the broken examples, then the two divergences and the parity tail
+## NEXT — the agent thread, then the two divergences and the parity tail
 
 Packaging is essentially done (Ilwaco ships as an AppImage). Owner standing rule: **no release until
 the whole parity list is complete**, so nothing here is release-gated — sequence by value.
 
-0. **Two threads opened this session, both owner-directed and both mid-flight:**
+0. **The agent permission thread is still mid-flight; the Examples cleanup (0b) is now done:**
 
    a. **The agent permission thread** — level plumbing landed; next is the **activity log** (agent
       actions into a pane), then the **Trusted-level path relaxation** (let a Trusted agent reach
@@ -130,29 +148,48 @@ the whole parity list is complete**, so nothing here is release-gated — sequen
       rejected alternatives (per-client pairing) are in
       [McpServer.md](Documentation/McpServer.md); the owner asked for checkpoints between each.
 
-   b. **`Examples/` is half broken and it ships.** All 22 pre-existing examples fail to build on
-      Linux — they are Windows programs — while the 53 ported from Astoria all build and run.
-      Audit-only by owner direction, catalogued by root cause in
-      [ExamplesAudit.md](Documentation/ExamplesAudit.md). Cheapest first: the five whose manifest
-      names no main file may be trivially recoverable, and `StageRelease.sh` already curates the
-      release tree, so *not shipping* what cannot build is an exclusion list rather than a deletion.
-      They are **seeded into `~/ilwaco-ide/Examples` on first run** (they travel in the image only as
-      a seed — nothing user-facing runs from the read-only mount), so **a beginner who opens one and
-      presses Build gets a wall of compiler errors**, which is the failure the product standard
-      exists to prevent.
+   b. **Examples — DONE** (deleted the broken half, 54 build-verified through the shipped toolchain).
+      Full detail in the DONE section above and [ExamplesAudit.md](Documentation/ExamplesAudit.md).
 
-1. **Packaging** — **Ilwaco now ships as a single-file AppImage.** `Packaging/StageRelease.sh` →
+1. **⭐ FRESH owner directives (2026-08-07) — interrupted before starting; do these first.** Came out of
+   the seeded-examples / AppImage investigation (which itself confirmed 54/54 seeded examples build via
+   the bundled toolchain — the compile path is *not* the problem). The owner asked to:
+
+   a. **Rename the user-data `Projects` directory to lowercase `projects`.** Owner directive, verbatim:
+      "keep 'projects' lower case." The AppImage seeds `~/ilwaco-ide/Projects` (capital P) today; the
+      owner wants `~/ilwaco-ide/projects`. Touch every producer/consumer of the name together (they
+      must agree, and Linux is case-sensitive): `Packaging/AppRun` (the seed loop list), `Packaging/
+      ilwaco.sh` (`mkdir -p "$HERE/Projects"`), `Packaging/StageRelease.sh` (`mkdir -p "$RELEASE/
+      Projects"`), and **grep `src/` for `Projects`** — the IDE has a default project/output path and
+      likely a `Projects`-relative default in `ilwaco.ini`; find and lower-case those too, or the IDE
+      writes to `Projects` while the seed makes `projects`. Verify by effect: seed a clean
+      `ILWACO_HOME`, confirm `projects/` is what's created and what New Project defaults into.
+
+   b. **Dig into / harden the "run straight from Downloads" caveats.** Confirmed this session that a
+      fresh run *does* install into `~/ilwaco-ide` and creates a user-owned, writable `Projects/`
+      (reproduced AppRun's seed loop by effect). The gaps a beginner hits are upstream of AppRun:
+      **(i)** the downloaded `.AppImage` is not executable — needs `chmod +x` / "allow executing";
+      **(ii)** **FUSE** — Debian 13 and other recent distros lack `libfuse2`, so a double-click fails to
+      mount; fallbacks are `--appimage-extract-and-run`, installing `libfuse2`, or shipping the `--run`
+      self-extracting variant (which sidesteps FUSE). Decide what the product does about these (docs? a
+      launcher note? default to the self-extracting build?). **(iii)** A real fragility found while
+      tracing: `ilwaco.sh`'s first-run seed-patch only *rewrites existing* keys in `ilwaco.ini` and
+      `die`s at launch if a target key is absent (`Compiler64Arguments`, `[Compilers] DefaultCompiler64/
+      Version_0/Path_0`) — they exist today, but a future `[Compilers]` reorder/rename breaks *launch*,
+      not just a build. Make the patch **insert-if-missing** instead of replace-only.
+
+2. **Packaging** — **Ilwaco now ships as a single-file AppImage.** `Packaging/StageRelease.sh` →
    `../ilwaco-ide-release`, `Packaging/BuildInstaller.sh` →
    `../ilwaco-ide-installer/Ilwaco-IDE-1.3.8-x86_64.AppImage` (49 MB), following Astoria's
    `StageRelease.ps1`/`BuildInstaller.ps1` pattern. `--run` builds a 52 MB self-extracting fallback.
    What remains: **a release build on an old-glibc host**, and driving a build **from inside the
    IDE's UI** rather than reproducing its command line. Full design and status table:
    [Documentation/Packaging.md](Documentation/Packaging.md).
-2. **The two committed divergences**, in order: **Git integration** (build the ADD chain `d61eb062` →
+3. **The two committed divergences**, in order: **Git integration** (build the ADD chain `d61eb062` →
    `fffee489` → `fd894173` → `95b04f70`, skip removal `9d277f28`), then the **three AI templates** (Claude
    Code, ChatGPT, Kun — ADD chain `987e8b7e`/`ef5a6252`/`72ea5980`/`de8c1e5a`, skip `6de0332f`). See the
    STANDING divergences table above and its traps.
-3. **The parity tail** — the deferred menu features and the rest of the `13.3.A` walk (below).
+4. **The parity tail** — the deferred menu features and the rest of the `13.3.A` walk (below).
 
 **Still explicitly NOT next: `13.72` (idle slices)** — it only removes a stall `13.71` introduced that
 nobody has felt on a real project.
@@ -195,11 +232,12 @@ document and commit per item.
 `xfce4-terminal --hold -x /bin/echo TEST`, so not ours, but it is what a user sees), and the **project
 `.vfp` BOMs** written by `SaveProjectFile` and carried by the template `.vfp` data.
 
-- **Examples — 53 ported from Astoria and verified (2026-08-07); the BOM sweep of the PRE-EXISTING
-  examples is still open.** The newly ported ones are clean (UTF-8 no-BOM, LF), but the 93-of-111
-  older sources under `Examples/` that start with a UTF-8 BOM — so FreeBASIC compiles their string
-  literals wide, building clean then printing UTF-32 — are untouched. Do that sweep with the two
-  Astoria Examples items (`4bd02894`, `51441d7a`).
+- **Examples — 54 projects ship, all build-verified (2026-08-07).** The 53 Astoria-ported set plus the
+  kept `Class Form Example`, each in its own directory. The old BOM-sweep worry is **largely moot**: the
+  BOM'd pre-existing sources were deleted (see the RESOLVED note under NEXT 0b), and the one survivor was
+  BOM-stripped. What remains of the BOM question is only the **project `.vfp` BOMs** written by
+  `SaveProjectFile` / carried by the template `.vfp` data (tracked just above); still worth doing with the
+  two Astoria Examples items (`4bd02894`, `51441d7a`).
 - Unverified, low priority: **Ctrl+F5 did not resume** a stopped debuggee — may be a synthetic-input
   artefact; check by hand before treating it as a bug.
 - Cosmetic: the Tools menu still lists a stale **`VisualFBEditor64`** external-tool entry from
