@@ -34,7 +34,37 @@ the diff.
   adding `#include once "gtk/gtk.bi"` and the same guarded `DebugWindowHandle` declaration
   `Application.bas` makes. Found by building the stock Console Application template.
 
+- **Every GTK app built on MFF crashes with SIGSEGV on close.** FreeBASIC runs each module-level
+  object's destructor at `_GLOBAL__D`, *after* `main()` returns — but closing the main window has
+  already made GTK free the entire widget tree. Each control/toolbutton/menu-item destructor then runs
+  `If widget <> 0 AndAlso GTK_IS_WIDGET(widget) Then gtk_widget_destroy(widget)`, and `GTK_IS_WIDGET`
+  **dereferences the freed pointer** — a use-after-free on every close, surfacing in whichever
+  widget-owning global destructs first (`~Control`, `~ToolButton`, `~MenuItem`, … — the site is
+  build-nondeterministic). The **Win32 build is safe for free** because `IsWindow(Handle)` validates a
+  destroyed window handle rather than dereferencing it; GTK has no equivalent, so the same guards that
+  protect Win32 are the thing that crashes on GTK. Per-object nulling of the widget on GTK's `"destroy"`
+  signal was tried and is both large (~20 destructors across the type zoo) and unreliable (the signal
+  does not fire uniformly for all container/child widget types). Fixed the way **Astoria** fixes exactly
+  this — the framework terminates the process on main-form close: Astoria's `Form.bas` does FB `End 0`
+  the instant the main form's `OnClose` returns (and Astoria itself falls back to `ExitProcess(0)` when
+  teardown is what crashes, its §13.29). `End` cannot be used on GTK (it *runs* the crashing
+  destructors), so `mff/Form.bas`'s two main-form close paths (`ProcessMessage` GDK_DELETE and
+  `CloseForm`) now call a `CloseOnMainForm` that does libc `_exit(0)`, skipping the destructor walk. By
+  that point `OnClose` has returned, so all state is saved (`IniFile` writes through to disk on every
+  write); the OS reclaims memory and GTK/X resources. Non-main forms are unaffected — they still hide.
+
 ## IDE (VisualFBEditor base) — GTK
+
+- **`frmMain_Close` dereferenced a null `Parent`, crashing on close whenever the debugger was off.**
+  The 7 debug panes (Locals/Globals/Procedures/Threads/Watches/Memory/Profiler) are detached from the
+  bottom tab bar by `SetDebugTabsVisible(False)` — the default state, since `UseDebugger=false` — and
+  `DetachTab` sets each page's `Parent = 0`. The shutdown handler then wrote
+  `iniSettings.WriteString("MainWindow", "LocalsParent", tpLocals->Parent->Name)` for all 18 panes
+  unguarded, so `tpLocals->Parent->Name` dereferenced null. This was the deterministic close crash long
+  misfiled as "an intermittent threading SIGSEGV" — the real variable was debugger on/off. Fixed by a
+  guarded `SaveTabPagePlacement(key, tp)` helper that skips a pane whose `Parent` is null (a detached
+  pane has no placement to persist; the next launch restores it to its default bar), collapsing the 36
+  duplicated write lines to 18 calls. Guarded on the same principle as MFF's own `RemoveBottomDebugTab`.
 
 - **A `TreeView`'s `OnMouseUp` never fires on GTK, so a context menu prepared there shows stale
   state.** `Control.bas` raises `OnMouseUp` only inside

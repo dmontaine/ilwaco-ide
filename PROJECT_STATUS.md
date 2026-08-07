@@ -117,47 +117,48 @@ name distinct and mapped in one place.
 
 ---
 
-## NEXT — settle the intermittent SIGSEGV first: measure it, then decide
+## ✅ DONE (2026-08-07) — the shutdown SIGSEGV is diagnosed and fixed
 
-**Recommended next task (assistant recommendation, 2026-08-06; owner asked for it to be recorded here).**
+The "intermittent SIGSEGV" that hampered `:0` verification for weeks is **resolved**. It was never
+intermittent, never a startup/large-files bug, and not the threading arc — all three were inherited
+assumptions. **Measured:** 23/23 launches — startup 100% clean, window-close 100% SIGSEGV. The real
+variable was **`UseDebugger` on/off**, the default being off. Two distinct close-path crashes, both fixed
+and **verified 20/20 clean close (exit 0), IDE renders correctly**:
 
-**Why this and not feature work.** It is the only outstanding item that could block a release — Git, the
-AI templates, `13.72` and the parity tail are all additive; a crashing IDE is not. It also just became
-the biggest known unknown: until this session the project believed this crash was diagnosed and merely
-awaiting a port, and that turned out to be an inherited assumption (see the correction below). The
-scariest defect we have moved from "handled" to "open" today.
+1. **`frmMain_Close` dereferenced a null `Parent`.** With the debugger off, `SetDebugTabsVisible(False)`
+   detaches the 7 debug panes (`DetachTab` → `Parent = 0`); the close handler read `tpLocals->Parent->Name`
+   for all 18 panes unguarded. Fixed with a guarded `SaveTabPagePlacement` helper in `src/Main.bas`
+   (skips a detached pane), collapsing 36 duplicated lines to 18 calls.
+2. **Global-destructor use-after-free over freed GTK widgets (framework).** FreeBASIC runs every
+   module-level destructor at `_GLOBAL__D` *after* `main()`, but GTK freed the widget tree on window
+   close; each `GTK_IS_WIDGET(widget)` guard then dereferenced freed memory (crash site
+   build-nondeterministic: `~Control`/`~ToolButton`/`~MenuItem`/…). **Win32 is safe here for free via
+   `IsWindow()`; GTK has no equivalent.** Fixed the Astoria way — the framework fast-exits on **main-form**
+   close: `mff/Form.bas`'s two main-form paths call a `CloseOnMainForm` doing libc `_exit(0)`, skipping the
+   destructor walk (the GTK port of Astoria's `End 0`-on-close; Astoria itself fast-exits via
+   `ExitProcess(0)`, §13.29). The fix lives in **MFF**, so **every MFF app** — not just the IDE — gets a
+   clean shutdown; a per-object null-on-`"destroy"` alternative was tried and rejected as large *and*
+   unreliable (the signal doesn't fire uniformly). No data loss: `IniFile` writes through on every write,
+   and all app state is saved in `frmMain_Close` before the exit. Non-main forms still hide. Detail in
+   [UpstreamFixes.md](Documentation/UpstreamFixes.md); memory `project-known-segfault-threading` rewritten.
 
-**Step 1 — MEASURE THE RATE. Do this before anything else; it decides how much the rest is worth.**
-The memory note says ~half of launches crash; this session launched the IDE roughly eight times with no
-crash. Both cannot be current. Launch it N times headless-ish on `:0`, count non-zero exits, and write
-the number down. Ten minutes, no build. This is the project's own "measure before theorising" rule, and
-it separates *release blocker* from *nuisance* from *already gone*.
+---
 
-**Step 2 — only if it is real, diagnose it properly.**
-- **Get a backtrace, do not propose mechanisms.** Build with symbols and run under the bundled gdb.
-  Astoria's entire `13.6x`/`13.7x` method was to stop theorising and resolve the fault address; every
-  hypothesis-first attempt in that arc was refuted.
-- **Drive its REAL trigger — opening _large files_** — not project switching. That was this session's
-  mistake and it is now recorded: a harness paced by MCP round trips cannot reproduce a sub-second race,
-  and 0 deaths at that pacing means nothing (Astoria measured 0/60 at 1 s/switch on an *unfixed* build).
-- **Read `13.65` and `13.66` first.** A loader thread calling into the UI, and a project close freeing
-  the tree under a live worker, match "opening a large file trips it" far better than `13.70` ever did.
-- **A control arm is nearly free**: the previous binary is tracked, so `git show <rev>:ilwaco` gives an
-  A/B with no rebuild. Confirm the control actually fails before believing anything about a fix.
+## NEXT — packaging, then the two committed divergences, then the parity tail
 
-**Then, in order:** packaging (the AppImage is the difference between a project and something people can
-install), then the two committed divergences (**Git**, then the **three AI templates**), then the parity
-tail.
+The release blocker is gone, so the order is now feature/packaging work (owner: **no release until the
+whole parity list is complete**, so nothing here is release-gated — sequence by value):
 
-**Explicitly do NOT do next: `13.72` (idle slices).** It exists only to remove a stall `13.71`
-introduces, and nobody has yet felt that stall on a real project. Building an optimisation for an
-unmeasured cost is exactly how this session's threading detour began.
+1. **Packaging** — the AppImage is the difference between a project and something people can install
+   (memory `project-packaging`); it should ship the console-link libs so users need no shim.
+2. **The two committed divergences**, in order: **Git integration** (build the ADD chain `d61eb062` →
+   `fffee489` → `fd894173` → `95b04f70`, skip removal `9d277f28`), then the **three AI templates** (Claude
+   Code, ChatGPT, Kun — ADD chain `987e8b7e`/`ef5a6252`/`72ea5980`/`de8c1e5a`, skip `6de0332f`). See the
+   STANDING divergences table above and its traps.
+3. **The parity tail** — the deferred menu features and the rest of the `13.3.A` walk (below).
 
-**Caveat on this recommendation, so it can be overridden knowingly.** It weights *shipping something
-reliable* above *feature completeness*. If the goal for the next stretch is breadth rather than a
-release, Git and the AI templates are the better use of the time and the crash can wait — it has been
-tolerable for weeks. That is the owner's call; it is recorded this way only so it is made deliberately
-rather than inherited.
+**Still explicitly NOT next: `13.72` (idle slices)** — it only removes a stall `13.71` introduced that
+nobody has felt on a real project.
 
 ---
 
@@ -182,9 +183,11 @@ because it inherited a phrase from an earlier handoff instead of checking it.** 
    one-second pause closes the window. Astoria's own conclusion: *"it needs project teardown to overlap
    IntelliSense loader threads that are still running … No user opens a project, opens its form and
    moves on three times a second"* — **explicitly not a release blocker.**
-2. **It is probably not our bug.** The SIGSEGV this file describes hits **on startup/analysis when
-   opening _large files_** (a small file opens first try) — a different trigger from project-teardown
-   racing live loaders. "A known Astoria-fixed threading issue" was an assumption, never a diagnosis.
+2. **It is a different bug from this arc, now fully diagnosed (see the DONE section above, 2026-08-07).**
+   The SIGSEGV was a **deterministic close crash** (null `Parent` + a global-destructor UAF over freed
+   GTK widgets), not project-teardown racing loaders and not the "opening large files" trigger this file
+   once guessed. "A known Astoria-fixed threading issue" was an assumption, never a diagnosis — and it is
+   now retired. This arc did not address it; the real fix did.
 
 **Our own A/B measurement is consistent with (1) and is itself inconclusive:** 40 cycles against the
 **pre-fix threaded** binary (recovered from git, so no rebuild) produced **0 deaths**. The harness
@@ -197,8 +200,8 @@ load is strictly safer, and the threading it removed never bought throughput. Bu
 improvement, not a fix for the crash we actually see. **`13.72` (idle slices) is DEFERRED**: it exists
 only to remove the stall `13.71` introduces, so do it if that stall is felt on a real project.
 
-**Ilwaco's actual SIGSEGV needs investigating on its own trigger** — opening large files, not project
-switching. Do not assume this arc addressed it.
+**Ilwaco's actual SIGSEGV is now diagnosed and fixed** (DONE section above, 2026-08-07) — a deterministic
+close crash, unrelated to this arc.
 
 ### ✅ DONE — `13.71`, the serial IntelliSense loader (`31a5e20`)
 
@@ -250,9 +253,8 @@ classifying, and **look downstream at the whole log** (now a CLAUDE.md rule) —
 reworked later (`e5e10808`'s toggles by `4a112089`; the menu cluster by ~15 commits; the toolbar breakpoint
 button by `d8a2e8fb`), so scoping against Astoria's *final* state avoids building what a later commit undoes.
 Build with `./build-linux.sh editor` in the background, verify on `:0`, then document and commit per item.
-**Note:** live `:0` verification is hampered by the **intermittent startup/analysis SIGSEGV** — it hits
-opening *large* files (thread-heavy analysis); a small file opens first try. Not a regression; retry. Its
-rate is unmeasured and it is undiagnosed — see NEXT.
+**Note:** the shutdown SIGSEGV that used to hamper live `:0` verification is **fixed** (2026-08-07 DONE
+section) — closes are now clean (exit 0).
 
 **Two items to settle before the testing phase** (both in TechnicalDebt "Known gaps"): the
 **blank-terminal finding** (a user pressing Run sees an empty window — reproducible with
@@ -312,12 +314,11 @@ off in Tools ▸ Options ▸ General; the status bar shows which. See
   twice on 2026-08-06). `Settings/Workspace.ini`, written on every exit, is gitignored and can be deleted
   freely to start the IDE empty.
 - **`pkill -f ilwaco` matches its own caller** — use `pkill -x ilwaco` or kill by PID.
-- **Intermittent startup/shutdown SIGSEGV — UNDIAGNOSED (corrected 2026-08-06).** It is *not* a
-  regression you introduced, so don't chase it as one mid-task; but the long-standing claim that it was
-  "a known Astoria-fixed threading issue awaiting a port" was an inherited assumption, not a diagnosis,
-  and it is now retracted — Astoria's `13.70` has a different trigger (rapid project switching) and was
-  itself downgraded as not-a-blocker. Investigating it properly is the **NEXT** task above (memory
-  `project-known-segfault-threading`).
+- **Shutdown SIGSEGV — FIXED 2026-08-07.** Was a deterministic close crash (null `Parent` in
+  `frmMain_Close` when the debugger is off, plus a global-destructor use-after-free over freed GTK
+  widgets); fixed by a `Main.bas` null-guard and an MFF `Form.bas` main-form `_exit(0)` (Astoria parity).
+  Closes are clean (exit 0), verified 20/20. Detail in the DONE section above and memory
+  `project-known-segfault-threading`. If a close crash recurs it is a **new** defect — diagnose fresh.
 - Harmless startup warnings: resources `AppAddin`/`AppConsole` "do not exist".
 
 **Known gaps (tracked, not blockers).**

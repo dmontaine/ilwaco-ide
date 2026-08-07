@@ -341,6 +341,16 @@ Private Sub AddBottomDebugTab(tp As TabPage Ptr)
 	ptabBottom->AddTab tp
 End Sub
 
+' Persist a tool panel's placement (which tab bar, and its index within it) so the next launch
+' restores it. A detached panel has a null Parent and no placement to save — the debug panes when
+' the debugger is off (see RemoveBottomDebugTab), the default state — so skip it. Reading
+' ->Parent->Name unguarded here was a shutdown SIGSEGV on every close with the debugger disabled.
+Private Sub SaveTabPagePlacement(ByRef Key As WString, tp As TabPage Ptr)
+	If tp = 0 OrElse tp->Parent = 0 Then Exit Sub
+	iniSettings.WriteString("MainWindow", Key & "Parent", tp->Parent->Name)
+	iniSettings.WriteInteger("MainWindow", Key & "Index", tp->Parent->IndexOfTab(tp))
+End Sub
+
 Sub SetDebugTabsVisible(bVisible As Boolean)
 	Static As Boolean bAlreadyVisible = True
 	If bVisible = bAlreadyVisible Then Exit Sub
@@ -9431,42 +9441,24 @@ Sub frmMain_Close(ByRef Designer As My.Sys.Object, ByRef Sender As Form, ByRef A
 	iniSettings.WriteInteger("MainWindow", "MainHeight", frmMain.Height)
 	iniSettings.WriteInteger("MainWindow", "ShowTipoftheDayIndex", ShowTipoftheDayIndex)
 	iniSettings.WriteBool("MainWindow", "ShowTipoftheDay", ShowTipoftheDay)
-	iniSettings.WriteString("MainWindow", "ProjectParent", tpProject->Parent->Name)
-	iniSettings.WriteInteger("MainWindow", "ProjectIndex", tpProject->Parent->IndexOfTab(tpProject))
-	iniSettings.WriteString("MainWindow", "ToolBoxParent", tpToolbox->Parent->Name)
-	iniSettings.WriteInteger("MainWindow", "ToolBoxIndex", tpToolbox->Parent->IndexOfTab(tpToolbox))
-	iniSettings.WriteString("MainWindow", "PropertiesParent", tpProperties->Parent->Name)
-	iniSettings.WriteInteger("MainWindow", "PropertiesIndex", tpProperties->Parent->IndexOfTab(tpProperties))
-	iniSettings.WriteString("MainWindow", "EventsParent", tpEvents->Parent->Name)
-	iniSettings.WriteInteger("MainWindow", "EventsIndex", tpEvents->Parent->IndexOfTab(tpEvents))
-	iniSettings.WriteString("MainWindow", "OutputParent", tpOutput->Parent->Name)
-	iniSettings.WriteInteger("MainWindow", "OutputIndex", tpOutput->Parent->IndexOfTab(tpOutput))
-	iniSettings.WriteString("MainWindow", "ProblemsParent", tpProblems->Parent->Name)
-	iniSettings.WriteInteger("MainWindow", "ProblemsIndex", tpProblems->Parent->IndexOfTab(tpProblems))
-	iniSettings.WriteString("MainWindow", "SuggestionsParent", tpSuggestions->Parent->Name)
-	iniSettings.WriteInteger("MainWindow", "SuggestionsIndex", tpSuggestions->Parent->IndexOfTab(tpSuggestions))
-	iniSettings.WriteString("MainWindow", "FindParent", tpFind->Parent->Name)
-	iniSettings.WriteInteger("MainWindow", "FindIndex", tpFind->Parent->IndexOfTab(tpFind))
-	iniSettings.WriteString("MainWindow", "ToDoParent", tpToDo->Parent->Name)
-	iniSettings.WriteInteger("MainWindow", "ToDoIndex", tpToDo->Parent->IndexOfTab(tpToDo))
-	iniSettings.WriteString("MainWindow", "ChangeLogParent", tpChangeLog->Parent->Name)
-	iniSettings.WriteInteger("MainWindow", "ChangeLogIndex", tpChangeLog->Parent->IndexOfTab(tpChangeLog))
-	iniSettings.WriteString("MainWindow", "ImmediateParent", tpImmediate->Parent->Name)
-	iniSettings.WriteInteger("MainWindow", "ImmediateIndex", tpImmediate->Parent->IndexOfTab(tpImmediate))
-	iniSettings.WriteString("MainWindow", "LocalsParent", tpLocals->Parent->Name)
-	iniSettings.WriteInteger("MainWindow", "LocalsIndex", tpLocals->Parent->IndexOfTab(tpLocals))
-	iniSettings.WriteString("MainWindow", "GlobalsParent", tpGlobals->Parent->Name)
-	iniSettings.WriteInteger("MainWindow", "GlobalsIndex", tpGlobals->Parent->IndexOfTab(tpGlobals))
-	iniSettings.WriteString("MainWindow", "ProceduresParent", tpProcedures->Parent->Name)
-	iniSettings.WriteInteger("MainWindow", "ProceduresIndex", tpProcedures->Parent->IndexOfTab(tpProcedures))
-	iniSettings.WriteString("MainWindow", "ThreadsParent", tpThreads->Parent->Name)
-	iniSettings.WriteInteger("MainWindow", "ThreadsIndex", tpThreads->Parent->IndexOfTab(tpThreads))
-	iniSettings.WriteString("MainWindow", "WatchesParent", tpWatches->Parent->Name)
-	iniSettings.WriteInteger("MainWindow", "WatchesIndex", tpWatches->Parent->IndexOfTab(tpWatches))
-	iniSettings.WriteString("MainWindow", "MemoryParent", tpMemory->Parent->Name)
-	iniSettings.WriteInteger("MainWindow", "MemoryIndex", tpMemory->Parent->IndexOfTab(tpMemory))
-	iniSettings.WriteString("MainWindow", "ProfilerParent", tpProfiler->Parent->Name)
-	iniSettings.WriteInteger("MainWindow", "ProfilerIndex", tpProfiler->Parent->IndexOfTab(tpProfiler))
+	SaveTabPagePlacement("Project", tpProject)
+	SaveTabPagePlacement("ToolBox", tpToolbox)
+	SaveTabPagePlacement("Properties", tpProperties)
+	SaveTabPagePlacement("Events", tpEvents)
+	SaveTabPagePlacement("Output", tpOutput)
+	SaveTabPagePlacement("Problems", tpProblems)
+	SaveTabPagePlacement("Suggestions", tpSuggestions)
+	SaveTabPagePlacement("Find", tpFind)
+	SaveTabPagePlacement("ToDo", tpToDo)
+	SaveTabPagePlacement("ChangeLog", tpChangeLog)
+	SaveTabPagePlacement("Immediate", tpImmediate)
+	SaveTabPagePlacement("Locals", tpLocals)
+	SaveTabPagePlacement("Globals", tpGlobals)
+	SaveTabPagePlacement("Procedures", tpProcedures)
+	SaveTabPagePlacement("Threads", tpThreads)
+	SaveTabPagePlacement("Watches", tpWatches)
+	SaveTabPagePlacement("Memory", tpMemory)
+	SaveTabPagePlacement("Profiler", tpProfiler)
 	iniSettings.WriteInteger("Options", "HistoryCodeCleanDay", HistoryCodeCleanDay)
 	
 	SaveMRU

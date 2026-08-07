@@ -15,6 +15,25 @@
 #include once "Application.bi"
 
 Namespace My.Sys.Forms
+	'' libc _exit(2): end the process immediately, WITHOUT running FreeBASIC's global/static
+	'' destructors. See CloseOnMainForm for why the GTK build must skip them.
+	Extern "C"
+		Declare Sub crt_underscore_exit Alias "_exit"(ByVal status As Long)
+	End Extern
+
+	'' Terminate on main-form close -- Astoria parity. Astoria's Form.bas ends the process with FB
+	'' `End 0` the instant the main form's OnClose returns ("nothing after pApp->Run runs" is the
+	'' framework contract). The GTK build cannot use `End`: it runs every control's destructor at
+	'' _GLOBAL__D, AFTER GTK has already freed the widget tree on window close, so each destructor's
+	'' GTK_IS_WIDGET(...) / gtk_widget_destroy(...) dereferences a freed GtkWidget and faults on EVERY
+	'' close. On Win32 IsWindow() makes those same destructors safe for free; GTK has no equivalent,
+	'' so we exit without running them. By here OnClose has returned, so all application state is
+	'' already saved; the OS reclaims memory and GTK/X resources on exit. This gives every MFF app --
+	'' not just the IDE -- a clean, crash-free shutdown from one place.
+	Private Sub CloseOnMainForm()
+		crt_underscore_exit(0)
+	End Sub
+
 	#ifndef ReadProperty_Off
 		Private Function Form.ReadProperty(ByRef PropertyName As String) As Any Ptr
 			FTempString = LCase(PropertyName)
@@ -535,8 +554,7 @@ Namespace My.Sys.Forms
 					msg.Result = -1
 				Case 1
 					If MainForm Then
-							gtk_main_quit()
-							'End 0
+							CloseOnMainForm()
 					Else
 						'#ifdef __USE_GTK3__
 						
@@ -807,10 +825,7 @@ Namespace My.Sys.Forms
 			Case 0
 			Case 1
 				If MainForm Then
-					If GTK_IS_WIDGET(widget) Then
-							gtk_widget_destroy(widget)
-					End If
-					gtk_main_quit()
+					CloseOnMainForm()
 				Else
 					If GTK_IS_WINDOW(widget) Then
 						If gtk_window_get_modal (GTK_WINDOW(widget)) Then
