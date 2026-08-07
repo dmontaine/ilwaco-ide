@@ -55,10 +55,17 @@ removed there.
   it as "an advanced feature that doesn't fit Astoria's target audience". Ilwaco intends to have it.
 - **A choice of AI assistant templates** — **Claude Code, ChatGPT and Kun**, each with its own Skills
   and Rules. Astoria supported six agents, then consolidated onto Claude Code alone so that its audience
-  would not face a choice of help systems. Ilwaco intends to offer the three above; three covers a wide
-  range because **Kun is model-flexible — it works with most available model API keys**, so it reaches
-  models that have no template of their own. (Cursor, OpenCode and Kimi, also in Astoria's original set,
-  are not planned.)
+  would not face a choice of help systems. Ilwaco intends to offer the three above, chosen to cover both
+  ways of paying for an assistant:
+
+  | Template | How you access it |
+  | --- | --- |
+  | **Claude Code**, **ChatGPT** | Their agents run on a **subscription** — no API key, no metered billing |
+  | **Kun** | **API key only**, but it works with most available model API keys, so it reaches models that have no template of their own |
+
+  So if you already pay for Claude or ChatGPT you can use that directly, and if you would rather bring an
+  API key for some other model, Kun covers it. The other three Astoria once shipped — Cursor, OpenCode
+  and Kimi — were removed there and are not planned here either.
 
 ## 4. Where Ilwaco is behind Astoria
 

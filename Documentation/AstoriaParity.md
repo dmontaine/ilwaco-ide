@@ -886,9 +886,12 @@ so expect REIMPLEMENT rather than straight PORT in places.
 Astoria consolidated onto Claude Code alone in **`6de0332f`**, deleting five vendor template folders:
 **ChatGPT, Cursor, Kimi, Kun, OpenCode**. Ilwaco keeps **three**: **Claude Code, ChatGPT, Kun** — i.e.
 restore ChatGPT and Kun alongside ClaudeCode, and leave Cursor, OpenCode and **Kimi** out (Kimi dropped
-by the owner, 2026-08-06). Three is deliberately sufficient rather than arbitrary: **Kun is
-model-flexible and works with most available model API keys**, so it covers models that have no template
-of their own — which is also why dropping Kimi loses little. Each agent
+by the owner, 2026-08-06). **The three are chosen to span both access models, which is the actual
+rationale — record it, because the set looks arbitrary otherwise:** Claude Code and ChatGPT are kept
+because **their agents run on a subscription** (no API key, no metered billing — the thing most users
+already have), and Kun is kept because it is **API-key only but works with most available model API
+keys**, covering every model without a template of its own. That combination is also why dropping Kimi
+loses little. Each agent
 carries its own **Skills and Rules**. Relevant add-chain commits: `987e8b7e` (New Project wires up Git and
 AI-friendly), `ef5a6252` (the **data-driven AI Agent dropdown**), `72ea5980` (MCP `create_project` marks
 AI-friendly and stamps the creating agent's template), `de8c1e5a` (template parity work).
