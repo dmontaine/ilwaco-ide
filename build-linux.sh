@@ -42,6 +42,7 @@ SHIM="$REPO/Compilers/shim/gtk-dev"
 LIBS=(
 	libtinfo libncurses
 	libgtk-3 libgdk-3 libgdk_pixbuf-2.0
+	libvte-2.91
 	libpango-1.0 libpangocairo-1.0 libpangoft2-1.0
 	libcairo libcairo-gobject
 	libatk-1.0 libharfbuzz libfontconfig libfreetype libX11
