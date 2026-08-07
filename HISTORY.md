@@ -11,6 +11,45 @@ for the classified port backlog, [Documentation/AstoriaParity.md](Documentation/
 
 ---
 
+## ✅ DONE (2026-08-06) — MCP server finished; menu-taxonomy cluster closed; workspace replaces sessions
+
+A long session. Six pieces of work, each built, verified **by effect** on `:0`, documented and
+committed separately; the per-change narratives are in [HISTORY.md](HISTORY.md) and the per-item
+classifications in [AstoriaParity.md](Documentation/AstoriaParity.md).
+
+1. **Agent MCP server Tasks 6 + 7 — the server is COMPLETE.** Task 6 made the listener a
+   user-controlled opt-out: `AllowAgentControl` (default ON), the Tools ▸ Options checkbox,
+   `ReconcileAgentPipe` so the toggle needs no restart, the status bar reading **"MCP Agent: On/Off"**
+   in the panel that used to be the always-"UTF-8" encoding readout, and
+   [AgentMcpSetup.md](Documentation/AgentMcpSetup.md) for users. Task 7 drove the whole
+   create → build → read-errors → fix → run loop from a real MCP client (20 checks, all pass;
+   `Primes below 1000000 = 78498`) and **found a real bug**: `run` never returned, because
+   `Compile("Run")` blocks in `RunPr`'s synchronous `Shell()` until the launched program's terminal
+   closes — which, with a keep-open terminal, is never. The agent path now builds plainly and
+   launches from the finalizer; `run` returns in 0.1 s.
+2. **Recent Projects became a dialog** (`src/frmRecentProjects.{bi,frm}`) listing file + path and
+   skipping entries whose `.vfp` is gone.
+3. **The Options panels**: the "When Ilwaco IDE starts" radio group removed with everything only it
+   fed, and the Code Editor page grouped **Display / Editing / Completion / IntelliSense / History**.
+4. **`Show Holiday Frame` → `Show Indent Guides`, done as a feature.** Astoria only relabelled the
+   caption while the checkbox still drove a seasonal decoration; Ilwaco deleted the decoration and
+   implemented real indent guides in `EditControl.PaintControlPriv`. **The menu-taxonomy cluster
+   `49ec5ccd`/`37ba31ea` is COMPLETE.**
+5. **`b9735e8e` — the workspace replaces `.vfs` sessions.** `SaveWorkspace`/`LoadWorkspace` write
+   `Settings/Workspace.ini` (BOM-less, paths relative to the exe, gitignored) on close and restore it
+   on start; the whole Sessions UX is gone. `CloseSession` was never about `.vfs` files — it is the
+   batched save-prompt run before the IDE will exit — so it was **renamed `CloseWorkspace` and kept**,
+   and that prompt was re-verified against a modified tab.
+6. **`cc9e7dd5` classified N/A**, with evidence rather than assumption: two GUI projects opened in one
+   session both render their form in the designer and the Toolbox populates — closing **TestPlan T3**,
+   which had stood unrecorded since the plan was written. The MFF library manifest was pruned to the
+   one variant that ships.
+
+**Everything is committed and pushed** (through `2ab9c4f`); the working tree is clean and
+`python3 Tools/DocCheck.py` is green.
+
+---
+
 ## ✅ DONE (2026-08-05) — terminal-launcher detection + the `.lng` startup error
 
 Run used to shell out to `gnome-terminal` unconditionally, so on a box without it (this one has

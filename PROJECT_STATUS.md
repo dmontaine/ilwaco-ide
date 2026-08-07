@@ -10,7 +10,8 @@ scaffolding over speed.
 See also: [HISTORY.md](HISTORY.md) (past session narratives, extracted from this file),
 [Documentation/AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md) (the pruned port
 backlog), [Documentation/AstoriaParity.md](Documentation/AstoriaParity.md) (what we ported and what we
-couldn't, and why), [CHANGELOG.md](CHANGELOG.md) (milestones),
+couldn't, and why), [Documentation/IlwacoVsAstoria.md](Documentation/IlwacoVsAstoria.md) (the
+user-facing Ilwaco-vs-Astoria comparison), [CHANGELOG.md](CHANGELOG.md) (milestones),
 [Documentation/UpstreamFixes.md](Documentation/UpstreamFixes.md) (our GTK fixes that are really upstream
 bugs) and [CLAUDE.md](CLAUDE.md) (orientation for the Linux/GTK build).
 
@@ -19,45 +20,6 @@ the **standing facts** below — not an archive. When a session's work is done a
 narrative section to [HISTORY.md](HISTORY.md) (newest-first) instead of letting handoffs pile up here.
 `python3 Tools/DocCheck.py` flags this file once more than two dated session sections accumulate; see
 CLAUDE.md "Working practices".
-
----
-
-## ✅ DONE (2026-08-06) — MCP server finished; menu-taxonomy cluster closed; workspace replaces sessions
-
-A long session. Six pieces of work, each built, verified **by effect** on `:0`, documented and
-committed separately; the per-change narratives are in [HISTORY.md](HISTORY.md) and the per-item
-classifications in [AstoriaParity.md](Documentation/AstoriaParity.md).
-
-1. **Agent MCP server Tasks 6 + 7 — the server is COMPLETE.** Task 6 made the listener a
-   user-controlled opt-out: `AllowAgentControl` (default ON), the Tools ▸ Options checkbox,
-   `ReconcileAgentPipe` so the toggle needs no restart, the status bar reading **"MCP Agent: On/Off"**
-   in the panel that used to be the always-"UTF-8" encoding readout, and
-   [AgentMcpSetup.md](Documentation/AgentMcpSetup.md) for users. Task 7 drove the whole
-   create → build → read-errors → fix → run loop from a real MCP client (20 checks, all pass;
-   `Primes below 1000000 = 78498`) and **found a real bug**: `run` never returned, because
-   `Compile("Run")` blocks in `RunPr`'s synchronous `Shell()` until the launched program's terminal
-   closes — which, with a keep-open terminal, is never. The agent path now builds plainly and
-   launches from the finalizer; `run` returns in 0.1 s.
-2. **Recent Projects became a dialog** (`src/frmRecentProjects.{bi,frm}`) listing file + path and
-   skipping entries whose `.vfp` is gone.
-3. **The Options panels**: the "When Ilwaco IDE starts" radio group removed with everything only it
-   fed, and the Code Editor page grouped **Display / Editing / Completion / IntelliSense / History**.
-4. **`Show Holiday Frame` → `Show Indent Guides`, done as a feature.** Astoria only relabelled the
-   caption while the checkbox still drove a seasonal decoration; Ilwaco deleted the decoration and
-   implemented real indent guides in `EditControl.PaintControlPriv`. **The menu-taxonomy cluster
-   `49ec5ccd`/`37ba31ea` is COMPLETE.**
-5. **`b9735e8e` — the workspace replaces `.vfs` sessions.** `SaveWorkspace`/`LoadWorkspace` write
-   `Settings/Workspace.ini` (BOM-less, paths relative to the exe, gitignored) on close and restore it
-   on start; the whole Sessions UX is gone. `CloseSession` was never about `.vfs` files — it is the
-   batched save-prompt run before the IDE will exit — so it was **renamed `CloseWorkspace` and kept**,
-   and that prompt was re-verified against a modified tab.
-6. **`cc9e7dd5` classified N/A**, with evidence rather than assumption: two GUI projects opened in one
-   session both render their form in the designer and the Toolbox populates — closing **TestPlan T3**,
-   which had stood unrecorded since the plan was written. The MFF library manifest was pruned to the
-   one variant that ships.
-
-**Everything is committed and pushed** (through `2ab9c4f`); the working tree is clean and
-`python3 Tools/DocCheck.py` is green.
 
 ---
 
@@ -75,7 +37,7 @@ the owner decisions, the per-task narratives and the v1 limits are in
 
 ---
 
-## ✅ DONE (2026-08-06, later) — Delete File shipped with deferred deletion; three GTK defects fixed
+## ✅ DONE (2026-08-06) — Delete File shipped with deferred deletion; three GTK defects fixed
 
 `93bbfa28` S5 **plus** `331b5705` (B1), scoped against Astoria's *final* state rather than the handoff's
 note — that note described `93bbfa28`'s intermediate version, which Astoria reworked twice afterwards
@@ -109,6 +71,17 @@ unreachable in supported use (Astoria's own code, kept as a guard, but a no-dead
 Verified by effect on `:0` throughout, using the MCP agent to open projects: confirm → pending → Close
 Project **Yes** deletes and rewrites the `.vfp`; **No** leaves file and `.vfp` untouched; Cancel Deletion
 reverts and the file then survives a real save.
+
+**Also this session — the product direction below was set, and documented for users.** The owner recorded
+the project-only stance and the four divergences (next section), and asked that the Ilwaco/Astoria
+differences be written down "in case users assume they are exactly the same". New
+**[IlwacoVsAstoria.md](Documentation/IlwacoVsAstoria.md)** does that, carefully separating what **ships
+today** from what is **planned** (Git and the AI templates are in neither product yet) and correcting the
+comparison that is easiest to get wrong — there are **two** theme capabilities and Astoria removed
+neither. `README.md` was a single line, so the comparison was undiscoverable; it now leads with it and
+indexes the user-facing docs. One stale claim fixed: `IlwacoIDESignificantChanges.md` had the
+multi-assistant AI integration under "features removed (opinionated by design)", which the divergence
+decision reverses.
 
 ---
 
