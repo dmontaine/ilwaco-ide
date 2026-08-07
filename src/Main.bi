@@ -203,6 +203,16 @@ Declare Sub AddFromTemplates
 Declare Sub AddFilesToProject
 Declare Sub DeleteEditorFile
 Declare Sub CancelFileDeletion
+'' 13.71: one queued IntelliSense load. See the serial-loader block in Main.bas for why the loads
+'' are queued and run one at a time rather than each on its own thread.
+Type SerialLoadItem
+	Proc As Sub(ByVal userdata As Any Ptr)
+	Param As Any Ptr
+	OwnedPath As WString Ptr
+End Type
+Declare Sub SpawnLoader(ByVal ProcPtr_ As Sub(ByVal userdata As Any Ptr), ByVal Param As Any Ptr, ByVal ParamIsPath As Boolean = False)
+Declare Sub DrainLoaderQueue()
+Declare Sub ClearLoaderQueue()
 Declare Sub UpdateExplorerMenuState
 Declare Sub SaveMRU
 Declare Sub RestoreStatusText

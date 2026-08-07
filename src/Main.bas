@@ -1287,6 +1287,88 @@ Sub ThreadCounter(Id As Any Ptr)
 	Threads.Add Id
 End Sub
 
+'' 13.71: the serial IntelliSense loader queue — the fix for the intermittent crash that used to
+'' hit while a form was being designed. The chain was: form design reads the global symbol lists
+'' while up to 18 loader threads write them. Astoria refuted nine hypotheses about which lock to
+'' add before the answer turned out to be removing the concurrency instead (19 deaths in 260
+'' switches threaded, 0 in 260 serial).
+''
+'' It costs little because the threading never bought throughput: StartOfLoadFunctions..
+'' EndOfLoadFunctions holds tlock across a loader's whole body and LoadFunctions holds tlockSave
+'' across most of its own, so the threads were already serialised on two mutexes. What they bought
+'' was concurrent windows for races.
+''
+'' DELIBERATELY UNSYNCHRONISED, and this is the check that says it may be: in serial mode the queue
+'' is touched only by SpawnLoader and DrainLoaderQueue, and every spawn site is reached only from
+'' the UI thread — three in AddProject, TabWindow.SaveTab, and TabWindow.FormDesign. The surviving
+'' worker entry points were checked against this: AnalyzeTab, FindSubProj, ReplaceSubProj, RunHelp
+'' and LoadFunctionsSub reach none of them. **A loader site added on a worker thread invalidates
+'' this and needs a mutex.**
+Dim Shared As PointerList SerialLoadQueue
+Dim Shared As Boolean bSerialLoadDraining
+
+'' WHY THIS IS A QUEUE AND NOT A PLAIN CALL. LoadFunctionsWithContent is reached from inside
+'' LoadFunctions, which holds BOTH tlockSave (taken at its top) and tlock (taken by
+'' StartOfLoadFunctions before it). Calling a loader entry point straight from there would run
+'' StartOfLoadFunctions -> MutexLock tlock a second time on the same thread; FB mutexes are not
+'' recursive, so that is an immediate self-deadlock — presenting as the IDE hanging on project
+'' open, looking nothing like this change. So a nested spawn only ENQUEUES: bSerialLoadDraining is
+'' true for exactly the span in which a loader is running, and the loop below picks the new item up
+'' on its next turn, by which point LoadFunctions has returned and released both locks.
+Sub DrainLoaderQueue()
+	If bSerialLoadDraining Then Exit Sub
+	bSerialLoadDraining = True
+	Do While SerialLoadQueue.Count > 0
+		Dim As SerialLoadItem Ptr it = Cast(SerialLoadItem Ptr, SerialLoadQueue.Item(0))
+		SerialLoadQueue.Remove 0
+		If it <> 0 Then
+			If Not FormClosing AndAlso it->Proc <> 0 Then it->Proc(it->Param)
+			If it->OwnedPath <> 0 Then WDeAllocate(it->OwnedPath)
+			_Delete(it)
+		End If
+	Loop
+	bSerialLoadDraining = False
+End Sub
+
+'' Replaces ThreadCounter(ThreadCreate_(...)) at every IntelliSense loader site.
+''
+'' This ALWAYS goes through the queue, even with nothing else in flight. Calling ProcPtr_ directly
+'' would leave bSerialLoadDraining clear, so a nested spawn would also call directly — straight into
+'' the tlock self-deadlock above. The flag has to be owned by exactly one place, and that place is
+'' DrainLoaderQueue.
+Sub SpawnLoader(ByVal ProcPtr_ As Sub(ByVal userdata As Any Ptr), ByVal Param As Any Ptr, ByVal ParamIsPath As Boolean = False)
+	Dim As SerialLoadItem Ptr it = _New(SerialLoadItem)
+	it->Proc = ProcPtr_
+	'' A queued path item cannot keep the caller's pointer. Every ParamIsPath site passes
+	'' `@SomeWStringList.Item(i)`, and the parse loop that enqueued us goes on adding to that same
+	'' list — one growth reallocates the buffer and the queued pointer is left aliasing freed
+	'' memory. (Same trap as the ReDim Preserve rule in CLAUDE.md.)
+	If ParamIsPath Then
+		WLet(it->OwnedPath, QWString(Param))
+		it->Param = it->OwnedPath
+	Else
+		it->Param = Param
+	End If
+	SerialLoadQueue.Add it
+	'' Nested: the drain already running owns it. Unwinding first is the whole point.
+	If bSerialLoadDraining Then Exit Sub
+	DrainLoaderQueue()
+End Sub
+
+'' A queued item can outlive its project: LoadOnlyFilePathOverwriteWithContent carries an
+'' EditControlContent Ptr owned by the project's Contents list, so the queue must be emptied when a
+'' project closes or the drain would later run against freed memory — the very shape this fixes.
+Sub ClearLoaderQueue()
+	Do While SerialLoadQueue.Count > 0
+		Dim As SerialLoadItem Ptr it = Cast(SerialLoadItem Ptr, SerialLoadQueue.Item(0))
+		SerialLoadQueue.Remove 0
+		If it <> 0 Then
+			If it->OwnedPath <> 0 Then WDeAllocate(it->OwnedPath)
+			_Delete(it)
+		End If
+	Loop
+End Sub
+
 Function AddProject(ByRef FileName As WString = "", pFilesList As WStringList Ptr = 0, tn1 As TreeNode Ptr = 0, bNew As Boolean = False) As TreeNode Ptr
 	Dim As ExplorerElement Ptr ee
 	Dim As TreeNode Ptr tn, tn3
@@ -1428,7 +1510,7 @@ Function AddProject(ByRef FileName As WString = "", pFilesList As WStringList Pt
 					If EndsWith(LCase(*ee->FileName), ".bas") OrElse EndsWith(LCase(*ee->FileName), ".frm") OrElse EndsWith(LCase(*ee->FileName), ".bi") OrElse EndsWith(LCase(*ee->FileName), ".inc") Then
 						pFiles->Add *ee->FileName, ppe
 						If Not LoadPaths.Contains(*ee->FileName) Then LoadPaths.Add *ee->FileName
-						ThreadCounter(ThreadCreate_(@LoadOnlyFilePath, @LoadPaths.Item(LoadPaths.IndexOf(*ee->FileName))))
+						SpawnLoader(@LoadOnlyFilePath, @LoadPaths.Item(LoadPaths.IndexOf(*ee->FileName)), True)
 					End If
 					ppe->Files_.Add *ee->FileName
 					If inFolder Then
@@ -1543,7 +1625,7 @@ Function AddProject(ByRef FileName As WString = "", pFilesList As WStringList Pt
 		CloseFile_(Fn)
 		If pFilesList = 0 Then
 			For i As Integer = 0 To pFiles->Count - 1
-				ThreadCounter(ThreadCreate_(@LoadOnlyIncludeFiles, @LoadPaths.Item(LoadPaths.IndexOf(pFiles->Item(i)))))
+				SpawnLoader(@LoadOnlyIncludeFiles, @LoadPaths.Item(LoadPaths.IndexOf(pFiles->Item(i))), True)
 			Next
 			If ProjectAutoSuggestions Then
 				For i As Integer = 0 To pFiles->Count - 1
@@ -1553,7 +1635,7 @@ Function AddProject(ByRef FileName As WString = "", pFilesList As WStringList Pt
 					ecc->Tag = pFiles->Object(i)
 					Cast(ProjectElement Ptr, pFiles->Object(i))->Contents.Add ecc
 					If Not LoadPaths.Contains(pFiles->Item(i)) Then LoadPaths.Add pFiles->Item(i)
-					ThreadCounter(ThreadCreate_(@LoadOnlyFilePathOverwriteWithContent, ecc))
+					SpawnLoader(@LoadOnlyFilePathOverwriteWithContent, ecc)
 				Next
 			End If
 		End If
@@ -2157,6 +2239,8 @@ End Sub
 '' runs before the IDE will exit; it was called CloseSession when Ilwaco still had `.vfs`
 '' sessions, which it no longer does.
 Function CloseWorkspace() As Boolean
+	'' 13.71: same reason as CloseProject — nothing queued may outlive the documents it reads.
+	ClearLoaderQueue()
 	Dim tb As TabWindow Ptr
 	Dim tn As TreeNode Ptr
 	Dim tnP As TreeNode Ptr
@@ -2637,6 +2721,9 @@ End Sub
 Function CloseProject(tn As TreeNode Ptr, WithoutMessage As Boolean = False) As Boolean
 	If tn = 0 Then Return True
 	If tn->ImageKey <> "Project" AndAlso tn->ImageKey <> "MainProject" AndAlso tn->ImageKey <> "Opened" Then Return True
+	'' 13.71: drop any queued loads before freeing what they were going to read. A queued item can
+	'' carry an EditControlContent Ptr owned by this project's Contents list.
+	ClearLoaderQueue()
 	Dim tb As TabWindow Ptr
 	Dim As Boolean bProjectModified = EndsWith(tn->Text, "*")
 	If Not WithoutMessage Then
