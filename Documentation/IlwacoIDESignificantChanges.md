@@ -34,7 +34,7 @@ Each of these was a *choice* in VisualFBEditor and is now made once, with the op
   longer exists rather than just hiding it.)
 - **The multi-assistant AI integration is not present** — but, unlike the rest of this section, that is
   **not** a permanent removal. Ilwaco intends to offer a choice of AI assistant templates (Claude Code,
-  ChatGPT, Kun, Kimi Code), which is a deliberate divergence from Astoria's decision to consolidate on
+  ChatGPT, Kun), which is a deliberate divergence from Astoria's decision to consolidate on
   one. See [IlwacoVsAstoria.md](IlwacoVsAstoria.md) §3 and [AstoriaParity.md](AstoriaParity.md)
   "Deliberate divergences".
 - **The Direct2D user option was removed** — it was a Win32-only rendering path with no GTK meaning.

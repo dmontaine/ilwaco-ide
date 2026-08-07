@@ -73,8 +73,9 @@ LOOKBACK = 8
 REMOVED_FEATURES = [
     (r"\bcompiler picker\b",            "the compiler-selection UI (removed: one bundled compiler)"),
     (r"Choose\s+(?:a\s+)?[Cc]ompiler",  "the compiler-selection UI (removed: one bundled compiler)"),
-    (r"\bOpenCode\b",                   "an AI template Ilwaco does not offer (its set is Claude Code, ChatGPT, Kun, Kimi Code)"),
-    (r"\bCursor\b",                     "an AI template Ilwaco does not offer (its set is Claude Code, ChatGPT, Kun, Kimi Code)"),
+    (r"\bOpenCode\b",                   "an AI template Ilwaco does not offer (its set is Claude Code, ChatGPT, Kun)"),
+    (r"\bCursor\b",                     "an AI template Ilwaco does not offer (its set is Claude Code, ChatGPT, Kun)"),
+    (r"\bKimi\b",                       "an AI template Ilwaco does not offer (its set is Claude Code, ChatGPT, Kun)"),
     (r"Use\s+Direct2D",                 "the Direct2D user option (removed; Win32-only path stripped)"),
     (r"32-bit\s+(?:build|target|compiler)", "32-bit build support (removed: Ilwaco is x86_64-only)"),
     (r"Compile to (?:GAS|LLVM|GCC|CLANG)", "the alt compiler-backend picker (removed: gas64-only)"),

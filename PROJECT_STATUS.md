@@ -123,13 +123,14 @@ traps, is in [AstoriaParity.md](Documentation/AstoriaParity.md) "Deliberate dive
 | --- | --- | --- | --- |
 | 1 | **Themes** — *two* of them: IDE UI theme (Options ▸ General ▸ Themes) and editor theme (Options ▸ Code Editor ▸ Colors and Fonts) | Both present; all **96** editor themes | **Guard.** Do not port `5c50f20f` (culls 84 of 96 editor themes; content only, zero code change). Neither capability was ever removed from Astoria. |
 | 2 | **Git integration** | Absent | **Build.** Port the ADD chain `d61eb062` → `fffee489` → `fd894173` → `95b04f70`; **skip the removal `9d277f28`** (read it as the inventory of what a full restore covers). |
-| 3 | **Multiple AI templates** — Claude Code, ChatGPT, Kun, Kimi Code | Absent (MCP dropped `ai_tool` stamping; `AgentPipe` hardcodes `ClaudeCode`) | **Build.** Port the ADD chain (`987e8b7e`, `ef5a6252`, `72ea5980`, `de8c1e5a`); **skip `6de0332f`** (consolidated to Claude only, deleting ChatGPT/Cursor/Kimi/Kun/OpenCode). Keep 4, leave Cursor and OpenCode out. |
+| 3 | **Multiple AI templates** — Claude Code, ChatGPT, Kun | Absent (MCP dropped `ai_tool` stamping; `AgentPipe` hardcodes `ClaudeCode`) | **Build.** Port the ADD chain (`987e8b7e`, `ef5a6252`, `72ea5980`, `de8c1e5a`); **skip `6de0332f`** (consolidated to Claude only, deleting ChatGPT/Cursor/Kimi/Kun/OpenCode). Keep 3; leave Cursor, OpenCode and **Kimi** out (owner, 2026-08-06). |
 | 4 | **Multiple IDE instances** | Already allowed | **Guard.** Do not port Astoria's `App.PrevInstance` handover (`Main.bas:110`, Win32 `EnumWindows`). Anything reaching "the running IDE" must not assume there is one. |
 
 **Do not re-import the three drifts that made Astoria drop the AI templates** (`6de0332f` documents them;
 they are bugs, not reasons to skip the feature): the dropdowns enumerated `Templates/AI` subdirectories
-while `AgentMcp`/`AgentPipe` each carried an unreconciled hardcoded list of five; **Kimi was selectable
-but supported nowhere**, resolving to no template folder; and the GUI stored `AITool=ClaudeCode` while the
+while `AgentMcp`/`AgentPipe` each carried an unreconciled hardcoded list of five; one agent was
+**selectable but supported nowhere**, resolving to no template folder (so every agent offered needs a
+real folder *and* backing support); and the GUI stored `AITool=ClaudeCode` while the
 MCP path defaulted to `"Claude Code"`, which `AgentAiToolFolder` did not recognise — with both dropdowns
 showing folder names instead of product names. One list, one source of truth; display label and folder
 name distinct and mapped in one place.

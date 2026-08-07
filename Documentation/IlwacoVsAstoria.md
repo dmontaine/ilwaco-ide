@@ -53,10 +53,12 @@ removed there.
 - **Git integration** — a top-level Git menu (Pull, Push, Commit, Set Up SSH Key, Create Remote
   Repository), Git identity settings, and Git-aware project creation. Astoria built this and then removed
   it as "an advanced feature that doesn't fit Astoria's target audience". Ilwaco intends to have it.
-- **A choice of AI assistant templates** — **Claude Code, ChatGPT, Kun and Kimi Code**, each with its own
-  Skills and Rules. Astoria supported six agents, then consolidated onto Claude Code alone so that its
-  audience would not face a choice of help systems. Ilwaco intends to offer the four above. (Cursor and
-  OpenCode, also in Astoria's original set, are not planned.)
+- **A choice of AI assistant templates** — **Claude Code, ChatGPT and Kun**, each with its own Skills
+  and Rules. Astoria supported six agents, then consolidated onto Claude Code alone so that its audience
+  would not face a choice of help systems. Ilwaco intends to offer the three above; three covers a wide
+  range because **Kun is model-flexible — it works with most available model API keys**, so it reaches
+  models that have no template of their own. (Cursor, OpenCode and Kimi, also in Astoria's original set,
+  are not planned.)
 
 ## 4. Where Ilwaco is behind Astoria
 
