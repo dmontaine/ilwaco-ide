@@ -75,7 +75,7 @@ Dim Shared As TrackBar trLeft
 Dim Shared As MainMenu mnuMain
 Dim Shared As MenuItem Ptr mnuStartWithCompile, mnuStart, mnuBreak, mnuEnd, mnuRestart, mnuStandardToolBar, mnuEditToolBar, mnuProjectToolBar, mnuFormatToolBar, mnuBuildToolBar, mnuDebugToolBar, mnuRunToolBar, mnuSplit, mnuSplitHorizontally, mnuSplitVertically, mnuWindowSeparator, miRecentFiles, miRecentFolders, miSetAsMain, miClearStartUp, miTabSetAsMain, miTabReloadHistoryCode, miRemoveFiles, miToolBars
 Dim Shared As MenuItem Ptr miRenameProject, miDeleteProject
-Dim Shared As MenuItem Ptr miSaveProject, miSaveProjectAs, miCloseProject, miSave, miSaveAs, miSaveAll, miClose, miCloseAll, miPrint, miPrintPreview, miPageSetup, miOpenProjectFolder, miProjectProperties, miExplorerOpenProjectFolder, miExplorerRename, miExplorerProjectProperties, miExplorerCloseProject, miRename, miRemoveFileFromProject
+Dim Shared As MenuItem Ptr miSaveProject, miSaveProjectAs, miCloseProject, miSave, miSaveAs, miSaveAll, miClose, miCloseAll, miPrint, miPrintPreview, miPageSetup, miOpenProjectFolder, miProjectProperties, miExplorerOpenProjectFolder, miExplorerRename, miExplorerProjectProperties, miExplorerCloseProject, miRename, miRemoveFileFromProject, miDeleteFile
 Dim Shared As MenuItem Ptr miUndo, miRedo, miCutCurrentLine, miCut, miCopy, miPaste, miSingleComment, miBlockComment, miUncommentBlock, miDuplicate, miSelectAll, miIndent, miOutdent, miFormat, miUnformat, miFormatProject, miUnformatProject, miAddSpaces, miDeleteBlankLines, miSuggestions, miCompleteWord, miParameterInfo, miStepInto, miStepOver, miStepOut, miRunToCursor, miAddWatch, miToggleBreakpoint, miClearAllBreakpoints, miSetNextStatement, miShowNextStatement
 Dim Shared As MenuItem Ptr dmiMake, dmiMakeClean
 Dim Shared As MenuItem Ptr miCode, miForm, miCodeAndForm, miGotoCodeForm, miCollapseCurrent, miCollapseAllProcedures, miCollapseAll, miUnCollapseCurrent, miUnCollapseAllProcedures, miUnCollapseAll, miImageManager, miAddProcedure, miAddType, miFind, miReplace, miFindNext, miFindPrevious, miGoto, miDefine, miToggleBookmark, miNextBookmark, miPreviousBookmark, miClearAllBookmarks, miSyntaxCheck, miCompile, miCompileAll, miMake, miMakeClean
@@ -1916,21 +1916,40 @@ Function SaveProject(ByRef tnP As TreeNode Ptr, bWithQuestion As Boolean = False
 	End If
 	Dim As TreeNode Ptr tn1, tn2
 	Dim As String Zv = "*"
+	'' B1: files marked pending-delete (via "Delete File") are collected here -- path plus the
+	'' originating TreeNode Ptr as the WStringList item's Object -- instead of being handed to
+	'' SaveProjectFile, so both .vfp write branches below skip them. They only really leave disk
+	'' and tree once the project file itself has been written, at the end of this Function.
+	Dim As WStringList PendingKill
 	For i As Integer = 0 To tnPr->Nodes.Count - 1
 		tn1 = tnPr->Nodes.Item(i)
 		ee = tn1->Tag
 		If ee <> 0 Then
-			If Not SaveProjectFile(ppe, ee, tn1) Then Return False
+			If ee->PendingDelete Then
+				PendingKill.Add WGet(ee->FileName), tn1
+			ElseIf Not SaveProjectFile(ppe, ee, tn1) Then
+				Return False
+			End If
 		ElseIf tn1->Nodes.Count > 0 Then
 			For j As Integer = 0 To tn1->Nodes.Count - 1
 				tn2 = tn1->Nodes.Item(j)
 				ee = tn2->Tag
 				If ee <> 0 Then
-					If Not SaveProjectFile(ppe, ee, tn2) Then Return False
+					If ee->PendingDelete Then
+						PendingKill.Add WGet(ee->FileName), tn2
+					ElseIf Not SaveProjectFile(ppe, ee, tn2) Then
+						Return False
+					End If
 				End If
 			Next
 		End If
 	Next
+	'' Folder-style projects write from ppe->Files rather than walking the tree, so pending
+	'' deletes have to be dropped from that list too.
+	For i As Integer = 0 To PendingKill.Count - 1
+		Dim As Integer fIdx = ppe->Files.IndexOf(PendingKill.Item(i))
+		If fIdx <> -1 Then ppe->Files.Remove fIdx
+	Next i
 	Dim As Integer Fn = FreeFile_
 	If Not EndsWith(LCase(*ppe->FileName), ".vfp") Then
 		Open *ppe->FileName & "/" & GetFileName(*ppe->FileName) & ".vfp" For Output Encoding "utf-8" As #Fn
@@ -1947,7 +1966,7 @@ Function SaveProject(ByRef tnP As TreeNode Ptr, bWithQuestion As Boolean = False
 		For i As Integer = 0 To tnPr->Nodes.Count - 1
 			tn1 = tnPr->Nodes.Item(i)
 			ee = tn1->Tag
-			If ee <> 0 Then
+			If ee <> 0 AndAlso Not ee->PendingDelete Then
 				Zv = IIf(ppe AndAlso (*ee->FileName = *ppe->MainFileName OrElse *ee->FileName = *ppe->ResourceFileName OrElse *ee->FileName = *ppe->IconResourceFileName OrElse *ee->FileName = *ppe->BatchCompilationFileNameWindows OrElse *ee->FileName = *ppe->BatchCompilationFileNameLinux), "*", "")
 				If StartsWith(*ee->FileName, GetFolderName(*ppe->FileName)) Then
 					Print #Fn, Zv & "File=" & Replace(Mid(*ee->FileName, Len(GetFolderName(*ppe->FileName)) + 1), "\", "/")
@@ -1958,7 +1977,7 @@ Function SaveProject(ByRef tnP As TreeNode Ptr, bWithQuestion As Boolean = False
 				For j As Integer = 0 To tn1->Nodes.Count - 1
 					tn2 = tn1->Nodes.Item(j)
 					ee = tn2->Tag
-					If ee <> 0 Then
+					If ee <> 0 AndAlso Not ee->PendingDelete Then
 						Zv = IIf(ppe AndAlso (*ee->FileName = *ppe->MainFileName OrElse *ee->FileName = *ppe->ResourceFileName OrElse *ee->FileName = *ppe->IconResourceFileName OrElse *ee->FileName = *ppe->BatchCompilationFileNameWindows OrElse *ee->FileName = *ppe->BatchCompilationFileNameLinux), "*", "")
 						If StartsWith(Replace(*ee->FileName, "\", "/"), Replace(GetFolderName(*ppe->FileName), "\", "/")) Then
 							Print #Fn, Zv & "File=" & Replace(Mid(*ee->FileName, Len(GetFolderName(*ppe->FileName)) + 1), "\", "/")
@@ -2014,6 +2033,19 @@ Function SaveProject(ByRef tnP As TreeNode Ptr, bWithQuestion As Boolean = False
 	'	End If
 	'Next
 	CloseFile_(Fn)
+	'' B1: only now -- once the project file itself is actually written -- do the files the
+	'' owner deleted this session really disappear from disk and from the tree. Until this
+	'' point, closing the project without saving leaves them untouched.
+	For i As Integer = 0 To PendingKill.Count - 1
+		Dim As TreeNode Ptr tnKill = PendingKill.Object(i)
+		If Dir(PendingKill.Item(i)) <> "" Then Kill PendingKill.Item(i)
+		If tnKill <> 0 AndAlso tnKill->ParentNode <> 0 AndAlso tnKill->ParentNode->Nodes.IndexOf(tnKill) <> -1 Then
+			'' Null after free: Nodes.Remove fires tvExplorer_SelChange, which derefs Tag in an
+			'' Is-check -- fb_IsTypeOf reading a freed object's vtable is a SIGSEGV.
+			If tnKill->Tag <> 0 Then _Delete(Cast(ExplorerElement Ptr, tnKill->Tag)): tnKill->Tag = 0
+			tnKill->ParentNode->Nodes.Remove tnKill->ParentNode->Nodes.IndexOf(tnKill)
+		End If
+	Next i
 	'Else
 	'	MsgBox ML("Save file failure!") & Chr(13,10) & *ppe->FileName
 	'End If
@@ -2075,15 +2107,15 @@ Function SaveAllBeforeCompile() As Boolean
 				Next i
 			Next j
 			If .lstFiles.ItemCount > 0 Then
-				.lstFiles.SelectAll
 				Select Case .ShowModal(*pfrmMain)
 				Case ModalResults.Yes
-					For i As Integer = .lstFiles.ItemCount - 1 To 0 Step -1
-						If .lstFiles.Selected(i) Then
-							If tvExplorer.Nodes.Contains(.lstFiles.ItemData(i)) Then
-								If Not SaveProject(.lstFiles.ItemData(i)) Then Return False
+					'' See CloseProject: the listbox is gone by the time ShowModal returns.
+					For i As Integer = .SelectedItems.Count - 1 To 0 Step -1
+						If .SelectedItems.Item(i) <> 0 Then
+							If tvExplorer.Nodes.Contains(.SelectedItems.Item(i)) Then
+								If Not SaveProject(.SelectedItems.Item(i)) Then Return False
 							Else
-								If Not Cast(TabWindow Ptr, .lstFiles.ItemData(i))->Save Then Return False
+								If Not Cast(TabWindow Ptr, .SelectedItems.Item(i))->Save Then Return False
 							End If
 						End If
 					Next
@@ -2154,7 +2186,6 @@ Function CloseWorkspace() As Boolean
 			Next i
 		Next j
 		If .lstFiles.ItemCount > 0 Then
-			.lstFiles.SelectAll
 			Select Case .ShowModal(*pfrmMain)
 			Case ModalResults.Yes
 				For i As Integer = .SelectedItems.Count - 1 To 0 Step -1
@@ -2285,7 +2316,7 @@ Sub AddFromTemplate(ByRef Template As WString)
 			WLet(ee->FileName, NewName)
 			WLet(ee->TemplateFileName, Template)
 			tn3->Tag = ee
-			If Not EndsWith(ptn->Text, "*") Then ptn->Text &= "*"
+			If Not EndsWith(ptn->Text, "*") Then ptn->Text = ptn->Text & "*"
 			If Not ptn->IsExpanded Then ptn->Expand
 			If Not tn1->IsExpanded Then tn1->Expand
 			tn3->SelectItem
@@ -2330,7 +2361,7 @@ Sub AddFilesToProject
 			End If
 		Next
 		If ptn <> 0 Then
-			If Not EndsWith(ptn->Text, "*") Then ptn->Text &= "*"
+			If Not EndsWith(ptn->Text, "*") Then ptn->Text = ptn->Text & "*"
 			If ptn->Nodes.Count > 0 Then
 				If Not ptn->IsExpanded Then ptn->Expand
 				For i As Integer = 0 To ptn->Nodes.Count - 1
@@ -2349,56 +2380,84 @@ Sub RenameFile
 	tvExplorer.SelectedNode->EditLabel
 End Sub
 
-Sub RemoveFileFromProject
-	If tvExplorer.SelectedNode = 0 Then Exit Sub
-	'	If tvExplorer.SelectedNode->Tag = 0 Then Exit Sub
-	'	If tvExplorer.SelectedNode->ParentNode = 0 Then Exit Sub
-	Dim tn As TreeNode Ptr = tvExplorer.SelectedNode
-	Dim As TreeNode Ptr ptn
-	ptn = GetParentNode(tn)
-	If ptn->ImageKey <> "Project" Then
-		If ptn->ImageKey = "Opened" AndAlso tn->Tag > 0 Then
-			Dim As ExplorerElement Ptr ee
-			ee = _New(ExplorerElement)
-			ee = tn->Tag
-			If ee->FileName> 0 AndAlso Dir(*ee->FileName) <> "" Then
-				'Move the file to temp folds.
-				FileCopy_(*ee->FileName, ExePath + "/Temp/" + GetFileName(*ee->FileName))
-				Kill *ee->FileName
-			End If
-		End If
-		ptn = 0
+Sub DeleteEditorFile()
+	'' 13.3.A S5 + B1. Replaces the old "Remove", which detached project members from the tree and
+	'' silently Kill'd files off disk with no confirmation at all. Works off the tree selection
+	'' rather than the active tab, so a project member can be deleted whether or not it is open.
+	Dim As TreeNode Ptr tn = tvExplorer.SelectedNode
+	If tn = 0 Then Exit Sub
+	'' The command is also reachable with a project root selected; keep routing that to
+	'' CloseProject rather than treating a project's own .vfp as a plain file -- Delete Project
+	'' already exists as its own, properly-confirmed command.
+	If tn->ImageKey = "Project" OrElse tn->ImageKey = "MainProject" Then
+		CloseProject tn
+		Exit Sub
 	End If
+	'' "Opened" is the folder/category icon (Includes, Forms, Modules, ... and opened folders),
+	'' never a file.
+	If tn->ImageKey = "Opened" Then Exit Sub
+	Dim As ExplorerElement Ptr ee = tn->Tag
+	If ee = 0 OrElse ee->PendingDelete Then Exit Sub '' already queued -- see CancelFileDeletion
+	'' Captured up front: for a ROOT-level node CloseTab below frees both the node and its
+	'' ExplorerElement, so neither tn nor ee may be read afterwards in that case. (Project members
+	'' are nested and survive it.)
+	Dim As WString * MAX_PATH sFilePath = WGet(ee->FileName)
+	Dim As Boolean bNestedInProject = (tn->ParentNode <> 0)
+	Dim As TreeNode Ptr ptnProject = 0
+	If bNestedInProject Then ptnProject = GetParentNode(tn)
+	If MsgBox(ML("Are you sure you want to delete the file") & " """ & GetFileName(sFilePath) & """?", "Ilwaco IDE", mtWarning, btYesNo) <> mrYes Then Exit Sub
+	'' Close this file's tab if it happens to be open in any panel; it is fine if there is none.
+	Dim As Boolean bTabClosed
 	Dim tb As TabWindow Ptr
 	For j As Integer = 0 To TabPanels.Count - 1
 		Var ptabCode = @Cast(TabPanel Ptr, TabPanels.Item(j))->tabCode
 		For i As Integer = 0 To ptabCode->TabCount - 1
 			tb = Cast(TabWindow Ptr, ptabCode->Tabs[i])
-			If tb->ptn = ptn Then
-				If Not CloseTab(tb) Then Exit Sub
-				Exit For
-			End If
-		Next i
-	Next j
-	For j As Integer = 0 To TabPanels.Count - 1
-		Var ptabCode = @Cast(TabPanel Ptr, TabPanels.Item(j))->tabCode
-		For i As Integer = 0 To ptabCode->TabCount - 1
-			tb = Cast(TabWindow Ptr, ptabCode->Tabs[i])
 			If tb->tn = tn Then
-				If Not CloseTab(tb) Then Exit Sub
+				If Not CloseTab(tb, True) Then Exit Sub
+				bTabClosed = True
 				Exit For
 			End If
 		Next i
+		If bTabClosed Then Exit For
 	Next j
-	If ptn <> 0 Then
-		If Not EndsWith(ptn->Text, "*") Then ptn->Text &= "*"
+	If bNestedInProject Then
+		'' B1: a project member is not removed from disk or from the tree until the project is
+		'' saved (SaveProject collects ee->PendingDelete), so abandoning the changes -- closing
+		'' without saving -- leaves everything exactly as it was. The node stays visible, and
+		'' right-clicking it offers "Cancel Deletion" to undo this before that save.
+		'' CloseTab leaves project-nested nodes (and their Tag) alive, so ee is still valid.
+		ee->PendingDelete = True
+		tn->Text = GetFileName(sFilePath) & " " & ML("(pending delete)")
+		If ptnProject <> 0 AndAlso Not EndsWith(ptnProject->Text, "*") Then ptnProject->Text = ptnProject->Text & "*"
+		'' The node stays selected, so re-opening the context menu on it would not fire
+		'' SelChange -- refresh here or it would still offer "Delete File".
+		UpdateExplorerMenuState
+	Else
+		'' A root-level node belongs to no project, so there is no save cycle to defer to and it
+		'' goes immediately. Ilwaco is project-only, so in supported use this is unreachable --
+		'' kept as the guard for a rootless node rather than falling through to the queue, which
+		'' nothing would ever drain. CloseTab has already removed and freed the node
+		'' (TreeNodeCollection.Remove _Delete()s it), so only touch the tree when no tab closed.
+		If Not bTabClosed Then
+			If tvExplorer.Nodes.IndexOf(tn) <> -1 Then
+				If tn->Tag <> 0 Then _Delete(Cast(ExplorerElement Ptr, tn->Tag)): tn->Tag = 0
+				tvExplorer.Nodes.Remove tvExplorer.Nodes.IndexOf(tn)
+			End If
+		End If
+		If sFilePath <> "" AndAlso Dir(sFilePath) <> "" Then Kill sFilePath
 	End If
-	If tn->ParentNode <> 0 Then
-		If tn->ParentNode->Nodes.IndexOf(tn) <> -1 Then tn->ParentNode->Nodes.Remove tn->ParentNode->Nodes.IndexOf(tn)
-	ElseIf tn->ImageKey = "Project" Then
-		CloseProject tn
-	End If
-	'pfProjectProperties->RefreshProperties
+End Sub
+
+Sub CancelFileDeletion()
+	'' B1: undo a queued deletion while the project still has not been saved.
+	Dim As TreeNode Ptr tn = tvExplorer.SelectedNode
+	If tn = 0 Then Exit Sub
+	Dim As ExplorerElement Ptr ee = tn->Tag
+	If ee = 0 OrElse Not ee->PendingDelete Then Exit Sub
+	ee->PendingDelete = False
+	tn->Text = GetFileName(WGet(ee->FileName))
+	UpdateExplorerMenuState   '' selection is unchanged, so SelChange will not refresh the menu
 End Sub
 
 Sub OpenProjectFolder
@@ -2491,7 +2550,7 @@ Sub SetAsMain(IsTab As Boolean)
 					Dim As TreeNode Ptr tn1, tn2
 					Dim As Integer tIndex
 					Dim As String IconName
-					If Not EndsWith(ptn->Text, "*") Then ptn->Text &= "*"
+					If Not EndsWith(ptn->Text, "*") Then ptn->Text = ptn->Text & "*"
 					If EndsWith(LCase(*ee->FileName), ".rc") Then
 						WLet(ppe->ResourceFileName, *ee->FileName)
 					ElseIf EndsWith(LCase(*ee->FileName), ".xpm") Then
@@ -2586,6 +2645,26 @@ Function CloseProject(tn As TreeNode Ptr, WithoutMessage As Boolean = False) As 
 		With *pfSave
 			.lstFiles.Clear
 			If bProjectModified Then .lstFiles.AddItem tn->Text, tn
+			'' B1: show what is about to actually vanish from disk when Yes is clicked. These
+			'' rows are informational only (ItemData=0, skipped below) -- the files themselves
+			'' are removed as part of SaveProject once the project row above is processed.
+			Dim As TreeNode Ptr tnPend1, tnPend2
+			Dim As ExplorerElement Ptr eePend
+			For i As Integer = 0 To tn->Nodes.Count - 1
+				tnPend1 = tn->Nodes.Item(i)
+				eePend = tnPend1->Tag
+				If eePend <> 0 AndAlso eePend->PendingDelete Then
+					.lstFiles.AddItem WSpace(2) & GetFileName(WGet(eePend->FileName)) & " " & ML("(delete pending)"), 0
+				ElseIf tnPend1->Nodes.Count > 0 Then
+					For j As Integer = 0 To tnPend1->Nodes.Count - 1
+						tnPend2 = tnPend1->Nodes.Item(j)
+						eePend = tnPend2->Tag
+						If eePend <> 0 AndAlso eePend->PendingDelete Then
+							.lstFiles.AddItem WSpace(2) & GetFileName(WGet(eePend->FileName)) & " " & ML("(delete pending)"), 0
+						End If
+					Next j
+				End If
+			Next i
 			For j As Integer = TabPanels.Count - 1 To 0 Step -1
 				Var ptabCode = @Cast(TabPanel Ptr, TabPanels.Item(j))->tabCode
 				For i As Integer = ptabCode->TabCount - 1 To 0 Step -1
@@ -2601,17 +2680,25 @@ Function CloseProject(tn As TreeNode Ptr, WithoutMessage As Boolean = False) As 
 			If .lstFiles.ItemCount > 0 Then
 				Select Case .ShowModal(*pfrmMain)
 				Case ModalResults.Yes
-					For i As Integer = .lstFiles.ItemCount - 1 To 0 Step -1
-						If .lstFiles.Selected(i) Then
-							If tvExplorer.Nodes.Contains(.lstFiles.ItemData(i)) Then
-								If Not SaveProject(.lstFiles.ItemData(i)) Then Return False
+					'' Clicking a button closes pfSave, which really destroys the listbox, so
+					'' .lstFiles.Selected() reads back False for everything once ShowModal has
+					'' returned. Read .SelectedItems, captured inside cmdYes_Click before the
+					'' window is torn down -- the same pattern CloseAllDocuments already uses.
+					'' ItemData=0 rows are the "(delete pending)" informational entries.
+					For i As Integer = .SelectedItems.Count - 1 To 0 Step -1
+						If .SelectedItems.Item(i) <> 0 Then
+							If tvExplorer.Nodes.Contains(.SelectedItems.Item(i)) Then
+								If Not SaveProject(.SelectedItems.Item(i)) Then Return False
 							Else
-								If Not Cast(TabWindow Ptr, .lstFiles.ItemData(i))->Save Then Return False
+								If Not Cast(TabWindow Ptr, .SelectedItems.Item(i))->Save Then Return False
 							End If
 						End If
 					Next
 				Case ModalResults.No
-				Case ModalResults.Cancel: Return False
+				Case Else: Return False '' Cancel, or closed via the window's X (ShowModal returns
+				'' None then, which matches neither Yes nor No and would otherwise fall through
+				'' and continue the close without saving -- this dialog guards a destructive
+				'' action, so treat anything unrecognised as Cancel.
 				End Select
 			End If
 		End With
@@ -5858,6 +5945,7 @@ Sub CreateMenusAndToolBars
 	miFile->Add("-")
 	'' Delete grouped well away from Close (safety -- a misclick on Delete is destructive, Close is not). 13.3.A S5.
 	miDeleteProject = miFile->Add(ML("Delete Project"), "", "DeleteProject", @mClick, , , False)
+	miDeleteFile = miFile->Add(ML("Delete File"), "", "DeleteFile", @mClick, , , False)
 	miFile->Add("-")
 	Var miFileAdvanced = miFile->Add(ML("Advanced"), "", "FileAdvanced")
 	miPrintPreview = miFileAdvanced->Add(ML("Print P&review") & HK("PrintPreview"), "PrintPreview", "PrintPreview", @mClick, , , False)
@@ -5917,7 +6005,7 @@ Sub CreateMenusAndToolBars
 	miProjectAdvanced->Add(ML("Add Ma&nifest File") & HK("AddManifestFile",""), "File", "AddManifestFile", @mClick)
 	miProject->Add("-")
 	miRename = miProject->Add(ML("R&ename") & HK("Rename"), "Rename", "Rename", @mClick, , , False)
-	miRemoveFileFromProject = miProject->Add(ML("&Remove") & HK("RemoveFileFromProject"), "Remove", "RemoveFileFromProject", @mClick, , , False)
+	miRemoveFileFromProject = miProject->Add(ML("&Delete File") & HK("DeleteFile"), "Remove", "DeleteFile", @mClick, , , False)
 	miProject->Add("-")
 	miOpenProjectFolder = miProject->Add(ML("&Open Project Folder") & HK("OpenProjectFolder"), "", "OpenProjectFolder", @mClick, , , False)
 	miProject->Add(ML("Import from Folder") & "..." & HK("OpenFolder", "Alt+O"), "", "OpenFolder", @mClick)
@@ -6209,7 +6297,7 @@ Sub CreateMenusAndToolBars
 	miAdd->Add(ML("Add From Templates") & "...", "", "AddFromTemplates", @mClick)
 	miAdd->Add(ML("Add Files") & "...", "", "AddFilesToProject", @mClick)
 	miExplorerRename = mnuExplorer.Add(ML("Rename"), "", "Rename", @mClick, , , False)
-	miRemoveFiles = mnuExplorer.Add(ML("&Remove"), "Remove", "RemoveFileFromProject", @mClick)
+	miRemoveFiles = mnuExplorer.Add(ML("&Delete File"), "Remove", "DeleteFile", @mClick)
 	mnuExplorer.Add("-")
 	miExplorerOpenProjectFolder = mnuExplorer.Add(ML("Open Project Folder"), "", "OpenProjectFolder", @mClick, , , False)
 	miExplorerCloseProject = mnuExplorer.Add(ML("Close Project"), "", "CloseProject", @mClick, , , False)
@@ -6399,7 +6487,7 @@ tbExplorer.Align = DockStyle.alTop
 tbExplorer.AutoSize = True
 tbExplorer.ExtraMargins.Right = tbLeft.Width
 tbExplorer.Buttons.Add , "Add",, @mClick, "AddFilesToProject", , ML("Add"), True
-tbtRemoveFileFromProject = tbExplorer.Buttons.Add(, "Remove", , @mClick, "RemoveFileFromProject", , ML("&Remove"), True, ToolButtonState.tstNone)
+tbtRemoveFileFromProject = tbExplorer.Buttons.Add(, "Remove", , @mClick, "DeleteFile", , ML("Delete File"), True, ToolButtonState.tstNone)
 tbExplorer.Buttons.Add tbsSeparator
 Var tbFolder = tbExplorer.Buttons.Add(tbsWholeDropdown, "Folder", , @mClick, "Folder", , ML("Show Folders"), True)
 miShowWithFolders = tbFolder->DropDownMenu.Add(ML("Show With Folders"), "", "ShowWithFolders", @mClick, , , True)
@@ -6614,6 +6702,7 @@ Sub tvExplorer_NodeActivate(ByRef Designer As My.Sys.Object, ByRef Sender As Con
 	If Item.ImageKey = "Opened" Then Exit Sub
 	If Item.ImageKey = "Project" AndAlso Item.ParentNode = 0 Then Exit Sub
 	Dim As ExplorerElement Ptr ee = Item.Tag
+	If ee <> 0 AndAlso ee->PendingDelete Then Exit Sub '' B1: about to be deleted on save, don't reopen
 	If ee <> 0 Then
 		If *ee Is TypeElement Then
 			Dim As TypeElement Ptr te = Item.Tag
@@ -6733,6 +6822,9 @@ Sub tvExplorer_SelChange(ByRef Designer As My.Sys.Object, ByRef Sender As TreeVi
 	Static OldParentNode As TreeNode Ptr
 	Dim As TreeNode Ptr ptn = tvExplorer.SelectedNode
 	If ptn = 0 Then Exit Sub 'David Change For Safty
+	'' Right-clicking a row selects it before MFF pops mnuExplorer, so this is where the menu's
+	'' captions and enablement get refreshed -- see UpdateExplorerMenuState for why not MouseUp.
+	UpdateExplorerMenuState
 	ptn = GetParentNode(ptn)
 	If ptn > 0 AndAlso OldParentNode <> ptn Then
 		OldParentNode = ptn
@@ -6792,14 +6884,14 @@ Sub tvExplorer_SelChange(ByRef Designer As My.Sys.Object, ByRef Sender As TreeVi
 	End If
 End Sub
 
-Sub tvExplorer_MouseUp(ByRef Designer As My.Sys.Object, ByRef Sender As Control, MouseButton As Integer, x As Integer, y As Integer, Shift As Integer)
-	If MouseButton <> 1 Then Exit Sub
-	Dim As TreeNode Ptr ptn, tn = tvExplorer.DraggedNode
-	If tn = 0 Then
-		tn = tvExplorer.SelectedNode
-	Else
-		tvExplorer.SelectedNode = tn
-	End If
+Sub UpdateExplorerMenuState()
+	'' Prepares mnuExplorer for display. This used to live in a tvExplorer_MouseUp handler, but
+	'' MFF's GTK code only raises OnMouseUp when the event window IS the widget window -- never
+	'' true for a GtkTreeView, whose button events arrive on its bin window -- while it pops the
+	'' ContextMenu unconditionally. So that handler never ran and the menu has shown stale
+	'' captions and enablement since the GTK port. Right-clicking a row does move the selection,
+	'' so tvExplorer_SelChange is a hook that actually fires, and it fires before the popup.
+	Dim As TreeNode Ptr ptn, tn = tvExplorer.SelectedNode
 	If tn <> 0 AndAlso tn->ParentNode <> 0 Then
 		ptn = GetParentNode(tn)
 		If ptn->ImageKey <> "Project" Then
@@ -6814,14 +6906,25 @@ Sub tvExplorer_MouseUp(ByRef Designer As My.Sys.Object, ByRef Sender As Control,
 		miSetAsMain->Caption = ML("Set as Start Up")
 	End If
 	Dim As String tmpKeyStr = " @Sub @StandartTypes @Property @Enum @EnumItem @Type @Function @Opened "
+	Dim As ExplorerElement Ptr eeMenu
+	If tn <> 0 Then eeMenu = tn->Tag
 	If CInt(tn = 0) OrElse CInt(tn <> 0 AndAlso InStr(tmpKeyStr, " @" & tn->ImageKey & " ")) Then
 		miSetAsMain->Enabled = IIf(tn <> 0 AndAlso tn->ParentNode <> 0, False, True)
 		miRemoveFiles->Enabled = False
-		miRemoveFiles->Caption = ML("Remove")
+		miRemoveFiles->Caption = ML("Delete File")
+		miRemoveFiles->Name = "DeleteFile"
+	ElseIf eeMenu <> 0 AndAlso eeMenu->PendingDelete Then
+		'' B1: right-clicking a file already queued for deletion offers to undo it, rather
+		'' than a second, meaningless "Delete File".
+		miSetAsMain->Enabled = False
+		miRemoveFiles->Enabled = True
+		miRemoveFiles->Caption = ML("Cancel Deletion")
+		miRemoveFiles->Name = "CancelFileDeletion"
 	Else
 		miSetAsMain->Enabled = True
 		miRemoveFiles->Enabled = True
-		miRemoveFiles->Caption = ML("Remove") & " " & tn->Text
+		miRemoveFiles->Caption = ML("Delete File") & " " & tn->Text
+		miRemoveFiles->Name = "DeleteFile"
 	End If
 End Sub
 
@@ -6910,7 +7013,6 @@ tvExplorer.HideSelection = False
 'tvExplorer.OnDblClick = @tvExplorer_DblClick
 tvExplorer.OnNodeActivate = @tvExplorer_NodeActivate
 tvExplorer.OnNodeExpanding = @tvExplorer_NodeExpanding
-tvExplorer.OnMouseUp = @tvExplorer_MouseUp
 tvExplorer.OnKeyDown = @tvExplorer_KeyDown
 tvExplorer.OnSelChanged = @tvExplorer_SelChange
 tvExplorer.OnBeforeLabelEdit = @tvExplorer_BeforeLabelEdit

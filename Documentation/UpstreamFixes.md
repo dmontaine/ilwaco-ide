@@ -36,6 +36,31 @@ the diff.
 
 ## IDE (VisualFBEditor base) — GTK
 
+- **A `TreeView`'s `OnMouseUp` never fires on GTK, so a context menu prepared there shows stale
+  state.** `Control.bas` raises `OnMouseUp` only inside
+  `If gtk_widget_get_window(widget) = e->motion.window OrElse (layoutwidget AndAlso …)`. A
+  `GtkTreeView` delivers its button events on its *bin* window and is not a `GtkLayout`, so neither
+  arm holds and the callback is never invoked — while the same `GDK_BUTTON_RELEASE` case pops
+  `ContextMenu` unconditionally a few lines below. `Main.bas` prepared the explorer menu in a
+  `tvExplorer_MouseUp` handler (captions, enabled/disabled, "Set as Main" vs "Set as Start Up"), so on
+  GTK that menu had shown fixed, stale entries since the port; the handler also opened with
+  `If MouseButton <> 1 Then Exit Sub`, which is a second bug behind the first, since MFF reports
+  `e->button.button - 1` (left 0, middle 1, right **2**). Fixed on our side by moving the logic to a
+  plain `UpdateExplorerMenuState` Sub called from the tree's selection-change handler — right-clicking
+  a row does move the selection, and that fires before the popup. Note a selection handler is not
+  sufficient alone: re-clicking the already-selected row raises no change, so anything that alters a
+  node's state must refresh the menu itself.
+
+- **`node->Text &= "*"` changes the string but does not repaint.** `TreeNode.Text` is a property pair
+  whose getter is `ByRef As WString`, so the compound assignment appends through the returned
+  reference instead of routing back through the setter — and the setter is what calls
+  `gtk_tree_store_set`. The IDE marks a modified project by appending `*` to its node this way (five
+  live sites in `Main.bas`/`AgentPipe.bas`), so on GTK the model held `Project.vfp*` while the tree
+  went on displaying `Project.vfp`: the dirty marker was invisible, and code reading
+  `EndsWith(tn->Text, "*")` still worked, which is why it went unnoticed. Appending in place into an
+  exactly-sized buffer is also dubious in its own right. Fixed by writing
+  `tn->Text = tn->Text & "*"`, which builds a temporary and goes through the setter.
+
 - **`FolderCopy` copies nothing on the GTK build — silently.** `Main.bas FolderCopy` passes its paths
   straight to FreeBASIC's `FileCopy`, which takes `ZString Ptr`. The arguments there are `UString`
   expressions (MFF's wide-string type), so the call binds through `UString.Cast() As Any Ptr` and the

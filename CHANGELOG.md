@@ -10,6 +10,11 @@ The format is loosely [Keep a Changelog](https://keepachangelog.com/). Dates are
 ## [Unreleased]
 
 ### Added
+- **Delete File** — one command on the File menu, the Project menu, the tree context menu and the
+  explorer toolbar, with a confirmation prompt that defaults to *No*. A file belonging to a project is
+  queued rather than deleted: it shows as `(pending delete)` and only leaves the disk when the project
+  is saved, so closing without saving abandons the deletion. Right-click a queued file for
+  **Cancel Deletion** to undo it (2026-08-06).
 - **Open Project** is now on the File menu — the command existed but its menu item was commented
   out, so there was no way to reach it (2026-08-04).
 - **Rename Project** and **Delete Project** commands (2026-08-04). ⚠️ Both currently inherit a
@@ -26,6 +31,14 @@ The format is loosely [Keep a Changelog](https://keepachangelog.com/). Dates are
   `DetachTab` (2026-08-03).
 
 ### Fixed
+- The project explorer's right-click menu showed fixed, stale entries: the handler that prepares it
+  could never run on GTK, so captions and enabled/disabled state never reflected what was selected
+  (2026-08-06).
+- A modified project showed no `*` against its name in the tree — the marker was being recorded but
+  never repainted (2026-08-06).
+- Answering the Close Project save prompt saved nothing, because the file list was read after the
+  dialog had already been torn down; closing that prompt with the window's X now counts as Cancel
+  rather than silently continuing without saving (2026-08-06).
 - Project templates shipped with a UTF-8 BOM, which makes FreeBASIC compile string literals as wide
   characters — every new project built cleanly and then printed garbled text (2026-08-04).
 - Debugging a project stored under a path containing uppercase letters failed with "File not found":
@@ -39,6 +52,10 @@ The format is loosely [Keep a Changelog](https://keepachangelog.com/). Dates are
 - Bottom/debug panels cleared on project close and debug end (2026-08-03).
 
 ### Changed / Removed (opinionated by design)
+- The **Remove** command is gone, merged into **Delete File**. Remove deleted a file from disk with no
+  confirmation of any kind; there is now one command, and it asks first (2026-08-06).
+- The save-changes prompt no longer counts down and answers **Yes** for you after ten seconds — it
+  guards a destructive action and now waits (2026-08-06).
 - The default module/form in a new project is now `Main.bas` / `Main.frm`, and New Project offers
   only project types that work on a Linux/GTK build (2026-08-04).
 - Menus follow Astoria's taxonomy: the File menu leads with project commands, `Format` is now

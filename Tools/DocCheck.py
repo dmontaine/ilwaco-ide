@@ -94,6 +94,8 @@ REMOVED_FEATURES = [
     (r"Build Bundle\s*/\s*APK",         "the Android build menu (removed: Android/APK support dropped, Linux target only)"),
     (r"Generate Signed Bundle",         "the Android signed-build menu (removed: Android/APK support dropped)"),
     (r"Android SDK [Ll]ocation",        "the Android SDK/NDK/JDK Project-Properties fields (removed with Android/APK support)"),
+    (r"Remove [Ff]ile [Ff]rom [Pp]roject", "the Remove command (removed: merged into Delete File)"),
+    (r"count ?down",                     "the save dialog's 10-second auto-save countdown (removed: it answered a destructive prompt by itself)"),
 ]
 
 # Files whose absence should be reported when a document still names them, written as an

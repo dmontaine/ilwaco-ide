@@ -780,6 +780,45 @@ step-by-step would build UI only to delete it (memory `project-menu-collapse-to-
   no Android, an example project opens (`.vfp` reader OK), and Project Properties opens with the Android
   tab gone (tabs now General/Make/Compile/Includes/Debugging) and no crash.
 
+- **`93bbfa28` S5 + `331b5705` (B1) — Delete File, DONE (2026-08-06).** Scoped against Astoria's
+  **final** state, not `93bbfa28`'s: that commit's tab-based ~18-line `DeleteEditorFile` was reworked
+  twice afterwards — `331b5705` added deferred deletion (`PendingDelete`) and `273df0f5` unified the
+  command with the tree's right-click "Remove", deleting `RemoveFileFromProject` outright. Owner chose
+  **full parity**, so Ilwaco ships the final shape: one `DeleteFile` command on the File menu (new
+  `miDeleteFile`), the Project menu, the tree context menu and the explorer toolbar; confirmation
+  prompt defaulting to No; tree-selection based, so a project member can be deleted whether or not it
+  is open. A project member is only marked `ee->PendingDelete` (label `(pending delete)`, project
+  flagged `*`); `SaveProject` collects them into a `PendingKill` `WStringList`, excludes them from both
+  `.vfp` write branches and from `ppe->Files`, and `Kill`s them **only after** the project file is
+  written. `CancelFileDeletion` undoes a queued delete; `CloseProject` lists queued files as
+  informational `(delete pending)` rows (`ItemData=0`, skipped on save) and `tvExplorer_NodeActivate`
+  refuses to reopen one. **`331b5705`'s save-dialog half was already partly present** — `frmSave`
+  had `SelectedItems` and `CloseWorkspace` used it, but `CloseProject`/`SaveAllBeforeCompile` still read
+  `.lstFiles.Selected(i)` *after* `ShowModal` returned; both converted, plus `Case Else: Return False`
+  so closing the prompt via the window X counts as Cancel, and `SelectAll` moved to `Form_Show` where
+  the control actually has a handle. **Removed** with it: Ilwaco's old unconfirmed `RemoveFileFromProject`
+  (which silently `Kill`ed loose files off disk after a hidden `Temp/` copy, and leaked an
+  `ExplorerElement` per call), and `frmSave`'s **10-second auto-Yes countdown** — a timer that answered
+  the save prompt by itself, which with B1 would have executed file deletions with no user action.
+  Astoria has no such timer. Verified by effect on `:0`: confirm prompt → `(pending delete)` label with
+  the file still on disk → Close Project prompt listing `DelTest.vfp*` + the `(delete pending)` row →
+  **Yes** deletes it and rewrites the `.vfp` without it, **No** leaves file and `.vfp` untouched;
+  Cancel Deletion reverts the label and the file then survives a real project save.
+- **`0c08fe5f`'s standalone-node `ExplorerElement` Tag — N/A (project-only product).** Astoria gives
+  the tree node created for a "File ▸ Open" file (one matching no project or folder) an
+  `ExplorerElement` Tag, without which `DeleteEditorFile` exits at its `ee = 0` guard. Ported, then
+  **reverted on owner direction (2026-08-06): Ilwaco is for project-based development only — files
+  outside a project are not a supported mode**, so this is not a gap to close. Consequence to be aware
+  of: File ▸ Open still creates such a node, and Delete File is a no-op on it. Constraining that entry
+  point is a separate product question, not part of this item.
+- **Two GTK defects found while verifying the above, both pre-existing and now fixed** (detail in
+  [UpstreamFixes.md](UpstreamFixes.md)): `tvExplorer_MouseUp` never ran on GTK, so the explorer context
+  menu had shown stale captions and enablement since the port — its logic moved to
+  `UpdateExplorerMenuState`, called from `tvExplorer_SelChange` (and directly after a delete/undo,
+  since re-clicking an already-selected row fires no selection change); and `node->Text &= "*"` updated
+  the node's internal string without repainting, so the project dirty marker was invisible in the tree —
+  changed to an explicit assignment at all five live sites.
+
 ## Foundation status (2026-08-02)
 
 - **Build baseline:** Ilwaco builds + runs on Linux (PROJECT_STATUS).

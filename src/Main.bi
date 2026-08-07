@@ -201,7 +201,9 @@ Declare Sub AddMRUProject(ByRef FileName As WString) '
 Declare Sub AddMRUFolder(ByRef FolderName As WString)
 Declare Sub AddFromTemplates
 Declare Sub AddFilesToProject
-Declare Sub RemoveFileFromProject
+Declare Sub DeleteEditorFile
+Declare Sub CancelFileDeletion
+Declare Sub UpdateExplorerMenuState
 Declare Sub SaveMRU
 Declare Sub RestoreStatusText
 Declare Sub OpenUrl(ByVal url As String)

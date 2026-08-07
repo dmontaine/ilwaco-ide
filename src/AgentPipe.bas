@@ -203,7 +203,7 @@ Private Function AgentRegisterFileInProject(ByRef fullPath As UString) As Boolea
 	Dim As ExplorerElement Ptr ee = _New(ExplorerElement)
 	WLet(ee->FileName, *fpW)
 	tn3->Tag = ee
-	If Not EndsWith(ptn->Text, "*") Then ptn->Text &= "*"   '' dirty marker on the project node
+	If Not EndsWith(ptn->Text, "*") Then ptn->Text = ptn->Text & "*"   '' dirty marker on the project node
 	WDeAllocate(fpW)
 	Return True
 End Function

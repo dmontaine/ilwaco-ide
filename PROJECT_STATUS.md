@@ -75,7 +75,44 @@ the owner decisions, the per-task narratives and the v1 limits are in
 
 ---
 
-## NEXT — `93bbfa28` S5 (add Delete File), then the deferred menu features + rest of the 13.3.A walk
+## ✅ DONE (2026-08-06, later) — Delete File shipped with deferred deletion; three GTK defects fixed
+
+`93bbfa28` S5 **plus** `331b5705` (B1), scoped against Astoria's *final* state rather than the handoff's
+note — that note described `93bbfa28`'s intermediate version, which Astoria reworked twice afterwards
+(`331b5705` deferred deletion, `273df0f5` merged "Remove" into "Delete File"). Owner chose **full
+parity**, superseding the earlier "keep both commands" product call.
+
+**Shipped:** one **Delete File** command (File menu, Project menu, tree context menu, explorer toolbar),
+confirmation defaulting to No, tree-selection based. A project member is queued — `(pending delete)`,
+project flagged `*` — and only `Kill`ed by `SaveProject` after the `.vfp` is written; **Cancel Deletion**
+undoes it; Close Project lists queued files as informational rows. **Removed:** the old unconfirmed
+`RemoveFileFromProject` (it silently deleted files off disk), and `frmSave`'s **10-second auto-Yes
+countdown**, which would have executed deletions with no user action.
+
+**Three pre-existing GTK defects found while verifying**, all fixed: the explorer context menu's state
+handler (`tvExplorer_MouseUp`) could never fire on GTK — MFF only raises `OnMouseUp` when the event
+window is the widget window, never true for a `GtkTreeView` — so the menu had shown stale captions and
+enablement since the port (logic moved to `UpdateExplorerMenuState`, driven from `tvExplorer_SelChange`
+plus an explicit refresh after delete/undo, since re-clicking the selected row fires no change);
+`node->Text &= "*"` never repainted, hiding the project dirty marker (five live sites, now explicit
+assignment); and `CloseProject`/`SaveAllBeforeCompile` read the save dialog *after* it was torn down
+(now `.SelectedItems`, with the window-X close treated as Cancel). Details in
+[UpstreamFixes.md](Documentation/UpstreamFixes.md) and [AstoriaParity.md](Documentation/AstoriaParity.md).
+
+**Owner direction (2026-08-06): Ilwaco is for project-based development only — files outside a project
+are not supported.** Astoria's `0c08fe5f` standalone-node `ExplorerElement` Tag was therefore ported and
+then **reverted**; it is recorded N/A. Two follow-ups this raises, neither actioned: **File ▸ Open still
+creates a root-level node for a file outside any project**, where Delete File is a no-op — constraining
+that entry point is a product question; and `DeleteEditorFile`'s non-project branch is consequently
+unreachable in supported use (Astoria's own code, kept as a guard, but a no-dead-code candidate).
+
+Verified by effect on `:0` throughout, using the MCP agent to open projects: confirm → pending → Close
+Project **Yes** deletes and rewrites the `.vfp`; **No** leaves file and `.vfp` untouched; Cancel Deletion
+reverts and the file then survives a real save.
+
+---
+
+## NEXT — the deferred menu features + rest of the 13.3.A walk
 
 **This session (2026-08-06, pushed through `d978e66`):** classified `e5e10808` (+ ported its `GetFileName`
 no-extension truncation fix, `68c4d91`); **collapsed the whole menu-taxonomy cluster to Astoria's final
@@ -88,25 +125,19 @@ Window-menu-index regression (`133501f`, a fallout of the reorg: `miWindow->Coun
 Per-item detail in [AstoriaParity.md](Documentation/AstoriaParity.md); menu strategy in memory
 `project-menu-collapse-to-final`; the whole-log rule in memory `feedback-scope-against-whole-astoria-log`.
 
-**Start here — `93bbfa28` (13.3.A S5-S7), which reduces to ONE portable item: add "Delete File" (S5).**
-Fully scoped this session, ready to implement:
-- Ilwaco has **no Delete File at all** (only `DeleteProject`). Astoria's `DeleteEditorFile` (~18 lines,
-  Main.bas) ports **directly** — Ilwaco's GTK `CloseTab` (TabWindow.bas ~1016-1046) frees root-level
-  ("Opened"/loose) tree nodes but leaves project-nested nodes intact, **matching the Win32 behaviour the
-  implementation depends on**, so the "capture `sFilePath` + `bNestedInProject = (tn->ParentNode<>0)`
-  BEFORE `CloseTab`, only detach `tn` after if nested" logic is memory-safe here. Confirmed present:
-  `ptabCode->SelectedTab`, `tb->tn` (`tn As TreeNode Ptr`), `tb->FileName` (`FFileName As WString Ptr` —
-  read as `*tb->FileName`/`WGet`; adapt Astoria's `sFilePath = tb->FileName` accordingly), `MsgBox(...,
-  "Ilwaco IDE", mtWarning, btYesNo)`, `Kill`. Wiring: add `DeleteEditorFile()` (after `DeleteProject`,
-  Main.bas:2705) + declare in Main.bi; add `miDeleteFile` shared var (Main.bas:77) + a **"Delete File"**
-  File-menu item after Delete Project (key `"DeleteFile"`); `Case "DeleteFile": DeleteEditorFile` in
-  ilwaco.bas mClick; enable it on `bEnabledTab` (TabWindow.bas ~218). **Product call:** keep Ilwaco's
-  Project-menu "Remove" (remove-from-project, no disk delete) AND add "Delete File" (disk delete) — two
-  distinct ops; Astoria merged them, we keep both.
-- **The rest of `93bbfa28` is N/A / deferred / INVERTED:** S6's dead-UI removals are already done in Ilwaco
-  (no compiler picker, UTF-8/LF-only ⇒ no encoding/newline pickers) — grep of `frmOptions` finds none; its
-  "Turn on Environment variables" removal is **INVERTED** (Ilwaco wired env-vars up). S7 (docs GTK) N/A.
-  The **Run-toolbar-persistence / `ShowRunToolBar` INI migration** is deferred **with the S3 toolbar merge**.
+**`93bbfa28` S5 is DONE (see the section above).** The rest of `93bbfa28` is **N/A / deferred / INVERTED**:
+S6's dead-UI removals are already done in Ilwaco (no compiler picker, UTF-8/LF-only ⇒ no encoding/newline
+pickers) — grep of `frmOptions` finds none; its "Turn on Environment variables" removal is **INVERTED**
+(Ilwaco wired env-vars up). S7 (docs GTK) N/A. The **Run-toolbar-persistence / `ShowRunToolBar` INI
+migration** is deferred **with the S3 toolbar merge**.
+
+**A method note worth keeping.** The handoff's scoping for S5 was written against `93bbfa28` alone and was
+wrong in two ways that only a whole-log scan caught: Astoria reworked the feature twice afterwards, and the
+"keep both Remove and Delete File" product call had been made without knowing Astoria later merged them. It
+also asserted `bNestedInProject = (tn->ParentNode <> 0)` was memory-safe "matching the Win32 behaviour" —
+true, but for a reason the note got backwards: loose files are *root* nodes (`ParentNode = 0`), and it is
+`CloseTab` freeing exactly those that makes the final version's post-`CloseTab` node access unsafe. **Read
+the current source, not the previous session's summary of it.**
 
 **Then the deferred menu features** (each its own pass, in walk order): the **S3 toolbar merge** (7→5 bands,
 single-checkable Toolbars, `ShowRunToolBar` INI migration, the 7-band Maximize `Bands.Count-2` fix, band

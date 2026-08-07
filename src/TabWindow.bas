@@ -239,6 +239,7 @@ Sub ChangeMenuItemsEnabled
 	miRename->Enabled = bEnabled
 	miExplorerRename->Enabled = bEnabled
 	miRemoveFileFromProject->Enabled = bEnabled
+	miDeleteFile->Enabled = bEnabled
 	tbtRemoveFileFromProject->Enabled = bEnabled
 	miFind->Enabled = bEnabled
 	miFindNext->Enabled = bEnabled
