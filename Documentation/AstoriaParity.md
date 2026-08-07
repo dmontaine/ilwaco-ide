@@ -819,6 +819,93 @@ step-by-step would build UI only to delete it (memory `project-menu-collapse-to-
   the node's internal string without repainting, so the project dirty marker was invisible in the tree —
   changed to an explicit assignment at all five live sites.
 
+## Deliberate divergences from Astoria — INVERT (owner, 2026-08-06)
+
+**These override the "port Astoria's final state" rule.** Ilwaco's audience is *somewhat more advanced*
+than Astoria's (returning Basic programmers, hobbyists, students), so where Astoria removed capability to
+simplify, Ilwaco keeps it. The standing rule would make a walker reach the removal commit and drop the
+feature — exactly the wrong outcome. Where Astoria added a feature and later deleted it (**Git**, the
+**AI templates**): **port the ADD chain, do NOT port the removal.** Where Ilwaco already has what we want
+(**themes**, **multiple instances**): these are **guards** — no work, just do not port the removal when
+the walk reaches it, and do not let an "opinionated by design" pass collapse them.
+
+### 1. Themes — KEEP **both** capabilities; **do not port `5c50f20f`** (the editor-theme cull)
+
+**There are two distinct theme capabilities, and both are retained:**
+
+| Capability | Where in the UI | Backing code | Theme files |
+| --- | --- | --- | --- |
+| **IDE UI theme** (the whole interface) | Tools ▸ Options ▸ **General ▸ Themes** | `cboInterfaceTheme`, `cmdInterfaceThemeAdd`/`Remove` | `Settings/Themes/Interface/` |
+| **Editor theme** (syntax colours/fonts) | Tools ▸ Options ▸ **Code Editor ▸ Colors and Fonts** | `cboTheme`, `frmTheme` | `Settings/Themes/*.ini` |
+
+The later-in-the-log deletion Ilwaco has not yet reached is **`5c50f20f`** — *"T15 re-curation:
+shortlist shipped editor themes to 12 (owner picks)"*. It touches **only the editor themes**: it deletes
+**84 of the 96** `Settings/Themes/*.ini` (keeping Default Theme, dracula, github, gradient-dark,
+hopscotch, kimbie.dark, kimbie.light, monokai, night-owl, purebasic, qtcreator_dark, qtcreator_light)
+and leaves `Themes/Interface/` untouched. **Ilwaco does not port it — we keep all 96.**
+
+Be precise about what that commit is, because it is easy to remember as a bigger removal than it was: a
+**content** cull with **zero code change** (its own message notes the picker scans the folder
+dynamically, so nothing needed rewiring). **Neither capability was ever removed from Astoria** — both
+pickers, `frmTheme` and the interface-theme Add/Remove buttons are still in its source today, and in
+ours. So there is **no code work here**; this entry is a **guard**: keep the 96 files, keep both pickers,
+and do not let an "opinionated by design" pass collapse either — they are explicitly retained options.
+
+### 4. Multiple instances — KEEP; **do not port Astoria's single-instance handover**
+
+**Ilwaco already allows several IDE windows open at once and that is deliberate; Astoria permits exactly
+one.** Astoria enforces it at `Main.bas:110`: `If App.PrevInstance Then` captures `Command(-1)`, strips a
+`2>CON` suffix and any `.exe`, and hands the payload to the already-running instance through
+`EnumWindows`/`EnumWindowsProc`, then leaves without FB's `End` — so a second launch always surfaces the
+first window instead of starting a new IDE (broadened in 13.29, which made the handover unconditional so
+a plain second launch would at least raise the existing window).
+
+Ilwaco has **none** of this — `App.PrevInstance` appears nowhere in our source. The whole mechanism is
+Win32 (`EnumWindows`, `LPARAM`, `.exe` handling), so it fell away with the Windows strip; the owner has
+now confirmed the resulting behaviour is the wanted one. **Do not port `App.PrevInstance`, the handover,
+or a GTK re-implementation of either.** If a future change needs to reach "the running IDE" (as the MCP
+agent socket does), it must not assume there is only one.
+
+### 2. Git integration — KEEP, port the ADD chain
+
+Astoria built it and then deleted it in **`9d277f28`** ("Git is an advanced feature that doesn't fit
+Astoria's target audience"). That reasoning does not apply to Ilwaco. Port, in order:
+`d61eb062` (top-level **Git** menu — Pull / Push — placed between Run and Tools) → `fffee489`
+(Git Commit with a message prompt) → `fd894173` (Set Up SSH Key) → `95b04f70` (Create Remote Repository,
+plus its New Project preflight). `9d277f28` also lists what a full restore covers, so read it as the
+*inventory* even though we skip it: the `frmGitCommit` dialog; New Project's "Git Project" clone mode with
+Provider/Username/Email and `CloneGitRepository`/`BuildGitURL`/`SetupGitRepository`/`WriteGitSupportFiles`/
+`SshKeyExists`/`RemoteRepoExists`; the Options ▸ Personal Information **Git identity** group
+(Login / User Name / E-mail) with its INI plumbing; the `UseGit`/`GitProvider`/`GitUserName`/`GitEmail`/
+`GitURL` project keys; `Templates/Git/` (gitignore/gitattributes stamps and the sshkeys/github/gitlab/
+codeberg guides); and `Templates/AI/*/skills/git-workflow/`. Everything is Win32-flavoured shell-out work,
+so expect REIMPLEMENT rather than straight PORT in places.
+
+### 3. Multiple AI templates — KEEP FOUR, port the ADD chain
+
+Astoria consolidated onto Claude Code alone in **`6de0332f`**, deleting five vendor template folders:
+**ChatGPT, Cursor, Kimi, Kun, OpenCode**. Ilwaco keeps **four**: **Claude Code, ChatGPT, Kun, Kimi Code**
+— i.e. restore ChatGPT, Kun and Kimi alongside ClaudeCode, and leave Cursor and OpenCode out. Each agent
+carries its own **Skills and Rules**. Relevant add-chain commits: `987e8b7e` (New Project wires up Git and
+AI-friendly), `ef5a6252` (the **data-driven AI Agent dropdown**), `72ea5980` (MCP `create_project` marks
+AI-friendly and stamps the creating agent's template), `de8c1e5a` (template parity work).
+
+**Do not re-import the three drifts that motivated the removal — `6de0332f` documents them, and they are
+real bugs, not reasons to avoid the feature:**
+1. The two dropdowns (New Project, Project Properties ▸ Description) were populated by **enumerating
+   `Templates/AI` subdirectories**, while `AgentMcp` and `AgentPipe` each carried a **hardcoded list of
+   five**, with nothing reconciling the two. One list, one source of truth.
+2. **Kimi was selectable but supported nowhere**, so it resolved to no template folder at all. Every
+   offered agent needs a real folder *and* backing support.
+3. The GUI stored `AITool=ClaudeCode` while the MCP path defaulted to `"Claude Code"`, which
+   `AgentAiToolFolder` then did not recognise — and both dropdowns showed **folder names** rather than
+   product names. Keep display label and folder name distinct and mapped in one place.
+
+**Current Ilwaco state: none of this machinery exists yet.** The MCP server deliberately dropped
+`create_project`'s `ai_tool` stamping ("Ilwaco has no AI-template machinery"), so this is a build, not a
+restore — `AgentPipe`'s `aiToolMeta` is presently hardcoded. Astoria's deleted folders are recoverable
+from its history (`git -C ../astoria-ide show 6de0332f^:Templates/AI/...`).
+
 ## Foundation status (2026-08-02)
 
 - **Build baseline:** Ilwaco builds + runs on Linux (PROJECT_STATUS).
