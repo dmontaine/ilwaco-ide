@@ -65,12 +65,6 @@ as the durable register:
   project name — confusing for a beginner.
   Ilwaco re-opens the correct file (Astoria's version silently re-opened nothing), but making the
   rename coherent means moving the `.vfp` and updating `ProjectName` inside it. Found 2026-08-04.
-- **No theme editor, and deliberately not adding one (owner, 2026-08-07).** Options ▸ Code Editor ▸
-  Colors and Fonts can show a theme, but nothing writes one back: `ilwaco.ini` holds no colour keys
-  and `piniTheme` is only ever loaded, never saved — there is no Save/New Theme control anywhere.
-  Changing a theme therefore means hand-editing an `.ini` in `Settings/Themes/`. Checked while
-  culling the theme list to 13; the owner decided **not** to build a theme editor, so this is a
-  recorded absence, not a gap to close. Do not "fix" it without asking.
 - **No display → SIGSEGV in the raw binary; handled in the launcher (2026-08-07).** With `DISPLAY`
   and `WAYLAND_DISPLAY` unset the IDE dies exit 139 after GLib criticals about a NULL instance: GTK
   refuses to initialise, every widget comes back NULL, and the crash lands nowhere near the cause.
