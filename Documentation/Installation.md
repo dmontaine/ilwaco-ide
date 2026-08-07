@@ -32,12 +32,18 @@ Older systems — Ubuntu 20.04, Debian 11, RHEL 8 — are **too old** and Ilwaco
 ## Method 1 — `.tar.gz` (no admin password)
 
 1. Download `Ilwaco-IDE-1.3.8-x86_64.tar.gz`.
-2. Double-click it. Your archive manager opens.
-3. Click **Extract**, and choose your home folder (or anywhere you like).
-4. Open the extracted folder and **double-click `Ilwaco-IDE-1.3.8-x86_64.AppImage`**.
+2. **Right-click it and choose "Extract Here"** (on some desktops: "Extract to…" or "Open With
+   Archive Manager → Extract"). A file called `Ilwaco-IDE-1.3.8-x86_64.AppImage` appears next to it.
+3. **Double-click that `.AppImage`.** Ilwaco starts.
 
-That's it — Ilwaco starts. **You do not need to make anything executable**: the file comes out of the
-archive ready to run, which is exactly why it is packed in a `.tar.gz` rather than offered on its own.
+**You do not need to make anything executable**: the file comes out of the archive ready to run,
+which is exactly why it is packed in a `.tar.gz` rather than offered on its own.
+
+> **If you double-click the `.tar.gz` instead**, an archive *viewer* opens and lists the AppImage
+> inside it. **Clicking the AppImage in that window does nothing** — a viewer shows you what is in an
+> archive, it does not run it. Use its **Extract** button (or close it and right-click → *Extract
+> Here*), then double-click the AppImage that appears in the folder. This trips people up; it is not
+> a sign anything is wrong.
 
 After the first launch, Ilwaco adds itself to your applications menu, so from then on you can start it
 the same way as any other program. Keep the `.AppImage` file where you put it — the menu entry points

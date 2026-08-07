@@ -42,6 +42,19 @@ what lands in the user's folder is already executable. Measured — see "What th
 the USER's machine" below. The bare `.AppImage` is deliberately **not** offered alongside it, because
 a beginner offered both will pick the one that dead-ends.
 
+**But the `.tar.gz` does not remove the dead-end, it moves it — found by the owner on first try
+(2026-08-07).** Double-clicking the `.tar.gz` on XFCE opens **xarchiver**, an archive *viewer*, which
+lists the AppImage; clicking it there does nothing, because a viewer does not run what it shows. The
+earlier claim that this route "never dead-ends" was wrong and is corrected here. It is still the
+better failure of the two — the **Extract** button is visible in the toolbar, whereas the bare
+AppImage's fix is a checkbox buried in Properties → Permissions — but it is not seamless, and the
+instructions must therefore lead with **right-click → "Extract Here"** (the `thunar-archive-plugin`
+path on XFCE, and the equivalent on GNOME/KDE) rather than with double-clicking the archive.
+[Installation.md](Installation.md) says so explicitly, including what the viewer window means.
+
+The archive deliberately holds **one file at its root**, so "Extract Here" drops the AppImage beside
+the download rather than burying it a folder deep. With a single member there is no tarbomb concern.
+
 **`.deb`/`.rpm` are root-only by design** — `dpkg` and `rpm` install system-wide, and there is no
 genuine "user-installed `.deb`". That is not a gap, because the `.tar.gz` covers exactly the user who
 cannot use them.
