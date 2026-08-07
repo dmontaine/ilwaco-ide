@@ -13,6 +13,13 @@ INVERT-or-SKIP (Astoria's Win64-only stripping) / N/A / DONE. The resumable back
 [Documentation/AstoriaParity.md](Documentation/AstoriaParity.md). Hobby project, no deadline —
 prefer durable scaffolding and build-verified changes over speed.
 
+**Astoria is FROZEN (owner, 2026-08-06): stable, with no changes anticipated until after Ilwaco
+reaches release.** So the backlog is a **fixed target** — the log will not grow under you, and a
+whole-log scan you do today stays valid. Two consequences worth acting on: a classification made now
+will not be invalidated by later Astoria work, so classify with confidence rather than hedging; and
+`git -C ../astoria-ide pull` is not part of starting a session (our own `origin` still is — see the
+Git sync section). If Astoria ever does move again, this note is what should be revisited first.
+
 **Always scope each entry against the WHOLE Astoria log, not just the entry in front of you.** Before
 porting a change, search the entire changelog for later commits that **supersede or extend** it, and
 port Astoria's *final* state — never an intermediate that a later commit reworks. This has bitten

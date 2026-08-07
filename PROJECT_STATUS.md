@@ -184,6 +184,12 @@ is the **Astoria→Ilwaco changelog walk** (backlog: [AstoriaDetailedChangeLog.m
 classified in [AstoriaParity.md](Documentation/AstoriaParity.md)). Past session narratives now live in
 [HISTORY.md](HISTORY.md).
 
+**Astoria is frozen (owner, 2026-08-06)** — stable, with no further changes anticipated until after
+Ilwaco reaches release. The walk therefore has a **fixed endpoint**: the remaining backlog is the whole
+of it, a whole-log scan stays valid once done, and no classification will be invalidated by later
+Astoria work. Ilwaco is the moving fork now, which also means the GTK fixes we log in
+[UpstreamFixes.md](Documentation/UpstreamFixes.md) will not be taken up on that side in the meantime.
+
 **The Agent MCP server is live and ON by default.** `./ilwaco-mcp` (sidecar) → a per-user Unix socket →
 the running IDE; it auto-launches the IDE if needed. It is genuinely useful as a *test instrument* — this
 session used it to open projects and files and to read `get_status` back while verifying UI work. Turn it
