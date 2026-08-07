@@ -78,7 +78,7 @@ Dim Shared As MenuItem Ptr miRenameProject, miDeleteProject
 Dim Shared As MenuItem Ptr miSaveProject, miSaveProjectAs, miCloseProject, miSave, miSaveAs, miSaveAll, miClose, miCloseAll, miPrint, miPrintPreview, miPageSetup, miOpenProjectFolder, miProjectProperties, miExplorerOpenProjectFolder, miExplorerRename, miExplorerProjectProperties, miExplorerCloseProject, miRename, miRemoveFileFromProject
 Dim Shared As MenuItem Ptr miUndo, miRedo, miCutCurrentLine, miCut, miCopy, miPaste, miSingleComment, miBlockComment, miUncommentBlock, miDuplicate, miSelectAll, miIndent, miOutdent, miFormat, miUnformat, miFormatProject, miUnformatProject, miAddSpaces, miDeleteBlankLines, miSuggestions, miCompleteWord, miParameterInfo, miStepInto, miStepOver, miStepOut, miRunToCursor, miAddWatch, miToggleBreakpoint, miClearAllBreakpoints, miSetNextStatement, miShowNextStatement
 Dim Shared As MenuItem Ptr dmiMake, dmiMakeClean
-Dim Shared As MenuItem Ptr miCode, miForm, miCodeAndForm, miGotoCodeForm, miCollapseCurrent, miCollapseAllProcedures, miCollapseAll, miUnCollapseCurrent, miUnCollapseAllProcedures, miUnCollapseAll, miImageManager, miAddProcedure, miAddType, miFind, miReplace, miFindNext, miFindPrevious, miGoto, miDefine, miToggleBookmark, miNextBookmark, miPreviousBookmark, miClearAllBookmarks, miSyntaxCheck, miCompile, miCompileAll, miBuildBundle, miBuildAPK, miGenerateSignedBundle, miGenerateSignedAPK, miMake, miMakeClean
+Dim Shared As MenuItem Ptr miCode, miForm, miCodeAndForm, miGotoCodeForm, miCollapseCurrent, miCollapseAllProcedures, miCollapseAll, miUnCollapseCurrent, miUnCollapseAllProcedures, miUnCollapseAll, miImageManager, miAddProcedure, miAddType, miFind, miReplace, miFindNext, miFindPrevious, miGoto, miDefine, miToggleBookmark, miNextBookmark, miPreviousBookmark, miClearAllBookmarks, miSyntaxCheck, miCompile, miCompileAll, miMake, miMakeClean
 Dim Shared As MenuItem Ptr miAlignLefts, miAlignCenters, miAlignRights, miAlignTops, miAlignMiddles, miAlignBottoms, miAlignToGrid, miMakeSameSizeWidth, miMakeSameSizeHeight, miMakeSameSizeBoth, miSizeToGrid, miHorizontalSpacingMakeEqual, miHorizontalSpacingIncrease, miHorizontalSpacingDecrease, miHorizontalSpacingRemove, miVerticalSpacingMakeEqual, miVerticalSpacingIncrease, miVerticalSpacingDecrease, miVerticalSpacingRemove, miCenterInParentHorizontally, miCenterInParentVertically, miOrderBringToFront, miOrderSendToBack, miLockControls
 Dim Shared As MenuItem Ptr miShowWithFolders, miShowWithoutFolders, miShowAsFolder
 Dim Shared As ToolButton Ptr tbtAlignLefts, tbtAlignCenters, tbtAlignRights, tbtAlignTops, tbtAlignMiddles, tbtAlignBottoms, tbtAlignToGrid, tbtMakeSameSizeWidth, tbtMakeSameSizeHeight, tbtMakeSameSizeBoth, tbtSizeToGrid, tbtHorizontalSpacingMakeEqual, tbtHorizontalSpacingIncrease, tbtHorizontalSpacingDecrease, tbtHorizontalSpacingRemove, tbtVerticalSpacingMakeEqual, tbtVerticalSpacingIncrease, tbtVerticalSpacingDecrease, tbtVerticalSpacingRemove, tbtCenterInParentHorizontally, tbtCenterInParentVertically, tbtOrderBringToFront, tbtOrderSendToBack, tbtLockControls
@@ -786,19 +786,8 @@ Function Compile(Parameter As String = "", bAll As Boolean = False) As Integer
 		'Shell("""" + BatFileName + """")
 		Dim As WString Ptr BatchCompilationFileName
 			If Project Then BatchCompilationFileName = Project->BatchCompilationFileNameLinux
-		If WGet(BatchCompilationFileName) <> "" AndAlso Parameter <> "Make" AndAlso Parameter <> "MakeClean" Then 'CBool(Project <> 0) AndAlso (Not EndsWith(*Project->FileName, ".vfp")) AndAlso FileExists(*Project->FileName & "/gradlew") Then
-			If EndsWith(LCase(*BatchCompilationFileName), "gradlew.bat") OrElse EndsWith(LCase(*BatchCompilationFileName), "/gradlew") Then
-				Dim As String gradlewFile, gradlewCommand
-				If Parameter = "Bundle" Then
-					gradlewCommand = "bundleRelease"
-				ElseIf Parameter = "APK" Then
-					gradlewCommand = "assembleRelease"
-				Else
-					gradlewCommand = "assembleDebug"
-				End If
-					gradlewFile = "./gradlew"
-				WLet(PipeCommand, gradlewFile & " " & gradlewCommand)
-			ElseIf LCase(GetFileName(*BatchCompilationFileName)) = "makefile" Then
+		If WGet(BatchCompilationFileName) <> "" AndAlso Parameter <> "Make" AndAlso Parameter <> "MakeClean" Then
+			If LCase(GetFileName(*BatchCompilationFileName)) = "makefile" Then
 				WLet(PipeCommand, "make")
 			Else
 				WLet(PipeCommand, *BatchCompilationFileName)
@@ -824,8 +813,6 @@ Function Compile(Parameter As String = "", bAll As Boolean = False) As Integer
 					Print #Fn2, "set FBC=" & *FbcExe
 				ElseIf StartsWith(Lines.Item(i), "set MFF=") Then
 					Print #Fn2, "set MFF=" & *MFFPathC
-				ElseIf StartsWith(Lines.Item(i), "set NDK=") Then
-					Print #Fn2, "set NDK=" & *Project->AndroidNDKLocation
 				Else
 					Print #Fn2, Lines.Item(i)
 				End If
@@ -1087,12 +1074,6 @@ Function Compile(Parameter As String = "", bAll As Boolean = False) As Integer
 	"in module " & ZGet(Ermn()) & " (Handler file: " & __FILE__ & ") "
 	ThreadsLeave()
 End Function
-
-Sub CreateKeyStore
-End Sub
-
-Sub GenerateSignedBundleAPK(Parameter As String)
-End Sub
 
 Sub SelectSearchResult(ByRef FileName As WString, iLine As Integer, ByVal iSelStart As Integer =-1, ByVal iSelLength As Integer =-1, tabw As TabWindow Ptr = 0, ByRef SearchText As WString = "")
 	Dim tb As TabWindow Ptr
@@ -1511,12 +1492,6 @@ Function AddProject(ByRef FileName As WString = "", pFilesList As WStringList Pt
 					WLet(ppe->CommandLineArguments, Mid(Buff, Pos1 + 2, Len(Buff) - Pos1 - 2))
 				ElseIf Parameter = "CreateDebugInfo" Then
 					ppe->CreateDebugInfo = CBool(Mid(Buff, Pos1 + 1))
-				ElseIf Parameter = "AndroidSDKLocation" Then
-					WLet(ppe->AndroidSDKLocation, Mid(Buff, Pos1 + 2, Len(Buff) - Pos1 - 2))
-				ElseIf Parameter = "AndroidNDKLocation" Then
-					WLet(ppe->AndroidNDKLocation, Mid(Buff, Pos1 + 2, Len(Buff) - Pos1 - 2))
-				ElseIf Parameter = "JDKLocation" Then
-					WLet(ppe->JDKLocation, Mid(Buff, Pos1 + 2, Len(Buff) - Pos1 - 2))
 				ElseIf Parameter = "IncludePath" Then
 					ppe->IncludePaths.Add Mid(Buff, Pos1 + 2, Len(Buff) - Pos1 - 2)
 				ElseIf Parameter = "LibraryPath" Then
@@ -2022,9 +1997,6 @@ Function SaveProject(ByRef tnP As TreeNode Ptr, bWithQuestion As Boolean = False
 	Print #Fn, "CompilationArguments64Linux=""" & *ppe->CompilationArguments64Linux & """"
 	Print #Fn, "CommandLineArguments=""" & *ppe->CommandLineArguments & """"
 	Print #Fn, "CreateDebugInfo=" & ppe->CreateDebugInfo
-	Print #Fn, "AndroidSDKLocation=""" & *ppe->AndroidSDKLocation & """"
-	Print #Fn, "AndroidNDKLocation=""" & *ppe->AndroidNDKLocation & """"
-	Print #Fn, "JDKLocation=""" & *ppe->JDKLocation & """"
 	For i As Integer = 0 To ppe->Components.Count - 1
 		Print #Fn, "ControlLibrary=""" & Replace(ppe->Components.Item(i), "\", "/") & """"
 	Next
@@ -3065,14 +3037,6 @@ End Sub
 Sub CompileAll(Param As Any Ptr)
 	'If Compile Then RunProgram(0) ', Run Program after compiled with FBC.exe only here.
 	Compile(, True)
-End Sub
-
-Sub CompileBundle(Param As Any Ptr)
-	Compile("Bundle")
-End Sub
-
-Sub CompileAPK(Param As Any Ptr)
-	Compile("APK")
 End Sub
 
 Sub CompileAndRun(Param As Any Ptr)
@@ -5809,7 +5773,6 @@ Sub CreateMenusAndToolBars
 	imgList32.ImageWidth = 32
 	imgList32.ImageHeight = 32
 	imgList32.Add "AppWindows", "AppWindows"
-	imgList32.Add "AppAndroid", "AppAndroid"
 	imgList32.Add "AppAddin", "AppAddin"
 	imgList32.Add "AppControl", "AppControl"
 	imgList32.Add "AppConsole", "AppConsole"
@@ -6091,8 +6054,7 @@ Sub CreateMenusAndToolBars
 
 	'' 13.3.A O2: Build + Debug + Run consolidated into one flattened Run menu. "Build" survives as a
 	'' command, not a menu. No GDB Command (Ilwaco has no external debugger) and no Continue (Ilwaco's
-	'' Integrated engine has no separate Continue). Android build kept in its two submenus until the
-	'' dedicated Android-removal pass (see PROJECT_STATUS).
+	'' Integrated engine has no separate Continue). Android/APK build removed (dead on Linux).
 	Var miRun = mnuMain.Add(ML("R&un"), "", "Run")
 	mnuStartWithCompile = miRun->Add(ML("&Run") & HK("StartWithCompile", "F5"), "StartWithCompile", "StartWithCompile", @mClick, , , False)
 	miCompile = miRun->Add(ML("&Build") & HK("Compile", "Ctrl+F9"), "Compile", "Compile", @mClick, , , False)
@@ -6123,16 +6085,6 @@ Sub CreateMenusAndToolBars
 	miShowNextStatement = miRun->Add(ML("Show Ne&xt Statement") & HK("ShowNextStatement"), "ShowNextStatement", "ShowNextStatement", @mClick, , , False)
 	miRun->Add("-")
 	mnuUseProfiler = miRun->Add(ML("Use &Profiler") & HK("UseProfiler"), "", "UseProfiler", @mClick, True)
-	miRun->Add("-")
-	'' Android build (dead on Linux; kept wired until the dedicated Android-removal pass -- see PROJECT_STATUS).
-	Var miBuildBundleAPK = miRun->Add(ML("&Build Bundle / APK") & HK("BuildBundleAPK"), "", "BuildBundleAPK", @mClick)
-	miBuildBundle = miBuildBundleAPK->Add(ML("Build &Bundle") & HK("BuildBundle"), "", "BuildBundle", @mClick, , , False)
-	miBuildAPK = miBuildBundleAPK->Add(ML("Build &APK") & HK("BuildAPK"), "", "BuildAPK", @mClick, , , False)
-	Var miGenerateSignedBundleAPK = miRun->Add(ML("&Generate Signed Bundle / APK") & HK("GenerateSignedBundleAPK"), "", "GenerateSignedBundleAPK", @mClick)
-	miGenerateSignedBundleAPK->Add(ML("Create Key Store") & HK("CreateKeyStore"), "", "CreateKeyStore", @mClick)
-	miGenerateSignedBundleAPK->Add("-")
-	miGenerateSignedBundle = miGenerateSignedBundleAPK->Add(ML("Generate Signed &Bundle") & HK("GenerateSignedBundle"), "", "GenerateSignedBundle", @mClick, , , False)
-	miGenerateSignedAPK = miGenerateSignedBundleAPK->Add(ML("Generate Signed &APK") & HK("GenerateSignedAPK"), "", "GenerateSignedAPK", @mClick, , , False)
 
 	miXizmat = mnuMain.Add(ML("&Tools"), "", "Service")
 	miXizmat->Add(ML("&Command Prompt") & HK("CommandPrompt", "Alt+C"), "Console", "CommandPrompt", @mClick)

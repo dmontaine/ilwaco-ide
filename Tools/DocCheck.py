@@ -91,6 +91,9 @@ REMOVED_FEATURES = [
     (r"Recent Sessions",                 "the Recent Sessions menu (removed with .vfs sessions)"),
     (r"\bWithFrame\b",                  "the holiday-frame December/January flag (removed with the decoration)"),
     (r"\bWhenVisualFBEditorStarts\b", "the startup-behaviour setting (removed with its radio group)"),
+    (r"Build Bundle\s*/\s*APK",         "the Android build menu (removed: Android/APK support dropped, Linux target only)"),
+    (r"Generate Signed Bundle",         "the Android signed-build menu (removed: Android/APK support dropped)"),
+    (r"Android SDK [Ll]ocation",        "the Android SDK/NDK/JDK Project-Properties fields (removed with Android/APK support)"),
 ]
 
 # Files whose absence should be reported when a document still names them, written as an

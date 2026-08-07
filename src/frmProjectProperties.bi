@@ -37,14 +37,6 @@ Using My.Sys.Forms
 		Declare Sub CommandButton1_Click(ByRef Sender As Control)
 		Declare Static Sub tpDebugging_Click_(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 		Declare Sub tpDebugging_Click(ByRef Sender As Control)
-		Declare Static Sub chkAndroidProject_Click_(ByRef Designer As My.Sys.Object, ByRef Sender As CheckBox)
-		Declare Sub chkAndroidProject_Click(ByRef Sender As CheckBox)
-		Declare Static Sub cmdAndroidSDKLocation_Click_(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
-		Declare Sub cmdAndroidSDKLocation_Click(ByRef Sender As Control)
-		Declare Static Sub cmdAndroidNDKLocation_Click_(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
-		Declare Sub cmdAndroidNDKLocation_Click(ByRef Sender As Control)
-		Declare Static Sub cmdJDKLocation_Click_(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
-		Declare Sub cmdJDKLocation_Click(ByRef Sender As Control)
 		Declare Static Sub chkManifest_Click_(ByRef Designer As My.Sys.Object, ByRef Sender As CheckBox)
 		Declare Sub chkManifest_Click(ByRef Sender As CheckBox)
 		Declare Static Sub _Form_Create(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
@@ -64,12 +56,12 @@ Using My.Sys.Forms
 		Declare Constructor
 		
 		Dim As TabControl tabProperties
-		Dim As TabPage tpGeneral, tpMake, tpCompile, tpDebugging, tpAndroidSettings, tpIncludes
-		Dim As CommandButton cmdOK, cmdCancel, cmdHelp, CommandButton1, cmdAndroidSDKLocation, cmdAndroidNDKLocation, cmdJDKLocation, cmdAddComponent, cmdRemoveComponent, cmdAddOtherInclude, cmdRemoveOtherInclude, cmdAddLibrary, cmdRemoveLibrary
-		Dim As Label lblProjectType, lblMainFile, lblProjectName, lblProjectDescription, lblCompilationArguments64, lblIcon, lblTitle, lblMajor, lblMinor, lblRevision, lblBuild, lblResourceFile, lblIconResourceFile, lblCompilationArguments64Linux, lblType, lblValue, lblHelpFileName, lblCompilationArguments321, lblSubsystem, lblAndroidSDKLocation, lblAndroidNDKLocation, lblJDKLocation, lblBatchCompilationFileWindows, lblBatchCompilationFileLinux, lblComponents, lblOthers
+		Dim As TabPage tpGeneral, tpMake, tpCompile, tpDebugging, tpIncludes
+		Dim As CommandButton cmdOK, cmdCancel, cmdHelp, CommandButton1, cmdAddComponent, cmdRemoveComponent, cmdAddOtherInclude, cmdRemoveOtherInclude, cmdAddLibrary, cmdRemoveLibrary
+		Dim As Label lblProjectType, lblMainFile, lblProjectName, lblProjectDescription, lblCompilationArguments64, lblIcon, lblTitle, lblMajor, lblMinor, lblRevision, lblBuild, lblResourceFile, lblIconResourceFile, lblCompilationArguments64Linux, lblType, lblValue, lblHelpFileName, lblCompilationArguments321, lblSubsystem, lblBatchCompilationFileWindows, lblBatchCompilationFileLinux, lblComponents, lblOthers
 		Dim As Picture picVersionNumber, picApplication, picVersionInformation, picCompilationArguments, picComponents, picOtherIncludes
 		Dim As ComboBoxEdit cboProjectType, cboMainFile, cboResourceFile, cboIconResourceFile, cboSubsystem, cboBatchCompilationFileWindows, cboBatchCompilationFileLinux
-		Dim As TextBox txtProjectName, txtProjectDescription, txtCompilationArguments64Windows, txtIcon, txtTitle, txtMajor, txtMinor, txtRevision, txtBuild, txtValue, txtHelpFileName, txtCommandLineArguments, txtCompilationArguments64Linux, txtAndroidSDKLocation, txtAndroidNDKLocation, txtJDKLocation
+		Dim As TextBox txtProjectName, txtProjectDescription, txtCompilationArguments64Windows, txtIcon, txtTitle, txtMajor, txtMinor, txtRevision, txtBuild, txtValue, txtHelpFileName, txtCommandLineArguments, txtCompilationArguments64Linux
 		Dim As GroupBox grbVersionNumber, grbApplication, grbVersionInformation, grbCompilationArguments, grbIncludePaths, grbLibraryPaths
 		Dim As CheckBox chkAutoIncrementVersion, chkCreateDebugInfo, chkPassAllModuleFilesToCompiler, chkManifest, chkRunAsAdministrator, chkOpenProjectAsFolder
 		Dim As ListControl lstType, lstComponents, lstOtherIncludes, lstLibraryPaths

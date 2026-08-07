@@ -75,26 +75,20 @@ the owner decisions, the per-task narratives and the v1 limits are in
 
 ---
 
-## NEXT — remove Android/APK, then the deferred menu features + rest of the 13.3.A walk
+## NEXT — the deferred menu features + rest of the 13.3.A walk
 
 **Just done (2026-08-06):** `e5e10808` classified (mostly INVERT/SKIP; its Edit-menu toggles are
-superseded by `4a112089`; `GetFileName` no-extension truncation bug ported), and — the big one — the
-**menu-taxonomy cluster was COLLAPSED to Astoria's final menu bar in one designed pass** rather than
-walked commit-by-commit. Ilwaco's menu bar is now **File · View · Project · Code · Code/Form · Form ·
-Run · Tools · Window · Help** (Edit→Code, Designer→Form, new Code/Form menu, Search folded into Code,
-Build+Debug merged into a flattened Run), verified by opening the Code and Run menus on `:0`. Full
-detail + what it collapses and what's deferred: [AstoriaParity.md](Documentation/AstoriaParity.md);
-strategy in memory `project-menu-collapse-to-final`.
+superseded by `4a112089`; `GetFileName` no-extension truncation bug ported); the **menu-taxonomy cluster
+COLLAPSED to Astoria's final menu bar** in one designed pass (now **File · View · Project · Code ·
+Code/Form · Form · Run · Tools · Window · Help** — Edit→Code, Designer→Form, new Code/Form menu, Search
+folded into Code, Build+Debug merged into a flattened Run); and the **Android/APK feature fully REMOVED**
+(menu, subs, `Compile()` gradle branch, `RunPr` adb-deploy branch, `ProjectElement` fields, `.vfp`
+reader/writer, the Project-Properties "Android Settings" tab, and the `Android Project` template). All
+verified by effect on `:0` — including opening an example project and its Project Properties (Android tab
+gone, no crash). Detail: [AstoriaParity.md](Documentation/AstoriaParity.md); menu strategy in memory
+`project-menu-collapse-to-final`.
 
-**Start here — remove the Android/APK feature** (a dedicated feature-removal pass, like GDB was; it is
-currently kept wired in the Run menu's two submenus). Footprint: `CompileBundle`/`CompileAPK`/
-`CreateKeyStore`/`GenerateSignedBundleAPK` in `Main.bas`; the `mClick` cases `BuildBundle`/`BuildAPK`/
-`CreateKeyStore`/`GenerateSignedBundle`/`GenerateSignedAPK` (`src/ilwaco.bas` ~229-234); the four
-`mi*` vars (`miBuildBundle`/`miBuildAPK`/`miGenerateSignedBundle`/`miGenerateSignedAPK`, `Main.bas:81`)
-and their `->Enabled` lines (`TabWindow.bas:266-269`); the two Run-menu submenus (`Main.bas` ~6125-6135);
-and any Project Properties / template Android fields. Remove menu + handlers + subs + vars together.
-
-**Then the deferred menu features** (each its own pass, in walk order): Code/Form contextual greying
+**Start here — the deferred menu features** (each its own pass, in walk order): Code/Form contextual greying
 (`a114ee5b`/`e1595a31`/`f3538e1c`), designer `@PopupClick` context items in the Form menu (`b05fdacb`),
 the toolbar merge/single-checkable (S3), and the Git menu (`d61eb062`+). When you reach **`4a112089`**,
 wire `ParameterInfoShow` up (INI load, the `If Not ParameterInfoShow Then Exit Sub` gate, the Options

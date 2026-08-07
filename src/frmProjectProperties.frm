@@ -464,98 +464,6 @@ pfProjectProperties = @fProjectProperties
 			'.Caption = ML("Subsystem") & " (" & ML("For Windows") & "):"
 			.Parent = @tpGeneral
 		End With
-		' tpAndroidSettings
-		With tpAndroidSettings
-			.Name = "tpAndroidSettings"
-			.Text = ML("Android Settings")
-			.TabIndex = 74
-			.UseVisualStyleBackColor = True
-			'.Caption = ML("Android Settings")
-			.SetBounds 2, 22, 487, 316
-			.Parent = @tabProperties
-		End With
-		' txtAndroidSDKLocation
-		With txtAndroidSDKLocation
-			.Name = "txtAndroidSDKLocation"
-			.Text = ""
-			.TabIndex = 76
-			.SetBounds 12, 32, 430, 20
-			.Parent = @tpAndroidSettings
-		End With
-		' cmdAndroidSDKLocation
-		With cmdAndroidSDKLocation
-			.Name = "cmdAndroidSDKLocation"
-			.Text = "..."
-			.TabIndex = 77
-			.Caption = "..."
-			.SetBounds 450, 31, 25, 22
-			.Designer = @This
-			.OnClick = @cmdAndroidSDKLocation_Click_
-			.Parent = @tpAndroidSettings
-		End With
-		' lblAndroidSDKLocation
-		With lblAndroidSDKLocation
-			.Name = "lblAndroidSDKLocation"
-			.Text = ML("Android SDK location")
-			.TabIndex = 75
-			'.Caption = ML("Android SDK location")
-			.SetBounds 12, 12, 260, 20
-			.Parent = @tpAndroidSettings
-		End With
-		' lblAndroidNDKLocation
-		With lblAndroidNDKLocation
-			.Name = "lblAndroidNDKLocation"
-			.Text = ML("Android NDK location")
-			.TabIndex = 78
-			'.Caption = ML("Android NDK location")
-			.SetBounds 12, 72, 260, 20
-			.Parent = @tpAndroidSettings
-		End With
-		' txtAndroidNDKLocation
-		With txtAndroidNDKLocation
-			.Name = "txtAndroidNDKLocation"
-			.TabIndex = 79
-			.Text = ""
-			.SetBounds 12, 92, 430, 20
-			.Parent = @tpAndroidSettings
-		End With
-		' cmdAndroidNDKLocation
-		With cmdAndroidNDKLocation
-			.Name = "cmdAndroidNDKLocation"
-			.Text = "..."
-			.TabIndex = 80
-			.SetBounds 450, 91, 25, 22
-			.Designer = @This
-			.OnClick = @cmdAndroidNDKLocation_Click_
-			.Parent = @tpAndroidSettings
-		End With
-		' lblJDKLocation
-		With lblJDKLocation
-			.Name = "lblJDKLocation"
-			.Text = ML("JDK location")
-			.TabIndex = 81
-			'.Caption = ML("JDK location")
-			.SetBounds 12, 132, 260, 20
-			.Parent = @tpAndroidSettings
-		End With
-		' txtJDKLocation
-		With txtJDKLocation
-			.Name = "txtJDKLocation"
-			.TabIndex = 82
-			.Text = ""
-			.SetBounds 12, 152, 430, 20
-			.Parent = @tpAndroidSettings
-		End With
-		' cmdJDKLocation
-		With cmdJDKLocation
-			.Name = "cmdJDKLocation"
-			.Text = "..."
-			.TabIndex = 83
-			.SetBounds 450, 151, 25, 22
-			.Designer = @This
-			.OnClick = @cmdJDKLocation_Click_
-			.Parent = @tpAndroidSettings
-		End With
 		' BrowseD
 		With BrowseD
 			.Name = "BrowseD"
@@ -907,75 +815,6 @@ Private Sub frmProjectProperties.cmdOK_Click(ByRef Designer As My.Sys.Object, By
 		Next
 		WLet(ppe->CommandLineArguments, .txtCommandLineArguments.Text)
 		ppe->CreateDebugInfo = .chkCreateDebugInfo.Checked
-		If CBool(*ppe->AndroidSDKLocation <> .txtAndroidSDKLocation.Text OrElse *ppe->AndroidNDKLocation <> .txtAndroidNDKLocation.Text) AndAlso _
-			CBool(Not EndsWith(*ppe->FileName, ".vfp") AndAlso FileExists(*ppe->FileName & "/local.properties")) Then
-			WLet(ppe->AndroidSDKLocation, .txtAndroidSDKLocation.Text)
-			WLet(ppe->AndroidNDKLocation, .txtAndroidNDKLocation.Text)
-			Dim As Integer Fn1 = FreeFile_
-			Open *ppe->FileName & "/local.properties" For Input As #Fn1
-			Dim pBuff As WString Ptr
-			Dim As Integer FileSize
-			Dim As WStringList Lines
-			FileSize = LOF(Fn1)
-			WReAllocate(pBuff, FileSize)
-			Do Until EOF(Fn1)
-				LineInputWstr Fn1, pBuff, FileSize
-				Lines.Add *pBuff
-			Loop
-			CloseFile_(Fn1)
-			Dim As Boolean bFindSDK, bFindNDK
-			Dim As Integer Fn2 = FreeFile_
-			Open *ppe->FileName & "/local.properties" For Output As #Fn2
-			For i As Integer = 0 To Lines.Count - 1
-				If StartsWith(Lines.Item(i), "sdk.dir=") Then
-					Print #Fn2, "sdk.dir=" & Replace(Replace(*ppe->AndroidSDKLocation, "\", "\\"), ":", "\:")
-					bFindSDK = True
-				ElseIf StartsWith(Lines.Item(i), "ndk.dir=") Then
-					Print #Fn2, "ndk.dir=" & Replace(Replace(*ppe->AndroidNDKLocation, "\", "\\"), ":", "\:")
-					bFindNDK = True
-				Else
-					Print #Fn2, Lines.Item(i)
-				End If
-			Next i
-			If *ppe->AndroidSDKLocation <> "" AndAlso Not bFindSDK Then
-				Print #Fn2, "sdk.dir=" & Replace(Replace(*ppe->AndroidSDKLocation, "\", "\\"), ":", "\:")
-			End If
-			If *ppe->AndroidNDKLocation <> "" AndAlso Not bFindNDK Then
-				Print #Fn2, "ndk.dir=" & Replace(Replace(*ppe->AndroidNDKLocation, "\", "\\"), ":", "\:")
-			End If
-			CloseFile_(Fn2)
-		End If
-		If CBool(Not EndsWith(*ppe->FileName, ".vfp") AndAlso FileExists(*ppe->FileName & "/gradle.properties")) AndAlso _
-			(*ppe->JDKLocation <> .txtJDKLocation.Text) Then
-			WLet(ppe->JDKLocation, .txtJDKLocation.Text)
-			Dim As Integer Fn1 = FreeFile_
-			Open *ppe->FileName & "/gradle.properties" For Input As #Fn1
-			Dim pBuff As WString Ptr
-			Dim As Integer FileSize
-			Dim As WStringList Lines
-			FileSize = LOF(Fn1)
-			WReAllocate(pBuff, FileSize)
-			Do Until EOF(Fn1)
-				LineInputWstr Fn1, pBuff, FileSize
-				Lines.Add *pBuff
-			Loop
-			CloseFile_(Fn1)
-			Dim As Boolean bFindJDK
-			Dim As Integer Fn2 = FreeFile_
-			Open *ppe->FileName & "/gradle.properties" For Output As #Fn2
-			For i As Integer = 0 To Lines.Count - 1
-				If StartsWith(Lines.Item(i), "org.gradle.java.home=") Then
-					Print #Fn2, "org.gradle.java.home=" & Replace(Replace(*ppe->JDKLocation, "\", "\\"), ":", "\:")
-					bFindJDK = True
-				Else
-					Print #Fn2, Lines.Item(i)
-				End If
-			Next i
-			If *ppe->JDKLocation <> "" AndAlso Not bFindJDK Then
-				Print #Fn2, "org.gradle.java.home=" & Replace(Replace(*ppe->JDKLocation, "\", "\\"), ":", "\:")
-			End If
-			CloseFile_(Fn2)
-		End If
 		If Not EndsWith(.ProjectTreeNode->Text, "*") Then .ProjectTreeNode->Text &= "*"
 		.CloseForm
 	End With
@@ -1137,49 +976,6 @@ Public Sub frmProjectProperties.RefreshProperties()
 				Next
 				.txtCommandLineArguments.Text = *ppe->CommandLineArguments
 				.chkCreateDebugInfo.Checked = ppe->CreateDebugInfo
-				If Not EndsWith(*ppe->FileName, ".vfp") AndAlso FileExists(*ppe->FileName & "/local.properties") Then
-					Dim As Integer Fn = FreeFile_
-					Open *ppe->FileName & "/local.properties" For Input As #Fn
-					Dim SDKDir As UString
-					Dim NDKDir As UString
-					Dim pBuff As WString Ptr
-					Dim As Integer FileSize
-					FileSize = LOF(Fn)
-					WReAllocate(pBuff, FileSize)
-					Do Until EOF(Fn)
-						LineInputWstr Fn, pBuff, FileSize
-						If StartsWith(*pBuff, "sdk.dir=") Then
-							SDKDir = Replace(Replace(Mid(*pBuff, 9), "\\", "\"), "\:", ":")
-						End If
-						If StartsWith(*pBuff, "ndk.dir=") Then
-							NDKDir = Replace(Replace(Mid(*pBuff, 9), "\\", "\"), "\:", ":")
-						End If
-					Loop
-					WLet(ppe->AndroidSDKLocation, SDKDir)
-					WLet(ppe->AndroidNDKLocation, NDKDir)
-					.txtAndroidSDKLocation.Text = SDKDir
-					.txtAndroidNDKLocation.Text = NDKDir
-					CloseFile_(Fn)
-				End If
-				If Not EndsWith(*ppe->FileName, ".vfp") AndAlso FileExists(*ppe->FileName & "/gradle.properties") Then
-					Dim As Integer Fn = FreeFile_
-					Open *ppe->FileName & "/gradle.properties" For Input As #Fn
-					Dim JavaHome As UString
-					Dim pBuff As WString Ptr
-					Dim As Integer FileSize
-					FileSize = LOF(Fn)
-					WReAllocate(pBuff, FileSize)
-					Do Until EOF(Fn)
-						LineInputWstr Fn, pBuff, FileSize
-						If StartsWith(*pBuff, "org.gradle.java.home=") Then
-							JavaHome = Replace(Replace(Mid(*pBuff, 22), "\\", "\"), "\:", ":")
-							Exit Do
-						End If
-					Loop
-					WLet(ppe->JDKLocation, JavaHome)
-					.txtJDKLocation.Text = JavaHome
-					CloseFile_(Fn)
-				End If
 			End If
 		Else
 			.ProjectTreeNode = ptn
@@ -1209,9 +1005,6 @@ Public Sub frmProjectProperties.RefreshProperties()
 			.chkManifest_Click(.chkManifest)
 			.txtCompilationArguments64Windows.Text = ""
 			.txtCompilationArguments64Linux.Text = ""
-			.txtAndroidSDKLocation.Text = ""
-			.txtAndroidNDKLocation.Text = ""
-			.txtJDKLocation.Text = ""
 		End If
 	End With
 End Sub
@@ -1260,36 +1053,6 @@ Private Sub frmProjectProperties.tpDebugging_Click_(ByRef Designer As My.Sys.Obj
 End Sub
 Private Sub frmProjectProperties.tpDebugging_Click(ByRef Sender As Control)
 	
-End Sub
-
-Private Sub frmProjectProperties.cmdAndroidSDKLocation_Click_(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
-	(*Cast(frmProjectProperties Ptr, Sender.Designer)).cmdAndroidSDKLocation_Click(Sender)
-End Sub
-Private Sub frmProjectProperties.cmdAndroidSDKLocation_Click(ByRef Sender As Control)
-	BrowseD.InitialDir = txtAndroidSDKLocation.Text
-	If BrowseD.Execute Then
-		txtAndroidSDKLocation.Text = BrowseD.Directory
-	End If
-End Sub
-
-Private Sub frmProjectProperties.cmdAndroidNDKLocation_Click_(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
-	(*Cast(frmProjectProperties Ptr, Sender.Designer)).cmdAndroidNDKLocation_Click(Sender)
-End Sub
-Private Sub frmProjectProperties.cmdAndroidNDKLocation_Click(ByRef Sender As Control)
-	BrowseD.InitialDir = txtAndroidNDKLocation.Text
-	If BrowseD.Execute Then
-		txtAndroidNDKLocation.Text = BrowseD.Directory
-	End If
-End Sub
-
-Private Sub frmProjectProperties.cmdJDKLocation_Click_(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
-	(*Cast(frmProjectProperties Ptr, Sender.Designer)).cmdJDKLocation_Click(Sender)
-End Sub
-Private Sub frmProjectProperties.cmdJDKLocation_Click(ByRef Sender As Control)
-	BrowseD.InitialDir = txtJDKLocation.Text
-	If BrowseD.Execute Then
-		txtJDKLocation.Text = BrowseD.Directory
-	End If
 End Sub
 
 Private Sub frmProjectProperties.chkManifest_Click(ByRef Sender As CheckBox)

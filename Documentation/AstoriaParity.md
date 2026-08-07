@@ -740,10 +740,19 @@ step-by-step would build UI only to delete it (memory `project-menu-collapse-to-
   D1 Designer greying `a114ee5b`), the designer `@PopupClick` context items in the Form menu
   (context-menu parity `b05fdacb`), the **Git menu** (`d61eb062`+), and the **toolbar** merge/
   single-checkable simplification (S3 — Ilwaco keeps its current Toolbars submenu + bands for now).
-- **Android/APK — kept wired in the Run menu for now** (two submenus), to be removed in a dedicated
-  feature-removal pass (like GDB was): it spans `CompileBundle`/`CompileAPK`/`CreateKeyStore`/
-  `GenerateSignedBundleAPK` in `Main.bas`, `mClick` cases, four `mi*` vars + their `->Enabled` lines in
-  `TabWindow.bas`, and Project Properties fields. **This is the immediate NEXT task.**
+- **Android/APK — REMOVED (2026-08-06), a dedicated feature-removal pass** (Astoria did the same in
+  `7e23e1ca`; Ilwaco is Linux-only so Android cross-build was dead weight). Removed: the two Run-menu
+  submenus + four `mi*` vars + their `->Enabled` lines; the `mClick` cases; `CompileBundle`/`CompileAPK`/
+  `CreateKeyStore`/`GenerateSignedBundleAPK` subs; the `gradlew` branch in `Compile()` and its `set NDK=`
+  rewrite (the general makefile/batch-compile path was **kept** — it is a legit Linux feature); `RunPr`'s
+  whole APK-deploy (`adb`) branch, collapsed so the normal run runs unconditionally; the
+  `AndroidSDKLocation`/`NDKLocation`/`JDKLocation` fields in `ProjectElement` + destructor frees + `.vfp`
+  reader/writer; the entire Project-Properties **"Android Settings"** tab with its load/save logic, six
+  click handlers and control declarations; the dead `chkAndroidProject` declares; the unused `AppAndroid`
+  icon registration; and the `Templates/Projects/Android Project/` template (55 files, which
+  "Add From Templates" would otherwise still offer). Verified by effect on `:0`: build clean, Run menu has
+  no Android, an example project opens (`.vfp` reader OK), and Project Properties opens with the Android
+  tab gone (tabs now General/Make/Compile/Includes/Debugging) and no crash.
 
 ## Foundation status (2026-08-02)
 

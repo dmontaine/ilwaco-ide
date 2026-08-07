@@ -49,9 +49,6 @@ Destructor ProjectElement
 	WDeAllocate(CompilationArguments64Windows)
 	WDeAllocate(CompilationArguments64Linux)
 	WDeAllocate(CommandLineArguments)
-	WDeAllocate(AndroidSDKLocation)
-	WDeAllocate(AndroidNDKLocation)
-	WDeAllocate(JDKLocation)
 	Files.Clear
 End Destructor
 
@@ -263,10 +260,6 @@ Sub ChangeMenuItemsEnabled
 	miCompile->Enabled = bEnabled
 	tbtCompile->Enabled = bEnabled
 	miCompileAll->Enabled = bEnabled
-	miBuildBundle->Enabled = bEnabled
-	miBuildAPK->Enabled = bEnabled
-	miGenerateSignedBundle->Enabled = bEnabled
-	miGenerateSignedAPK->Enabled = bEnabled
 	miMake->Enabled = bEnabled
 	miMakeClean->Enabled = bEnabled
 	dmiMake->Enabled = bEnabled
@@ -11886,59 +11879,6 @@ Sub RunPr(Debugger As String = "", ByRef ProjectFileName As WString, ByRef Proje
 	On Error Goto ErrorHandler
 	Dim Result As Integer
 	Dim ExeFileName As WString Ptr
-	If CBool(ProjectFileName <> "") AndAlso (Not EndsWith(ProjectFileName, ".vfp")) AndAlso FileExists(ProjectFileName & "/local.properties") Then
-		Dim As String ApkFileName = ProjectFileName & "/app/build/outputs/apk/debug/app-debug.apk"
-		If Not FileExists(ApkFileName) Then
-			ShowMessages ML("Do not found apk file!")
-			Exit Sub
-		End If
-		Dim As Integer Fn = FreeFile_
-		Open ProjectFileName & "/local.properties" For Input As #Fn
-		Dim SDKDir As UString
-		Dim pBuff As WString Ptr
-		Dim As Integer FileSize
-		FileSize = LOF(Fn)
-		WReAllocate(pBuff, FileSize)
-		Do Until EOF(Fn)
-			LineInputWstr Fn, pBuff, FileSize
-			If StartsWith(*pBuff, "sdk.dir=") Then
-				SDKDir = Replace(Replace(Mid(*pBuff, 9), "\\", "\"), "\:", ":")
-				Exit Do
-			End If
-		Loop
-		CloseFile_(Fn)
-		If SDKDir = "" Then
-			ShowMessages ML("Sdk.dir not specified in file local.properties!")
-			Exit Sub
-		End If
-		If Not FileExists(ProjectFileName & "/app/build.gradle") Then
-			ShowMessages ML("File") & " " & ProjectFileName & "/app/build.gradle " & ML("not found") & "!"
-			Exit Sub
-		End If
-		Fn = FreeFile_
-		Open ProjectFileName & "/app/build.gradle" For Input As #Fn
-		Dim applicationId As String
-		FileSize = LOF(Fn)
-		WReAllocate(pBuff, FileSize)
-		Do Until EOF(Fn)
-			LineInputWstr Fn, pBuff, FileSize
-			If StartsWith(Trim(*pBuff), "applicationId ") Then
-				applicationId = Left(Mid(Trim(*pBuff), 16), Len(Mid(Trim(*pBuff), 16)) - 1)
-				Exit Do
-			End If
-		Loop
-		CloseFile_(Fn)
-		If applicationId = "" Then
-			ShowMessages ML("applicationId not found in file app/build.gradle!")
-			Exit Sub
-		End If
-		Dim As WString Ptr Workdir, CmdL
-		WLet(ExeFileName, SDKDir & "\platform-tools\adb")
-		WLet(CmdL, SDKDir & "\platform-tools\adb uninstall " & applicationId)
-		WLet(Workdir, SDKDir & "\platform-tools")
-		If Workdir Then _Deallocate( Workdir)
-		If CmdL Then _Deallocate(CmdL)
-	Else
 		WLet(ExeFileName, (GetExeFileName(MainFile, CompileLine & " " & FirstLine)))
 		Dim As WString Ptr Arguments
 		WLet(Arguments, *RunArguments)
@@ -11967,7 +11907,6 @@ Sub RunPr(Debugger As String = "", ByRef ProjectFileName As WString, ByRef Proje
 		ShowMessages(Time & ": " & ML("Application finished. Returned code") & ": " & Result & " - " & Err2Description(Result))
 		CheckProfiler GetFolderName(*ExeFileName), *ExeFileName
 		ThreadsLeave()
-	End If
 	If ExeFileName Then _Deallocate( ExeFileName)
 	Exit Sub
 	ErrorHandler:
