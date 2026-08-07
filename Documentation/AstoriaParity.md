@@ -909,6 +909,75 @@ fixed in the editor, the tree, the framework or the build path is still ours.
 4. **MFF framework fixes** and the **MsgBox → Output panel** arc — both platform-neutral.
 5. **Examples / control testing** — deferred by the owner to just before the testing phase.
 
+### UI work — staged sequence (2026-08-07)
+
+A look-ahead pass over everything UI-facing still in the backlog, ordered by dependency into stages.
+This **refines queue items 2–4 above for the UI portion** — same items, sequenced. **Owner decision
+(2026-08-07): "parity first, redesign later."** The near-term target for the central **Form/Editor
+area** is the Astoria-parity restructure below (Stages A–C); a broader redesign of that area — and the
+**final home of the deferred embedded terminal** (see PROJECT_STATUS "⏸ DEFERRED — the embedded VTE
+terminal") — is a deliberate *later* revisit, once the parity shape has landed.
+
+Standard caveat (per "How much to trust this pass"): each entry still needs its own scoping against
+Ilwaco source when the walk reaches it — a stage is an ordering, not a promise every listed commit
+applies verbatim.
+
+**Stage A — the source-tab view model (the central-area spine).**
+- `4b643af5` **tcView** — replace the three *Code / Form / Code And Form* `tbsCheckGroup` toggles Ilwaco
+  still adds to `tbrTop` (`TabWindow.bas:10226`–`10228`) with a **bottom-docked button row** reading
+  *Code And Form* / *Code* / *Form*. In Astoria this is a `TabControl` named `tcView` **styled as
+  buttons** — `tcView.TabStyle = TabStyle.tsButtons`, `.Align = DockStyle.alBottom`, `.Height = 26`,
+  icons from `imgList` (see `TabWindow.bas` ~10696–10713) — so despite the "tc"/"tab strip" naming it
+  reads and behaves as **buttons**, not notebook tabs (owner, 2026-08-07). It is **header-only**: the
+  three entries carry no page content; `tcView_SelChange` drives which panel — code editor vs designer
+  — is shown. The class/function *(General)* / *(Declarations)* dropdowns stay at the **top** of the
+  pane; only the view selectors move down. This is the reshape the owner means by "much different," and
+  it gates the rest of the central-area work.
+- **Visual target (owner's Astoria screenshot, 2026-08-07)** for Stages A–B: bottom *Code And Form /
+  Code / Form* tabs under the editor; in **Code And Form** the live form renders as a designer window
+  over/beside the code; the Explorer shows a **per-form control tree** (`Calculator.frm → Panel1
+  (Panel)` — that is Stage B's `f292db0b`); Properties / Events panels on the right.
+
+**Stage B — Form Designer depth (central area).**
+- `f292db0b` — per-form **control tree** in the project Explorer (designer navigation, part a).
+- `0c08fe5f` — **PagePanel** layer/page navigation (part b). Its standalone-node `ExplorerElement` Tag
+  sub-part stays **out** (reverted, owner: project-only product — see the Delete-File notes above).
+- `623aa2a7` + the designer half of `1c00c1fb` — designer **Undo/Redo** (Ctrl+Z/Y on the form). Note
+  `623aa2a7` shipped in Astoria UNBUILT/UNTESTED, so treat it as a spec, not a port.
+
+**Stage C — context menus & contextual greying** (owner dislikes toolbars, so right-click must carry
+everything the toolbars do).
+- `b05fdacb`, `ab8d166e`, `036c5fa3`, `9d797cd8` — code + Designer context-menu parity and the
+  format-submenu (Align / Make Same Size / Spacing / Center) rendering fixes.
+- `a114ee5b`, `e4d9a954`, `e1595a31`, `f3538e1c` — Code/Form menu **contextual greying**
+  (`UpdateCodeFormMenuEnabled`; grey the Form menu when no designable form is active, and re-grey on
+  form/tab close).
+
+**Stage D — toolbars & menu tail.**
+- **S3 toolbar merge** — 7→5 bands, single-checkable Toolbars submenu, `ShowRunToolBar` INI migration
+  (incl. `93bbfa28`'s run-toolbar persistence), the 7-band Maximize `Bands.Count-2` fix, band
+  renumbering. (The Maximize SIGSEGV is *introduced by* this merge — fix it here, not before.)
+- `4a112089` — wire up `ParameterInfoShow` (a latent global in `Main.bi`: INI load, the
+  `If Not ParameterInfoShow Then Exit Sub` gate, the Options checkbox).
+- Residual UX: `0d6c6be8` (stop `ApplyView` forcing the left panel to Toolbox), `b5cc3ebf` (Step Out
+  onto the top-level Run menu), `820eebb7` (merge into one Toggle Comment), `164c5ead` (name a new file
+  up front), `d48a6cd5` (drop the toolbox component picker — opinionated-design parity).
+
+**Stage E — the two committed divergences (UI-facing).**
+- **Git menu** — ADD chain `d61eb062` → `fffee489` → `fd894173` → `95b04f70`, skip removal `9d277f28`.
+- **Three AI templates** — Claude Code / ChatGPT / Kun (see "Deliberate divergences" below).
+
+**Stage F — feedback surfaces.**
+- **MsgBox → Output panel** — `f169384c` (13.85, 122 informational MsgBoxes → the Output panel),
+  `ec475679` (13.92 severity re-grade), `84d066a2` (first-MsgBox non-modal fix), `b8195f7d` (grow to
+  fit long paths) + the status-bar / Output / MsgBox channel policy.
+- Options-dialog tail: `a7c7839d` (General-page checkbox overlap + the flagged Form-Designer
+  scalability concern), the licenses page `52d1021d`/`3e72506d`.
+
+**↩ Terminal re-entry point:** after Stage A–B, once tcView and the designer navigation have settled
+the central area's shape, the deferred VTE terminal is picked up and placed in its real central-area
+home (revisited with the "redesign later" pass).
+
 ### The threading arc, re-judged (2026-08-06)
 
 The classification above rated `13.60`–`13.79` the highest-value item left, on the strength of a phrase

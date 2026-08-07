@@ -234,7 +234,9 @@ the **bottom pane** and verified by effect: a live, colour-rendering interactive
 projects folder, embedding + spawn + pty all real. **The owner deemed the bottom pane the wrong home:**
 the terminal belongs in the **Form/Editor (central) area**, which will change substantially with later
 UI work. So the wiring was reverted to this clean foundation; **pick it up again once that UI work is
-much further along.** Do not re-add it to the bottom pane.
+much further along.** Do not re-add it to the bottom pane. That UI work is now sequenced in
+[AstoriaParity.md](Documentation/AstoriaParity.md) "UI work — staged sequence"; the terminal
+**re-enters after Stage A–B** (once `tcView` + the designer navigation have settled the area's shape).
 
 **Findings to make resumption cheap** (so the next attempt starts ahead):
 - The 4-step plan (create tab + embed → redirect `RunPr`'s `Shell()` → remove the terminal-picker
@@ -269,6 +271,10 @@ loader, `31a5e20`) is DONE and kept as a correctness improvement (detail in [HIS
 `13.72` (idle slices) stays deferred until its stall is felt on a real project. Astoria downgraded the
 underlying race itself (`382dbb07`: 0 deaths/60 at ≥1 s/switch) — not a blocker. The actual shutdown
 SIGSEGV was a separate deterministic close crash, now fixed (DONE section above).
+
+**The UI portion of this tail is now sequenced** in [AstoriaParity.md](Documentation/AstoriaParity.md)
+"UI work — staged sequence" (Stages A–F, central Form/Editor area first, terminal re-entry noted) —
+follow that ordering for anything UI-facing below.
 
 **Deferred menu features** (each its own pass, in walk order): the **S3 toolbar merge** (7→5 bands,
 single-checkable Toolbars, `ShowRunToolBar` INI migration incl. `93bbfa28`'s run-toolbar persistence, the
