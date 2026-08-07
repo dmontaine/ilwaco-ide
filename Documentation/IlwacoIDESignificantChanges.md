@@ -32,8 +32,11 @@ Each of these was a *choice* in VisualFBEditor and is now made once, with the op
 - **The compiler picker is gone** — one bundled compiler, hard-coded, no selection dialog. (The INI
   `[Compilers]` block cannot simply be restructured — the settings parser is edited so the picker no
   longer exists rather than just hiding it.)
-- **AI-assistant features were removed** — the multi-assistant integration (a choice of several) is
-  no longer present.
+- **The multi-assistant AI integration is not present** — but, unlike the rest of this section, that is
+  **not** a permanent removal. Ilwaco intends to offer a choice of AI assistant templates (Claude Code,
+  ChatGPT, Kun, Kimi Code), which is a deliberate divergence from Astoria's decision to consolidate on
+  one. See [IlwacoVsAstoria.md](IlwacoVsAstoria.md) §3 and [AstoriaParity.md](AstoriaParity.md)
+  "Deliberate divergences".
 - **The Direct2D user option was removed** — it was a Win32-only rendering path with no GTK meaning.
 - **Legacy editor options removed** — Error Handling and Line Numbering menu items, the "Close
   Folder" command, the "Use" target-selector dropdown, and the Help ▸ GitHub submenu are no longer
