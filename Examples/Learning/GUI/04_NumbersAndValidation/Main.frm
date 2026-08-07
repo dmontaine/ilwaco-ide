@@ -48,27 +48,27 @@
 		End With
 		With lblA
 			.Name = "lblA" : .Text = "First number:"
-			.SetBounds 20, 22, 110, 22
+			.SetBounds 20, 22, 130, 22
 			.Designer = @This : .Parent = @This
 		End With
 		With txtA
 			.Name = "txtA" : .Text = "12"
-			.SetBounds 140, 20, 100, 24
+			.SetBounds 160, 20, 100, 24
 			.Designer = @This : .Parent = @This
 		End With
 		With lblB
 			.Name = "lblB" : .Text = "Second number:"
-			.SetBounds 20, 58, 110, 22
+			.SetBounds 20, 58, 130, 22
 			.Designer = @This : .Parent = @This
 		End With
 		With txtB
 			.Name = "txtB" : .Text = "30"
-			.SetBounds 140, 56, 100, 24
+			.SetBounds 160, 56, 100, 24
 			.Designer = @This : .Parent = @This
 		End With
 		With cmdAdd
 			.Name = "cmdAdd" : .Text = "Add them up"
-			.SetBounds 140, 94, 120, 30
+			.SetBounds 160, 94, 120, 30
 			.Designer = @This : .OnClick = @cmdAdd_Click : .Parent = @This
 		End With
 		With lblResult

@@ -48,17 +48,17 @@
 		End With
 		With lblPrompt
 			.Name = "lblPrompt" : .Text = "A word or phrase:"
-			.SetBounds 20, 22, 130, 22
+			.SetBounds 20, 22, 155, 22
 			.Designer = @This : .Parent = @This
 		End With
 		With txtWord
 			.Name = "txtWord" : .Text = "level"
-			.SetBounds 155, 20, 180, 24
+			.SetBounds 180, 20, 175, 24
 			.Designer = @This : .Parent = @This
 		End With
 		With cmdCheck
 			.Name = "cmdCheck" : .Text = "Examine"
-			.SetBounds 350, 20, 90, 26
+			.SetBounds 370, 20, 95, 26
 			.Designer = @This : .OnClick = @cmdCheck_Click : .Parent = @This
 		End With
 		With lblReversed

@@ -55,17 +55,17 @@
 		End With
 		With lblPrompt
 			.Name = "lblPrompt" : .Text = "Amount before tax:"
-			.SetBounds 20, 22, 140, 22
+			.SetBounds 20, 22, 165, 22
 			.Designer = @This : .Parent = @This
 		End With
 		With txtAmount
 			.Name = "txtAmount" : .Text = "49.99"
-			.SetBounds 165, 20, 90, 24
+			.SetBounds 190, 20, 90, 24
 			.Designer = @This : .Parent = @This
 		End With
 		With cmdWork
 			.Name = "cmdWork" : .Text = "Work it out"
-			.SetBounds 270, 20, 110, 26
+			.SetBounds 295, 20, 110, 26
 			.Designer = @This : .OnClick = @cmdWork_Click : .Parent = @This
 		End With
 		With lblNet

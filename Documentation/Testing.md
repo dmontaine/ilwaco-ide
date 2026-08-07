@@ -14,13 +14,21 @@ necessary but not sufficient — "it compiled" is not "it works".
 
 ## Proven
 
-- **The 53 examples ported from Astoria all build, and all run (2026-08-07).** Built with Ilwaco's
-  bundled Linux toolchain on Debian 13 x86_64: **25/25** `Learning/Console` programs compiled and ran
-  to completion (exit 0), **25/25** `Learning/GUI` programs compiled and were each launched and
-  confirmed to put a window on screen, and `Calculator`, `FiveInARow` and `Maze` likewise opened
-  their windows. Running matters separately from compiling here: a form whose constructor fails half
-  way still builds, and then opens empty. What is *not* proven is that any handler does the right
-  thing — nothing was clicked, and console output was spot-checked rather than diffed.
+- **The 53 examples ported from Astoria all build and run; 25 of the 28 GUI ones also look right
+  (2026-08-07).** Built with Ilwaco's bundled Linux toolchain on Debian 13 x86_64: **25/25**
+  `Learning/Console` programs compiled and ran to completion (exit 0), and all 28 GUI programs
+  compiled and opened a window.
+
+  **"A window opened" was not enough, and the first version of this entry claimed too much.** Every
+  GUI example was subsequently screenshotted and inspected. That found layout defects in four of the
+  25 `Learning/GUI` examples — three where a label wrapped to two lines and misaligned
+  (`04_NumbersAndValidation`, `12_ProceduresInAModule`, `13_FunctionsAndReturn`; **fixed** by widening
+  the labels, re-verified by screenshot) and `20_MenuAndStatusBar`, where the status bar renders at
+  the **top** instead of docked at the bottom (**open**). `Calculator`, `FiveInARow` and `Maze` have
+  worse layout problems — see "Not proven" below.
+
+  What is still *not* proven for any of them is that a handler does the right thing — nothing was
+  clicked, and console output was spot-checked rather than diffed.
 - **Editor builds from source and runs.** `./build-linux.sh editor` produces `ilwaco`; the window
   opens on `:0` with no error dialog (harmless `AppAddin`/`AppConsole` "does not exist" warnings
   aside). Standing result — see [PROJECT_STATUS.md](../PROJECT_STATUS.md).
@@ -130,6 +138,16 @@ necessary but not sufficient — "it compiled" is not "it works".
   project. TestPlan T19.
 
 ## Not proven (known gaps)
+- **`Calculator`, `FiveInARow` and `Maze` have broken layouts on GTK (2026-08-07, owner-reported).**
+  They compile and open, but: `FiveInARow`'s settings panel has genuinely overlapping labels
+  ("Chess Board Size" collides with "Background:") with clipped radio captions, and it opens at
+  2560×1293; `Maze`'s "Maze Size:"/"Wall Size:" labels wrap into their text boxes and the Refresh
+  button overlaps a progress bar; `Calculator` leaves a large dead area below its controls.
+  **Cause:** absolute pixel layouts tuned to Win32 font metrics. GTK's default font is wider, the
+  fixed-width labels wrap to a second line, and that second line lands on whatever is beneath —
+  which is the overlap. Not a framework wrap-flag divergence: both forks default `WordWraps = True`.
+  These three predate Astoria's own examples and came from the shared VisualFBEditor base, so the
+  **pre-existing `Examples/` in this repo are likely affected the same way and have not been swept.**
 - **Six of the eight `FileCopy_` call sites are build-verified only.** New Project exercised the two
   that were actually broken (`FolderCopy` and the manifest copy). The other conversions — backup on
   save, `Resource.rc`/`Manifest.xml` creation, Find-and-Replace-in-project backups, Remove File From
