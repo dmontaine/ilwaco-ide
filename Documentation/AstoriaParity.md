@@ -746,9 +746,21 @@ step-by-step would build UI only to delete it (memory `project-menu-collapse-to-
   bug fix; and status-bar feedback (`No word at cursor` / `No definition found for '…'`) plus the match
   count in the picker title. Ilwaco's `Define` was Astoria's exact pre-image and every dependency was
   present, so it ported cleanly. Verified on `:0`: F2 on a call opened the picker titled
-  "Definitions for 'Start' (3)". Remaining `0eaa8806` bits to assess later: S4 (`*nix/*bsd Icon
-  Resource File` field — INVERT caution on Linux) and the folded fixes (7-band Maximize SIGSEGV,
-  `tbtToggleBreakpoint` double-assign, `frmTools` save handler).
+  "Definitions for 'Start' (3)". (3) **`tbtToggleBreakpoint` double-assign fixed** — line 6308 reassigned
+  `tbtToggleBreakpoint` (should be `tbtShowNextStatement`); no functional impact in Ilwaco (neither is
+  read by enable-logic, unlike Astoria) but corrected. Folded in the later **`d8a2e8fb`** command-name fix
+  on the *same* toolbar button (per the whole-log rule, to avoid touching it twice): its command was
+  `"ToggleBreakpoint"` with no handler — a **dead button** — now `"Breakpoint"`, matching the menu, so it
+  actually toggles.
+  **The other `0eaa8806` folded fixes are N/A / deferred / INVERTED for Ilwaco:** the **7-band Maximize
+  SIGSEGV** is N/A (that crash was *introduced* by the S3 toolbar merge — a `Bands.Item(5)` on a 5-band
+  ReBar; Ilwaco still has 7 bands and no such Maximize loop; fix it *with* S3). The **`frmTools` save
+  handler** fix is N/A: it repaired a break from moving "External Tools" into a Tools▸Advanced submenu,
+  which Ilwaco didn't do (External Tools is a flat child named `"Tools"`, so the `Name` lookup still
+  works). **S4 (`*nix/*bsd Icon Resource File` field) is INVERTED → keep**: Astoria removed it as dead on
+  Windows, but on a Linux IDE the `.xpm`/`IconResourceFileName` field is the *live* one (tracked, renamed,
+  marked `*` in the tree), so Ilwaco keeps it; any dead *Windows* `.ico` field is a separate non-target
+  strip. The **band renumbering + `ShowRunToolBar` INI migration** are deferred with the S3 toolbar merge.
 - **Deferred to their own passes** (final menu also contains these, but they are separate features to
   port when the walk reaches them): the **Code/Form contextual greying** (`UpdateCodeFormMenuEnabled`,
   D1 Designer greying `a114ee5b`), the designer `@PopupClick` context items in the Form menu

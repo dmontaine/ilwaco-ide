@@ -6302,10 +6302,10 @@ Sub CreateMenusAndToolBars
 	tbtStepOut = tbDebug.Buttons.Add(, "StepOut", , @mClick, "StepOut", , ML("Step Out") & HK("StepOut", "Ctrl+Shift+F8", True), True)
 	tbtRunToCursor = tbDebug.Buttons.Add(, "RunToCursor", , @mClick, "RunToCursor", , ML("Run To Cursor") & HK("RunToCursor", "Ctrl+F8", True), True)
 	tbDebug.Buttons.Add tbsSeparator
-	tbtToggleBreakpoint = tbDebug.Buttons.Add(, "Breakpoint", , @mClick, "ToggleBreakpoint", , ML("Toggle Breakpoint") & HK("ToggleBreakpoint", "F9", True), True)
+	tbtToggleBreakpoint = tbDebug.Buttons.Add(, "Breakpoint", , @mClick, "Breakpoint", , ML("Toggle Breakpoint") & HK("Breakpoint", "F9", True), True)
 	tbDebug.Buttons.Add tbsSeparator
 	tbtSetNextStatement = tbDebug.Buttons.Add(, "SetNextStatement", , @mClick, "SetNextStatement", , ML("Set Next Statement") & HK("SetNextStatement", , True), True)
-	tbtToggleBreakpoint = tbDebug.Buttons.Add(, "ShowNextStatement", , @mClick, "ShowNextStatement", , ML("Show Next Statement") & HK("ShowNextStatement", , True), True)
+	tbtShowNextStatement = tbDebug.Buttons.Add(, "ShowNextStatement", , @mClick, "ShowNextStatement", , ML("Show Next Statement") & HK("ShowNextStatement", , True), True)
 	'tbStandard.Buttons.Add tbsSeparator
 	tbRun.Name = "Run"
 	tbRun.ImagesList = @imgList
