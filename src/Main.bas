@@ -8074,7 +8074,7 @@ Sub tabCode_SelChange(ByRef Designer As My.Sys.Object, ByRef Sender As TabContro
 	'	pLocalFunctionsOthers = @tb->FunctionsOthers
 	'	pLocalArgs = @tb->Args
 	If tb->tn Then tb->tn->SelectItem
-	For i As Integer = 3 To miWindow->Count - 1
+	For i As Integer = 1 To miWindow->Count - 1 '' index 0 is now the only static item (separator); Split H/V moved to Code (menu taxonomy)
 		If miWindow->Item(i) > 0 AndAlso tb->mi > 0 Then miWindow->Item(i)->Checked = miWindow->Item(i) = tb->mi
 	Next
 	If tb->Des <> 0 Then

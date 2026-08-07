@@ -198,7 +198,7 @@ End Function
 Sub ChangeMenuItemsEnabled
 	Dim As TreeNode Ptr ptn = GetParentNode(tvExplorer.SelectedNode)
 	Dim bEnabled As Boolean = tvExplorer.Nodes.Count > 0
-	Dim bEnabledTab As Boolean = miWindow->Count > 3
+	Dim bEnabledTab As Boolean = miWindow->Count > 1 '' Window menu now holds only the separator (index 0) as a static item; Split H/V moved to Code (menu taxonomy)
 	Dim bEnabledProject As Boolean = ptn AndAlso (ptn->ImageKey = "Project" OrElse ptn->ImageKey = "MainProject")
 	Dim bEnabledFolderProject As Boolean = ptn AndAlso ((ptn->ImageKey = "Project") OrElse (ptn->ImageKey = "MainProject")) AndAlso CInt(ProjectNameSameWithFolder(ptn))
 	Dim bEnabledProjectAndFolder As Boolean = ptn AndAlso ((ptn->ImageKey = "Project") OrElse (ptn->ImageKey = "MainProject") OrElse (ptn->ImageKey = "Opened"))
