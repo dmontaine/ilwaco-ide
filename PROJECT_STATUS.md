@@ -110,7 +110,7 @@ name distinct and mapped in one place.
 
 ---
 
-## NEXT — the threading arc (13.60–13.79) first, then the deferred menu features
+## NEXT — the deferred menu features; the threading arc is DOWNGRADED (see below)
 
 **A full classification pass over the whole remaining backlog was done on 2026-08-06** — all **396**
 entries in [AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md) are now grouped and
@@ -120,14 +120,44 @@ PORT verdict is *cluster-level* and each entry still needs normal scoping. The b
 deliberately **not** pruned — sampling one cluster produced four mis-filed entries (a DONE, an INVERT and
 two real PORTs hiding inside the "GDB → N/A" group), which a bulk delete would have destroyed.
 
-**START HERE — `13.60`–`13.79`, the threading / IntelliSense arc (36 entries).** This is the known
-intermittent startup/analysis **SIGSEGV** that this file has been describing as "a known Astoria-fixed
-threading issue" — the fix is in the backlog and has been all along. Astoria's route is recorded with
-**nine refuted hypotheses**, and the answer was counter-intuitive: not another lock, but *removing the
-concurrency*. Read **`32028141`** (run the IntelliSense load **serially**) and **`dd8ddf37`** (drain it
-in idle slices so project open does not block) **first**, and do not re-derive the dead ends. Take the
-`13.65`/`13.66` teardown use-after-free entries with it — same family. Dependencies are present:
-`QuitThread` (`src/TabWindow.bas:6856`) and 41 `LoadFunctions` references.
+### ⚠️ CORRECTION — the threading arc is NOT the emergency this file claimed (2026-08-06)
+
+**The previous entry here said `13.60`–`13.79` was "the known intermittent startup/analysis SIGSEGV …
+the fix is in the backlog and has been all along". That was wrong on both halves, and it was wrong
+because it inherited a phrase from an earlier handoff instead of checking it.** Corrected on evidence:
+
+1. **Astoria downgraded the defect itself** (`382dbb07`). Its death rate depends on *switching speed*:
+   ~0.35 s/switch gave 6, 6 and 9 deaths in 60; **1 s/switch gave 0 in 60; 4 s/switch 0 in 60.** A
+   one-second pause closes the window. Astoria's own conclusion: *"it needs project teardown to overlap
+   IntelliSense loader threads that are still running … No user opens a project, opens its form and
+   moves on three times a second"* — **explicitly not a release blocker.**
+2. **It is probably not our bug.** The SIGSEGV this file describes hits **on startup/analysis when
+   opening _large files_** (a small file opens first try) — a different trigger from project-teardown
+   racing live loaders. "A known Astoria-fixed threading issue" was an assumption, never a diagnosis.
+
+**Our own A/B measurement is consistent with (1) and is itself inconclusive:** 40 cycles against the
+**pre-fix threaded** binary (recovered from git, so no rebuild) produced **0 deaths**. The harness
+paces at six MCP round trips per cycle — far slower than 1 s/switch — so Astoria's table predicts
+exactly that result on an unfixed build. **A harness paced by MCP round trips cannot reproduce a race
+that needs sub-second switching**; the serial arm was not run, because another 0/40 would prove nothing.
+
+**What this means for the work:** `13.71` is **DONE and kept** (below) — the race is real, the serial
+load is strictly safer, and the threading it removed never bought throughput. But it is a correctness
+improvement, not a fix for the crash we actually see. **`13.72` (idle slices) is DEFERRED**: it exists
+only to remove the stall `13.71` introduces, so do it if that stall is felt on a real project.
+
+**Ilwaco's actual SIGSEGV needs investigating on its own trigger** — opening large files, not project
+switching. Do not assume this arc addressed it.
+
+### ✅ DONE — `13.71`, the serial IntelliSense loader (`31a5e20`)
+
+All five loader sites (three in `AddProject`, `TabWindow.SaveTab`, `TabWindow.FormDesign`) call the new
+`SpawnLoader` instead of `ThreadCounter(ThreadCreate_(...))` and run one at a time;
+`ClearLoaderQueue()` runs from `CloseProject`/`CloseWorkspace` so nothing queued outlives what it reads.
+Astoria's `ASTORIA_T70_SERIALLOAD` env gate was deliberately **not** ported — the A/B is over and it
+would be dead code. **Verified:** no deadlock on project open (the real trap — `SpawnLoader` must queue,
+never call through, or it re-enters `MutexLock tlock` and FB mutexes are not recursive), forms open,
+symbols resolve. **Not verified:** any reduction in crashes, for the reasons above.
 
 ### Then — the deferred menu features + rest of the 13.3.A walk
 

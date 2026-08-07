@@ -866,7 +866,7 @@ fixed in the editor, the tree, the framework or the build path is still ours.
 | GDB debugger engine | **N/A** (Ilwaco removed GDB; Integrated only) — less the 4 carve-outs | 26 |
 | 13.28 Alt+C/G/R menu-mnemonic saga | **N/A** — Win32 accelerator/kernel-debug investigation | 14 |
 | 13.68 close-crash investigation | **REVIEW** — Win32 symptom, but `154fb8aa`'s cause (a shared context menu holding a dangling `ParentWindow`) is framework-level | 13 |
-| **13.60–13.79 threading / IntelliSense** | **PORT — highest value** | 36 |
+| **13.60–13.79 threading / IntelliSense** | `13.71` **DONE**; rest **DEFERRED** — severity downgraded, see the correction below | 36 |
 | Agent MCP + AI templates | **DONE** (MCP server) / **INVERT-KEEP** (templates) | 38 |
 | Git integration | **INVERT-KEEP** — port the add chain, skip `9d277f28` | 15 |
 | Windows packaging / installer / release | **REIMPLEMENT** — AppImage, tracked separately | 7 |
@@ -887,19 +887,45 @@ fixed in the editor, the tree, the framework or the build path is still ours.
 
 ### The actionable queue, in priority order
 
-1. **13.60–13.79 — the threading / IntelliSense arc. Do this first.** Ilwaco carries a known
-   intermittent startup/analysis SIGSEGV that PROJECT_STATUS already describes as *"a known
-   Astoria-fixed threading issue"* — this arc is that fix, and it is the single highest-value thing
-   left in the backlog. Astoria's route is recorded in full, including **nine refuted hypotheses**, and
-   the answer was counter-intuitive: not another lock but **removing the concurrency** — `32028141`
-   runs the IntelliSense load **serially**, then `dd8ddf37` drains it in idle slices so project open
-   does not block. Read that pair *first* and do not re-derive the dead ends. The dependencies exist
-   here: `QuitThread` (`TabWindow.bas:6856`) and 41 `LoadFunctions` references.
+1. ~~**13.60–13.79 — the threading / IntelliSense arc. Do this first.**~~ **CORRECTED 2026-08-06 —
+   see "The threading arc, re-judged" below.** `13.71` is done; the rest is deferred. This item claimed
+   the arc was "the single highest-value thing left" and that it fixed our SIGSEGV. Both claims were
+   inherited rather than checked, and both are wrong.
 2. **The deferred menu features** — S3 toolbar merge, Code/Form contextual greying, designer
    `@PopupClick` context items (unchanged from the previous NEXT).
 3. **Git integration** and **the three AI templates** — the two build-work divergences.
 4. **MFF framework fixes** and the **MsgBox → Output panel** arc — both platform-neutral.
 5. **Examples / control testing** — deferred by the owner to just before the testing phase.
+
+### The threading arc, re-judged (2026-08-06)
+
+The classification above rated `13.60`–`13.79` the highest-value item left, on the strength of a phrase
+carried in PROJECT_STATUS — that Ilwaco's intermittent SIGSEGV was "a known Astoria-fixed threading
+issue". **Implementing `13.71` and then trying to measure it showed that rating was wrong.** Recorded
+here because the error is more useful than the verdict:
+
+- **Astoria downgraded the defect** in `382dbb07`. The death rate is a function of *switching speed*:
+  ~0.35 s/switch gave 6, 6 and 9 deaths in 60; **1 s/switch gave 0 in 60**; 4 s/switch 0 in 60. Its own
+  conclusion is that this needs project teardown to overlap still-running loader threads, which no user
+  produces — **explicitly not a release blocker**.
+- **It is probably not our defect at all.** Ours hits on startup/analysis when opening **large files**;
+  this one needs rapid project *switching*. Nothing ever established they were the same bug.
+- **Our A/B could not measure it, and that is itself a finding.** 40 cycles against the **pre-fix
+  threaded** binary (recovered from git — no rebuild needed for a control arm) gave **0 deaths**. The
+  harness paces at six MCP round trips per cycle, well over the 1 s/switch Astoria measured as closing
+  the window. **A harness paced by MCP round trips cannot reproduce a race that needs sub-second
+  switching.** The serial arm was not run: another 0/40 would have proved nothing, and reporting it as
+  success would have been the exact false green this project keeps guarding against.
+
+**Verdicts now:** `13.71` **DONE** (`31a5e20`) — kept on its merits, since the race is real, the serial
+load is strictly safer, and the threading it removed never bought throughput (the loaders were already
+serialised on `tlock` and `tlockSave`). `13.72` (idle slices) **DEFERRED** — it exists only to remove the
+stall `13.71` introduces, so it is worth doing when that stall is actually felt. The `13.65`/`13.66`
+teardown use-after-free entries stay **PORT**; they are a different and more plausible family for our crash.
+
+**Method note worth keeping:** a control arm cost nothing here — the previous binary is tracked in git,
+so `git show <rev>:ilwaco` gives an A/B without a rebuild. Use it, and confirm the control actually
+fails before believing anything about the treatment.
 
 ### The 66 residual entries, classified individually
 
