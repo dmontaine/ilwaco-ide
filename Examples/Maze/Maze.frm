@@ -99,7 +99,7 @@
 			.Name = "lblFPS"
 			.Text = "FPS："
 			.TabIndex = 1
-			.SetBounds 10, 40, 70, 20
+			.SetBounds 10, 32, 225, 22
 			.Designer = @This
 			.Parent = @This
 		End With
@@ -108,7 +108,7 @@
 			.Name = "cmdRefresh"
 			.Text = ML("Refresh")
 			.TabIndex = 2
-			.SetBounds 20, 70, 60, 20
+			.SetBounds 10, 92, 225, 28
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdRefresh_Click)
 			.Parent = @This
@@ -120,7 +120,7 @@
 			.TabIndex = 3
 			.ControlIndex = 2
 			.Visible = True
-			.SetBounds 20, 100, 60, 20
+			.SetBounds 10, 126, 225, 28
 			.Enabled = False
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdPlay_Click)
@@ -136,7 +136,7 @@
 			.MaxValue = 255
 			.MinValue = 10
 			.Position = speed
-			.SetBounds 8, 55, 77, 10
+			.SetBounds 10, 58, 225, 26
 			.Designer = @This
 			.OnChange = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As TrackBar, Position As Integer), @TrackBarFPS_Change)
 			.Parent = @This
@@ -147,7 +147,7 @@
 			.Text = ML("Language:") & App.CurLanguage
 			.TabIndex = 5
 			.ControlIndex = 1
-			.SetBounds 10, 0, 100, 40
+			.SetBounds 10, 4, 225, 22
 			.Designer = @This
 			.Parent = @This
 		End With
@@ -167,7 +167,7 @@
 			.Name = "lblMazeSize"
 			.Text = ML("Maze Size:")
 			.TabIndex = 6
-			.SetBounds 10, 130, 60, 20
+			.SetBounds 10, 166, 95, 22
 			.Designer = @This
 			.Parent = @This
 		End With
@@ -178,7 +178,7 @@
 			.TabIndex = 8
 			.MaxValue = 10
 			.MinValue = 100
-			.SetBounds 70, 130, 40, 20
+			.SetBounds 110, 164, 125, 26
 			.Designer = @This
 			.OnKeyPress = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control, Key As Integer), @NumUpDnMazeSize_KeyPress)
 			.Parent = @This
@@ -189,7 +189,7 @@
 			.Text = ML("Wall Size:")
 			.TabIndex = 9
 			.ControlIndex = 6
-			.SetBounds 10, 160, 60, 20
+			.SetBounds 10, 198, 95, 22
 			.Designer = @This
 			.Parent = @This
 		End With
@@ -201,7 +201,7 @@
 			.ControlIndex = 8
 			.MaxValue = 10
 			.MinValue = 100
-			.SetBounds 70, 160, 40, 20
+			.SetBounds 110, 196, 125, 26
 			.Designer = @This
 			.OnKeyPress = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control, Key As Integer), @NumUpDnWallSize_KeyPress)
 			.Parent = @This
@@ -216,7 +216,7 @@
 			.Anchor.Right = AnchorStyle.asAnchor
 			.Anchor.Left = AnchorStyle.asAnchor
 			.Anchor.Bottom = AnchorStyle.asAnchor
-			.SetBounds 120, 10, 479, 390
+			.SetBounds 245, 10, 354, 390
 			.Designer = @This
 			.Parent = @This
 		End With

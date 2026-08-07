@@ -55,7 +55,7 @@
 			.Icon.LoadFromResourceID(1)
 			.StartPosition = FormStartPosition.CenterScreen
 			.MaximizeBox = False
-			.SetBounds 0, 0, 290, 210
+			.SetBounds 0, 0, 350, 300
 		End With
 		
 		' Panel1
@@ -63,7 +63,7 @@
 			.Name = "Panel1"
 			.Text = "Panel1"
 			.TabIndex = 1
-			.SetBounds 0, 0, 290, 192
+			.SetBounds 0, 0, 350, 300
 			.Designer = @This
 			.Parent = @This
 		End With
@@ -72,7 +72,7 @@
 			.Name = "cmdNum(0)"
 			.Text = "0"
 			.TabIndex = 2
-			.SetBounds 12, 114, 36, 28
+			.SetBounds 14, 170, 44, 44
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdNum_Click)
 			.Parent = @Panel1
@@ -83,7 +83,7 @@
 			.Text = "1"
 			.TabIndex = 3
 			.ControlIndex = 0
-			.SetBounds 12, 12, 36, 28
+			.SetBounds 14, 14, 44, 44
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdNum_Click)
 			.Parent = @Panel1
@@ -94,7 +94,7 @@
 			.Text = "2"
 			.TabIndex = 4
 			.ControlIndex = 1
-			.SetBounds 54, 12, 36, 28
+			.SetBounds 62, 14, 44, 44
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdNum_Click)
 			.Parent = @Panel1
@@ -105,7 +105,7 @@
 			.Text = "3"
 			.TabIndex = 5
 			.ControlIndex = 2
-			.SetBounds 96, 12, 36, 28
+			.SetBounds 110, 14, 44, 44
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdNum_Click)
 			.Parent = @Panel1
@@ -116,7 +116,7 @@
 			.Text = "4"
 			.TabIndex = 6
 			.ControlIndex = 3
-			.SetBounds 12, 46, 36, 28
+			.SetBounds 14, 66, 44, 44
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdNum_Click)
 			.Parent = @Panel1
@@ -127,7 +127,7 @@
 			.Text = "5"
 			.TabIndex = 7
 			.ControlIndex = 4
-			.SetBounds 54, 46, 36, 28
+			.SetBounds 62, 66, 44, 44
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdNum_Click)
 			.Parent = @Panel1
@@ -138,7 +138,7 @@
 			.Text = "6"
 			.TabIndex = 8
 			.ControlIndex = 5
-			.SetBounds 96, 46, 36, 28
+			.SetBounds 110, 66, 44, 44
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdNum_Click)
 			.Parent = @Panel1
@@ -149,7 +149,7 @@
 			.Text = "7"
 			.TabIndex = 9
 			.ControlIndex = 6
-			.SetBounds 12, 80, 36, 28
+			.SetBounds 14, 118, 44, 44
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdNum_Click)
 			.Parent = @Panel1
@@ -160,7 +160,7 @@
 			.Text = "8"
 			.TabIndex = 10
 			.ControlIndex = 7
-			.SetBounds 54, 80, 36, 28
+			.SetBounds 62, 118, 44, 44
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdNum_Click)
 			.Parent = @Panel1
@@ -171,7 +171,7 @@
 			.Text = "9"
 			.TabIndex = 11
 			.ControlIndex = 8
-			.SetBounds 96, 80, 36, 28
+			.SetBounds 110, 118, 44, 44
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdNum_Click)
 			.Parent = @Panel1
@@ -182,7 +182,7 @@
 			.Text = "+"
 			.TabIndex = 12
 			.Caption = "+"
-			.SetBounds 54, 114, 36, 28
+			.SetBounds 62, 170, 44, 44
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdNum_Click)
 			.Parent = @Panel1
@@ -193,7 +193,7 @@
 			.Text = "-"
 			.TabIndex = 13
 			.ControlIndex = 10
-			.SetBounds 96, 114, 36, 28
+			.SetBounds 110, 170, 44, 44
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdNum_Click)
 			.Parent = @Panel1
@@ -204,7 +204,7 @@
 			.Text = "*"
 			.TabIndex = 14
 			.ControlIndex = 11
-			.SetBounds 12, 148, 36, 28
+			.SetBounds 14, 222, 44, 44
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdNum_Click)
 			.Parent = @Panel1
@@ -215,7 +215,7 @@
 			.Text = "/"
 			.TabIndex = 15
 			.ControlIndex = 12
-			.SetBounds 54, 148, 36, 28
+			.SetBounds 62, 222, 44, 44
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdNum_Click)
 			.Parent = @Panel1
@@ -226,7 +226,7 @@
 			.Text = "="
 			.TabIndex = 16
 			.ControlIndex = 13
-			.SetBounds 96, 148, 36, 28
+			.SetBounds 110, 222, 44, 44
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdNum_Click)
 			.Parent = @Panel1
@@ -236,7 +236,7 @@
 			.Name = "lblExpressions"
 			.Text = ML("Expressions")
 			.TabIndex = 17
-			.SetBounds 148, 12, 120, 16
+			.SetBounds 168, 14, 165, 20
 			.Designer = @This
 			.Parent = @Panel1
 		End With
@@ -245,7 +245,7 @@
 			.Name = "txtResult"
 			.Text = ""
 			.TabIndex = 18
-			.SetBounds 148, 80, 128, 30
+			.SetBounds 168, 102, 165, 30
 			.Designer = @This
 			.Parent = @Panel1
 		End With
@@ -254,7 +254,7 @@
 			.Name = "cmdClear"
 			.Text = ML("Clear")
 			.TabIndex = 19
-			.SetBounds 148, 116, 128, 26
+			.SetBounds 168, 158, 165, 36
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdClear_Click)
 			.Parent = @Panel1
@@ -264,7 +264,7 @@
 			.Name = "cmdExit"
 			.Text = ML("Exit")
 			.TabIndex = 20
-			.SetBounds 148, 146, 128, 26
+			.SetBounds 168, 202, 165, 36
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdExit_Click)
 			.Parent = @Panel1
@@ -275,7 +275,7 @@
 			.Text = ML("Result")
 			.TabIndex = 21
 			.ControlIndex = 15
-			.SetBounds 148, 62, 120, 16
+			.SetBounds 168, 78, 165, 20
 			.Designer = @This
 			.Parent = @Panel1
 		End With
@@ -285,7 +285,7 @@
 			.Text = "5+7*sin(0.5)"
 			.TabIndex = 22
 			.ControlIndex = 17
-			.SetBounds 148, 30, 128, 22
+			.SetBounds 168, 38, 165, 30
 			.Designer = @This
 			.Parent = @Panel1
 		End With

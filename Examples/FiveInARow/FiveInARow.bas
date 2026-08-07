@@ -119,7 +119,7 @@
 			.OnShow = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @Form_Show)
 			.Graphic.Icon.LoadFromResourceID(1, , 48, 48)
 			.BorderStyle = FormBorderStyle.FixedSingle
-			.SetBounds 0, 0, 811, 667
+			.SetBounds 0, 0, 960, 667
 			.Designer = @This
 		End With
 		' Picture1
@@ -143,7 +143,7 @@
 			.Name = "GroupBox1"
 			.Text = ML("Setting") '"Settings"
 			.TabIndex = 3
-			.SetBounds 638, 13, 159, 242
+			.SetBounds 638, 13, 305, 292
 			.Designer = @This
 			.Parent = @This
 		End With
@@ -152,7 +152,7 @@
 			.Name = "cmdStart"
 			.Text = ML("Restart")  '"Restart"
 			.TabIndex = 5
-			.SetBounds 13, 198, 135, 35
+			.SetBounds 14, 248, 275, 36
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdStart_Click)
 			.Parent = @GroupBox1
@@ -163,7 +163,7 @@
 			.Text = ML("Man-Computer Playing")
 			.TabIndex = 5
 			.Checked = True
-			.SetBounds 16, 46, 129, 22
+			.SetBounds 14, 54, 275, 26
 			.Designer = @This
 			.Parent = @GroupBox1
 		End With
@@ -172,7 +172,7 @@
 			.Name = "optComputer(1)"
 			.Text = ML("Man-Man Playing")
 			.TabIndex = 6
-			.SetBounds 15, 23, 127, 24
+			.SetBounds 14, 24, 275, 26
 			.Designer = @This
 			.Parent = @GroupBox1
 		End With
@@ -182,7 +182,7 @@
 			.Text = "lblInfomation"
 			.TabIndex = 8
 			.BackColor = 255
-			.SetBounds 17, 166, 135, 26
+			.SetBounds 14, 216, 275, 26
 			.Designer = @This
 			.Parent = @GroupBox1
 		End With
@@ -191,7 +191,7 @@
 			.Name = "Label2"
 			.Text = ML("Chess Board Size") '"Board size:"
 			.TabIndex = 8
-			.SetBounds 9, 97, 97, 16
+			.SetBounds 14, 120, 155, 22
 			.Designer = @This
 			.Parent = @GroupBox1
 		End With
@@ -202,7 +202,7 @@
 			.TabIndex = 10
 			.MinValue= 6
 			.MaxValue= 19
-			.SetBounds 114, 98, 31, 17
+			.SetBounds 175, 116, 115, 28
 			.Designer = @This
 			.Parent = @GroupBox1
 		End With
@@ -212,7 +212,7 @@
 			.Text = ML("Computer first") '"Computer moves first"
 			.TabIndex = 9
 			.Checked = True
-			.SetBounds 18, 74, 117, 16
+			.SetBounds 14, 84, 275, 26
 			.Designer = @This
 			.Parent = @GroupBox1
 		End With
@@ -230,7 +230,7 @@
 			        "VisualFBEditor: <a href=""https://gitee.com/avata/VisualFBEditor""> https://gitee.com/avata/VisualFBEditor</a>"
 		
 			.TabIndex = 10
-			.SetBounds 639, 264, 159, 367
+			.SetBounds 638, 314, 305, 317
 			.Designer = @This
 			.Parent = @This
 		End With
@@ -239,7 +239,7 @@
 			.Name = "lblChessText(0)"
 			.Text = ML("Chess Background:")
 			.TabIndex = 11
-			.SetBounds 10, 120, 100, 16
+			.SetBounds 14, 154, 155, 22
 			.Designer = @This
 			.Parent = @GroupBox1
 		End With
@@ -248,7 +248,7 @@
 			.Name = "lblChessText(1)"
 			.Text = ML("Grid Color:")
 			.TabIndex = 11
-			.SetBounds 10, 141, 100, 16
+			.SetBounds 14, 186, 155, 22
 			.Designer = @This
 			.Parent = @GroupBox1
 		End With
@@ -259,7 +259,7 @@
 			.Text = ""
 			.TabIndex = 12
 			.Caption = ""
-			.SetBounds 103, 123, 15, 14
+			.SetBounds 175, 154, 40, 22
 			.Designer = @This
 			.Parent = @GroupBox1
 		End With
@@ -269,7 +269,7 @@
 			.Text = ""
 			.TabIndex = 12
 			.Caption = ""
-			.SetBounds 103, 141, 15, 14
+			.SetBounds 175, 186, 40, 22
 			.Designer = @This
 			.Parent = @GroupBox1
 		End With
@@ -280,7 +280,7 @@
 			.Text = "..."
 			.TabIndex = 13
 			.Caption = "..."
-			.SetBounds 120, 123, 27, 17
+			.SetBounds 222, 152, 68, 26
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdChangBK_Click)
 			.Parent = @GroupBox1
@@ -291,7 +291,7 @@
 			.Text = "..."
 			.TabIndex = 13
 			.Caption = "..."
-			.SetBounds 120, 141, 27, 17
+			.SetBounds 222, 184, 68, 26
 			.Designer = @This
 			.OnClick = Cast(Sub(ByRef Designer As My.Sys.Object, ByRef Sender As Control), @cmdChangBK_Click)
 			.Parent = @GroupBox1
