@@ -819,6 +819,157 @@ step-by-step would build UI only to delete it (memory `project-menu-collapse-to-
   the node's internal string without repainting, so the project dirty marker was invisible in the tree —
   changed to an explicit assignment at all five live sites.
 
+## Full classification pass — all 396 remaining entries (2026-08-06)
+
+Astoria is **frozen** (owner, 2026-08-06), so the backlog is a fixed target and a classification made
+now cannot be invalidated by later Astoria work. This pass therefore covers **every one of the 396
+entries** still in [AstoriaDetailedChangeLog.md](AstoriaDetailedChangeLog.md), grouping them into the
+arcs they actually belong to rather than treating each commit as independent — the same
+"port the final state, not the intermediates" method the rest of this document uses.
+
+### How much to trust this pass
+
+**Read this before acting on a verdict.** The grouping is exhaustive (all 396 assigned, none dropped),
+but the *confidence* is not uniform, and pretending otherwise would repeat the mistake that cost this
+project a day on `93bbfa28`:
+
+- **High confidence — the non-actionable clusters.** These rest on facts already established about
+  Ilwaco (GDB removed, own branding, LF-only, testing deferred). Safe to treat as settled.
+- **Cluster-level only — the PORT clusters.** The *cluster* is actionable; the individual entries have
+  **not** each been checked against Ilwaco's source. Each still needs the normal per-item scoping when
+  the walk reaches it. A cluster verdict of PORT means "this arc is ours to do", not "these 36 commits
+  are each verified applicable".
+- **The backlog file was deliberately NOT pruned by this pass.** Its own rule says "prefer keeping when
+  unsure", and a mechanical grouping is exactly the situation that rule is for — see the carve-outs
+  below, which a bulk delete would have silently lost.
+
+### Carve-outs found while checking the grouping
+
+Sampling the largest "non-actionable" cluster immediately produced four entries that a mechanical sweep
+would have mis-filed. This is the evidence for the caution above, and these four are now correctly
+classified:
+
+| Entry | Looks like | Actually |
+| --- | --- | --- |
+| `d8a2e8fb` DR-12 toolbar Toggle Breakpoint | GDB → N/A | **DONE** — ported in Ilwaco `d978e66` |
+| `5fa5cf25` Remove Integrated (stabs) debugger | GDB → N/A | **INVERT** — Ilwaco kept Integrated and removed GDB, the exact opposite |
+| `b7af6117` DR-4 full repaint on breakpoint toggle | GDB → N/A | **PORT** — `EditControl` paint; Ilwaco has breakpoints (10 sites in `EditControl.bas`) |
+| `56afc8ab` DR-4 gutter click scrolls the viewport | GDB → N/A | **PORT** — editor gutter behaviour, nothing to do with the debug engine |
+
+**The lesson generalises:** a debugger-era commit is only N/A when it touches the *engine*. Anything it
+fixed in the editor, the tree, the framework or the build path is still ours.
+
+### Summary
+
+| Cluster | Verdict | Entries |
+| --- | --- | --- |
+| GDB debugger engine | **N/A** (Ilwaco removed GDB; Integrated only) — less the 4 carve-outs | 26 |
+| 13.28 Alt+C/G/R menu-mnemonic saga | **N/A** — Win32 accelerator/kernel-debug investigation | 14 |
+| 13.68 close-crash investigation | **REVIEW** — Win32 symptom, but `154fb8aa`'s cause (a shared context menu holding a dangling `ParentWindow`) is framework-level | 13 |
+| **13.60–13.79 threading / IntelliSense** | **PORT — highest value** | 36 |
+| Agent MCP + AI templates | **DONE** (MCP server) / **INVERT-KEEP** (templates) | 38 |
+| Git integration | **INVERT-KEEP** — port the add chain, skip `9d277f28` | 15 |
+| Windows packaging / installer / release | **REIMPLEMENT** — AppImage, tracked separately | 7 |
+| Astoria branding, version, icon, splash, About | **N/A** — Ilwaco has its own identity | 22 |
+| CRLF / tabs normalisation | **INVERT** — Ilwaco is LF-only | 6 |
+| Rebuild-binary commits | **N/A** — no source change | 3 |
+| Docs / changelog / DocCheck tooling | **N/A** — Ilwaco has its own (`Tools/DocCheck.py`); PowerShell machinery dropped | 24 |
+| Examples / control testing / TestPlan | **DEFER** — owner deferred to just before the testing phase | 20 |
+| Designer / form editor | **PORT** | 17 |
+| Menus / toolbars / UI taxonomy | **MOSTLY DONE** — the taxonomy collapse landed in `3ef11eb` | 24 |
+| MsgBox → Output panel (13.85–13.93) | **PORT** | 8 |
+| Options dialog / settings / INI | **PORT** | 16 |
+| Project create / open / save / `.vfp` | **PORT** | 16 |
+| MFF framework fixes | **PORT** | 12 |
+| Win32-only implementation | **REIMPLEMENT** | 3 |
+| Compile / build path | **PORT** | 10 |
+| Residual — classified individually below | mixed | 66 |
+
+### The actionable queue, in priority order
+
+1. **13.60–13.79 — the threading / IntelliSense arc. Do this first.** Ilwaco carries a known
+   intermittent startup/analysis SIGSEGV that PROJECT_STATUS already describes as *"a known
+   Astoria-fixed threading issue"* — this arc is that fix, and it is the single highest-value thing
+   left in the backlog. Astoria's route is recorded in full, including **nine refuted hypotheses**, and
+   the answer was counter-intuitive: not another lock but **removing the concurrency** — `32028141`
+   runs the IntelliSense load **serially**, then `dd8ddf37` drains it in idle slices so project open
+   does not block. Read that pair *first* and do not re-derive the dead ends. The dependencies exist
+   here: `QuitThread` (`TabWindow.bas:6856`) and 41 `LoadFunctions` references.
+2. **The deferred menu features** — S3 toolbar merge, Code/Form contextual greying, designer
+   `@PopupClick` context items (unchanged from the previous NEXT).
+3. **Git integration** and **the three AI templates** — the two build-work divergences.
+4. **MFF framework fixes** and the **MsgBox → Output panel** arc — both platform-neutral.
+5. **Examples / control testing** — deferred by the owner to just before the testing phase.
+
+### The 66 residual entries, classified individually
+
+These did not fall into any arc, so each is judged on its own. Several are **more valuable than their
+cluster-mates**, which is the argument for having done this rather than leaving them as "unmatched".
+
+**DONE already in Ilwaco** — `331b5705` (Delete File B1, this session), `a510b24b` + `e83212fc`
+(`.lng` removal / English-only sweep — Ilwaco is already English-only).
+
+**N/A — Astoria repo, identity, Windows CI or CRLF artefacts:** `6ff623a3`, `b62f18f9` (Codeberg→GitHub),
+`84b5beef`, `05088583`, `33e1ffd0`, `a132e23f`, `2d833f40`, `d58b15e0` (stray CR — we are LF-only),
+`27540aea` (Win32 `WM_PAINT` `GetDC`), `5077c4fc` (32-bit/Windows SQLite DLLs), `8cb4aa58`, `86940547`,
+`a0170dd0`.
+
+**DEFER to the testing phase:** `4d7499b1`, `cc23967a`, `d9c31939`, `0986f182`.
+
+**PORT — worth pulling forward, in rough value order:**
+
+- **`c713f136`** — a deleted workspace file must not block startup with a modal "File not found".
+  Ilwaco *now has* a workspace loader (`b9735e8e`, ported this month), so we have inherited exactly the
+  situation this fixes.
+- **`d6fb59e8`** — Delete Project crashing *and* silently failing to delete from disk. PROJECT_STATUS
+  already records that Ilwaco's Rename/Delete Project "inherit a pre-existing crash in Close Project";
+  this is very likely the same defect, already diagnosed.
+- **`13.66` stale-pointer sites** (`8cda50fd`, `00b65f5e`, `8a90fec7`, `e311e572`) and **`13.65`**
+  (`f30cf3c7`) — use-after-free and deadlock in project teardown, the same family as our known SIGSEGV.
+  Take these with the threading arc, not separately.
+- **`13.69` control-library loading** (`87223b67`, `2d02b35e`, `37976ea8`) — libraries loaded then
+  freed, and a `ByRef` parameter overwriting each library's path with its folder, so no control from an
+  optional library could be placed. Ilwaco has the same toolbox/control-library mechanism, and the
+  `ByRef`-overwrite is a trap CLAUDE.md already warns about.
+- **`13.99` imagekey-as-type** (`b2c9589d`) and **`13.102` "MainProject"** (`0436b846`) — deciding a
+  node's type from its display-icon name. Directly relevant: the Delete File work this session turned on
+  exactly this (`ImageKey = "Opened"` is a folder icon, not a file).
+- **`13.91` licence notices** (`52d1021d`, `3e72506d`) — per-file GPL/LGPL modification notices. Ilwaco
+  is a fork of Free Software with substantial changes and carries no such notice; this is a real
+  obligation, not hygiene.
+- **`13.83`/`13.90` FreeFile** (`a01cb61a`, `79100d16`) — partly satisfied already (Ilwaco has the
+  guarded open helper), so scope before porting.
+- Editor/UX: `820eebb7` (merge into one Toggle Comment), `05ff9476` (missing-exe check on Run),
+  `0d6c6be8` (stop forcing the left panel to Toolbox), `b5cc3ebf` (Step Out onto the top-level Run menu),
+  `62404e04` (Recent Files), `8639e1c1` (portable Recent paths), `164c5ead` (name a new file up front).
+- Robustness: `cda99f83` (unchecked `Open For Output` sites), `d84b2ef7` + `7a0c8294` (Add External Tool
+  silently failing — `Form_Close` clobbering `ModalResult`), `72489b9f` (Add Module crash),
+  `35a53050` + `cd08ffbb` + `36cacd84` (never raise a modal from the app-activation handler),
+  `8356a345` (tag-as-pointer audit), `6ccb0383` (commented-out code sweep — our standing rule),
+  `4ec96461` (analysis scratch file left in the project), `e3bfa7a3` (shortcut-default sweep),
+  `9b19f1e1` (MFF `HTTPConnection`), `d099dc60` (Change Log location, project paths, themes),
+  `5d9cd620` + `8aba6c2d` + `640e94ed` (the "Opus Next Steps" fixes).
+
+**REIMPLEMENT:** `a100adfc` (copy a control library's runtime DLLs beside the exe → `.so` on Linux).
+
+**REVIEW:** `7242e9e0` — Astoria *retracted* a standing `ReDim Preserve` rule after measuring it.
+Ilwaco's CLAUDE.md still carries a `ReDim Preserve` warning; the two claims are not identical (ours is
+about a stale pointer into a relocated array, Astoria's retraction is about double-freeing heap-owning
+elements), so read `7242e9e0` before trusting either. `273df0f5` and `d4d775f7`/`923703ec` are mixed
+commits tied to `project.astoria`, which Ilwaco does not have — scope before porting.
+
+### What this pass did not do
+
+- It did not verify each entry inside a PORT cluster against Ilwaco's source; that stays part of
+  scoping each item when the walk reaches it.
+- It did not prune the backlog file. Pruning is still correct per that file's rule, but it should follow
+  a per-entry pass, not this grouping — the four carve-outs above show why.
+- It did not re-check the clusters' *internal* membership beyond the sample that produced the four
+  carve-outs. Others of the same kind are likely; expect them and check before treating an entry as
+  settled.
+
+---
+
 ## Deliberate divergences from Astoria — INVERT (owner, 2026-08-06)
 
 **These override the "port Astoria's final state" rule.** Ilwaco's audience is *somewhat more advanced*

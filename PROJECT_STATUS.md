@@ -110,7 +110,26 @@ name distinct and mapped in one place.
 
 ---
 
-## NEXT — the deferred menu features + rest of the 13.3.A walk
+## NEXT — the threading arc (13.60–13.79) first, then the deferred menu features
+
+**A full classification pass over the whole remaining backlog was done on 2026-08-06** — all **396**
+entries in [AstoriaDetailedChangeLog.md](Documentation/AstoriaDetailedChangeLog.md) are now grouped and
+judged in [AstoriaParity.md](Documentation/AstoriaParity.md) "Full classification pass". Read its
+**"How much to trust this pass"** section before acting: the non-actionable clusters are settled, but a
+PORT verdict is *cluster-level* and each entry still needs normal scoping. The backlog file was
+deliberately **not** pruned — sampling one cluster produced four mis-filed entries (a DONE, an INVERT and
+two real PORTs hiding inside the "GDB → N/A" group), which a bulk delete would have destroyed.
+
+**START HERE — `13.60`–`13.79`, the threading / IntelliSense arc (36 entries).** This is the known
+intermittent startup/analysis **SIGSEGV** that this file has been describing as "a known Astoria-fixed
+threading issue" — the fix is in the backlog and has been all along. Astoria's route is recorded with
+**nine refuted hypotheses**, and the answer was counter-intuitive: not another lock, but *removing the
+concurrency*. Read **`32028141`** (run the IntelliSense load **serially**) and **`dd8ddf37`** (drain it
+in idle slices so project open does not block) **first**, and do not re-derive the dead ends. Take the
+`13.65`/`13.66` teardown use-after-free entries with it — same family. Dependencies are present:
+`QuitThread` (`src/TabWindow.bas:6856`) and 41 `LoadFunctions` references.
+
+### Then — the deferred menu features + rest of the 13.3.A walk
 
 **This session (2026-08-06, pushed through `d978e66`):** classified `e5e10808` (+ ported its `GetFileName`
 no-extension truncation fix, `68c4d91`); **collapsed the whole menu-taxonomy cluster to Astoria's final
