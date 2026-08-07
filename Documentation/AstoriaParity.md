@@ -735,6 +735,20 @@ step-by-step would build UI only to delete it (memory `project-menu-collapse-to-
   so `mClick` needed no rewiring. Verified by opening the Code and Run menus on `:0`; all submenus
   populate; clean startup, no error dialog. Collapses `0eaa8806`/`93bbfa28`/`11c033d4`/`4a112089`/
   `faaf0860`/`6f933f43`/`e1595a31` (menu-bar parts).
+- **`0eaa8806`'s TabWindow.bas non-menu parts — DONE.** (1) **Window-menu index fix** (regression the
+  reorg introduced): `bEnabledTab = miWindow->Count > 3 → > 1` and the tab-check loop `For i = 3 → 1`,
+  since Split H/V left the Window menu so only the separator is static now — else Code/Go-to-Definition/
+  Split were greyed until 3 tabs were open. Verified on `:0`. (2) **Go-to-Definition (F2) reliability
+  pass**: a `DefineOverlapsCaretWord` helper so the same-line skip only skips the definition that
+  actually overlaps the caret word (not every match on the caret's line); stale-symbol refresh
+  (`If TextChanged Then FormDesign(True)`); a string/comment guard; word-bounds via `GetWordAt`'s
+  out-params; `#define`/`#macro` lookup (new `Content.Defines` + `pGlobalDefines` loops); a `te`→`te1`
+  bug fix; and status-bar feedback (`No word at cursor` / `No definition found for '…'`) plus the match
+  count in the picker title. Ilwaco's `Define` was Astoria's exact pre-image and every dependency was
+  present, so it ported cleanly. Verified on `:0`: F2 on a call opened the picker titled
+  "Definitions for 'Start' (3)". Remaining `0eaa8806` bits to assess later: S4 (`*nix/*bsd Icon
+  Resource File` field — INVERT caution on Linux) and the folded fixes (7-band Maximize SIGSEGV,
+  `tbtToggleBreakpoint` double-assign, `frmTools` save handler).
 - **Deferred to their own passes** (final menu also contains these, but they are separate features to
   port when the walk reaches them): the **Code/Form contextual greying** (`UpdateCodeFormMenuEnabled`,
   D1 Designer greying `a114ee5b`), the designer `@PopupClick` context items in the Form menu
