@@ -11,6 +11,33 @@ for the classified port backlog, [Documentation/AstoriaParity.md](Documentation/
 
 ---
 
+## ✅ DONE (2026-08-07) — the shutdown SIGSEGV is diagnosed and fixed
+
+The "intermittent SIGSEGV" that hampered `:0` verification for weeks is **resolved**. It was never
+intermittent, never a startup/large-files bug, and not the threading arc — all three were inherited
+assumptions. **Measured:** 23/23 launches — startup 100% clean, window-close 100% SIGSEGV. The real
+variable was **`UseDebugger` on/off**, the default being off. Two distinct close-path crashes, both fixed
+and **verified 20/20 clean close (exit 0), IDE renders correctly**:
+
+1. **`frmMain_Close` dereferenced a null `Parent`.** With the debugger off, `SetDebugTabsVisible(False)`
+   detaches the 7 debug panes (`DetachTab` → `Parent = 0`); the close handler read `tpLocals->Parent->Name`
+   for all 18 panes unguarded. Fixed with a guarded `SaveTabPagePlacement` helper in `src/Main.bas`
+   (skips a detached pane), collapsing 36 duplicated lines to 18 calls.
+2. **Global-destructor use-after-free over freed GTK widgets (framework).** FreeBASIC runs every
+   module-level destructor at `_GLOBAL__D` *after* `main()`, but GTK freed the widget tree on window
+   close; each `GTK_IS_WIDGET(widget)` guard then dereferenced freed memory (crash site
+   build-nondeterministic: `~Control`/`~ToolButton`/`~MenuItem`/…). **Win32 is safe here for free via
+   `IsWindow()`; GTK has no equivalent.** Fixed the Astoria way — the framework fast-exits on **main-form**
+   close: `mff/Form.bas`'s two main-form paths call a `CloseOnMainForm` doing libc `_exit(0)`, skipping the
+   destructor walk (the GTK port of Astoria's `End 0`-on-close; Astoria itself fast-exits via
+   `ExitProcess(0)`, §13.29). The fix lives in **MFF**, so **every MFF app** — not just the IDE — gets a
+   clean shutdown; a per-object null-on-`"destroy"` alternative was tried and rejected as large *and*
+   unreliable (the signal doesn't fire uniformly). No data loss: `IniFile` writes through on every write,
+   and all app state is saved in `frmMain_Close` before the exit. Non-main forms still hide. Detail in
+   [UpstreamFixes.md](Documentation/UpstreamFixes.md); memory `project-known-segfault-threading` rewritten.
+
+---
+
 ## ✅ DONE (2026-08-06) — Delete File shipped with deferred deletion; three GTK defects fixed
 
 `93bbfa28` S5 **plus** `331b5705` (B1), scoped against Astoria's *final* state rather than the handoff's
