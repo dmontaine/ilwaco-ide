@@ -13,6 +13,15 @@ INVERT-or-SKIP (Astoria's Win64-only stripping) / N/A / DONE. The resumable back
 [Documentation/AstoriaParity.md](Documentation/AstoriaParity.md). Hobby project, no deadline —
 prefer durable scaffolding and build-verified changes over speed.
 
+**Always scope each entry against the WHOLE Astoria log, not just the entry in front of you.** Before
+porting a change, search the entire changelog for later commits that **supersede or extend** it, and
+port Astoria's *final* state — never an intermediate that a later commit reworks. This has bitten
+repeatedly: `e5e10808`'s Edit-menu toggles were removed 47 commits later by `4a112089`, and the whole
+menu-taxonomy arc (`0eaa8806` → …) is ~15 commits that rework each other, so both were collapsed to the
+final shape in one pass instead of built-then-torn-down. Practical check: `git -C ../astoria-ide log
+--oneline --all -S<identifier>` / `--grep=<feature>` across the full log, and read the current *and* the
+final source before classifying.
+
 ## Two rules that govern every change
 
 - **No dead code, no commented-out code** (same as Astoria). Ilwaco is the **GTK build**, so
