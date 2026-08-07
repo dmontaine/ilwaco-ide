@@ -500,16 +500,26 @@ pfOptions = @fOptions
 			.SetBounds 0, 98, 190, 21
 			.Parent = @vbxGeneral
 		End With
-		' chkAllowAgentControl
-		With chkAllowAgentControl
-			.Name = "chkAllowAgentControl"
-			.Text = ML("Allow AI agent control (MCP)")
+		' lblAgentPermission
+		With lblAgentPermission
+			.Name = "lblAgentPermission"
+			.Text = ML("AI agent control (MCP)") & ":"
 			.TabIndex = 104
+			.ExtraMargins.Top = 5
+			.Align = DockStyle.alTop
+			.Constraints.Height = 16
+			.SetBounds 0, 119, 380, 16
+			.Parent = @vbxGeneral
+		End With
+		' cboAgentPermission
+		With cboAgentPermission
+			.Name = "cboAgentPermission"
+			.Text = ""
+			.TabIndex = 105
 			.ExtraMargins.Top = 0
 			.Align = DockStyle.alTop
 			.Constraints.Height = 21
-			.AutoSize = True
-			.SetBounds 0, 119, 380, 21
+			.SetBounds 0, 137, 380, 21
 			.Parent = @vbxGeneral
 		End With
 		' grbIncludePaths
@@ -2811,7 +2821,11 @@ Sub frmOptions.LoadSettings()
 		.chkAutoCreateRC.Checked = AutoCreateRC
 		.chkAutoCreateBakFiles.Checked = AutoCreateBakFiles
 		.chkAddRelativePathsToRecent.Checked = AddRelativePathsToRecent
-		.chkAllowAgentControl.Checked = AllowAgentControl
+		.cboAgentPermission.Clear
+		For agpI As Integer = agpOff To agpTrusted
+			.cboAgentPermission.AddItem AgentPermissionName(agpI)
+		Next agpI
+		.cboAgentPermission.ItemIndex = Max(0, .cboAgentPermission.IndexOf(AgentPermissionName(AgentPermission)))
 		.chkCreateNonStaticEventHandlers.Checked = CreateNonStaticEventHandlers
 		.chkPlaceStaticEventHandlersAfterTheConstructor.Checked = PlaceStaticEventHandlersAfterTheConstructor
 		.chkCreateStaticEventHandlersWithAnUnderscoreAtTheBeginning.Checked = CreateStaticEventHandlersWithAnUnderscoreAtTheBeginning
@@ -3339,7 +3353,7 @@ Private Sub frmOptions.cmdApply_Click(ByRef Designer As My.Sys.Object, ByRef Sen
 		AutoCreateRC = .chkAutoCreateRC.Checked
 		AutoCreateBakFiles = .chkAutoCreateBakFiles.Checked
 		AddRelativePathsToRecent = .chkAddRelativePathsToRecent.Checked
-		AllowAgentControl = .chkAllowAgentControl.Checked
+		AgentPermission = AgentPermissionFromName(.cboAgentPermission.Text)
 		CreateNonStaticEventHandlers = .chkCreateNonStaticEventHandlers.Checked
 		PlaceStaticEventHandlersAfterTheConstructor = .chkPlaceStaticEventHandlersAfterTheConstructor.Checked
 		CreateEventHandlersWithoutStaticEventHandlerIfEventAllowsIt = .chkCreateEventHandlersWithoutStaticEventHandlerIfEventAllowsIt.Checked
@@ -3502,7 +3516,7 @@ Private Sub frmOptions.cmdApply_Click(ByRef Designer As My.Sys.Object, ByRef Sen
 		piniSettings->WriteBool "Options", "AutoCreateRC", AutoCreateRC
 		piniSettings->WriteBool "Options", "AutoCreateBakFiles", AutoCreateBakFiles
 		piniSettings->WriteBool "Options", "AddRelativePathsToRecent", AddRelativePathsToRecent
-		piniSettings->WriteBool "Options", "AllowAgentControl", AllowAgentControl
+		piniSettings->WriteString "Options", "AgentPermission", AgentPermissionName(AgentPermission)
 		piniSettings->WriteInteger "Options", "AutoSaveBeforeCompiling", AutoSaveBeforeCompiling
 		piniSettings->WriteBool "Options", "ShowSpaces", ShowSpaces
 		piniSettings->WriteBool "Options", "ShowKeywordsTooltip", ShowKeywordsToolTip

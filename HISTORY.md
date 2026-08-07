@@ -11,6 +11,70 @@ for the classified port backlog, [Documentation/AstoriaParity.md](Documentation/
 
 ---
 
+## ✅ DONE (2026-08-07) — Ilwaco installs: release staging, installer, toolchain, AppDir
+
+**There is a single-file AppImage, and it works.** Following Astoria's two-step pattern:
+`Packaging/StageRelease.sh` exports a clean end-user tree (from `git archive HEAD`, never the working
+tree — Astoria's expensive lesson) to `../ilwaco-ide-release`; `Packaging/BuildInstaller.sh` stages
+then packages it into `../ilwaco-ide-installer/Ilwaco-IDE-1.3.8-x86_64.AppImage`, 49 MB. Verified:
+**run → seeds `~/ilwaco-ide` + a valid menu entry → IDE opens → GUI example compiles and runs →
+second launch relinks the payload to the new mount and starts clean.**
+
+`BuildInstaller.sh --run` builds a 52 MB self-extracting fallback for machines without
+`appimagetool`/FUSE; it was verified the same way, plus **reinstall over the top leaving a user's
+project file and hand-edited INI untouched**. A `.run` rather than a self-extracting zip because
+`unzip` is not guaranteed on a minimal Linux install while `tar`/`gzip` effectively are.
+
+**Build-machine requirement:** `appimagetool` is not vendored (as Astoria does not vendor Inno Setup) —
+installed at `~/.local/bin/appimagetool` from the official AppImage project release, needs FUSE.
+Both routes install to **`~/ilwaco-ide`** and write **`~/.local/share/applications/ilwaco.desktop`**
+(owner, 2026-08-07).
+
+The staged tree is laid out **exactly as an installed Ilwaco**, so both packaging routes fall out of
+one staging step and ship identical content. `ilwaco.sh` is the shared launcher; `AppRun` only
+materialises a writable copy and hands over to it.
+
+**The AppDir runs.** `Packaging/build-appdir.sh` assembles a 136 MB AppDir; `Packaging/AppRun` seeds a
+writable app home, patches the settings the shipped INI cannot carry, regenerates the GTK link targets,
+and launches the IDE. Verified end to end: window opens, and a real MFF GUI example compiled under
+AppRun's environment with the seeded arguments then **ran and opened its own window**.
+
+The design turns on one measurement: **`ExePath()` resolves symlinks**, so the IDE — which writes to
+`Settings/`, `Temp/` and `.bak` files next to its own binary — cannot run from the read-only image, and
+cannot be symlinked out of it either. `AppRun` therefore keeps **real copies** of the binaries in
+`~/Ilwaco` (refreshed when the image ships a different build) and relinks the bulk read-only payload
+into the image on every start, because the mount point moves each run. Two traps worth remembering are
+in [Packaging.md](Documentation/Packaging.md): the shipped `[Compilers]` block still points at the
+original author's machine, and **`ilwaco.ini`'s UTF-8 BOM** makes a naive `[Parameters]` section match
+fail silently (it did, first run — the patcher now verifies each key landed).
+
+### The bundled link toolchain
+
+The hardest part of packaging is settled: **Ilwaco can now compile FreeBASIC with nothing from the host
+but the kernel and the GTK/libc runtime a normal desktop already has.** Three scripts in
+[`Packaging/`](Packaging), designed and verified this session; the full write-up, including the two
+decisions below, is [Documentation/Packaging.md](Documentation/Packaging.md).
+
+- **`make-toolchain.sh`** assembles ~12 MB: wrapped `as`/`ld` (with their private `libbfd` etc. kept off
+  the app's library path), a **stub `gcc`**, and a minimal C link sysroot. Run it on the release machine.
+- **`gen-gtk-links.sh`** generates the unversioned GTK `.so` link targets against the *host's runtime*
+  at startup. **GTK is deliberately not bundled** — the `ilwaco` binary already links host
+  `libgtk-3.so.0`, so a host GTK3 runtime is a hard requirement regardless; bundling would add ~19 MB
+  plus the pixbuf-loader/gio-module/theme tax and buy nothing.
+- **`verify-toolchain.sh`** compiles under `env -i` with only the bundled `bin` on `PATH`, runs the
+  result, and scans the link line for host reach-back. Green, and **confirmed falsifiable**: pointing the
+  gcc stub at `/usr/bin/gcc` and deleting the bundled `crt1.o` each turn it red.
+
+**The finding that changes the plan:** fbc's *default* backend shells out to a real **`gcc`**, not just
+`as`/`ld` as previously recorded — and with no gcc present it fails **silently**, dropping every crt
+object from the `ld` line and dying later on `cannot find -lgcc`. The escape is **`-gen gas64`**, which
+needs no C compiler; **owner confirmed 2026-08-07, and the IDE already emits it** on every compile path
+(`GetFirstCompileLine` in `src/TabWindow.bas`, plus a redundant second append in `Compile` in
+`src/Main.bas`). Both are gated on there being a project, which is correct — **Ilwaco has no loose
+single-file compiles, everything is a project.** So no code change was needed.
+
+---
+
 ## ✅ DONE (2026-08-07) — the shutdown SIGSEGV is diagnosed and fixed
 
 The "intermittent SIGSEGV" that hampered `:0` verification for weeks is **resolved**. It was never

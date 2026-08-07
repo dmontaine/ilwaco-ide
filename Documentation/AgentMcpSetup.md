@@ -100,6 +100,33 @@ The agent will use the tools below to do the work directly in the IDE.
 
 Form-designer tools (`designer_*`) are deliberately not offered yet — see McpServer.md.
 
+## How much an agent may do
+
+One setting, five values, each a superset of the one before. **Build & Run is the default** — it is
+exactly what Ilwaco allowed before this setting existed, because an agent that can edit but not
+build cannot check its own work.
+
+| Level | An agent may |
+| --- | --- |
+| **Off** | nothing — the socket is not even opened |
+| **Read-only** | inspect the project that is *already* open: status, file list, file and buffer contents, build output, errors |
+| **Edit** | + create and modify files, edit the active buffer, open files in tabs, and open or create projects |
+| **Build & Run** *(default)* | + compile, syntax-check and run the program |
+| **Trusted** | + everything later gated as privileged — the form designer, and reaching outside the project folder. For a local model or local server you already trust |
+
+A command above the current level is refused with **`permission_denied`**, naming the level it needs
+and the level you are on. The tool list an agent sees does not change, so a level change mid-session
+takes effect immediately without the client having to re-read anything.
+
+Two consequences worth knowing:
+
+- **Read-only cannot open a project.** Opening one changes what the IDE is looking at, and the path
+  is not confined to any folder — so it sits at Edit. A read-only agent therefore inspects whatever
+  *you* have open, which is what read-only ought to mean.
+- **Nothing is gated at Trusted yet.** The designer tools and outside-the-project access it is meant
+  to unlock are not built, so today Trusted equals Build & Run plus the promise. Anything unrecognised
+  requires it, which is deliberate: a tool added later without being classified fails closed.
+
 ## Not losing your work
 
 Two protections exist because an agent and a human can edit the same file at the same time, and the
@@ -127,8 +154,8 @@ is computed over what you were actually given, so a read-modify-write round trip
 ## Security notes
 
 - **On by default, but user-controllable.** Because Ilwaco is meant to be driven by an agent, the
-  socket listens out of the box. Un-tick **"Allow AI agent control (MCP)"** (or close Ilwaco) to stop
-  the listener; the status bar shows the current state.
+  socket listens out of the box. **Tools ▸ Options ▸ General ▸ "AI agent control (MCP)"** sets how much
+  an agent may do; the status bar shows the current level, and changes take effect without a restart.
 - **Local only.** The transport is a Unix-domain socket owned by your user, not a network port.
 - **Project-scoped.** File tools resolve paths inside the open project's folder and reject anything
   that escapes it (`bad_path`). The check is lexical, so a symlink *inside* a project could still

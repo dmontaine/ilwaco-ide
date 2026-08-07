@@ -62,70 +62,6 @@ name distinct and mapped in one place.
 
 ---
 
-## ✅ DONE (2026-08-07) — Ilwaco installs: release staging, installer, toolchain, AppDir
-
-**There is a single-file AppImage, and it works.** Following Astoria's two-step pattern:
-`Packaging/StageRelease.sh` exports a clean end-user tree (from `git archive HEAD`, never the working
-tree — Astoria's expensive lesson) to `../ilwaco-ide-release`; `Packaging/BuildInstaller.sh` stages
-then packages it into `../ilwaco-ide-installer/Ilwaco-IDE-1.3.8-x86_64.AppImage`, 49 MB. Verified:
-**run → seeds `~/ilwaco-ide` + a valid menu entry → IDE opens → GUI example compiles and runs →
-second launch relinks the payload to the new mount and starts clean.**
-
-`BuildInstaller.sh --run` builds a 52 MB self-extracting fallback for machines without
-`appimagetool`/FUSE; it was verified the same way, plus **reinstall over the top leaving a user's
-project file and hand-edited INI untouched**. A `.run` rather than a self-extracting zip because
-`unzip` is not guaranteed on a minimal Linux install while `tar`/`gzip` effectively are.
-
-**Build-machine requirement:** `appimagetool` is not vendored (as Astoria does not vendor Inno Setup) —
-installed at `~/.local/bin/appimagetool` from the official AppImage project release, needs FUSE.
-Both routes install to **`~/ilwaco-ide`** and write **`~/.local/share/applications/ilwaco.desktop`**
-(owner, 2026-08-07).
-
-The staged tree is laid out **exactly as an installed Ilwaco**, so both packaging routes fall out of
-one staging step and ship identical content. `ilwaco.sh` is the shared launcher; `AppRun` only
-materialises a writable copy and hands over to it.
-
-**The AppDir runs.** `Packaging/build-appdir.sh` assembles a 136 MB AppDir; `Packaging/AppRun` seeds a
-writable app home, patches the settings the shipped INI cannot carry, regenerates the GTK link targets,
-and launches the IDE. Verified end to end: window opens, and a real MFF GUI example compiled under
-AppRun's environment with the seeded arguments then **ran and opened its own window**.
-
-The design turns on one measurement: **`ExePath()` resolves symlinks**, so the IDE — which writes to
-`Settings/`, `Temp/` and `.bak` files next to its own binary — cannot run from the read-only image, and
-cannot be symlinked out of it either. `AppRun` therefore keeps **real copies** of the binaries in
-`~/Ilwaco` (refreshed when the image ships a different build) and relinks the bulk read-only payload
-into the image on every start, because the mount point moves each run. Two traps worth remembering are
-in [Packaging.md](Documentation/Packaging.md): the shipped `[Compilers]` block still points at the
-original author's machine, and **`ilwaco.ini`'s UTF-8 BOM** makes a naive `[Parameters]` section match
-fail silently (it did, first run — the patcher now verifies each key landed).
-
-### The bundled link toolchain
-
-The hardest part of packaging is settled: **Ilwaco can now compile FreeBASIC with nothing from the host
-but the kernel and the GTK/libc runtime a normal desktop already has.** Three scripts in
-[`Packaging/`](Packaging), designed and verified this session; the full write-up, including the two
-decisions below, is [Documentation/Packaging.md](Documentation/Packaging.md).
-
-- **`make-toolchain.sh`** assembles ~12 MB: wrapped `as`/`ld` (with their private `libbfd` etc. kept off
-  the app's library path), a **stub `gcc`**, and a minimal C link sysroot. Run it on the release machine.
-- **`gen-gtk-links.sh`** generates the unversioned GTK `.so` link targets against the *host's runtime*
-  at startup. **GTK is deliberately not bundled** — the `ilwaco` binary already links host
-  `libgtk-3.so.0`, so a host GTK3 runtime is a hard requirement regardless; bundling would add ~19 MB
-  plus the pixbuf-loader/gio-module/theme tax and buy nothing.
-- **`verify-toolchain.sh`** compiles under `env -i` with only the bundled `bin` on `PATH`, runs the
-  result, and scans the link line for host reach-back. Green, and **confirmed falsifiable**: pointing the
-  gcc stub at `/usr/bin/gcc` and deleting the bundled `crt1.o` each turn it red.
-
-**The finding that changes the plan:** fbc's *default* backend shells out to a real **`gcc`**, not just
-`as`/`ld` as previously recorded — and with no gcc present it fails **silently**, dropping every crt
-object from the `ld` line and dying later on `cannot find -lgcc`. The escape is **`-gen gas64`**, which
-needs no C compiler; **owner confirmed 2026-08-07, and the IDE already emits it** on every compile path
-(`GetFirstCompileLine` in `src/TabWindow.bas`, plus a redundant second append in `Compile` in
-`src/Main.bas`). Both are gated on there being a project, which is correct — **Ilwaco has no loose
-single-file compiles, everything is a project.** So no code change was needed.
-
----
-
 ## ✅ DONE (2026-08-07) — 53 Astoria examples ported and verified on Linux
 
 Owner-requested, superseding the "defer Examples to the testing phase" note. Ported: the whole
@@ -150,10 +86,58 @@ the DirectShow, COM, SAPI and WLan sets, plus `Sudoku` and `MultipleDisplay`.
 
 ---
 
-## NEXT — packaging, then the two committed divergences, then the parity tail
+## ✅ DONE (2026-08-07) — MCP write safety, then agent permission levels
 
-The release blocker is gone, so the order is now feature/packaging work (owner: **no release until the
-whole parity list is complete**, so nothing here is release-gated — sequence by value):
+**Write safety first, because no permission tier makes an unversioned clobber safe.** Two live
+data-loss paths, found by reading the write path during the permissions discussion rather than from a
+failure report: `write_file` wrote to disk with no check for an open dirty tab (the very thing
+CLAUDE.md tells humans never to do), and `set_active_file_content` replaced the whole buffer with no
+version check. Now `dirty_buffer` and an opt-in `expected_version`/`version_mismatch`; `read_file` and
+`get_active_file` hand out the token. Detail in [McpServer.md](Documentation/McpServer.md).
+
+**Then five permission levels** — Off / Read-only / Edit / **Build & Run** / Trusted — replacing the
+`AllowAgentControl` boolean (owner-directed, 2026-08-07). **The default stays Build & Run**: Ilwaco is
+agent-first, and a default that let an agent edit but not build would break the edit-build-fix loop.
+So it is two opt-in restrictions below the old capability and one opt-in expansion above it. One combo
+in Tools ▸ Options ▸ General (the old checkbox became its `Off` value — an option removed, not added),
+the level shown in the status bar, `AllowAgentControl=true/false` migrating to `Build & Run`/`Off`, and
+**one gate at the dispatcher** so no handler can forget; unclassified commands fail **closed**.
+
+Verified by effect at four levels over the socket, plus the Options combo and status bar by screenshot.
+**Trusted gates nothing yet** — the designer tools and outside-the-project access it is meant to unlock
+are still to build, which is the point of landing the mechanism once.
+
+**Next on this thread, in order:** the activity log (agent actions into a pane — arguably the highest
+value of the three, since it is what makes the Edit level trustworthy), then the Trusted-level path
+relaxation, then the designer tools. Per-client pairing was considered and **rejected**: on a
+same-user Unix socket any process running as the user can already read the source or the pairing
+token, so it buys accountability the activity log gives more cheaply, at the cost of the "it just
+works" default.
+
+---
+
+## NEXT — the agent thread, the broken examples, then the two divergences and the parity tail
+
+Packaging is essentially done (Ilwaco ships as an AppImage). Owner standing rule: **no release until
+the whole parity list is complete**, so nothing here is release-gated — sequence by value.
+
+0. **Two threads opened this session, both owner-directed and both mid-flight:**
+
+   a. **The agent permission thread** — level plumbing landed; next is the **activity log** (agent
+      actions into a pane), then the **Trusted-level path relaxation** (let a Trusted agent reach
+      outside the project folder), then the **designer tools** that Trusted is meant to unlock.
+      Until those land Trusted equals Build & Run plus a fail-closed catch-all. Rationale and the
+      rejected alternatives (per-client pairing) are in
+      [McpServer.md](Documentation/McpServer.md); the owner asked for checkpoints between each.
+
+   b. **`Examples/` is half broken and it ships.** All 22 pre-existing examples fail to build on
+      Linux — they are Windows programs — while the 53 ported from Astoria all build and run.
+      Audit-only by owner direction, catalogued by root cause in
+      [ExamplesAudit.md](Documentation/ExamplesAudit.md). Cheapest first: the five whose manifest
+      names no main file may be trivially recoverable, and `StageRelease.sh` already curates the
+      release tree, so *not shipping* what cannot build is an exclusion list rather than a deletion.
+      **A beginner who opens one and presses Build gets a wall of compiler errors**, which is the
+      failure the product standard exists to prevent.
 
 1. **Packaging** — **Ilwaco now ships as a single-file AppImage.** `Packaging/StageRelease.sh` →
    `../ilwaco-ide-release`, `Packaging/BuildInstaller.sh` →

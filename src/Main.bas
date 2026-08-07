@@ -3008,17 +3008,18 @@ End Sub
 Sub UpdateMcpAgentStatusBar()
 	If stBar.Count > 3 Then
 		If AgentPipeActive() Then
-			stBar.Panels[3]->Caption = "MCP Agent: On"
+			stBar.Panels[3]->Caption = "MCP Agent: " & AgentPermissionName(AgentPermission)
 		Else
 			stBar.Panels[3]->Caption = "MCP Agent: Off"
 		End If
 	End If
 End Sub
 
-'' Bring the agent socket into line with the AllowAgentControl setting. Called from
-'' Tools > Options (Apply/OK) so toggling the checkbox takes effect without a restart.
+'' Bring the agent socket into line with the AgentPermission setting. Called from
+'' Tools > Options (Apply/OK) so a change takes effect without a restart. Only Off/non-Off
+'' decides whether the socket exists; the level itself is enforced per command in AgentDispatch.
 Sub ReconcileAgentPipe()
-	If AllowAgentControl Then
+	If AgentPermission > agpOff Then
 		If Not AgentPipeActive() Then StartAgentPipe()
 	Else
 		If AgentPipeActive() Then StopAgentPipe()
@@ -5579,7 +5580,17 @@ Sub LoadSettings
 	AddRelativePathsToRecent = iniSettings.ReadBool("Options", "AddRelativePathsToRecent", True)
 	'' Agent MCP socket. Default ON -- Ilwaco is meant to be driven agent-first, so the listener
 	'' comes up unless the user unticks Tools > Options > "Allow AI agent control (MCP)".
-	AllowAgentControl = iniSettings.ReadBool("Options", "AllowAgentControl", True)
+	'' AgentPermission replaced the AllowAgentControl boolean (2026-08-07). Migrate on first
+	'' read: the old checkbox granted everything we offered, which is exactly Build & Run.
+	Dim As UString agpName = iniSettings.ReadString("Options", "AgentPermission", "")
+	If agpName = "" Then
+		If iniSettings.ReadBool("Options", "AllowAgentControl", True) Then
+			agpName = "Build & Run"
+		Else
+			agpName = "Off"
+		End If
+	End If
+	AgentPermission = AgentPermissionFromName(agpName)
 	DefaultFileFormat = FileEncodings.Utf8
 	DefaultNewLineFormat = NewLineTypes.LinuxLF
 	AutoComplete = iniSettings.ReadBool("Options", "AutoComplete", True)
@@ -9362,8 +9373,8 @@ Sub frmMain_Show(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	Dim As Boolean bAgentLaunched = (InStr(LCase(File), "--mcp-agent") > 0)
 	If bAgentLaunched Then File = ""
 	'' The listener is opt-out (default ON), so an --mcp-agent launch alone does not grant
-	'' access -- AllowAgentControl still governs. Tools > Options toggles it without a restart.
-	If AllowAgentControl Then StartAgentPipe()
+	'' access -- AgentPermission still governs. Tools > Options changes it without a restart.
+	If AgentPermission > agpOff Then StartAgentPipe()
 	UpdateMcpAgentStatusBar()
 	Var Pos1 = InStr(File, "2>CON")
 	Var bFileOpening = False

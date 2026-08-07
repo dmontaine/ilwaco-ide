@@ -672,12 +672,65 @@ End Sub
 
 '' ---------------------------------------------------------------- command dispatch (UI thread)
 
+'' The permission level a command needs. Every command the dispatcher below handles must
+'' appear here; anything unlisted falls to agpTrusted, so a tool added without a line here
+'' fails CLOSED rather than being silently ungated. (Side effect: at levels under Trusted a
+'' misspelled command reports permission_denied instead of unknown_command. Failing safe is
+'' worth more than that message being exact.)
+Private Function AgentCmdMinLevel(ByRef cmd As String) As Integer
+	Select Case cmd
+	Case "ping", "get_status", "list_files", "read_file", "get_active_file", _
+	     "get_build_output", "get_errors"
+		Return agpReadOnly
+	Case "write_file", "add_file", "set_active_file_content", "open_in_editor", _
+	     "open_project", "create_project"
+		Return agpEdit
+	Case "build", "syntax_check", "run"
+		Return agpBuildRun
+	Case Else
+		Return agpTrusted
+	End Select
+End Function
+
+'' Names as they appear in Settings/ilwaco.ini, the Options combo and the status bar.
+Function AgentPermissionName(ByVal level As Integer) As UString
+	Select Case level
+	Case agpReadOnly : Return "Read-only"
+	Case agpEdit     : Return "Edit"
+	Case agpBuildRun : Return "Build & Run"
+	Case agpTrusted  : Return "Trusted"
+	Case Else        : Return "Off"
+	End Select
+End Function
+
+Function AgentPermissionFromName(ByRef nm As UString) As Integer
+	Select Case LCase(Trim(nm))
+	Case "read-only", "readonly" : Return agpReadOnly
+	Case "edit"                  : Return agpEdit
+	Case "build & run", "buildrun", "build and run" : Return agpBuildRun
+	Case "trusted"               : Return agpTrusted
+	Case Else                    : Return agpOff
+	End Select
+End Function
+
 '' Runs the mapped command on the GTK UI thread. Read-only surface so far; later
 '' tasks add the mutation, build/run and project handlers here.
 Private Sub AgentDispatch(ByRef cmd As String, ByVal args As JsonValue Ptr, _
 		ByRef ok As Boolean, ByRef res As JsonValue Ptr, ByRef ecode As String, ByRef emsg As String, _
 		ByRef async As Boolean)
 	ok = False : res = 0 : ecode = "" : emsg = "" : async = False
+
+	'' One gate for every command. Putting it here rather than in each handler is the point:
+	'' a handler cannot forget to check.
+	Dim As Integer needed = AgentCmdMinLevel(cmd)
+	If AgentPermission < needed Then
+		ecode = "permission_denied"
+		emsg = "'" & cmd & "' needs the '" & AgentPermissionName(needed) & "' agent permission " & _
+		       "level; Ilwaco is currently set to '" & AgentPermissionName(AgentPermission) & "'. " & _
+		       "Change it in Tools > Options > General."
+		Return
+	End If
+
 	Select Case cmd
 	Case "ping"
 		res = JsonNewObject() : res->SetMember("pong", JsonNewBool(True)) : ok = True

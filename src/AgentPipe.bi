@@ -27,6 +27,12 @@ Declare Sub StopAgentPipe()
 '' Whether the listener is currently up.
 Declare Function AgentPipeActive() As Boolean
 
+'' Convert between an AgentPermissionLevel and the name shown in the INI, the Options
+'' combo and the status bar. FromName is deliberately forgiving about case and spacing,
+'' because Settings/ilwaco.ini is edited by hand; anything unrecognised reads as Off.
+Declare Function AgentPermissionName(ByVal level As Integer) As UString
+Declare Function AgentPermissionFromName(ByRef nm As UString) As Integer
+
 '' True only while a client is actually connected. Use this, not AgentPipeActive,
 '' before raising anything modal on the UI thread: a modal blocks the command slot
 '' and the worker waits on it, so a prompt nobody can answer stalls the agent.

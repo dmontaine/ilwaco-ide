@@ -14,6 +14,14 @@ necessary but not sufficient — "it compiled" is not "it works".
 
 ## Proven
 
+- **MCP agent permission levels (2026-08-07).** Probed over the agent socket at four levels, one
+  command per band. Read-only: `get_status` allowed, `write_file`/`open_in_editor`/`syntax_check` all
+  `permission_denied`. Edit: writes allowed, `syntax_check` denied. Build & Run (the migrated
+  default): every current tool allowed, an unclassified command denied. Trusted: the unclassified
+  command passes the gate and the dispatcher reports `unknown_cmd`, which is what proves the gate
+  lets things through rather than blanket-denying. Migration verified: an INI carrying only the old
+  `AllowAgentControl=true` starts at Build & Run.
+
 - **MCP write safety (2026-08-07).** Driven against a live IDE over the agent socket, six behaviours:
   `read_file`/`get_active_file` return a `version`; `write_file` with a stale `expected_version` is
   refused (`version_mismatch`) with the file unchanged **on disk**; with the correct version it

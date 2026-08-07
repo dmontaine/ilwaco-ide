@@ -101,7 +101,20 @@ Common Shared As Boolean AutoSuggestions, ProjectAutoSuggestions
 Common Shared As Boolean AutoCreateRC
 Common Shared As Boolean AutoCreateBakFiles, gLocalProperties
 Common Shared As Boolean AddRelativePathsToRecent
-Common Shared As Boolean AllowAgentControl   ' Tools > Options: let the ilwaco-mcp sidecar drive the IDE (MCP)
+'' How much of the IDE an AI agent may drive over the MCP socket (Tools > Options > General).
+'' Ordered: each level is a superset of the one before, so the dispatcher can compare with >=.
+'' agpBuildRun is the default and is exactly what the old AllowAgentControl=true granted --
+'' Ilwaco is agent-first, so the out-of-box level has to keep the edit-build-fix loop whole.
+'' The two below it are opt-in restrictions; agpTrusted is an opt-in expansion (designer tools
+'' and reaching outside the project folder), meant for a local model you already trust.
+Enum AgentPermissionLevel
+	agpOff = 0
+	agpReadOnly = 1
+	agpEdit = 2
+	agpBuildRun = 3
+	agpTrusted = 4
+End Enum
+Common Shared As Integer AgentPermission     ' one of AgentPermissionLevel; see ReconcileAgentPipe
 Common Shared As Boolean UseMakeOnStartWithCompile
 Common Shared As Boolean CreateNonStaticEventHandlers, CreateFormTypesWithoutTypeWord
 Common Shared As Boolean PlaceStaticEventHandlersAfterTheConstructor, CreateStaticEventHandlersWithAnUnderscoreAtTheBeginning, CreateEventHandlersWithoutStaticEventHandlerIfEventAllowsIt

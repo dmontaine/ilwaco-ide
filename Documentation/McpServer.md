@@ -380,6 +380,46 @@ deliberately dirtied tab refused. One thing checked rather than assumed — the 
 CRLF even when given LF, but the IDE normalises to LF on save, so this is Scintilla's internal
 representation and not a corruption path.
 
+## Agent permission levels (2026-08-07)
+
+Owner-directed, following a discussion of how another IDE is approaching the same problem. Five
+levels — Off / Read-only / Edit / **Build & Run** / Trusted — each a superset of the last, replacing
+the `AllowAgentControl` boolean.
+
+**The default had to stay at Build & Run.** Ilwaco is agent-first; a default that let an agent edit
+but not build would break the edit-build-fix loop and regress the out-of-box behaviour. So the model
+is two opt-in *restrictions* below the old capability and one opt-in *expansion* above it, rather
+than a new default.
+
+Design decisions worth keeping:
+
+- **One combo, not a checkbox plus a combo.** The old "Allow AI agent control" checkbox became the
+  Off value of the same control, so the change removes an option rather than adding one.
+  `AllowAgentControl=true/false` migrates on first read to `Build & Run`/`Off`; the level persists as
+  a *name* (`AgentPermission=Build & Run`) so a hand-edited INI stays readable.
+- **Advertise everything, refuse at call time.** Filtering the tool list the sidecar publishes would
+  need it to re-query whenever the level changed; refusing with `permission_denied` is simpler and
+  stays correct mid-session. The error names both the level required and the level in force.
+- **One gate, at the dispatcher.** `AgentCmdMinLevel` is checked once in `AgentDispatch`, so a handler
+  cannot forget to check. Unlisted commands fall to `agpTrusted` — a tool added later without being
+  classified fails **closed**. The cost is that below Trusted a misspelled command reads
+  `permission_denied` rather than `unknown_cmd`; failing safe is worth more than that precision.
+- **`open_project` sits at Edit, not Read-only.** It changes what the IDE is looking at and its path
+  is not confined to any folder. A read-only agent therefore inspects what the user already has open.
+- **Trusted gates nothing yet.** Designer tools and outside-the-project access are not built, so
+  Trusted currently equals Build & Run plus the fail-closed catch-all. That is why the level exists
+  now: the mechanism lands once, and those tools slot into it without a redesign.
+
+Verified by effect against a live IDE at four levels, probing one command from each band: Read-only
+allows `get_status` and refuses `write_file`/`syntax_check`; Edit allows writes and refuses
+`syntax_check`; Build & Run allows all current tools and refuses an unclassified one; Trusted lets
+the unclassified command through to the dispatcher, which reports `unknown_cmd` — proving the gate
+passes rather than blanket-denies. Migration confirmed: an INI carrying only `AllowAgentControl=true`
+comes up at Build & Run.
+
+Still to come, in order: the activity log, then the Trusted-level path relaxation, then the designer
+tools themselves.
+
 ## Verification recipe
 
 Build and run the editor (`./build-linux.sh editor`, then
