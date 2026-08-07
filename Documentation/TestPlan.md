@@ -26,6 +26,7 @@ came to describe a deleted Git menu for four days). Treat every row below as a t
 | Document | Update when |
 | --- | --- |
 | `IlwacoIDEManual.md` | user-facing behaviour, a menu, or a workflow changes |
+| `Installation.md` | how Ilwaco is **downloaded or installed** changes — a new artefact, a changed filename or version, a new supported distro, or a change to what an upgrade preserves. User-facing, and it ships with the application |
 | `IlwacoIDESignificantChanges.md` | a feature is **added or removed** — how Ilwaco differs from VisualFBEditor. On a *removal*, also add a line to `REMOVED_FEATURES` in `Tools/DocCheck.py` |
 | `IlwacoVsAstoria.md` | a difference between **Ilwaco and Astoria** appears or disappears — the user-facing comparison. In particular when a *planned* divergence ships, or a gap against Astoria closes. `DocCheck` cannot catch staleness here (the facts live in the other repository), so this row is the only guard |
 | `Controls.md` | an MFF control's API, properties, events, or behaviour changes |

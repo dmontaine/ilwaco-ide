@@ -18,11 +18,77 @@ Documentation) lives **outside** the read-only image and is seeded on first run.
 | GTK link targets generated against the host runtime | **Done** — `Packaging/gen-gtk-links.sh` |
 | `-gen gas64` for user compiles | **Done** — already emitted by the IDE; see "The gcc question" below |
 | Staged release tree | **Done** — `Packaging/StageRelease.sh` → `../ilwaco-ide-release` |
-| Single-file **AppImage** (the primary download) | **Done** — `Packaging/BuildInstaller.sh` → `Ilwaco-IDE-<ver>-x86_64.AppImage` (49 MB); run, relaunch, compile all verified |
-| Single-file `.run` fallback | **Done** — `BuildInstaller.sh --run` (52 MB); install, launch, compile and upgrade all verified |
+| **`.tar.gz`** — the no-root download | **Done** — `BuildInstaller.sh --tar`; wraps the AppImage so it extracts already-executable |
+| **`.deb`** — Debian, Ubuntu, Mint | **Done** — `Packaging/BuildPackages.sh --deb` (39 MB) |
+| **`.rpm`** — Fedora, RHEL, openSUSE | **Done** — `Packaging/BuildPackages.sh --rpm` (47 MB); real install test needs a Fedora VM |
+| Single-file AppImage | **Done** — now shipped inside the `.tar.gz` rather than bare |
+| Single-file `.run` fallback | **Done** — `BuildInstaller.sh --run` (52 MB); superseded by the above, kept for now |
 | AppDir layout + `AppRun` | **Done** — `Packaging/build-appdir.sh` + `Packaging/AppRun` |
 | Writable user-data dirs, seeded on first run | **Done** — no IDE source changes needed |
 | Building on an old-glibc host | Not set up |
+
+## Two tiers, chosen by one question: does the user have root?
+
+Decided with the owner, 2026-08-07. The audience splits cleanly, so the download does too.
+
+| user | artefact | what they do | root? |
+| --- | --- | --- | --- |
+| Their own laptop | **`.deb`** / **`.rpm`** | double-click install → applications menu → `apt`/`dnf` upgrades it | yes |
+| A managed school or work machine | **`.tar.gz`** | extract into home → double-click | **no** |
+
+**The no-root path needs no `chmod`.** That is the whole reason the AppImage ships inside a
+`.tar.gz` rather than bare: a browser saves a download mode 644, but `tar` restores mode bits, so
+what lands in the user's folder is already executable. Measured — see "What the AppImage needs on
+the USER's machine" below. The bare `.AppImage` is deliberately **not** offered alongside it, because
+a beginner offered both will pick the one that dead-ends.
+
+**`.deb`/`.rpm` are root-only by design** — `dpkg` and `rpm` install system-wide, and there is no
+genuine "user-installed `.deb`". That is not a gap, because the `.tar.gz` covers exactly the user who
+cannot use them.
+
+### The system packages install to /opt, but the user still lives in ~
+
+Both packages lay out the same thing:
+
+```
+/opt/ilwaco-ide/          the staged release tree, read-only
+/usr/bin/ilwaco           launcher: seeds ~/ilwaco-ide, then execs it
+/usr/share/applications/ilwaco.desktop
+/usr/share/icons/hicolor/256x256/apps/ilwaco.png
+```
+
+`/opt` rather than `/usr/lib` because this is a self-contained vendor application carrying its own
+compiler — precisely what the FHS reserves `/opt` for. **Nothing the user edits lives there.** On
+first launch `/usr/bin/ilwaco` materialises `~/ilwaco-ide` exactly as the AppImage's `AppRun` does —
+the two share `Packaging/seed-app-home.sh`, one implementation of the same problem. So each user on
+the machine gets their own settings, projects and examples with **no per-user configuration**, and
+`apt upgrade` replaces `/opt` while leaving all of it untouched.
+
+This is forced, not stylistic: the IDE writes relative to `ExePath()`, which follows symlinks, so it
+cannot run from a root-owned directory at all. Only a real copy of the binary somewhere writable works.
+
+### One RPM for Fedora, RHEL *and* SUSE — and the dependency trap on both sides
+
+The three distros disagree on what the GTK package is *called* (`gtk3` on Fedora/RHEL,
+`libgtk-3-0` on SUSE), so a `Requires:` on a package name would reach at most two of them.
+`rpmbuild`'s automatic generator emits **SONAME** requires instead — `libgtk-3.so.0()(64bit)` — which
+all three satisfy from their own provides. The auto-generated dependencies are therefore not a
+convenience here, they are the portability mechanism.
+
+**But the generator must only look at our own binaries.** The payload also carries the bundled
+FreeBASIC toolchain, and `fbc` needs `libtinfo.so.5` — which we ship ourselves in `Toolchain/runtime`
+and which Fedora does *not* install by default. Letting the scanner see it bakes an unsatisfiable
+dependency into the package and makes it refuse to install. Hence `__requires_exclude_from` on the
+spec and, on the Debian side, running `dpkg-shlibdeps` against `ilwaco` and `ilwaco-mcp` only.
+Verified: the built RPM requires `libtinfo.so.6` (the IDE's own, legitimate) and no `.so.5` at all.
+
+**The `.deb` has its own version of this trap — Debian's 64-bit `time_t` transition.**
+`dpkg-shlibdeps` names packages as the *build host* has them, and Debian 13 / Ubuntu 24.04 renamed
+`libgtk-3-0` → `libgtk-3-0t64` (likewise glib and atk), while **Debian 12, Ubuntu 22.04 and Mint 21
+still ship the old names**. A package built here and depending only on the `t64` names is
+uninstallable on half the distros we target. `BuildPackages.sh` therefore rewrites each renamed
+dependency into an alternative — `libgtk-3-0t64 (>= 3.16.2) | libgtk-3-0 (>= 3.16.2)` — modern name
+first, since dpkg takes the first satisfiable one.
 
 ## How a release is built
 

@@ -23,6 +23,23 @@ TOOLCHAIN="$HERE/Toolchain"
 
 die() { echo "Ilwaco: $*" >&2; exit 1; }
 
+# --- a display is required ---------------------------------------------------
+# Ilwaco is a GTK program. With no display server it does not fail politely: GTK
+# refuses to initialise, every widget comes back NULL and the process dies with a
+# SIGSEGV in widget cleanup, nowhere near the cause — so a tester on a headless box
+# reports a crash rather than "no display". It cannot be caught inside the binary
+# either: GTK initialises in a global constructor, which FreeBASIC runs before any
+# of the main module's own statements. So it is checked here, in the launcher every
+# shipped route goes through (AppImage, .deb/.rpm, and the .run install alike).
+if [ -z "${DISPLAY:-}" ] && [ -z "${WAYLAND_DISPLAY:-}" ]; then
+	echo "Ilwaco IDE needs a graphical desktop, but no display was found" >&2
+	echo "(neither DISPLAY nor WAYLAND_DISPLAY is set)." >&2
+	echo "" >&2
+	echo "Start Ilwaco from the computer's own desktop, or - if you are connected" >&2
+	echo "over SSH - reconnect with 'ssh -X' so the display is forwarded." >&2
+	exit 1
+fi
+
 [ -x "$HERE/ilwaco" ]  || die "no ilwaco binary beside this script ($HERE)"
 [ -d "$TOOLCHAIN" ]    || die "the bundled compiler toolchain is missing from $HERE"
 [ -w "$HERE" ]         || die "$HERE is not writable — Ilwaco stores its settings beside itself"

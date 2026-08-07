@@ -25,8 +25,22 @@
 # not yet on this machine, and fetching it is a download the owner has to
 # approve — see Documentation/Packaging.md.
 #
-# Usage:  Packaging/BuildInstaller.sh [--appimage|--run]
-#         default: appimage if appimagetool is on PATH, otherwise run
+# WHAT SHIPS, AND TO WHOM (owner, 2026-08-07)
+# -------------------------------------------
+# Two tiers, because the deciding question is whether the user has root:
+#
+#   .deb / .rpm     has root, own machine. Double-click install, applications
+#                   menu entry, apt/dnf upgrades. Root installs a READ-ONLY
+#                   payload to /opt; every user's own settings and projects
+#                   still live in ~/ilwaco-ide (Packaging/BuildPackages.sh).
+#   .tar.gz         NO root — a school or work managed machine. Wraps the
+#                   AppImage, which runs from anywhere and touches nothing
+#                   outside $HOME. Wrapped in tar rather than offered bare
+#                   because tar restores the executable bit and a browser
+#                   download does not (Documentation/Packaging.md).
+#
+# Usage:  Packaging/BuildInstaller.sh [--all|--appimage|--tar|--deb|--rpm|--run]
+#         default: --all  (.tar.gz-wrapped AppImage, .deb and .rpm)
 #
 set -euo pipefail
 
@@ -41,13 +55,18 @@ case "${INSTALLER_DIR##*/}" in
 	*) die "refusing to continue: '$INSTALLER_DIR' does not end with 'ilwaco-ide-installer'" ;;
 esac
 
-FORMAT="${1:-auto}"
-case "$FORMAT" in
-	--appimage) FORMAT=appimage ;;
-	--run)      FORMAT=run ;;
-	auto)       command -v appimagetool >/dev/null && FORMAT=appimage || FORMAT=run ;;
-	*)          die "unknown option '$FORMAT' (use --appimage or --run)" ;;
+DO_APPIMAGE=0 DO_TAR=0 DO_DEB=0 DO_RPM=0 DO_RUN=0
+case "${1:---all}" in
+	--all)      DO_TAR=1; DO_DEB=1; DO_RPM=1 ;;
+	--appimage) DO_APPIMAGE=1 ;;
+	--tar)      DO_TAR=1 ;;
+	--deb)      DO_DEB=1 ;;
+	--rpm)      DO_RPM=1 ;;
+	--run)      DO_RUN=1 ;;
+	*)          die "unknown option '$1' (use --all, --appimage, --tar, --deb, --rpm or --run)" ;;
 esac
+# The .tar.gz wraps an AppImage, so asking for one asks for the other.
+[ "$DO_TAR" = 1 ] && DO_APPIMAGE=1
 
 VERSION="$(awk -F'"' '/#define VER_MAJOR/{a=$2} /#define VER_MINOR/{b=$2} /#define VER_PATCH/{c=$2} END{print a"."b"."c}' "$REPO/src/ilwaco.bas")"
 [ -n "$VERSION" ] && [ "$VERSION" != ".." ] || die "could not read the version from src/ilwaco.bas"
@@ -56,20 +75,43 @@ echo "=== Step 1/2: staging release ==="
 "$REPO/Packaging/StageRelease.sh" "$RELEASE"
 
 echo ""
-echo "=== Step 2/2: building installer ($FORMAT) ==="
-# Only ever holds the one artefact, so it is cleared rather than added to —
-# a stale installer beside a fresh one is how the wrong file gets distributed.
+echo "=== Step 2/2: building installers ==="
+# Cleared rather than added to — a stale installer beside a fresh one is how the
+# wrong file gets distributed.
 rm -rf "$INSTALLER_DIR"
 mkdir -p "$INSTALLER_DIR"
 
-if [ "$FORMAT" = appimage ]; then
+APPIMAGE="$INSTALLER_DIR/Ilwaco-IDE-$VERSION-x86_64.AppImage"
+
+if [ "$DO_APPIMAGE" = 1 ]; then
 	command -v appimagetool >/dev/null || die "appimagetool not found on PATH"
 	APPDIR="$REPO/build/Ilwaco.AppDir"
 	"$REPO/Packaging/build-appdir.sh" "$RELEASE" "$APPDIR" >/dev/null
-	ARCH=x86_64 appimagetool "$APPDIR" "$INSTALLER_DIR/Ilwaco-IDE-$VERSION-x86_64.AppImage" \
-		|| die "appimagetool failed"
-	OUT="$INSTALLER_DIR/Ilwaco-IDE-$VERSION-x86_64.AppImage"
-else
+	ARCH=x86_64 appimagetool "$APPDIR" "$APPIMAGE" || die "appimagetool failed"
+fi
+
+if [ "$DO_TAR" = 1 ]; then
+	# The no-root download. tar carries the mode bits, so what comes out of the
+	# archive is already executable — which a browser download never is, and
+	# which no self-extracting format can fix either (the self-extractor would
+	# need the executable bit itself).
+	TARBALL="$INSTALLER_DIR/Ilwaco-IDE-$VERSION-x86_64.tar.gz"
+	chmod +x "$APPIMAGE"
+	tar -czf "$TARBALL" -C "$INSTALLER_DIR" --owner=0 --group=0 \
+		"$(basename "$APPIMAGE")" || die "tar failed"
+	# The AppImage itself is not a separate download: shipping both invites a
+	# beginner to pick the one that dead-ends on the executable bit.
+	rm -f "$APPIMAGE"
+fi
+
+if [ "$DO_DEB" = 1 ] || [ "$DO_RPM" = 1 ]; then
+	if   [ "$DO_DEB" = 1 ] && [ "$DO_RPM" = 1 ]; then PKGARG=--both
+	elif [ "$DO_DEB" = 1 ]; then PKGARG=--deb
+	else PKGARG=--rpm; fi
+	"$REPO/Packaging/BuildPackages.sh" "$PKGARG" "$RELEASE"
+fi
+
+if [ "$DO_RUN" = 1 ]; then
 	OUT="$INSTALLER_DIR/Ilwaco-IDE-$VERSION-x86_64.run"
 	# Header first, then the payload appended verbatim. The header locates the
 	# payload by searching for its own marker, so no line-count arithmetic has
@@ -80,5 +122,5 @@ else
 fi
 
 echo ""
-echo "BuildInstaller.sh: $OUT"
-echo "BuildInstaller.sh: $(du -h "$OUT" | cut -f1)"
+echo "BuildInstaller.sh: artefacts in $INSTALLER_DIR"
+ls -lh "$INSTALLER_DIR" | tail -n +2

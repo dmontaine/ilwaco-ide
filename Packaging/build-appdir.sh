@@ -8,7 +8,8 @@
 # content and only one script decides what a release contains.
 #
 #   <outdir>/
-#     AppRun                    materialises the payload into ~/Ilwaco
+#     AppRun                    materialises the payload into ~/ilwaco-ide
+#     seed-app-home.sh          the seeding itself, shared with the .deb/.rpm
 #     ilwaco.desktop            top-level, as the AppImage spec requires
 #     ilwaco.png                ditto, matching the desktop file's Icon=
 #     usr/share/ilwaco/         the staged release tree, verbatim
@@ -33,6 +34,9 @@ cp -a "$RELEASE" "$OUT/usr/share/ilwaco"
 
 cp "$REPO/Packaging/AppRun" "$OUT/AppRun"
 chmod +x "$OUT/AppRun"
+# AppRun delegates the seeding to this, shared with the .deb/.rpm launcher.
+cp "$REPO/Packaging/seed-app-home.sh" "$OUT/seed-app-home.sh"
+chmod +x "$OUT/seed-app-home.sh"
 cp "$REPO/ilwaco.desktop" "$OUT/ilwaco.desktop"
 cp "$REPO/Resources/Logo.png" "$OUT/ilwaco.png"
 # appimagetool also expects the desktop file and icon in the usual share paths.

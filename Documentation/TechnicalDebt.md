@@ -65,11 +65,22 @@ as the durable register:
   project name — confusing for a beginner.
   Ilwaco re-opens the correct file (Astoria's version silently re-opened nothing), but making the
   rename coherent means moving the `.vfp` and updating `ProjectName` inside it. Found 2026-08-04.
-- **The download's executable bit is unsolved.** AppImage packaging itself is **done** (read-only
-  bundle + external writable `projects`/Examples/Docs, seeded into `~/ilwaco-ide`), but a browser
-  saves the downloaded file mode 644, so a beginner's first double-click does nothing. No
-  self-extracting format fixes it — the self-extractor needs `+x` too. Measured carrier comparison and
-  the open decision: [Packaging.md](Packaging.md) and PROJECT_STATUS NEXT 1.
+- **No display → SIGSEGV in the raw binary; handled in the launcher (2026-08-07).** With `DISPLAY`
+  and `WAYLAND_DISPLAY` unset the IDE dies exit 139 after GLib criticals about a NULL instance: GTK
+  refuses to initialise, every widget comes back NULL, and the crash lands nowhere near the cause.
+  **Every shipped route now stops first with a plain message and exit 1**, because `Packaging/
+  ilwaco.sh` checks for a display — and the AppImage, the `.deb`/`.rpm` and the `.run` install all
+  launch through it. What remains is the **raw `./ilwaco`**, which still segfaults if run directly
+  with no display; that is a from-source dev path only.
+  **It cannot be fixed inside the binary at the obvious place:** a guard at the top of
+  `src/ilwaco.bas` never runs, because GTK initialises in a **global constructor** and FreeBASIC runs
+  those before any of the main module's own statements. Tried and reverted rather than left as code
+  that looks like a guard but is not. A real in-binary fix would need a `Constructor` priority that
+  beats MFF's, or a check inside MFF's own `Application` constructor.
+- ~~**The download's executable bit is unsolved.**~~ **RESOLVED 2026-08-07** by shipping the AppImage
+  inside a `.tar.gz` (tar restores mode 755, a browser download never has it) and by adding `.deb`
+  and `.rpm` for users who can install software. No self-extracting format would have fixed it — the
+  self-extractor needs `+x` itself. Detail in [Packaging.md](Packaging.md).
 - **The launched terminal shows no program output on this box (found 2026-08-06).** Run opens the
   terminal and the program runs to completion — the window's own banner says "The child process exited
   normally with status 0" — but its content area is blank, so a user sees an empty window instead of

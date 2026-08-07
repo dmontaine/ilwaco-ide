@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+#
+# ilwaco-launcher — installed as /usr/bin/ilwaco by the .deb and the .rpm.
+#
+# A system package puts the payload in /opt/ilwaco-ide, which is root-owned, and
+# the IDE cannot run from a directory it cannot write to (see seed-app-home.sh
+# for the ExePath() reason). So this does exactly what the AppImage's AppRun
+# does: materialise a writable ~/ilwaco-ide from the read-only payload, then hand
+# over to ilwaco.sh, which is where everything machine-specific lives.
+#
+# Consequences worth knowing:
+#   * every user on the machine gets their own ~/ilwaco-ide, seeded on first run;
+#   * `apt upgrade` / `dnf update` replaces /opt, and the next launch copies the
+#     new binaries across while leaving the user's settings and projects alone;
+#   * no desktop entry is written here — unlike the AppImage, a system package
+#     ships /usr/share/applications/ilwaco.desktop and the icon itself.
+#
+set -euo pipefail
+
+PAYLOAD="${ILWACO_PAYLOAD:-/opt/ilwaco-ide}"
+APPHOME="${ILWACO_HOME:-$HOME/ilwaco-ide}"
+
+[ -d "$PAYLOAD" ] || { echo "Ilwaco: $PAYLOAD is missing — reinstall the ilwaco-ide package" >&2; exit 1; }
+
+"$PAYLOAD/seed-app-home.sh" "$PAYLOAD" "$APPHOME"
+
+exec "$APPHOME/ilwaco.sh" "$@"

@@ -62,45 +62,67 @@ name distinct and mapped in one place.
 
 ---
 
-## ✅ DONE (2026-08-07) — Examples: 53 ported, broken half deleted, 54 build-verified through the SHIPPED toolchain
+## ✅ DONE (2026-08-07) — Ilwaco ships three ways: `.deb`, `.rpm` and a no-root `.tar.gz`
 
-Owner-requested, superseding the "defer Examples to the testing phase" note. Ported: the whole
-`Learning` course except its DLL series — **`Console` 25 + `GUI` 25** (renamed from Astoria's
-`WinGUI`, a misnomer on GTK) — plus **`Calculator`, `FiveInARow`, `Maze`**. Every one was compiled
-with the bundled toolchain **and run**: console programs to completion (exit 0), GUI programs to a
-confirmed window on screen. All converted to UTF-8-no-BOM + LF on the way in.
+Owner directive: ".deb and .rpm — between them they cover over 90% of the Linux market", then the
+clarifying concern, "what about a user who wants to use Ilwaco but does not have root access". The
+resolution is **two tiers chosen by one question — does the user have root**, documented for users in
+the new [Installation.md](Documentation/Installation.md) and for maintainers in
+[Packaging.md](Documentation/Packaging.md).
 
-**Copying was not enough — four defects had to be fixed**, three of them the same class: a
-case-insensitive filesystem had hidden `mff/Textbox.bi`, `mff/sys.bi` and `maze.bi`, all of which are
-`error 23` here. The fourth was `crHand`, Win32-only (`LoadCursor(0, IDC_HAND)`), substituted with
-GTK's `crHandPoint`. Separately, **every** GUI example needed the `#ifdef __FB_WIN32__` guard restored
-around its `#cmdline "*.rc"` — an INVERT of Astoria's Win64-only stripping, without which fbc stops at
-`Executable not found: "windres"`. Detail in [UpstreamFixes.md](Documentation/UpstreamFixes.md).
+| user | artefact | root? |
+| --- | --- | --- |
+| own laptop | `.deb` (39 MB) / `.rpm` (47 MB) — double-click install, menu entry, `apt`/`dnf` upgrades | yes |
+| managed school/work machine | `.tar.gz` (44 MB) wrapping the AppImage | **no** |
 
-**Held back:** the `Learning/DLL` series, because **fbc 1.10.1 `-gen gas64 -dll` segfaults** on two of
-its four lessons (minimal repro in [TechnicalDebt.md](Documentation/TechnicalDebt.md)) — shipping a
-numbered course missing lessons 2 and 3 is worse than shipping none. **This is bigger than the
-examples:** Ilwaco compiles everything with `-gen gas64`, so a user building a shared library can hit
-a compiler crash with no diagnostic. Not yet reported upstream. Also not ported, as Windows by nature:
-the DirectShow, COM, SAPI and WLan sets, plus `Sudoku` and `MultipleDisplay`.
+**The bare `.AppImage` is no longer offered.** It is shipped inside the `.tar.gz` because tar restores
+mode 755 while a browser download is always 644 — so the no-root path needs **no `chmod`**, verified
+by extracting and checking the bit. Offering both would invite a beginner to pick the dead-end one.
 
-**Then the broken half was deleted and every example put in its own directory** (owner). The 22 audited
-pre-existing projects, 6 stale Windows-era duplicates under `Examples/Game/`, four empty placeholder
-dirs and an orphaned `Examples/Manifest.xml` were `git rm`'d; the retained candidates were re-evaluated
-against a "delete unless the port is trivial" bar and **test-compiled** — `try_catch_throw`, `Add-In`,
-`Web Page`, `Graphics/CanvasDraw` deleted; `Class Form Example` compiled clean and was **kept and
-finished into a real project** (BOM stripped, `.vfp` added). `Examples/` now holds **54 projects, one
-per directory**. Detail and the per-candidate reasons in [ExamplesAudit.md](Documentation/ExamplesAudit.md).
+**One implementation of the writable-home problem.** A system package installs a *root-owned*
+payload, and the IDE cannot run from a directory it cannot write to (`ExePath()` follows symlinks) —
+the identical constraint the AppImage hit. So `Packaging/seed-app-home.sh` was factored out of
+`AppRun` and is now shared by both routes; `/usr/bin/ilwaco` (`Packaging/ilwaco-launcher`) is a
+12-line wrapper over it. `/opt/ilwaco-ide` holds only the immutable payload; every user still gets
+their own `~/ilwaco-ide` with **no per-user configuration**.
 
-**Verified against the SHIPPED build path, not just the dev shim.** The earlier "compiled with the
-bundled toolchain" runs used the dev shim (`-p <shim> -l tinfo`); this session reproduced the *shipped*
-path — `Packaging/make-toolchain.sh` sysroot on PATH, only `libtinfo.so.5` on `LD_LIBRARY_PATH`, the
-seed-patch's `-p sysroot -p .link-shim` link args, the IDE-appended `-gen gas64`, and the main file via
-`-b "<file>"` (how `.frm` reaches fbc) — and swept **all 54: 54/54 build, 0 fail**. The one sharp edge:
-without `-gen gas64` the bundled `gcc` is a **stub** (crt-probe only) and fbc's default `-gen gcc`
-backend dies `no C compiler in the image` — but the IDE appends `-gen gas64` for **every project**
-build (`src/Main.bas:714`, `src/TabWindow.bas:11546`), and seeded examples are all `.vfp` projects, so
-the shipped path is sound.
+**The two dependency traps, both real, both caught before shipping:**
+- **RPM:** Fedora/RHEL call the GTK package `gtk3`, SUSE calls it `libgtk-3-0`, so a name-based
+  `Requires:` reaches at most two of the three. rpmbuild's **SONAME** auto-requires
+  (`libgtk-3.so.0()(64bit)`) satisfy all three — the auto-generated deps *are* the portability
+  mechanism. But the generator had to be fenced off the bundled toolchain: `fbc` needs
+  `libtinfo.so.5`, which we ship ourselves and Fedora does not install, so an unfenced scan would
+  have baked in an unsatisfiable dependency and made the package refuse to install. Verified: the
+  built RPM requires `libtinfo.so.6` (legitimate, the IDE's own) and no `.so.5`.
+- **DEB:** `dpkg-shlibdeps` names packages as the *build host* has them, and Debian's 64-bit `time_t`
+  transition renamed `libgtk-3-0` → `libgtk-3-0t64` (plus glib, atk) in Debian 13 / Ubuntu 24.04
+  while **Debian 12, Ubuntu 22.04 and Mint 21 keep the old names**. Built here, the first `.deb` was
+  uninstallable on half the targets. Each renamed dep is now rewritten to an alternative,
+  `libgtk-3-0t64 (>= 3.16.2) | libgtk-3-0 (>= 3.16.2)`, modern name first.
+
+**Reinstall safety — the owner's explicit requirement — proven, not asserted.** Planted a project and
+a custom setting in a seeded home, then re-ran both the package launcher and the real AppImage over
+it: `projects/` came back **byte-identical**, the custom setting survived, and a user-edited example
+survived. It holds at three independent levels: neither package contains any path under a home
+directory at all (checked), their scriptlets touch only desktop/icon caches, and the seed loop skips
+anything that already exists. Uninstalling deliberately leaves `~/ilwaco-ide` behind.
+
+**A display is now required, and said so politely (owner, 2026-08-07).** "Ilwaco should never be
+installed on a headless system — I would prefer it fail gracefully with a message that a display is
+required." Implemented at **launch**, not install: an install-time check would misfire on the
+ordinary `sudo apt install` over SSH into one's own desktop, where `DISPLAY` is unset on a machine
+that plainly has a GUI (owner agreed, install left alone). `Packaging/ilwaco.sh` now exits 1 with a
+plain message when neither `DISPLAY` nor `WAYLAND_DISPLAY` is set, and every shipped route launches
+through it. **The obvious in-binary guard does not work** — a check at the top of `src/ilwaco.bas`
+never runs, because GTK initialises in a global constructor and FreeBASIC runs those before the main
+module's statements; it was tried, measured as ineffective, and reverted rather than left looking
+like protection. Detail in [TechnicalDebt.md](Documentation/TechnicalDebt.md).
+
+**Verified by effect:** the `.deb` extracted to a scratch root, its launcher run from there → seeded a
+correct home → **the IDE opened on `:0`** with IntelliSense loaded, and the `/opt` payload was
+confirmed untouched afterwards. With no display the same launcher prints the message and exits 1. Glibc floor 2.34 gives Debian 12+, Ubuntu 22.04+, Mint 21+,
+Fedora 35+, RHEL 9+, openSUSE Leap 15.5+. **Not yet verified: installing the `.rpm` on real Fedora**
+— it is built and inspected only (see NEXT 1).
 
 ---
 
@@ -159,19 +181,13 @@ the whole parity list is complete**, so nothing here is release-gated — sequen
    b. **Examples — DONE** (deleted the broken half, 54 build-verified through the shipped toolchain).
       Full detail in the DONE section above and [ExamplesAudit.md](Documentation/ExamplesAudit.md).
 
-1. **Fresh owner directives (2026-08-07) — (a) and (b-iii) DONE; one product decision left in (b).**
-   See the DONE section below for what landed. What remains is a single owner call:
-
-   **How is Ilwaco downloaded?** FUSE turned out to be a non-issue (measured — see below), so the only
-   real beginner trap is the **executable bit**: a browser saves a download mode 644, so a double-click
-   cannot run it. **No self-extracting format fixes this** — a self-extractor is itself a program that
-   needs `+x`, which is why our existing `.run` has the same trap. Only a *plain* archive fixes it,
-   because the extractor is already installed and executable. Measured carrier comparison in
-   [Packaging.md](Documentation/Packaging.md) "What the AppImage needs on the USER's machine":
-   `.tar.gz` keeps mode 755 through `tar`; `.zip` keeps it through the `unzip` CLI but **loses it**
-   through other common extractors, because Unix modes are an extension in zip and core in tar.
-   So the options are: ship the AppImage inside a **`.tar.gz`** as the primary download (a few lines in
-   `BuildInstaller.sh`), or keep the bare `.AppImage` and document `chmod +x`. Not yet decided.
+1. **Fresh owner directives (2026-08-07) — all DONE.** The `projects` rename, the seed-patch
+   hardening, and the download question (now answered with three artefacts). See the DONE sections.
+   **What is left is verification we cannot do here: install the `.rpm` on a real Fedora system.**
+   The owner is setting up a Fedora VM for exactly this. Until that passes, the RPM is *built and
+   inspected* but not *installed-and-run* anywhere. Check, in order: `dnf install ./…rpm` resolves
+   without complaint, Ilwaco appears in the applications menu, it launches, `~/ilwaco-ide` is seeded,
+   and a bundled example compiles and runs.
 
 2. **Packaging** — **Ilwaco now ships as a single-file AppImage.** `Packaging/StageRelease.sh` →
    `../ilwaco-ide-release`, `Packaging/BuildInstaller.sh` →

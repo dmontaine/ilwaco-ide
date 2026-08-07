@@ -11,6 +11,48 @@ for the classified port backlog, [Documentation/AstoriaParity.md](Documentation/
 
 ---
 
+## ✅ DONE (2026-08-07) — Examples: 53 ported, broken half deleted, 54 build-verified through the SHIPPED toolchain
+
+Owner-requested, superseding the "defer Examples to the testing phase" note. Ported: the whole
+`Learning` course except its DLL series — **`Console` 25 + `GUI` 25** (renamed from Astoria's
+`WinGUI`, a misnomer on GTK) — plus **`Calculator`, `FiveInARow`, `Maze`**. Every one was compiled
+with the bundled toolchain **and run**: console programs to completion (exit 0), GUI programs to a
+confirmed window on screen. All converted to UTF-8-no-BOM + LF on the way in.
+
+**Copying was not enough — four defects had to be fixed**, three of them the same class: a
+case-insensitive filesystem had hidden `mff/Textbox.bi`, `mff/sys.bi` and `maze.bi`, all of which are
+`error 23` here. The fourth was `crHand`, Win32-only (`LoadCursor(0, IDC_HAND)`), substituted with
+GTK's `crHandPoint`. Separately, **every** GUI example needed the `#ifdef __FB_WIN32__` guard restored
+around its `#cmdline "*.rc"` — an INVERT of Astoria's Win64-only stripping, without which fbc stops at
+`Executable not found: "windres"`. Detail in [UpstreamFixes.md](Documentation/UpstreamFixes.md).
+
+**Held back:** the `Learning/DLL` series, because **fbc 1.10.1 `-gen gas64 -dll` segfaults** on two of
+its four lessons (minimal repro in [TechnicalDebt.md](Documentation/TechnicalDebt.md)) — shipping a
+numbered course missing lessons 2 and 3 is worse than shipping none. **This is bigger than the
+examples:** Ilwaco compiles everything with `-gen gas64`, so a user building a shared library can hit
+a compiler crash with no diagnostic. Not yet reported upstream. Also not ported, as Windows by nature:
+the DirectShow, COM, SAPI and WLan sets, plus `Sudoku` and `MultipleDisplay`.
+
+**Then the broken half was deleted and every example put in its own directory** (owner). The 22 audited
+pre-existing projects, 6 stale Windows-era duplicates under `Examples/Game/`, four empty placeholder
+dirs and an orphaned `Examples/Manifest.xml` were `git rm`'d; the retained candidates were re-evaluated
+against a "delete unless the port is trivial" bar and **test-compiled** — `try_catch_throw`, `Add-In`,
+`Web Page`, `Graphics/CanvasDraw` deleted; `Class Form Example` compiled clean and was **kept and
+finished into a real project** (BOM stripped, `.vfp` added). `Examples/` now holds **54 projects, one
+per directory**. Detail and the per-candidate reasons in [ExamplesAudit.md](Documentation/ExamplesAudit.md).
+
+**Verified against the SHIPPED build path, not just the dev shim.** The earlier "compiled with the
+bundled toolchain" runs used the dev shim (`-p <shim> -l tinfo`); this session reproduced the *shipped*
+path — `Packaging/make-toolchain.sh` sysroot on PATH, only `libtinfo.so.5` on `LD_LIBRARY_PATH`, the
+seed-patch's `-p sysroot -p .link-shim` link args, the IDE-appended `-gen gas64`, and the main file via
+`-b "<file>"` (how `.frm` reaches fbc) — and swept **all 54: 54/54 build, 0 fail**. The one sharp edge:
+without `-gen gas64` the bundled `gcc` is a **stub** (crt-probe only) and fbc's default `-gen gcc`
+backend dies `no C compiler in the image` — but the IDE appends `-gen gas64` for **every project**
+build (`src/Main.bas:714`, `src/TabWindow.bas:11546`), and seeded examples are all `.vfp` projects, so
+the shipped path is sound.
+
+---
+
 ## ✅ DONE (2026-08-07) — MCP write safety, then agent permission levels
 
 **Write safety first, because no permission tier makes an unversioned clobber safe.** Two live
