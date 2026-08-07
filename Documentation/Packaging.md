@@ -18,10 +18,10 @@ Documentation) lives **outside** the read-only image and is seeded on first run.
 | GTK link targets generated against the host runtime | **Done** — `Packaging/gen-gtk-links.sh` |
 | `-gen gas64` for user compiles | **Done** — already emitted by the IDE; see "The gcc question" below |
 | Staged release tree | **Done** — `Packaging/StageRelease.sh` → `../ilwaco-ide-release` |
-| Single-file installer | **Done** — `Packaging/BuildInstaller.sh` → `../ilwaco-ide-installer/Ilwaco-IDE-<ver>-x86_64.run` (52 MB); install, launch, compile and upgrade all verified |
-| AppDir layout + `AppRun` | **Done** — `Packaging/build-appdir.sh` + `Packaging/AppRun`; launched and verified |
+| Single-file **AppImage** (the primary download) | **Done** — `Packaging/BuildInstaller.sh` → `Ilwaco-IDE-<ver>-x86_64.AppImage` (49 MB); run, relaunch, compile all verified |
+| Single-file `.run` fallback | **Done** — `BuildInstaller.sh --run` (52 MB); install, launch, compile and upgrade all verified |
+| AppDir layout + `AppRun` | **Done** — `Packaging/build-appdir.sh` + `Packaging/AppRun` |
 | Writable user-data dirs, seeded on first run | **Done** — no IDE source changes needed |
-| Wrapping the AppDir into a `.AppImage` | Wired up in `BuildInstaller.sh`, but untested — needs `appimagetool` |
 | Building on an old-glibc host | Not set up |
 
 ## How a release is built
@@ -61,6 +61,23 @@ The staged tree is laid out **exactly as an installed Ilwaco** — binaries at t
 directories the IDE expects beside them, and `ilwaco.sh` to launch it. That is what lets both
 packaging routes fall out of one staging step, shipping byte-identical content.
 
+### Where Ilwaco installs, and the menu entry
+
+Both routes install to **`~/ilwaco-ide`** (owner, 2026-08-07) — the `.run`'s `--dir` and the
+AppImage's `ILWACO_HOME` override it — and both write a per-user menu entry to
+**`~/.local/share/applications/ilwaco.desktop`**, honouring `$XDG_DATA_HOME` when set. No root, and
+uninstalling is deleting the directory and that one file.
+
+The two entries differ in what they launch, and the difference is not cosmetic:
+
+- the **`.run`** copy points `Exec` at `~/ilwaco-ide/ilwaco.sh`, a self-contained installed tree;
+- the **AppImage** points `Exec` at the AppImage file itself. It must: the app home's `Compilers/`,
+  `Toolchain/` and `Resources/` are symlinks into the mount, which is gone once the process exits,
+  so `ilwaco.sh` there only works while the image is mounted. `AppRun` reads `$APPIMAGE` (set by the
+  AppImage runtime) to learn that path, rewrites the entry on every launch so moving or renaming the
+  AppImage heals itself, and copies the icon out as a real file for the same reason the binaries are
+  real copies. Running a raw AppDir writes no entry, because there is no stable path to record.
+
 ### Why a `.run` and not a self-extracting zip
 
 A self-extracting zip is the Windows idiom, and `unzip` is not guaranteed on a minimal Linux
@@ -70,10 +87,15 @@ installed either to build or to run. It takes `--dir` and `--force`, adds a per-
 root anywhere), and on reinstall **keeps `Settings`, `Projects`, `Examples`, `Documentation`,
 `Templates` and `AddIns`** while replacing everything else, so an upgrade never eats a user's work.
 
-The better single-file answer on Linux, and the format already chosen for the primary download, is
-an **AppImage**: one file, `chmod +x`, run, with no extraction step at all. `BuildInstaller.sh`
-emits that instead when `appimagetool` is on `PATH`. It is not on this machine, and fetching it is a
-download that needs the owner's approval — so that branch is written but has never run.
+The better single-file answer on Linux, and the format chosen for the primary download, is an
+**AppImage**: one file, `chmod +x`, run, with no extraction step at all. `BuildInstaller.sh` emits
+that whenever `appimagetool` is on `PATH`, which makes it the default; `--run` forces the fallback.
+
+**Build-machine requirement:** `appimagetool` is not vendored — it is a build tool, the way Astoria
+does not vendor Inno Setup. Installed here at `~/.local/bin/appimagetool` from the official
+[AppImage/appimagetool](https://github.com/AppImage/appimagetool) continuous release (build 295,
+2025-12-04, `sha256 a6d71e2b…cb9d13e0`). It needs FUSE at runtime. A build machine without it still
+produces the `.run`.
 
 ---
 
@@ -213,19 +235,23 @@ copies, so there is one launch path rather than two that can drift.
 
 All on 2026-08-07, on this machine.
 
-**Installer route:** `BuildInstaller.sh --run` produced a 52 MB single file. Installing it into a
-clean directory laid out the tree, patched all three settings to the install path, and wrote a
-per-user menu entry; `ilwaco.sh` launched the IDE (window opens, only the known-harmless
-`AppAddin`/`AppConsole` resource warnings). A real MFF GUI example
-(`Examples/Class Form Example.bas`) compiled from the installed tree and **the resulting program ran
-and opened its window**. Re-running the installer over that installation upgraded the binary while
-**leaving a user file in `Projects/` and a hand-edited `Settings/ilwaco.ini` untouched**.
+**`.run` route:** `BuildInstaller.sh --run` produced a 52 MB single file. Installing it into a clean
+directory laid out the tree, patched all three settings to the install path, and wrote the menu
+entry; `ilwaco.sh` launched the IDE (window opens, only the known-harmless `AppAddin`/`AppConsole`
+resource warnings). A real MFF GUI example (`Examples/Class Form Example.bas`) compiled from the
+installed tree and **the resulting program ran and opened its window**. Re-running the installer
+over that installation upgraded the binary while **leaving a user file in `Projects/` and a
+hand-edited `Settings/ilwaco.ini` untouched**.
 
-**AppImage route:** `build-appdir.sh` produced a 121 MB AppDir from the same staged tree; `AppRun`
-seeded a clean app home, relinked the payload, and reached the same running IDE.
+**AppImage route:** `BuildInstaller.sh` produced a 49 MB `Ilwaco-IDE-1.3.8-x86_64.AppImage`.
+Running it seeded `~/ilwaco-ide`, wrote a `desktop-file-validate`-clean menu entry, and opened the
+IDE; a GUI example compiled from that app home and ran. **The second launch was tested
+deliberately** — between runs the payload symlinks dangle, because the previous mount point is gone
+(confirmed: `/tmp/.mount_IlwacoOFBfIa/…` no longer resolved), and `AppRun` correctly relinked them
+to the new mount and started cleanly.
 
 Still unverified: driving a build *from inside the IDE's own UI* rather than reproducing its command
-line, and the `appimagetool` branch of `BuildInstaller.sh`.
+line.
 
 ## Glibc floor
 

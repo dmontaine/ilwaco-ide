@@ -13,14 +13,14 @@
 set -eu
 
 VERSION="@VERSION@"
-DEST="$HOME/Ilwaco"
+DEST="$HOME/ilwaco-ide"
 FORCE=0
 
 usage() {
 	cat <<EOF
 Ilwaco IDE $VERSION installer
 
-  --dir <path>   where to install            (default: $HOME/Ilwaco)
+  --dir <path>   where to install            (default: $HOME/ilwaco-ide)
   --force        reinstall over an existing installation
   --help         show this message
 

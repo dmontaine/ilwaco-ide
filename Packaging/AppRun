@@ -16,11 +16,11 @@
 # only a *real file* there gives a writable ExePath.
 #
 # So AppRun's whole job is to materialise a writable copy of the release tree in
-# ~/Ilwaco (override with ILWACO_HOME) and hand over to ilwaco.sh, the same
+# ~/ilwaco-ide (override with ILWACO_HOME) and hand over to ilwaco.sh, the same
 # launcher an ordinary installed copy uses. Everything below is about that
 # materialisation; the actual launch logic lives in ilwaco.sh.
 #
-#   ~/Ilwaco/
+#   ~/ilwaco-ide/
 #     ilwaco, ilwaco-mcp,      real copies — ExePath() must be writable, and
 #     ilwaco.sh                ilwaco.sh must sit beside them
 #     Settings/ Temp/          real, writable — the IDE writes these
@@ -37,7 +37,7 @@ set -euo pipefail
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 APPDIR="${APPDIR:-$(dirname "$SELF")}"
 PAYLOAD="$APPDIR/usr/share/ilwaco"
-APPHOME="${ILWACO_HOME:-$HOME/Ilwaco}"
+APPHOME="${ILWACO_HOME:-$HOME/ilwaco-ide}"
 
 die() { echo "Ilwaco: $*" >&2; exit 1; }
 
@@ -76,6 +76,38 @@ for f in ilwaco ilwaco-mcp ilwaco.sh license.txt; do
 done
 chmod +x "$APPHOME/ilwaco" "$APPHOME/ilwaco.sh" 2>/dev/null || true
 [ -x "$APPHOME/ilwaco.sh" ] || die "broken package: no launcher in the image"
+
+# --- menu entry --------------------------------------------------------------
+# So the AppImage shows up in the applications menu like the .run installer's
+# copy does, instead of only being launchable from wherever it was downloaded.
+#
+# Exec points at the AppImage itself, NOT at $APPHOME/ilwaco.sh: the app home's
+# Compilers/, Toolchain/ and Resources/ are symlinks into the mount, which is
+# gone once this process exits, so ilwaco.sh only works while the image is
+# mounted. $APPIMAGE is set by the AppImage runtime; when it is not (running a
+# raw AppDir), there is no stable path to record, so no entry is written.
+#
+# Rewritten on every launch, so moving or renaming the AppImage heals itself.
+# The icon is copied out as a real file for the same reason the binaries are.
+if [ -n "${APPIMAGE:-}" ] && [ -f "$APPIMAGE" ]; then
+	apps="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+	if mkdir -p "$apps" 2>/dev/null; then
+		[ -f "$PAYLOAD/Resources/Logo.png" ] && cp -f "$PAYLOAD/Resources/Logo.png" "$APPHOME/.icon.png"
+		cat > "$apps/ilwaco.desktop" <<EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Ilwaco IDE
+Comment=FreeBASIC IDE
+Exec="$APPIMAGE" %F
+Icon=$APPHOME/.icon.png
+Terminal=false
+Categories=Development;IDE;
+EOF
+		command -v update-desktop-database >/dev/null 2>&1 \
+			&& update-desktop-database "$apps" 2>/dev/null || true
+	fi
+fi
 
 # Everything machine-specific — the GTK link targets, the first-run settings,
 # PATH and LD_LIBRARY_PATH — is ilwaco.sh's job, shared with installed copies.

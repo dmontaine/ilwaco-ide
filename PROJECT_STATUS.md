@@ -91,17 +91,22 @@ and **verified 20/20 clean close (exit 0), IDE renders correctly**:
 
 ## ✅ DONE (2026-08-07) — Ilwaco installs: release staging, installer, toolchain, AppDir
 
-**There is a single-file installer, and it works.** Following Astoria's two-step pattern:
+**There is a single-file AppImage, and it works.** Following Astoria's two-step pattern:
 `Packaging/StageRelease.sh` exports a clean end-user tree (from `git archive HEAD`, never the working
 tree — Astoria's expensive lesson) to `../ilwaco-ide-release`; `Packaging/BuildInstaller.sh` stages
-then packages it into `../ilwaco-ide-installer/Ilwaco-IDE-1.3.8-x86_64.run`, 52 MB, self-extracting,
-no root and nothing installed. Verified end to end: **install → launch → compile a GUI example →
-run it → reinstall over the top with a user's project file and hand-edited INI left untouched.**
+then packages it into `../ilwaco-ide-installer/Ilwaco-IDE-1.3.8-x86_64.AppImage`, 49 MB. Verified:
+**run → seeds `~/ilwaco-ide` + a valid menu entry → IDE opens → GUI example compiles and runs →
+second launch relinks the payload to the new mount and starts clean.**
 
-A `.run` rather than a self-extracting zip because `unzip` is not guaranteed on a minimal Linux install
-while `tar`/`gzip` effectively are. The **AppImage** remains the better single-file answer and the
-chosen primary download; `BuildInstaller.sh` emits it when `appimagetool` is present, but that branch
-has never run — fetching the tool needs owner approval.
+`BuildInstaller.sh --run` builds a 52 MB self-extracting fallback for machines without
+`appimagetool`/FUSE; it was verified the same way, plus **reinstall over the top leaving a user's
+project file and hand-edited INI untouched**. A `.run` rather than a self-extracting zip because
+`unzip` is not guaranteed on a minimal Linux install while `tar`/`gzip` effectively are.
+
+**Build-machine requirement:** `appimagetool` is not vendored (as Astoria does not vendor Inno Setup) —
+installed at `~/.local/bin/appimagetool` from the official AppImage project release, needs FUSE.
+Both routes install to **`~/ilwaco-ide`** and write **`~/.local/share/applications/ilwaco.desktop`**
+(owner, 2026-08-07).
 
 The staged tree is laid out **exactly as an installed Ilwaco**, so both packaging routes fall out of
 one staging step and ship identical content. `ilwaco.sh` is the shared launcher; `AppRun` only
@@ -153,12 +158,12 @@ single-file compiles, everything is a project.** So no code change was needed.
 The release blocker is gone, so the order is now feature/packaging work (owner: **no release until the
 whole parity list is complete**, so nothing here is release-gated — sequence by value):
 
-1. **Packaging** — **Ilwaco now installs.** `Packaging/StageRelease.sh` → `../ilwaco-ide-release`,
-   `Packaging/BuildInstaller.sh` → `../ilwaco-ide-installer/Ilwaco-IDE-1.3.8-x86_64.run` (52 MB),
-   following Astoria's `StageRelease.ps1`/`BuildInstaller.ps1` pattern. What remains: the
-   **`.AppImage`** output (branch is written, needs `appimagetool` — a download the owner has to
-   approve), **a release build on an old-glibc host**, and driving a build **from inside the IDE's
-   UI** rather than reproducing its command line. Full design and status table:
+1. **Packaging** — **Ilwaco now ships as a single-file AppImage.** `Packaging/StageRelease.sh` →
+   `../ilwaco-ide-release`, `Packaging/BuildInstaller.sh` →
+   `../ilwaco-ide-installer/Ilwaco-IDE-1.3.8-x86_64.AppImage` (49 MB), following Astoria's
+   `StageRelease.ps1`/`BuildInstaller.ps1` pattern. `--run` builds a 52 MB self-extracting fallback.
+   What remains: **a release build on an old-glibc host**, and driving a build **from inside the
+   IDE's UI** rather than reproducing its command line. Full design and status table:
    [Documentation/Packaging.md](Documentation/Packaging.md).
 2. **The two committed divergences**, in order: **Git integration** (build the ADD chain `d61eb062` →
    `fffee489` → `fd894173` → `95b04f70`, skip removal `9d277f28`), then the **three AI templates** (Claude
