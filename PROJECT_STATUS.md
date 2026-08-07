@@ -75,31 +75,54 @@ the owner decisions, the per-task narratives and the v1 limits are in
 
 ---
 
-## NEXT — the deferred menu features + rest of the 13.3.A walk
+## NEXT — `93bbfa28` S5 (add Delete File), then the deferred menu features + rest of the 13.3.A walk
 
-**Just done (2026-08-06):** `e5e10808` classified (mostly INVERT/SKIP; its Edit-menu toggles are
-superseded by `4a112089`; `GetFileName` no-extension truncation bug ported); the **menu-taxonomy cluster
-COLLAPSED to Astoria's final menu bar** in one designed pass (now **File · View · Project · Code ·
-Code/Form · Form · Run · Tools · Window · Help** — Edit→Code, Designer→Form, new Code/Form menu, Search
-folded into Code, Build+Debug merged into a flattened Run); and the **Android/APK feature fully REMOVED**
-(menu, subs, `Compile()` gradle branch, `RunPr` adb-deploy branch, `ProjectElement` fields, `.vfp`
-reader/writer, the Project-Properties "Android Settings" tab, and the `Android Project` template). All
-verified by effect on `:0` — including opening an example project and its Project Properties (Android tab
-gone, no crash). Detail: [AstoriaParity.md](Documentation/AstoriaParity.md); menu strategy in memory
-`project-menu-collapse-to-final`.
+**This session (2026-08-06, pushed through `d978e66`):** classified `e5e10808` (+ ported its `GetFileName`
+no-extension truncation fix, `68c4d91`); **collapsed the whole menu-taxonomy cluster to Astoria's final
+menu bar** in one designed pass (`3ef11eb` — File · View · Project · Code · Code/Form · Form · Run · Tools ·
+Window · Help); **removed the Android/APK feature** whole (`a299511`); added the **"scope each Astoria-log
+entry against the WHOLE log" rule** to CLAUDE.md (`17a9232`); and finished **`0eaa8806`** — its
+Window-menu-index regression (`133501f`, a fallout of the reorg: `miWindow->Count > 3 → > 1`), the
+**Go-to-Definition (F2) reliability pass** (`ea10cad`), and the **dead toolbar Toggle Breakpoint button**
+(`d978e66`, folding in `d8a2e8fb`'s command-name fix). All build-verified and verified by effect on `:0`.
+Per-item detail in [AstoriaParity.md](Documentation/AstoriaParity.md); menu strategy in memory
+`project-menu-collapse-to-final`; the whole-log rule in memory `feedback-scope-against-whole-astoria-log`.
 
-**Start here — the deferred menu features** (each its own pass, in walk order): Code/Form contextual greying
-(`a114ee5b`/`e1595a31`/`f3538e1c`), designer `@PopupClick` context items in the Form menu (`b05fdacb`),
-the toolbar merge/single-checkable (S3), and the Git menu (`d61eb062`+). When you reach **`4a112089`**,
-wire `ParameterInfoShow` up (INI load, the `If Not ParameterInfoShow Then Exit Sub` gate, the Options
-checkbox) — it is a latent global in Ilwaco. Skip the pure GTK/Linux/32-bit stripping commits
+**Start here — `93bbfa28` (13.3.A S5-S7), which reduces to ONE portable item: add "Delete File" (S5).**
+Fully scoped this session, ready to implement:
+- Ilwaco has **no Delete File at all** (only `DeleteProject`). Astoria's `DeleteEditorFile` (~18 lines,
+  Main.bas) ports **directly** — Ilwaco's GTK `CloseTab` (TabWindow.bas ~1016-1046) frees root-level
+  ("Opened"/loose) tree nodes but leaves project-nested nodes intact, **matching the Win32 behaviour the
+  implementation depends on**, so the "capture `sFilePath` + `bNestedInProject = (tn->ParentNode<>0)`
+  BEFORE `CloseTab`, only detach `tn` after if nested" logic is memory-safe here. Confirmed present:
+  `ptabCode->SelectedTab`, `tb->tn` (`tn As TreeNode Ptr`), `tb->FileName` (`FFileName As WString Ptr` —
+  read as `*tb->FileName`/`WGet`; adapt Astoria's `sFilePath = tb->FileName` accordingly), `MsgBox(...,
+  "Ilwaco IDE", mtWarning, btYesNo)`, `Kill`. Wiring: add `DeleteEditorFile()` (after `DeleteProject`,
+  Main.bas:2705) + declare in Main.bi; add `miDeleteFile` shared var (Main.bas:77) + a **"Delete File"**
+  File-menu item after Delete Project (key `"DeleteFile"`); `Case "DeleteFile": DeleteEditorFile` in
+  ilwaco.bas mClick; enable it on `bEnabledTab` (TabWindow.bas ~218). **Product call:** keep Ilwaco's
+  Project-menu "Remove" (remove-from-project, no disk delete) AND add "Delete File" (disk delete) — two
+  distinct ops; Astoria merged them, we keep both.
+- **The rest of `93bbfa28` is N/A / deferred / INVERTED:** S6's dead-UI removals are already done in Ilwaco
+  (no compiler picker, UTF-8/LF-only ⇒ no encoding/newline pickers) — grep of `frmOptions` finds none; its
+  "Turn on Environment variables" removal is **INVERTED** (Ilwaco wired env-vars up). S7 (docs GTK) N/A.
+  The **Run-toolbar-persistence / `ShowRunToolBar` INI migration** is deferred **with the S3 toolbar merge**.
+
+**Then the deferred menu features** (each its own pass, in walk order): the **S3 toolbar merge** (7→5 bands,
+single-checkable Toolbars, `ShowRunToolBar` INI migration, the 7-band Maximize `Bands.Count-2` fix, band
+renumbering — all deferred here), Code/Form contextual greying (`a114ee5b`/`e1595a31`/`f3538e1c`), designer
+`@PopupClick` context items in the Form menu (`b05fdacb`), and the Git menu (`d61eb062`+). When you reach
+**`4a112089`**, wire `ParameterInfoShow` up (INI load, the `If Not ParameterInfoShow Then Exit Sub` gate,
+the Options checkbox) — a latent global in Ilwaco. Skip the pure GTK/Linux/32-bit stripping commits
 (`e139c2cc`, `c494207f`, `7baebd1e`, `add4642a`, `76abaa5a`, `15e66cc5`).
 
 **Method that has been working:** read Astoria's commit *and* what its code actually does before
-classifying, and **look downstream** — twice now a change was reworked later (`e5e10808`'s toggles by
-`4a112089`; the whole menu cluster by ~15 commits), so scoping against Astoria's *final* state avoided
-building UI only to tear it out. Build with `./build-linux.sh editor` in the background, verify on
-`:0`, then document and commit per item.
+classifying, and **look downstream at the whole log** (now a CLAUDE.md rule) — repeatedly a change was
+reworked later (`e5e10808`'s toggles by `4a112089`; the menu cluster by ~15 commits; the toolbar breakpoint
+button by `d8a2e8fb`), so scoping against Astoria's *final* state avoids building what a later commit undoes.
+Build with `./build-linux.sh editor` in the background, verify on `:0`, then document and commit per item.
+**Note:** live `:0` verification is hampered by the **known intermittent startup/analysis SIGSEGV** — it
+hits opening *large* files (thread-heavy analysis); a small file opens first try. Not a regression; retry.
 
 **Two items to settle before the testing phase** (both in TechnicalDebt "Known gaps"): the
 **blank-terminal finding** (a user pressing Run sees an empty window — reproducible with
