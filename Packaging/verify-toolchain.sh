@@ -29,11 +29,14 @@ FBC="$REPO/Compilers/FreeBASIC-1.10.1-linux-x86_64/bin/fbc"
 WORK=$(mktemp -d); trap 'rm -rf "$WORK"' EXIT
 fails=0
 
-# fbc runs with a scrubbed environment: only the bundled toolchain on PATH.
+# fbc runs with a scrubbed environment: only the bundled toolchain on PATH, and
+# only runtime/ on LD_LIBRARY_PATH -- exactly what AppRun exports. Pointing this
+# at sysroot/ instead would "work" while hiding a real bug, because sysroot
+# holds libc.so.6 as a link target and must never be on a library path.
 # -v is not optional here: the assembler/linker command lines it prints are what
 # the host-reach-back check below inspects.
 run_fbc() {
-	env -i PATH="$TC/bin" HOME="$WORK" LD_LIBRARY_PATH="$SYS" "$FBC" -v "$@"
+	env -i PATH="$TC/bin" HOME="$WORK" LD_LIBRARY_PATH="$TC/runtime" "$FBC" -v "$@"
 }
 
 check() {

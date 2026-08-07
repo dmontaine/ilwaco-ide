@@ -141,10 +141,19 @@ ln -sf libm.so.6      "$SYS/libm.so"
 ln -sf libdl.so.2     "$SYS/libdl.so"
 ln -sf libpthread.so.0 "$SYS/libpthread.so"
 
-# ncurses/tinfo: every FB console program links them, so they ship bundled.
-# libtinfo.so.5 is what fbc itself needs (modern distros carry only .so.6).
-cp -L "$REPO/Compilers/shim/libtinfo.so.5" "$SYS/libtinfo.so.5" \
+# fbc's own runtime dependency: it links libtinfo.so.5, and modern distros carry
+# only .so.6. This is the ONLY library that belongs on the *running* app's
+# LD_LIBRARY_PATH, which is why it lives in its own directory.
+#
+# Never put sysroot/ on LD_LIBRARY_PATH: it holds libc.so.6, libm.so.6 and the
+# loader as *link* targets, and exporting that directory would make the IDE and
+# everything it spawns resolve glibc against the bundled copy instead of the
+# host's -- mixing our glibc with the host GTK that is linked against theirs.
+mkdir -p "$TC/runtime"
+cp -L "$REPO/Compilers/shim/libtinfo.so.5" "$TC/runtime/libtinfo.so.5" \
 	|| die "vendored libtinfo.so.5 missing from Compilers/shim/"
+
+# ncurses/tinfo link targets: every FB console program links them.
 for base in libtinfo libncurses; do
 	real=$(ls /lib/x86_64-linux-gnu/$base.so.[0-9] 2>/dev/null | sort -V | tail -1) \
 		|| die "no $base.so.N on the build machine"

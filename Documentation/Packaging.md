@@ -17,8 +17,8 @@ Documentation) lives **outside** the read-only image and is seeded on first run.
 | Bundled link toolchain (`as`, `ld`, gcc stub, C sysroot) | **Done** — `Packaging/make-toolchain.sh`, proven by `Packaging/verify-toolchain.sh` |
 | GTK link targets generated against the host runtime | **Done** — `Packaging/gen-gtk-links.sh` |
 | `-gen gas64` for user compiles | **Done** — already emitted by the IDE; see "The gcc question" below |
-| AppDir layout + `AppRun` | Not built |
-| Writable user-data dirs, seeded on first run | Not built (needs IDE source changes) |
+| AppDir layout + `AppRun` | **Done** — `Packaging/build-appdir.sh` + `Packaging/AppRun`; launched and verified |
+| Writable user-data dirs, seeded on first run | **Done** — in `AppRun`, no IDE source changes needed |
 | Wrapping the AppDir into a `.AppImage` | Not built (needs `appimagetool`) |
 | Building on an old-glibc host | Not set up |
 
@@ -110,6 +110,59 @@ The project gating is correct and must stay: **Ilwaco has no loose single-file c
 is a project**, so "no project" is not a case that needs covering. Ilwaco is therefore gas64-only,
 with no backend picker, which is why the GCC/CLANG-only optimization and `-Wc` warning options were
 removed from the UI.
+
+## The AppDir, and why the IDE cannot run from inside the image
+
+Ilwaco resolves everything relative to FreeBASIC's `ExePath()` — Settings, Templates, Compilers,
+Resources, Temp — and it **writes** to several of them: `Settings/ilwaco.ini` and
+`Settings/Workspace.ini` on exit, `Temp/Compile.log` on every build, `.bak` files on save. An
+AppImage is a read-only squashfs, so the IDE cannot simply run from inside it.
+
+The obvious fix — symlink the binary into a writable directory — does not work. **`ExePath()`
+resolves symlinks** (measured 2026-08-07: it reads `/proc/self/exe`, so a symlink into the image
+reports the *image's* path). Only a real file in a writable directory yields a writable `ExePath`.
+
+So `AppRun` maintains a writable **app home**, `~/Ilwaco` by default (`ILWACO_HOME` overrides):
+
+| In `~/Ilwaco` | What it is |
+| --- | --- |
+| `ilwaco`, `ilwaco-mcp` | **real copies** — `ExePath()` must be writable. Refreshed when the image ships a different build, so upgrading the AppImage upgrades the IDE |
+| `Settings/`, `Temp/` | real and writable; the IDE writes these |
+| `Projects/`, `Examples/`, `Documentation/`, `Templates/`, `AddIns/` | the user's work — seeded once, then **never touched again**, so edits survive an upgrade |
+| `Compilers/`, `Controls/`, `Resources/`, `Help/`, `CHMVIEW/` | symlinks into the mounted image |
+| `.toolchain/`, `.link-shim/` | the bundled toolchain, and the generated GTK link targets |
+
+The image mounts at a different path every run (`/tmp/.mount_XXXXXX`), so **every symlink into it is
+stale by the next launch**. `AppRun` recreates them on each start, which is cheap and also picks up
+an upgraded image. The two paths baked into the IDE's settings — `.toolchain` and `.link-shim` —
+are stable precisely because they live in the app home rather than in the image.
+
+### Settings the shipped INI cannot carry
+
+Two things in the tracked `Settings/ilwaco.ini` are wrong for a packaged build: the `[Compilers]`
+block still points at the original author's machine (`/mnt/media/FreeBasic/…`), and nothing tells
+fbc where the bundled link sysroot is. `AppRun` patches both when it first seeds the app home,
+because the values depend on where the app home lands. It changes **values only** — never the shape
+of `[Compilers]`, whose parser is fragile about being restructured — and only on first seed, so a
+user's later edits are never overwritten.
+
+That patcher has one trap worth remembering: **`ilwaco.ini` starts with a UTF-8 BOM**, so its first
+line is not literally `[Parameters]`. A naive section compare silently skips that whole section
+while later sections patch correctly — which is exactly what happened on the first run here. The
+patcher now compares against a BOM-stripped copy, and *verifies each key landed*, because a miss is
+otherwise invisible until the user's first build fails deep inside fbc.
+
+### What has been verified
+
+On 2026-08-07, end to end on this machine: `build-appdir.sh` produced a 136 MB AppDir; `AppRun`
+seeded a clean app home, patched all three settings, generated 18 GTK link targets, and launched
+the IDE (window opens, only the known-harmless `AppAddin`/`AppConsole` resource warnings). A real
+MFF GUI example (`Examples/Class Form Example.bas`) then compiled under `AppRun`'s exact
+environment using the seeded compiler arguments, and **the resulting 1.7 MB program ran and opened
+its window**.
+
+Still unverified: driving that same build *from inside the IDE's own UI* rather than reproducing
+its command line.
 
 ## Glibc floor
 

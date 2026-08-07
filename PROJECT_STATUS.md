@@ -89,7 +89,23 @@ and **verified 20/20 clean close (exit 0), IDE renders correctly**:
 
 ---
 
-## ✅ DONE (2026-08-07) — the AppImage's bundled link toolchain
+## ✅ DONE (2026-08-07) — the AppImage's toolchain, AppDir and AppRun
+
+**The AppDir runs.** `Packaging/build-appdir.sh` assembles a 136 MB AppDir; `Packaging/AppRun` seeds a
+writable app home, patches the settings the shipped INI cannot carry, regenerates the GTK link targets,
+and launches the IDE. Verified end to end: window opens, and a real MFF GUI example compiled under
+AppRun's environment with the seeded arguments then **ran and opened its own window**.
+
+The design turns on one measurement: **`ExePath()` resolves symlinks**, so the IDE — which writes to
+`Settings/`, `Temp/` and `.bak` files next to its own binary — cannot run from the read-only image, and
+cannot be symlinked out of it either. `AppRun` therefore keeps **real copies** of the binaries in
+`~/Ilwaco` (refreshed when the image ships a different build) and relinks the bulk read-only payload
+into the image on every start, because the mount point moves each run. Two traps worth remembering are
+in [Packaging.md](Documentation/Packaging.md): the shipped `[Compilers]` block still points at the
+original author's machine, and **`ilwaco.ini`'s UTF-8 BOM** makes a naive `[Parameters]` section match
+fail silently (it did, first run — the patcher now verifies each key landed).
+
+### The bundled link toolchain
 
 The hardest part of packaging is settled: **Ilwaco can now compile FreeBASIC with nothing from the host
 but the kernel and the GTK/libc runtime a normal desktop already has.** Three scripts in
@@ -122,9 +138,11 @@ The release blocker is gone, so the order is now feature/packaging work (owner: 
 whole parity list is complete**, so nothing here is release-gated — sequence by value):
 
 1. **Packaging** — the AppImage is the difference between a project and something people can install
-   (memory `project-packaging`). **The bundled link toolchain is now DONE** (see the section below);
-   what remains is the AppDir + `AppRun`, the writable user-data dirs, and wrapping it into a
-   `.AppImage`. Full design and status table: [Documentation/Packaging.md](Documentation/Packaging.md).
+   (memory `project-packaging`). **The toolchain, the AppDir and `AppRun` are now DONE** (see the
+   section below). What remains: **wrapping the AppDir into a `.AppImage`** (needs `appimagetool`,
+   not on this machine — a download the owner has to approve), **a release build on an old-glibc
+   host**, and driving a build **from inside the IDE's UI** rather than reproducing its command line.
+   Full design and status table: [Documentation/Packaging.md](Documentation/Packaging.md).
 2. **The two committed divergences**, in order: **Git integration** (build the ADD chain `d61eb062` →
    `fffee489` → `fd894173` → `95b04f70`, skip removal `9d277f28`), then the **three AI templates** (Claude
    Code, ChatGPT, Kun — ADD chain `987e8b7e`/`ef5a6252`/`72ea5980`/`de8c1e5a`, skip `6de0332f`). See the
