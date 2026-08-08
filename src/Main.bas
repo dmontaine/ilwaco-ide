@@ -423,7 +423,7 @@ Sub ClearDebugPanels()
 End Sub
 
 Sub SetCodeVisible(tb As TabWindow Ptr)
-	If tb->tbrTop.Buttons.Item("Form")->Checked = True Then tb->tbrTop.Buttons.Item("Code")->Checked = True: tbrTop_ButtonClick *tb->tbrTop.Designer, tb->tbrTop, *tb->tbrTop.Buttons.Item("Code")
+	If tb->tbrView.Buttons.Item("Form")->Checked = True Then tb->tbrView.Buttons.Item("Code")->Checked = True: tbrTop_ButtonClick *tb->tbrView.Designer, tb->tbrView, *tb->tbrView.Buttons.Item("Code")
 End Sub
 
 Sub SelectError(ByRef FileName As WString, iLine As Integer, tabw As TabWindow Ptr = 0)
@@ -6884,9 +6884,9 @@ Sub tvExplorer_NodeActivate(ByRef Designer As My.Sys.Object, ByRef Sender As Con
 			tb = Cast(TabWindow Ptr, ptabCode->Tabs[i])
 			If tb->tn = @Item Then
 				ptabCode->SelectedTabIndex = ptabCode->Tabs[i]->Index
-				If tb->Des <> 0 AndAlso tb->tbrTop.Buttons.Item("Code")->Checked Then
-					tb->tbrTop.Buttons.Item("CodeAndForm")->Checked = True
-					tbrTop_ButtonClick *tb->tbrTop.Designer, tb->tbrTop, *tb->tbrTop.Buttons.Item("CodeAndForm")
+				If tb->Des <> 0 AndAlso tb->tbrView.Buttons.Item("Code")->Checked Then
+					tb->tbrView.Buttons.Item("CodeAndForm")->Checked = True
+					tbrTop_ButtonClick *tb->tbrView.Designer, tb->tbrView, *tb->tbrView.Buttons.Item("CodeAndForm")
 				End If
 				tb->txtCode.SetFocus
 				t = True
@@ -8341,17 +8341,17 @@ Sub tabCode_SelChange(ByRef Designer As My.Sys.Object, ByRef Sender As TabContro
 		miForm->Enabled = True
 		miCodeAndForm->Enabled = True
 		miGotoCodeForm->Enabled = True
-		tb->tbrTop.Buttons.Item("Form")->Enabled = True
-		tb->tbrTop.Buttons.Item("CodeAndForm")->Enabled = True
+		tb->tbrView.Buttons.Item("Form")->Enabled = True
+		tb->tbrView.Buttons.Item("CodeAndForm")->Enabled = True
 	Else
 		lvProperties.Nodes.Clear
 		lvEvents.Nodes.Clear
 		miForm->Enabled = False
 		miCodeAndForm->Enabled = False
 		miGotoCodeForm->Enabled = False
-		tb->tbrTop.Buttons.Item("Form")->Enabled = False
-		tb->tbrTop.Buttons.Item("CodeAndForm")->Enabled = False
-		tb->tbrTop.Buttons.Item("Code")->Checked = True: tbrTop_ButtonClick *tb->tbrTop.Designer, tb->tbrTop, *tb->tbrTop.Buttons.Item("Code")
+		tb->tbrView.Buttons.Item("Form")->Enabled = False
+		tb->tbrView.Buttons.Item("CodeAndForm")->Enabled = False
+		tb->tbrView.Buttons.Item("Code")->Checked = True: tbrTop_ButtonClick *tb->tbrView.Designer, tb->tbrView, *tb->tbrView.Buttons.Item("Code")
 		'SetRightClosedStyle True, True
 	End If
 	If tb->FileName = "" Then

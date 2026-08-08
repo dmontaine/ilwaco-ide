@@ -184,6 +184,7 @@ Public:
 	pnlForm As Panel
 	tbrLeft As ToolBar
 	tbrTop As ToolBar
+	tbrView As ToolBar
 	pnlToolbar As Panel
 	txtCode As EditControl
 	cboClass As ComboBoxEx

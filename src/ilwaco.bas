@@ -459,15 +459,15 @@ Sub mClick(ByRef Designer_ As My.Sys.Object, Sender As My.Sys.Object)
 		Case "NextBookmark":                NextBookmark 1
 		Case "PreviousBookmark":            NextBookmark -1
 		Case "ClearAllBookmarks":           ClearAllBookmarks
-		Case "Code":                        tb->tbrTop.Buttons.Item("Code")->Checked = True: tbrTop_ButtonClick *tb->tbrTop.Designer, tb->tbrTop, *tb->tbrTop.Buttons.Item("Code")
-		Case "Form":                        tb->tbrTop.Buttons.Item("Form")->Checked = True: tbrTop_ButtonClick *tb->tbrTop.Designer, tb->tbrTop, *tb->tbrTop.Buttons.Item("Form")
-		Case "CodeAndForm":                 tb->tbrTop.Buttons.Item("CodeAndForm")->Checked = True: tbrTop_ButtonClick *tb->tbrTop.Designer, tb->tbrTop, *tb->tbrTop.Buttons.Item("CodeAndForm")
+		Case "Code":                        tb->tbrView.Buttons.Item("Code")->Checked = True: tbrTop_ButtonClick *tb->tbrView.Designer, tb->tbrView, *tb->tbrView.Buttons.Item("Code")
+		Case "Form":                        tb->tbrView.Buttons.Item("Form")->Checked = True: tbrTop_ButtonClick *tb->tbrView.Designer, tb->tbrView, *tb->tbrView.Buttons.Item("Form")
+		Case "CodeAndForm":                 tb->tbrView.Buttons.Item("CodeAndForm")->Checked = True: tbrTop_ButtonClick *tb->tbrView.Designer, tb->tbrView, *tb->tbrView.Buttons.Item("CodeAndForm")
 		Case "GotoCodeForm":
 			If tb->txtCode.Focused Then
-				If tb->tbrTop.Buttons.Item("Code")->Checked Then tb->tbrTop.Buttons.Item(tb->LastButton)->Checked = True: tbrTop_ButtonClick *tb->tbrTop.Designer, tb->tbrTop, *tb->tbrTop.Buttons.Item(tb->LastButton)
+				If tb->tbrView.Buttons.Item("Code")->Checked Then tb->tbrView.Buttons.Item(tb->LastButton)->Checked = True: tbrTop_ButtonClick *tb->tbrView.Designer, tb->tbrView, *tb->tbrView.Buttons.Item(tb->LastButton)
 				If tb->Des Then DesignerChangeSelection(*tb->Des, tb->Des->SelectedControl)
 			Else
-				If tb->tbrTop.Buttons.Item("Form")->Checked Then tb->tbrTop.Buttons.Item("Code")->Checked = True: tbrTop_ButtonClick *tb->tbrTop.Designer, tb->tbrTop, *tb->tbrTop.Buttons.Item("Code")
+				If tb->tbrView.Buttons.Item("Form")->Checked Then tb->tbrView.Buttons.Item("Code")->Checked = True: tbrTop_ButtonClick *tb->tbrView.Designer, tb->tbrView, *tb->tbrView.Buttons.Item("Code")
 				Dim As Integer iSelStartLine, iSelEndLine, iSelStartChar, iSelEndChar
 				tb->txtCode.GetSelection iSelStartLine, iSelEndLine, iSelStartChar, iSelEndChar
 				tb->txtCode.SetFocus

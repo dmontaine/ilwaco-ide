@@ -62,119 +62,41 @@ name distinct and mapped in one place.
 
 ---
 
-## ⏳ HANDOFF (2026-08-08) — framework license headers + deep-clean removals done; Stage A stash lost
+## ⏳ HANDOFF (2026-08-08) — Stage A done: the bottom view-selector (tcView, reimplemented on GTK)
 
-Builds on the prior session's framework rename `Controls/MyFbFramework` → `Controls/Framework`
-(committed `55745b8`). This session:
+Redoes the lost Stage A stash (that prior 2026-08-08 handoff is now in [HISTORY.md](HISTORY.md)) and
+**completes it — owner-verified in the running IDE across all three buttons on a form.**
 
-**1. DONE — LGPL modification header on every framework source file.** The original *"This file is part
-of MyFBFramework"* attribution is **kept**; the *"Ilwaco IDE Modifications / copyright 2026 Donald
-Montaine"* LGPL v3 block is **appended below it** on all **199** retained `Controls/Framework/mff/*.bi`
-and `*.bas`, placed exactly per Astoria's own rules (after the `'###`/`'***` attribution box; after the
-zlib `''` header; at the top for header-less files). Idempotent, verified against Astoria. Files were
-also **converted to LF** (only `mff.bi`/`mff.bas`/`mff.rc` were CRLF).
+**What shipped.** The three *Code / Form / Code And Form* view toggles Ilwaco added to the top toolbar
+`tbrTop` are gone; a new **bottom-docked toolbar `tbrView`** (`Align = alBottom`, `Height = 26`) carries
+them as a text-labelled radio-button row ordered **Code And Form / Code / Form**. The class/function
+dropdowns stay on `tbrTop` (top). Astoria's mechanism — a `TabControl` styled `TabStyle.tsButtons`
+(`4b643af5`) — **does not translate**: MFF's GTK `TabControl` is a `gtk_notebook` and `FTabStyle` is
+never consulted, so `tsButtons` is a no-op there. The GTK reimplementation reuses the existing
+`tbsCheckGroup` style (→ `gtk_radio_tool_button`, genuine single-selection), shows text via
+`tbrView.List = True` (`GTK_TOOLBAR_BOTH_HORIZ`) with each button flagged
+`gtk_tool_item_set_is_important` so the label draws beside the icon. Behaviour is otherwise identical to
+the old toggles: same `tbrTop_ButtonClick` handler (it resolves its tab via `Button.Ctrl->Parent`, so it
+works on either toolbar), and the ~30 `tbrTop.Buttons.Item("…")` call sites across `ilwaco.bas`,
+`Main.bas`, `TabWindow.bas` were repointed to `tbrView`. Full rationale:
+[AstoriaParity.md](Documentation/AstoriaParity.md) "UI work — staged sequence", Stage A.
 
-**2. DONE — two dead MFF designer components removed** (no-dead-code policy, ahead of the scheduled
-deep-clean): **`HTTPServer.{bi,bas}`** (matches Astoria `4a0798bf`; kept the HTTP client +
-`HTTPConnection` — edited `mff.bi` include/registration, `mff.rc`, `Framework.vfp`, and
-`src/TabWindow.bas:3592`) and **`NativeFontControl.{bi,bas}`** (already dead here — commented includes —
-and dropped upstream + in Astoria; also removed its `Framework.vfp`/`mff.rc` refs). Recorded in
-[IlwacoIDESignificantChanges.md](Documentation/IlwacoIDESignificantChanges.md) §2 + `REMOVED_FEATURES`.
+**Two latent Ilwaco bugs fixed in passing.** A tab-add `.tbrTop.Buttons.Item(1)->Checked` and a
+designer-path `Item(3)->Checked` were both hitting *separators* — index-based refs that never matched the
+view buttons (Astoria's base used the button *names*; Ilwaco had drifted to indices). The first is
+deleted (Astoria removed it too); the second is corrected to `Item("CodeAndForm")`, matching Astoria's
+`SyncViewTab("CodeAndForm")` — a sync that must NOT re-fire the handler, which holds because MFF's
+`ToolButton.Checked` setter is unported Win32 and on GTK only sets `FChecked`.
 
-**3. DECISION — framework BOMs KEPT deliberately.** No-BOM was requested, but a UTF-8 BOM is what makes
-the framework's bare `""` literals wide (`WString`), so a blanket strip breaks the build (`SysUtils.bas
-error 318`). Astoria's route was to strip **and** rewrite every literal to `WStr("")` — a large pass it
-never finished (8 framework + 11 `src/` files still BOM'd there). **Measured that a framework BOM cannot
-harm a user app:** a BOM is scoped to its own file and does *not* leak into an including file's literals
-(compiled include-scoping test, FB 1.10.1). So Ilwaco keeps the framework BOMs; the discipline that
-matters (never *write* a BOM; keep user-facing Example/Template source BOM-free) is unchanged. **DONE
-(2026-08-08):** the 9 Example/Template `.vfp` BOMs were stripped, and `SaveProject` now removes the BOM
-its `Encoding "utf-8"` write adds (new `StripUtf8Bom`, `Main.bas`), so saved projects stay BOM-less.
+**Build-verified GREEN** (`./build-linux.sh editor`, exit 0) and owner-verified on `:0`; `ilwaco` is
+rebuilt and staged with the source. No `ApplyView`/`ShowView` method layer was introduced — that Astoria
+abstraction is deferred until Stage C's menu-greying actually needs it.
 
-**4. Build-verified GREEN** — `./build-linux.sh lib` and `editor` both exit 0; `ilwaco` and
-`Controls/Framework/libmff64_gtk3.so` are rebuilt and staged with the source.
-
-**5. New record — [AstoriaFindings.md](Documentation/AstoriaFindings.md)** (owner, 2026-08-08): defects
-found in **Astoria's own** Win64 code during the port, to feed back when Astoria unfreezes — the mirror
-of [UpstreamFixes.md](Documentation/UpstreamFixes.md) (shared-upstream bugs). Wired into the TestPlan
-rule table; `DocCheck` green.
-
-**6. LOST — the Stage A (tcView bottom button row) `git stash` is GONE.** A stash is local to a working
-copy and does **not** travel through `origin`; this is a fresh sandbox, so it is unrecoverable here.
-Redo it from the design notes in the `Docs: stage the remaining UI work` commit and
-[AstoriaParity.md](Documentation/AstoriaParity.md) "UI work — staged sequence": the tcView row (order
-**Code · Code And Form · Form**, text labels via `FCaption` + `gtk_toolbar_set_style(...,
-GTK_TOOLBAR_BOTH_HORIZ)`, reorder the three `Add` calls — handlers key off `Button.Name`, not index),
-then re-test the view-switch crash on a *form* (`gtk_container_propagate_draw: GTK_IS_WIDGET(child)
-failed`) against the now-present `Controls/Framework` library. Also still open: the benign
-`CurrentView() = "Code"` → `CBool(...)` warning wrap in `src/TabWindow.bas`.
-
-**Resume order:** (i) redo Stage A from the notes (piece 6); (ii) the parity tail. *(The 9 `.vfp` BOM
-fix is DONE — see piece 3.)*
-
----
-
-## ✅ DONE (2026-08-07) — Ilwaco ships three ways: `.deb`, `.rpm` and a no-root `.tar.gz`
-
-Owner directive: ".deb and .rpm — between them they cover over 90% of the Linux market", then the
-clarifying concern, "what about a user who wants to use Ilwaco but does not have root access". The
-resolution is **two tiers chosen by one question — does the user have root**, documented for users in
-the new [Installation.md](Documentation/Installation.md) and for maintainers in
-[Packaging.md](Documentation/Packaging.md).
-
-| user | artefact | root? |
-| --- | --- | --- |
-| own laptop | `.deb` (39 MB) / `.rpm` (47 MB) — double-click install, menu entry, `apt`/`dnf` upgrades | yes |
-| managed school/work machine | `.tar.gz` (44 MB) wrapping the AppImage | **no** |
-
-**The bare `.AppImage` is no longer offered.** It is shipped inside the `.tar.gz` because tar restores
-mode 755 while a browser download is always 644 — so the no-root path needs **no `chmod`**, verified
-by extracting and checking the bit. Offering both would invite a beginner to pick the dead-end one.
-
-**One implementation of the writable-home problem.** A system package installs a *root-owned*
-payload, and the IDE cannot run from a directory it cannot write to (`ExePath()` follows symlinks) —
-the identical constraint the AppImage hit. So `Packaging/seed-app-home.sh` was factored out of
-`AppRun` and is now shared by both routes; `/usr/bin/ilwaco` (`Packaging/ilwaco-launcher`) is a
-12-line wrapper over it. `/opt/ilwaco-ide` holds only the immutable payload; every user still gets
-their own `~/ilwaco-ide` with **no per-user configuration**.
-
-**The two dependency traps, both real, both caught before shipping:**
-- **RPM:** Fedora/RHEL call the GTK package `gtk3`, SUSE calls it `libgtk-3-0`, so a name-based
-  `Requires:` reaches at most two of the three. rpmbuild's **SONAME** auto-requires
-  (`libgtk-3.so.0()(64bit)`) satisfy all three — the auto-generated deps *are* the portability
-  mechanism. But the generator had to be fenced off the bundled toolchain: `fbc` needs
-  `libtinfo.so.5`, which we ship ourselves and Fedora does not install, so an unfenced scan would
-  have baked in an unsatisfiable dependency and made the package refuse to install. Verified: the
-  built RPM requires `libtinfo.so.6` (legitimate, the IDE's own) and no `.so.5`.
-- **DEB:** `dpkg-shlibdeps` names packages as the *build host* has them, and Debian's 64-bit `time_t`
-  transition renamed `libgtk-3-0` → `libgtk-3-0t64` (plus glib, atk) in Debian 13 / Ubuntu 24.04
-  while **Debian 12, Ubuntu 22.04 and Mint 21 keep the old names**. Built here, the first `.deb` was
-  uninstallable on half the targets. Each renamed dep is now rewritten to an alternative,
-  `libgtk-3-0t64 (>= 3.16.2) | libgtk-3-0 (>= 3.16.2)`, modern name first.
-
-**Reinstall safety — the owner's explicit requirement — proven, not asserted.** Planted a project and
-a custom setting in a seeded home, then re-ran both the package launcher and the real AppImage over
-it: `projects/` came back **byte-identical**, the custom setting survived, and a user-edited example
-survived. It holds at three independent levels: neither package contains any path under a home
-directory at all (checked), their scriptlets touch only desktop/icon caches, and the seed loop skips
-anything that already exists. Uninstalling deliberately leaves `~/ilwaco-ide` behind.
-
-**A display is now required, and said so politely (owner, 2026-08-07).** "Ilwaco should never be
-installed on a headless system — I would prefer it fail gracefully with a message that a display is
-required." Implemented at **launch**, not install: an install-time check would misfire on the
-ordinary `sudo apt install` over SSH into one's own desktop, where `DISPLAY` is unset on a machine
-that plainly has a GUI (owner agreed, install left alone). `Packaging/ilwaco.sh` now exits 1 with a
-plain message when neither `DISPLAY` nor `WAYLAND_DISPLAY` is set, and every shipped route launches
-through it. **The obvious in-binary guard does not work** — a check at the top of `src/ilwaco.bas`
-never runs, because GTK initialises in a global constructor and FreeBASIC runs those before the main
-module's statements; it was tried, measured as ineffective, and reverted rather than left looking
-like protection. Detail in [TechnicalDebt.md](Documentation/TechnicalDebt.md).
-
-**Verified by effect:** the `.deb` extracted to a scratch root, its launcher run from there → seeded a
-correct home → **the IDE opened on `:0`** with IntelliSense loaded, and the `/opt` payload was
-confirmed untouched afterwards. With no display the same launcher prints the message and exits 1. Glibc floor 2.34 gives Debian 12+, Ubuntu 22.04+, Mint 21+,
-Fedora 35+, RHEL 9+, openSUSE Leap 15.5+. **Not yet verified: installing the `.rpm` on real Fedora**
-— it is built and inspected only (see NEXT 1).
+**Resume order:** the parity tail, now led by **Stage B — Form Designer depth** (`f292db0b` per-form
+control tree, `0c08fe5f` PagePanel, `623aa2a7` + `1c00c1fb` designer Undo/Redo) per the staged sequence.
+Still open, unchanged: the benign `CurrentView() = "Code"` → `CBool(...)` warning wrap in
+`src/TabWindow.bas`, and the command-line **file**-open gap (observed again: `./ilwaco <file>` opens no
+editor tab — MCP `open_in_editor` does; this is a superset of the known `.vfp`-Explorer gap).
 
 ---
 
@@ -193,7 +115,7 @@ the whole parity list is complete**, so nothing here is release-gated — sequen
       [McpServer.md](Documentation/McpServer.md); the owner asked for checkpoints between each.
 
    b. **Examples — DONE** (deleted the broken half, 54 build-verified through the shipped toolchain).
-      Full detail in the DONE section above and [ExamplesAudit.md](Documentation/ExamplesAudit.md).
+      Full detail in [HISTORY.md](HISTORY.md) and [ExamplesAudit.md](Documentation/ExamplesAudit.md).
 
 1. **Flatpak — considered and REJECTED (owner, 2026-08-07).** Raised as the one technology that gives
    a genuine two-double-click, no-root install. Rejected because the premise it serves is weak: **a
@@ -207,7 +129,7 @@ the whole parity list is complete**, so nothing here is release-gated — sequen
    [Packaging.md](Documentation/Packaging.md) still stands.
 
 2. **Fresh owner directives (2026-08-07) — all DONE.** The `projects` rename, the seed-patch
-   hardening, and the download question (now answered with three artefacts). See the DONE sections.
+   hardening, and the download question (now answered with three artefacts). See [HISTORY.md](HISTORY.md).
    **What is left is verification we cannot do here: install the `.rpm` on a real Fedora system.**
    The owner is setting up a Fedora VM for exactly this. Until that passes, the RPM is *built and
    inspected* but not *installed-and-run* anywhere. Check, in order: `dnf install ./…rpm` resolves
@@ -284,7 +206,7 @@ entries a bulk delete would have lost).
 loader, `31a5e20`) is DONE and kept as a correctness improvement (detail in [HISTORY.md](HISTORY.md));
 `13.72` (idle slices) stays deferred until its stall is felt on a real project. Astoria downgraded the
 underlying race itself (`382dbb07`: 0 deaths/60 at ≥1 s/switch) — not a blocker. The actual shutdown
-SIGSEGV was a separate deterministic close crash, now fixed (DONE section above).
+SIGSEGV was a separate deterministic close crash, now fixed (see [HISTORY.md](HISTORY.md)).
 
 **The UI portion of this tail is now sequenced** in [AstoriaParity.md](Documentation/AstoriaParity.md)
 "UI work — staged sequence" (Stages A–F, central Form/Editor area first, terminal re-entry noted) —
@@ -368,7 +290,7 @@ off in Tools ▸ Options ▸ General; the status bar shows which. See
 - **Shutdown SIGSEGV — FIXED 2026-08-07.** Was a deterministic close crash (null `Parent` in
   `frmMain_Close` when the debugger is off, plus a global-destructor use-after-free over freed GTK
   widgets); fixed by a `Main.bas` null-guard and an MFF `Form.bas` main-form `_exit(0)` (Astoria parity).
-  Closes are clean (exit 0), verified 20/20. Detail in the DONE section above and memory
+  Closes are clean (exit 0), verified 20/20. Detail in [HISTORY.md](HISTORY.md) and memory
   `project-known-segfault-threading`. If a close crash recurs it is a **new** defect — diagnose fresh.
 - Harmless startup warnings: resources `AppAddin`/`AppConsole` "do not exist".
 - **GUI screenshots on this GNOME/Wayland box (Ubuntu 26.04):** `gnome-screenshot` and the GNOME Shell
@@ -393,7 +315,7 @@ off in Tools ▸ Options ▸ General; the status bar shows which. See
   `CompilationArguments64Linux` or globally via `[Parameters] Compiler64Arguments`; without it fbc stops at
   `ld: cannot find -lncurses` (measured again 2026-08-06). This is a *from-source dev build* caution only —
   **for the shipped app it is solved**: `Packaging/make-toolchain.sh` bundles binutils, a stub `gcc` and a
-  minimal C link sysroot, verified self-contained (DONE section above,
+  minimal C link sysroot, verified self-contained ([HISTORY.md](HISTORY.md),
   [Packaging.md](Documentation/Packaging.md)). What is still open there is the AppDir/`AppRun`, the
   writable user-data dirs, the `.AppImage` wrap, and the `-gen gas64` decision.
 - **GTK dark mode (REIMPLEMENT):** MFF ships a real GTK3 `SetDarkMode`, but `g_darkModeSupported` was only

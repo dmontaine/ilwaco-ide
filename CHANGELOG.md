@@ -52,6 +52,9 @@ The format is loosely [Keep a Changelog](https://keepachangelog.com/). Dates are
 - Bottom/debug panels cleared on project close and debug end (2026-08-03).
 
 ### Changed / Removed (opinionated by design)
+- The **Code / Form / Code And Form** view switcher moved from the top toolbar to a labelled button row
+  **docked at the bottom** of each source tab, ordered *Code And Form / Code / Form* (Astoria parity,
+  `4b643af5`, reimplemented for GTK) (2026-08-08).
 - The **Remove** command is gone, merged into **Delete File**. Remove deleted a file from disk with no
   confirmation of any kind; there is now one command, and it asks first (2026-08-06).
 - The save-changes prompt no longer counts down and answers **Yes** for you after ten seconds — it

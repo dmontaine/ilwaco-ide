@@ -335,7 +335,6 @@ Function AddTab(ByRef FileName As WString = "", bNew As Boolean = False, TreeN A
 				gtk_widget_show_all(._Box)
 			tb->ImageKey = GetIconName(FileNameNew)
 			If Not bNoActivate Then .SelectTab Else .Visible = True: ptabCode->RequestAlign: .Visible = False
-			.tbrTop.Buttons.Item(1)->Checked = True
 			If FileNameNew <> "" Then
 				pApp = @VisualFBEditorApp
 				pApp->MainForm = @frmMain
@@ -440,18 +439,18 @@ Function AddTab(ByRef FileName As WString = "", bNew As Boolean = False, TreeN A
 			miForm->Enabled = False
 			miCodeAndForm->Enabled = False
 			miGotoCodeForm->Enabled = False
-			tb->tbrTop.Buttons.Item("Form")->Enabled = False
-			tb->tbrTop.Buttons.Item("CodeAndForm")->Enabled = False
-			tb->tbrTop.Buttons.Item("Code")->Checked = True: tbrTop_ButtonClick *tb->tbrTop.Designer, tb->tbrTop, *tb->tbrTop.Buttons.Item("Code")
+			tb->tbrView.Buttons.Item("Form")->Enabled = False
+			tb->tbrView.Buttons.Item("CodeAndForm")->Enabled = False
+			tb->tbrView.Buttons.Item("Code")->Checked = True: tbrTop_ButtonClick *tb->tbrView.Designer, tb->tbrView, *tb->tbrView.Buttons.Item("Code")
 			'SetRightClosedStyle True, True
 		Else
 			'SetRightClosedStyle False, False
 			miForm->Enabled = True
 			miCodeAndForm->Enabled = True
 			miGotoCodeForm->Enabled = True
-			tb->tbrTop.Buttons.Item("Form")->Enabled = True
-			tb->tbrTop.Buttons.Item("CodeAndForm")->Enabled = True
-			tb->tbrTop.Buttons.Item("CodeAndForm")->Checked = True: tbrTop_ButtonClick *tb->tbrTop.Designer, tb->tbrTop, *tb->tbrTop.Buttons.Item("CodeAndForm")
+			tb->tbrView.Buttons.Item("Form")->Enabled = True
+			tb->tbrView.Buttons.Item("CodeAndForm")->Enabled = True
+			tb->tbrView.Buttons.Item("CodeAndForm")->Checked = True: tbrTop_ButtonClick *tb->tbrView.Designer, tb->tbrView, *tb->tbrView.Buttons.Item("CodeAndForm")
 			'tpProperties->SelectTab
 		End If
 		TabCtl.MoveCloseButtons ptabCode
@@ -484,11 +483,6 @@ Sub OnChangeEdit(ByRef Designer As My.Sys.Object, ByRef Sender As Control)
 	If tb = 0 Then Exit Sub
 	tb->Modified = True
 	TextChanged = True
-	'    'Exit Sub
-	'    With tb->txtCode
-	'        If Not .Focused Then Exit Sub
-	'        tb->FormDesign tb->tbrTop.Buttons.Item(1)->Checked
-	'    End With
 End Sub
 
 'Declare Function get_var_value(VarName As String, LineIndex As Integer) As String
@@ -3160,10 +3154,10 @@ Sub OnLineChangeEdit(ByRef Designer As My.Sys.Object, ByRef Sender As Control, B
 						End If
 					End If
 				End If
-				If tb->tbrTop.Buttons.Item("Code")->Checked AndAlso CBool(OldLine = -1 OrElse (OldLine >= tb->ConstructorStart AndAlso OldLine <= tb->ConstructorEnd)) Then
+				If tb->tbrView.Buttons.Item("Code")->Checked AndAlso CBool(OldLine = -1 OrElse (OldLine >= tb->ConstructorStart AndAlso OldLine <= tb->ConstructorEnd)) Then
 					tb->FormNeedDesign = True
 				End If
-				tb->FormDesign bNotDesignForms OrElse tb->tbrTop.Buttons.Item("Code")->Checked OrElse (CBool(OldLine < tb->ConstructorStart) AndAlso CBool(OldLine <> -1)) OrElse CBool(OldLine > tb->ConstructorEnd) 'Not EndsWith(tb->cboFunction.Text, " [Constructor]")
+				tb->FormDesign bNotDesignForms OrElse tb->tbrView.Buttons.Item("Code")->Checked OrElse (CBool(OldLine < tb->ConstructorStart) AndAlso CBool(OldLine <> -1)) OrElse CBool(OldLine > tb->ConstructorEnd) 'Not EndsWith(tb->cboFunction.Text, " [Constructor]")
 			End With
 			TextChanged = False
 		End If
@@ -3596,9 +3590,9 @@ Sub DesignerDblClickControl(ByRef Sender As Designer, Ctrl As Any Ptr)
 			Case Else
 				If iItem <> 0 Then FindEvent tb, iItem->Object, "OnClick"
 			End Select
-			If tb->tbrTop.Buttons.Item("CodeAndForm")->Checked Then
-				tb->tbrTop.Buttons.Item("Code")->Checked = True
-				tbrTop_ButtonClick *tb->tbrTop.Designer, tb->tbrTop, *tb->tbrTop.Buttons.Item("Code")
+			If tb->tbrView.Buttons.Item("CodeAndForm")->Checked Then
+				tb->tbrView.Buttons.Item("Code")->Checked = True
+				tbrTop_ButtonClick *tb->tbrView.Designer, tb->tbrView, *tb->tbrView.Buttons.Item("Code")
 				If GlobalSettings.ShowClassesExplorerOnOpenWindow Then
 					If tb->cboFunction.ItemIndex > -1 Then
 						Dim te As TypeElement Ptr = tb->cboFunction.ItemData(tb->cboFunction.ItemIndex)
@@ -3623,9 +3617,6 @@ Sub DesignerClickMenuItem(ByRef Sender As Designer, MenuItem As Any Ptr)
 	Dim tb As TabWindow Ptr = Sender.Tag
 	If tb = 0 Then Exit Sub
 	FindEvent tb, MenuItem, "OnClick"
-	'	If tb->tbrTop.Buttons.Item(2)->Checked Then
-	'		tb->tbrTop.Buttons.Item(1)->Checked = True
-	'	End If
 End Sub
 
 Sub DesignerClickProperties(ByRef Sender As Designer, Ctrl As Any Ptr)
@@ -9488,7 +9479,7 @@ Sub TabWindow.FormDesign(NotForms As Boolean = False)
 						This.Visible = True
 						pnlForm.Visible = True
 						splForm.Visible = True
-						If Not tbrTop.Buttons.Item(3)->Checked Then tbrTop.Buttons.Item(3)->Checked = True
+						If Not tbrView.Buttons.Item("CodeAndForm")->Checked Then tbrView.Buttons.Item("CodeAndForm")->Checked = True
 						Des = _New( My.Sys.Forms.Designer(@pnlForm))
 						If Des = 0 Then FLine= 0: bNotDesign = False: pfrmMain->UpdateUnLock: Exit Sub
 						Des->Tag = @This
@@ -10222,13 +10213,29 @@ Constructor TabWindow(ByRef wFileName As WString = "", bNew As Boolean = False, 
 	btnFunction->Expand = True
 	'btnFunction->Width = btnClass->Width 
 	'btnFunction->Left + btnFunction->Width + 1
-	tbrTop.Buttons.Add tbsSeparator
-	tbrTop.Buttons.Add tbsCheckGroup, "Code", , , "Code", , ML("Show Code"), True ' Show the toollips
-	tbrTop.Buttons.Add tbsCheckGroup, "Form", , , "Form", , ML("Show Form"), True ' Show the toollips
-	tbrTop.Buttons.Add tbsCheckGroup, "CodeAndForm", , , "CodeAndForm", , ML("Show Code And Form"), True '
 	tbrTop.OnButtonClick = @tbrTop_ButtonClick
 	tbrTop.Flat = True
 	'pnlToolbar.Align = DockStyle.alRight
+
+	' Bottom-docked view selector: a row of text-labelled radio buttons (Code And Form / Code /
+	' Form) replacing the former top toolbar toggles. Astoria uses a TabControl styled tsButtons
+	' (4b643af5); on GTK that TabStyle is a no-op (MFF's TabControl is a gtk_notebook), so the GTK
+	' reimplementation reuses tbsCheckGroup radio tool buttons -- same single-selection behaviour,
+	' rendered as a horizontal icon+text row via List = True (GTK_TOOLBAR_BOTH_HORIZ).
+	tbrView.Align = DockStyle.alBottom
+	tbrView.Height = 26
+	tbrView.ImagesList = pimgList
+	tbrView.Buttons.Add tbsCheckGroup, "CodeAndForm", , , "CodeAndForm", ML("Code And Form"), ML("Show Code And Form"), True
+	tbrView.Buttons.Add tbsCheckGroup, "Code", , , "Code", ML("Code"), ML("Show Code"), True
+	tbrView.Buttons.Add tbsCheckGroup, "Form", , , "Form", ML("Form"), ML("Show Form"), True
+	tbrView.OnButtonClick = @tbrTop_ButtonClick
+	tbrView.Flat = True
+	tbrView.List = True
+	' GTK_TOOLBAR_BOTH_HORIZ (List = True) only draws a tool item's text beside its icon when the
+	' item is flagged important; MFF sets that only for dropdown styles, so mark the view buttons.
+	gtk_tool_item_set_is_important(GTK_TOOL_ITEM(tbrView.Buttons.Item("CodeAndForm")->Widget), True)
+	gtk_tool_item_set_is_important(GTK_TOOL_ITEM(tbrView.Buttons.Item("Code")->Widget), True)
+	gtk_tool_item_set_is_important(GTK_TOOL_ITEM(tbrView.Buttons.Item("Form")->Widget), True)
 	
 
 	pnlForm.Visible = False
@@ -10257,6 +10264,7 @@ Constructor TabWindow(ByRef wFileName As WString = "", bNew As Boolean = False, 
 			'gtk_overlay_add_overlay(gtk_overlay(overlay), layout)
 	pnlCode.Add @txtCode
 	This.Add @tbrTop
+	This.Add @tbrView
 	This.Add @pnlForm
 	This.Add @splForm
 	This.Add @pnlCode

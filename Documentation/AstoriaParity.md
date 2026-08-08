@@ -922,17 +922,29 @@ Standard caveat (per "How much to trust this pass"): each entry still needs its 
 Ilwaco source when the walk reaches it — a stage is an ordering, not a promise every listed commit
 applies verbatim.
 
-**Stage A — the source-tab view model (the central-area spine).**
-- `4b643af5` **tcView** — replace the three *Code / Form / Code And Form* `tbsCheckGroup` toggles Ilwaco
-  still adds to `tbrTop` (`TabWindow.bas:10226`–`10228`) with a **bottom-docked button row** reading
-  *Code And Form* / *Code* / *Form*. In Astoria this is a `TabControl` named `tcView` **styled as
-  buttons** — `tcView.TabStyle = TabStyle.tsButtons`, `.Align = DockStyle.alBottom`, `.Height = 26`,
-  icons from `imgList` (see `TabWindow.bas` ~10696–10713) — so despite the "tc"/"tab strip" naming it
-  reads and behaves as **buttons**, not notebook tabs (owner, 2026-08-07). It is **header-only**: the
-  three entries carry no page content; `tcView_SelChange` drives which panel — code editor vs designer
-  — is shown. The class/function *(General)* / *(Declarations)* dropdowns stay at the **top** of the
-  pane; only the view selectors move down. This is the reshape the owner means by "much different," and
-  it gates the rest of the central-area work.
+**Stage A — the source-tab view model (the central-area spine). DONE (2026-08-08), owner-verified.**
+- `4b643af5` **tcView** — **PORTED as a GTK reimplementation.** Astoria replaces the three view toggles
+  with a `TabControl` named `tcView` **styled as buttons** (`tcView.TabStyle = TabStyle.tsButtons`,
+  `.Align = DockStyle.alBottom`, `.Height = 26`). **On GTK that `TabStyle` is a no-op** — MFF's
+  `TabControl` is a `gtk_notebook` and `FTabStyle` is stored but never consulted in the GTK path, so a
+  literal port would render notebook tabs, not buttons. So Ilwaco reuses the existing `tbsCheckGroup`
+  **radio tool buttons** (which map to `gtk_radio_tool_button` — genuine single-selection) on a new
+  bottom-docked toolbar **`tbrView`** (`Align = alBottom`, `Height = 26`, `List = True` →
+  `GTK_TOOLBAR_BOTH_HORIZ`, each view button flagged `gtk_tool_item_set_is_important` so its text draws
+  beside the icon). Order **Code And Form / Code / Form** (Astoria's final `AddTab` order + the owner's
+  screenshot — the earlier "Code · Code And Form · Form" handoff note was a lost-stash slip, superseded).
+  Behaviour is unchanged from the old top toggles (same style, same `tbrTop_ButtonClick` handler, which
+  resolves its tab via `Button.Ctrl->Parent` and so works on either toolbar) — only the buttons' **home,
+  labels and order** changed. The ~30 `tbrTop.Buttons.Item("…")` read/switch call sites across
+  `ilwaco.bas`, `Main.bas`, `TabWindow.bas` were repointed to `tbrView`; the class/function dropdowns
+  stay on `tbrTop` (top). Two latent Ilwaco bugs fell out and were fixed in passing: a tab-add
+  `Item(1)->Checked` and a designer-path `Item(3)->Checked` were both targeting *separators* (no-ops) —
+  the first deleted (Astoria removed it), the second corrected to `Item("CodeAndForm")` (Astoria's
+  `SyncViewTab("CodeAndForm")` intent — a sync that must NOT fire the handler, which holds on GTK because
+  the `ToolButton.Checked` setter is unported Win32 and only sets `FChecked`). **No centralized
+  `ApplyView`/`ShowView` method layer was introduced** — that Astoria abstraction only earns its keep
+  once Stage C's menu-greying needs it; add it then. (The `tsButtons`-on-GTK no-op is an MFF GTK gap, not
+  an Astoria defect — it is captured here as the REIMPLEMENT reason, not in AstoriaFindings/UpstreamFixes.)
 - **Visual target (owner's Astoria screenshot, 2026-08-07)** for Stages A–B: bottom *Code And Form /
   Code / Form* tabs under the editor; in **Code And Form** the live form renders as a designer window
   over/beside the code; the Explorer shows a **per-form control tree** (`Calculator.frm → Panel1
