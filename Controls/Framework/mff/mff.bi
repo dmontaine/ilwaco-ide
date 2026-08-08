@@ -3,6 +3,23 @@
 '#  This file is part of MyFBFramework                                         #
 '#  Authors: Xusinboy Bekchanov                                                #
 '###############################################################################
+'
+' Ilwaco IDE Modifications
+' copyright 2026 Donald Montaine
+'
+' This program is free software; you can redistribute it and/or modify
+' it under the terms of the GNU Lesser General Public License as published by
+' the Free Software Foundation; either version 3, or (at your option)
+' any later version.
+'
+' This program is distributed in the hope that it will be useful,
+' but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU Lesser General Public License for more details.
+'
+' You should have received a copy of the GNU Lesser General Public License
+' along with this program; if not, write to the Free Software Foundation,
+' Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 '#define __USE_GTK3__
 #if defined(__USE_WINAPI__) OrElse defined(__FB_WIN32__) AndAlso Not defined(__USE_GTK__)
 	#ifdef __FB_64BIT__
@@ -74,7 +91,6 @@
 #include once "HorizontalBox.bi"
 #include once "HotKey.bi"
 #include once "HTTP.bi"
-#include once "HTTPServer.bi"
 #include once "Icon.bi"
 #include once "ImageBox.bi"
 #include once "ImageList.bi"
@@ -226,7 +242,6 @@ Using My.Sys.Forms
 		Cpnt = 0
 		Select Case LCase(ClassName)
 		Case "httpconnection": Cpnt = _New(HTTPConnection)
-		Case "httpserver": Cpnt = _New(HTTPServer)
 		Case "imagelist": Cpnt = _New( ImageList)
 		Case "timercomponent": Cpnt = _New( TimerComponent)
 		Case "tooltips": Cpnt = _New( ToolTips)
@@ -293,7 +308,6 @@ Using My.Sys.Forms
 		Case "hotkey": _Delete( Cast(HotKey Ptr, Ctrl))
 		Case "horizontalbox": _Delete(Cast(HorizontalBox Ptr, Ctrl))
 		Case "httpconnection": _Delete(Cast(HTTPConnection Ptr, Ctrl))
-		Case "httpserver": _Delete(Cast(HTTPServer Ptr, Ctrl))
 		Case "ipaddress": _Delete( Cast(IPAddress Ptr, Ctrl))
 		Case "imagebox": _Delete( Cast(ImageBox Ptr, Ctrl))
 		Case "label": _Delete( Cast(Label Ptr, Ctrl))

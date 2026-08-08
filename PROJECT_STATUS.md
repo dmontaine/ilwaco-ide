@@ -62,63 +62,54 @@ name distinct and mapped in one place.
 
 ---
 
-## ⏳ HANDOFF (2026-08-07) — framework renamed to `Framework`; license headers + Stage A pending
+## ⏳ HANDOFF (2026-08-08) — framework license headers + deep-clean removals done; Stage A stash lost
 
-Mid-thread handoff (owner ran out of usage credits). Three interlocking pieces:
+Builds on the prior session's framework rename `Controls/MyFbFramework` → `Controls/Framework`
+(committed `55745b8`). This session:
 
-**1. DONE this session — framework renamed `Controls/MyFbFramework` → `Controls/Framework`** (owner:
-"one project, Ilwaco; not tracking any upstream"; match Astoria). The `mff/` subdir and
-`libmff64_gtk3.so`/`mff` names are unchanged. Scope: the directory (`git mv`), `MyFbFramework.vfp` →
-`Framework.vfp`, the doc/help files named `MyFbFramework*`, and **all of Ilwaco's own** path/code/build/
-settings/template references (`src/Main.bas`, `src/TabWindow.bas`, `src/frmComponents.frm`,
-`build-linux.sh`, `Settings/ilwaco.ini`, `Templates/Projects/*.vfp`, `.vscode`, `ilwaco.vfp`, etc.).
-**Attribution deliberately preserved:** each framework file's header still reads *"This file is part of
-MyFBFramework"* (the original LGPL project + authors) — this matches Astoria, which renamed the *folder*
-but kept the file-header attribution. Binaries (stale Windows `.dll`/`.exe`) and the real upstream repo
-URLs (`github.com/XusinboyBekchanov/MyFbFramework`, attribution only) were left intact; the one
-historical Astoria changelog rename-entry was preserved. **This makes the 29 examples' designer path
-(`ControlLibrary="Controls/Framework"`) resolve** — they always pointed at Astoria's folder name.
-Build: the designer **lib rebuilt** into `Controls/Framework/`; the editor build was verified at handoff
-(see the commit). Memory `project-mff-is-our-fork` / `reference-linux-build` updated.
+**1. DONE — LGPL modification header on every framework source file.** The original *"This file is part
+of MyFBFramework"* attribution is **kept**; the *"Ilwaco IDE Modifications / copyright 2026 Donald
+Montaine"* LGPL v3 block is **appended below it** on all **199** retained `Controls/Framework/mff/*.bi`
+and `*.bas`, placed exactly per Astoria's own rules (after the `'###`/`'***` attribution box; after the
+zlib `''` header; at the top for header-less files). Idempotent, verified against Astoria. Files were
+also **converted to LF** (only `mff.bi`/`mff.bas`/`mff.rc` were CRLF).
 
-**2. NEXT (owner-directed, NOT started) — add the LGPL/modification header block to every framework
-file**, exactly as Astoria did. The template (from Astoria's `Controls/Framework/mff/*.bi`) keeps the
-original attribution block, then appends:
-```
-'
-' Ilwaco IDE Modifications
-' copyright 2026 Donald Montaine
-'
-' This program is free software; you can redistribute it and/or modify
-' it under the terms of the GNU Lesser General Public License as published by
-' the Free Software Foundation; either version 3, or (at your option)
-' any later version.
-' ... (full LGPL v3 "no warranty" + FSF-address boilerplate — copy Astoria's verbatim,
-'      substituting "Ilwaco IDE" for "Astoria IDE") ...
-```
-Astoria used **"Astoria IDE Modifications"**; Ilwaco uses **"Ilwaco IDE Modifications"**, same owner
-(Donald Montaine). Apply to every `Controls/Framework/mff/*.bi` and `*.bas` (and the framework's other
-sources) that lacks it. Mechanical — a candidate for a Sonnet worker with the exact block; **the worker
-returns to Opus for the build.** Copy Astoria's exact wording so the LGPL text is verbatim.
+**2. DONE — two dead MFF designer components removed** (no-dead-code policy, ahead of the scheduled
+deep-clean): **`HTTPServer.{bi,bas}`** (matches Astoria `4a0798bf`; kept the HTTP client +
+`HTTPConnection` — edited `mff.bi` include/registration, `mff.rc`, `Framework.vfp`, and
+`src/TabWindow.bas:3592`) and **`NativeFontControl.{bi,bas}`** (already dead here — commented includes —
+and dropped upstream + in Astoria; also removed its `Framework.vfp`/`mff.rc` refs). Recorded in
+[IlwacoIDESignificantChanges.md](Documentation/IlwacoIDESignificantChanges.md) §2 + `REMOVED_FEATURES`.
 
-**3. IN-FLIGHT — Stage A (the tcView bottom button row) is STASHED** (`git stash` "Stage A: tcView
-button row (WIP, unverified crash)"). It builds and the **button row renders at the bottom**, but: (a)
-owner wants the order **Code · Code And Form · Form** with **text labels** (currently CodeAndForm/Code/
-Form, icon-only) — the fix is `FCaption` on each `tbrView.Buttons.Add` + `gtk_toolbar_set_style(...,
-GTK_TOOLBAR_BOTH_HORIZ)`, and reordering the three `Add` calls (handler/methods key off `Button.Name`,
-not index, so reordering is safe); (b) a **crash on switching views** on a *form* (GTK-CRITICAL
-`gtk_container_propagate_draw: GTK_IS_WIDGET(child) failed`) — isolated to the designer/form path (a
-plain module didn't crash), and it was entangled with the missing `Controls/Framework` designer library,
-which the rename (piece 1) now provides — so **re-test the crash on the renamed tree first**; it may have
-been the stale control-library fallback. There is also a benign warning to fix at `src/TabWindow.bas`
-(the `CurrentView() = "Code"` comparisons want a `CBool(...)` wrap). Full Stage-A design is in the
-`Docs: stage the remaining UI work` commit and [AstoriaParity.md](Documentation/AstoriaParity.md) "UI
-work — staged sequence".
+**3. DECISION — framework BOMs KEPT deliberately.** No-BOM was requested, but a UTF-8 BOM is what makes
+the framework's bare `""` literals wide (`WString`), so a blanket strip breaks the build (`SysUtils.bas
+error 318`). Astoria's route was to strip **and** rewrite every literal to `WStr("")` — a large pass it
+never finished (8 framework + 11 `src/` files still BOM'd there). **Measured that a framework BOM cannot
+harm a user app:** a BOM is scoped to its own file and does *not* leak into an including file's literals
+(compiled include-scoping test, FB 1.10.1). So Ilwaco keeps the framework BOMs; the discipline that
+matters (never *write* a BOM; keep user-facing Example/Template source BOM-free) is unchanged. The one
+real gap stays the **9 Example/Template `.vfp` BOMs** (NEXT below).
 
-**Resume order:** (i) build-verify the renamed editor + confirm the designer loads a form (open
-`Examples/Calculator`); (ii) do the license-header block (piece 2); (iii) `git stash pop` Stage A,
-apply the order+text fix, rebuild, and re-test the view-switch crash against the now-present
-`Controls/Framework` library.
+**4. Build-verified GREEN** — `./build-linux.sh lib` and `editor` both exit 0; `ilwaco` and
+`Controls/Framework/libmff64_gtk3.so` are rebuilt and staged with the source.
+
+**5. New record — [AstoriaFindings.md](Documentation/AstoriaFindings.md)** (owner, 2026-08-08): defects
+found in **Astoria's own** Win64 code during the port, to feed back when Astoria unfreezes — the mirror
+of [UpstreamFixes.md](Documentation/UpstreamFixes.md) (shared-upstream bugs). Wired into the TestPlan
+rule table; `DocCheck` green.
+
+**6. LOST — the Stage A (tcView bottom button row) `git stash` is GONE.** A stash is local to a working
+copy and does **not** travel through `origin`; this is a fresh sandbox, so it is unrecoverable here.
+Redo it from the design notes in the `Docs: stage the remaining UI work` commit and
+[AstoriaParity.md](Documentation/AstoriaParity.md) "UI work — staged sequence": the tcView row (order
+**Code · Code And Form · Form**, text labels via `FCaption` + `gtk_toolbar_set_style(...,
+GTK_TOOLBAR_BOTH_HORIZ)`, reorder the three `Add` calls — handlers key off `Button.Name`, not index),
+then re-test the view-switch crash on a *form* (`gtk_container_propagate_draw: GTK_IS_WIDGET(child)
+failed`) against the now-present `Controls/Framework` library. Also still open: the benign
+`CurrentView() = "Code"` → `CBool(...)` warning wrap in `src/TabWindow.bas`.
+
+**Resume order:** (i) redo Stage A from the notes (piece 6); (ii) the 9 `.vfp` BOM fix (NEXT); (iii) the
+parity tail.
 
 ---
 

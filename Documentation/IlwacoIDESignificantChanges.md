@@ -51,6 +51,10 @@ Each of these was a *choice* in VisualFBEditor and is now made once, with the op
 - **Two never-functional options removed (2026-08-04)** — "Limit debug to the directory of the main
   file" (its only reference was commented-out Win32 code) and the debug panel's "Update" toggle (it
   wrote a flag nothing read). A broken option costs a beginner more than a missing one.
+- **Two dead MFF designer components removed (2026-08-08)** — `HTTPServer` (dropped in Astoria
+  `4a0798bf`; the HTTP client and `HTTPConnection` are kept) and `NativeFontControl` (already dead
+  here — its includes were commented out — and removed both upstream and in Astoria). No-dead-code
+  policy, ahead of the scheduled deep-clean pass.
 
 ## 3. Behaviour reimplemented for GTK
 

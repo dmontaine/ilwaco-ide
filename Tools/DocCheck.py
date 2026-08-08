@@ -85,6 +85,8 @@ REMOVED_FEATURES = [
     (r"Integrated GDB Debugger",        "the GDB debugger engine (removed: Integrated engine only)"),
     (r"Limit debug to the directory",   "the Limit debug option (removed: it was never functional)"),
     (r"\bConsoleType\b",                 "the MFF console wrapper (removed: Console.bi deleted; the Console template is plain FreeBASIC)"),
+    (r"\bHTTPServer\b",                  "the MFF HTTPServer designer component (removed 2026-08-08: dropped in Astoria 4a0798bf; the HTTP client + HTTPConnection are kept)"),
+    (r"\bNativeFontControl\b",           "the MFF NativeFontControl (removed 2026-08-08: dead here, dropped upstream and in Astoria)"),
     (r"When (?:Ilwaco IDE|VisualFBEditor) starts", "the startup-behaviour radio group (removed: Ilwaco always starts empty)"),
     (r"Show Holiday Frame",              "the seasonal holiday-frame decoration (removed: replaced by real indent guides)"),
     (r"\.vfs\b",                         "the .vfs session files (removed: the workspace restores automatically)"),

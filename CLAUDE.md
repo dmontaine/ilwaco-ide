@@ -52,7 +52,8 @@ final source before classifying.
 | [Documentation/AstoriaParity.md](Documentation/AstoriaParity.md) | The port backlog: every Astoria change, classified, with the next action. |
 | `../astoria-ide/Documentation/AstoriaIDESignificantChanges.md` | Curated "how Astoria differs from VisualFBEditor" — the high-level backlog order. |
 | `../astoria-ide/Documentation/DetailedChangelog.md` | Every Astoria change; `git -C ../astoria-ide show <hash>` for the diff. |
-| `../astoria-ide/Documentation/UpstreamFixes.md` | Astoria's fixes offered upstream. Ilwaco keeps GTK, so **our** GTK fixes belong in our own `Documentation/UpstreamFixes.md` (to be created). |
+| `../astoria-ide/Documentation/UpstreamFixes.md` | Astoria's fixes offered upstream. Ilwaco keeps GTK, so **our** GTK fixes belong in our own [Documentation/UpstreamFixes.md](Documentation/UpstreamFixes.md) — a bug in the shared VisualFBEditor/MFF **upstream** base. |
+| [Documentation/AstoriaFindings.md](Documentation/AstoriaFindings.md) | The mirror of that for the sibling: a defect found in **Astoria's own** (Win64) code during the port, to feed back to Astoria when it unfreezes. Win32-shaped bugs that are N/A here but real for Astoria go here too. |
 
 ## Building (Linux, from-source)
 

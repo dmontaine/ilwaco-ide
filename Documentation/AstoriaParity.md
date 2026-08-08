@@ -1041,9 +1041,15 @@ cluster-mates**, which is the argument for having done this rather than leaving 
 - **`13.99` imagekey-as-type** (`b2c9589d`) and **`13.102` "MainProject"** (`0436b846`) — deciding a
   node's type from its display-icon name. Directly relevant: the Delete File work this session turned on
   exactly this (`ImageKey = "Opened"` is a folder icon, not a file).
-- **`13.91` licence notices** (`52d1021d`, `3e72506d`) — per-file GPL/LGPL modification notices. Ilwaco
-  is a fork of Free Software with substantial changes and carries no such notice; this is a real
-  obligation, not hygiene.
+- **`13.91` licence notices** (`52d1021d`, `3e72506d`) — **DONE (2026-08-08).** Per-file *"Ilwaco IDE
+  Modifications / copyright 2026 Donald Montaine"* LGPL v3 block appended below the original
+  MyFBFramework attribution on all 199 retained `Controls/Framework/mff/*.bi`/`*.bas`, placement mirrored
+  from Astoria. Files also LF-normalised; framework BOMs deliberately kept (a strip needs the `WStr("")`
+  literal rewrite and is functionally moot — a BOM does not leak into an including file; see PROJECT_STATUS).
+- **`4a0798bf` MFF cleanup (drop HTTPServer/Animate/ListItemsOld)** — **PARTLY DONE (2026-08-08):**
+  `HTTPServer.{bi,bas}` removed (HTTP client + `HTTPConnection` kept) together with `NativeFontControl`
+  (dead here, dropped upstream + Astoria). **Residual for the deep-clean pass:** Astoria's same commit
+  also drops **Animate** and orphaned **ListItemsOld**, still present here.
 - **`13.83`/`13.90` FreeFile** (`a01cb61a`, `79100d16`) — partly satisfied already (Ilwaco has the
   guarded open helper), so scope before porting.
 - Editor/UX: `820eebb7` (merge into one Toggle Comment), `05ff9476` (missing-exe check on Run),
