@@ -235,10 +235,11 @@ main_file}`; `get_status`/`list_files`/`read_file` reflect it; `syntax_check` on
 `success=true`; the three error paths return the right codes; a second `create_project` switches the
 active project. No `DebugInfo.log`.
 
-**Pre-existing issue surfaced (not Task 5, tracked separately):** project `.vfp` files get a UTF-8 **BOM**
-from the IDE's `SaveProjectFile` (`Open … For Output Encoding "utf-8"`, `Main.bas:2048/2058`) and from the
-template `.vfp` files themselves — violating the no-BOM directive. `create_project` writes BOM-less, but
-the first `SaveProject` re-adds it. Fix belongs in the project writer + template data.
+**Pre-existing issue surfaced (not Task 5) — FIXED 2026-08-08:** project `.vfp` files used to get a
+UTF-8 **BOM** from the IDE's `SaveProject` (`Open … For Output Encoding "utf-8"`) and from the template
+`.vfp` files themselves — violating the no-BOM directive. `create_project` already wrote BOM-less, but
+the first GUI `SaveProject` re-added it. Fixed in the project writer (`SaveProject` now calls
+`StripUtf8Bom` to remove the BOM the encoding clause adds) and by de-BOM'ing the 9 template `.vfp` files.
 
 ### Task 6 — DONE + verified (2026-08-06)
 

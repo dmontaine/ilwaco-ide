@@ -87,8 +87,9 @@ error 318`). Astoria's route was to strip **and** rewrite every literal to `WStr
 never finished (8 framework + 11 `src/` files still BOM'd there). **Measured that a framework BOM cannot
 harm a user app:** a BOM is scoped to its own file and does *not* leak into an including file's literals
 (compiled include-scoping test, FB 1.10.1). So Ilwaco keeps the framework BOMs; the discipline that
-matters (never *write* a BOM; keep user-facing Example/Template source BOM-free) is unchanged. The one
-real gap stays the **9 Example/Template `.vfp` BOMs** (NEXT below).
+matters (never *write* a BOM; keep user-facing Example/Template source BOM-free) is unchanged. **DONE
+(2026-08-08):** the 9 Example/Template `.vfp` BOMs were stripped, and `SaveProject` now removes the BOM
+its `Encoding "utf-8"` write adds (new `StripUtf8Bom`, `Main.bas`), so saved projects stay BOM-less.
 
 **4. Build-verified GREEN** — `./build-linux.sh lib` and `editor` both exit 0; `ilwaco` and
 `Controls/Framework/libmff64_gtk3.so` are rebuilt and staged with the source.
@@ -108,8 +109,8 @@ then re-test the view-switch crash on a *form* (`gtk_container_propagate_draw: G
 failed`) against the now-present `Controls/Framework` library. Also still open: the benign
 `CurrentView() = "Code"` → `CBool(...)` warning wrap in `src/TabWindow.bas`.
 
-**Resume order:** (i) redo Stage A from the notes (piece 6); (ii) the 9 `.vfp` BOM fix (NEXT); (iii) the
-parity tail.
+**Resume order:** (i) redo Stage A from the notes (piece 6); (ii) the parity tail. *(The 9 `.vfp` BOM
+fix is DONE — see piece 3.)*
 
 ---
 
@@ -305,17 +306,17 @@ wired env-vars up; S7 docs N/A).
 Astoria's *final* state. Build with `./build-linux.sh editor` (background), verify by effect on `:0`, then
 document and commit per item.
 
-**Two items to settle before the testing phase** (both in TechnicalDebt "Known gaps"): the
+**One item to settle before the testing phase** (in TechnicalDebt "Known gaps"): the
 **blank-terminal finding** (Run shows an empty window — reproducible with
-`xfce4-terminal --hold -x /bin/echo TEST`, so not ours, but it is what a user sees), and the **project
-`.vfp` BOMs** written by `SaveProjectFile` and carried by the template `.vfp` data.
+`xfce4-terminal --hold -x /bin/echo TEST`, so not ours, but it is what a user sees). *(The project
+`.vfp` BOMs are FIXED, 2026-08-08 — `SaveProject` strips the BOM and the templates were de-BOM'd.)*
 
 - **Examples — 54 projects ship, all build-verified (2026-08-07).** The 53 Astoria-ported set plus the
   kept `Class Form Example`, each in its own directory. The old BOM-sweep worry is **largely moot**: the
   BOM'd pre-existing sources were deleted (see the RESOLVED note under NEXT 0b), and the one survivor was
-  BOM-stripped. What remains of the BOM question is only the **project `.vfp` BOMs** written by
-  `SaveProjectFile` / carried by the template `.vfp` data (tracked just above); still worth doing with the
-  two Astoria Examples items (`4bd02894`, `51441d7a`).
+  BOM-stripped. The **project `.vfp` BOMs** are now **FIXED too** (2026-08-08): `SaveProject` strips the
+  BOM its `Encoding "utf-8"` write adds and the 9 templates were de-BOM'd. The two Astoria Examples items
+  (`4bd02894`, `51441d7a`) remain.
 - Unverified, low priority: **Ctrl+F5 did not resume** a stopped debuggee — may be a synthetic-input
   artefact; check by hand before treating it as a bug.
 - Cosmetic: the Tools menu still lists a stale **`VisualFBEditor64`** external-tool entry from
@@ -370,8 +371,22 @@ off in Tools ▸ Options ▸ General; the status bar shows which. See
   Closes are clean (exit 0), verified 20/20. Detail in the DONE section above and memory
   `project-known-segfault-threading`. If a close crash recurs it is a **new** defect — diagnose fresh.
 - Harmless startup warnings: resources `AppAddin`/`AppConsole` "do not exist".
+- **GUI screenshots on this GNOME/Wayland box (Ubuntu 26.04):** `gnome-screenshot` and the GNOME Shell
+  D-Bus screenshot are blocked (rootless XWayland has no grabbable root; the Shell API returns "not
+  allowed"). The working method — launch under **`GDK_BACKEND=x11`** so the IDE is a real X window, find
+  its id with `xwininfo -root -tree | grep 'Ilwaco IDE (64-bit)'`, then **`import -window <id> shot.png`**
+  (ImageMagick, installed 2026-08-08). This is the `verify-ilwaco-behaviour` capture path the CLAUDE.md
+  notes as an open infra item. Write captures under `/home/don` (or the scratchpad); the harness trusts
+  `/home/don` + `/tmp`.
 
 **Known gaps (tracked, not blockers).**
+- **Command-line project open may not populate the Explorer (observed 2026-08-08, unresolved).** Launching
+  `./ilwaco <abs-path>.vfp` reaches `OpenFiles` → `AddProject` (`Main.bas:1782`), but the project tree
+  came up **empty** for `Examples/Calculator/Calculator.vfp` (relative *and* absolute path). **Not a BOM
+  regression** — that `.vfp` is a pre-existing BOM-less example and the fix below touches only the *writer*
+  + templates, not `OpenFiles`/`AddProject`/the loader; and the loader reads `Encoding "utf-8"` (handles
+  no-BOM). Follow-up: does command-line project open work at all, or is it an `AddProject`-in-`frmMain_Show`
+  timing/render issue? Verify a BOM-less `.vfp` loads via **File ▸ Open Project** / MCP `open_project` too.
 - **Packaging/shim:** the vendored shim *does* carry `libncurses.so` and `libtinfo.so` under
   `Compilers/shim/gtk-dev/`, but the linker only sees them when they are on its command line — `ld` does
   **not** consult `LD_LIBRARY_PATH`. So a console link needs `-p <shim> -l tinfo`, either per-project via

@@ -1974,6 +1974,24 @@ Function SaveProjectFile(ppe As ProjectElement Ptr, ee As ExplorerElement Ptr, t
 	Return True
 End Function
 
+'' `Open ... For Output Encoding "utf-8"` prepends a UTF-8 BOM; the UTF-8/LF policy forbids one (see
+'' SaveWorkspace). Rewrite FileName without the leading BOM. No-op when there is none (idempotent).
+Sub StripUtf8Bom(ByRef FileName As WString)
+	Dim As Integer Fn = FreeFile_
+	If Open(FileName For Binary Access Read As #Fn) <> 0 Then Return
+	Dim As LongInt Sz = Lof(Fn)
+	If Sz < 3 Then CloseFile_(Fn): Return
+	Dim As String Buf = String(CInt(Sz), 0)
+	Get #Fn, 1, Buf
+	CloseFile_(Fn)
+	If Left(Buf, 3) <> Chr(&hEF) & Chr(&hBB) & Chr(&hBF) Then Return
+	Buf = Mid(Buf, 4)
+	Fn = FreeFile_
+	If Open(FileName For Output As #Fn) <> 0 Then Return
+	Print #Fn, Buf;
+	CloseFile_(Fn)
+End Sub
+
 Function SaveProject(ByRef tnP As TreeNode Ptr, bWithQuestion As Boolean = False) As Boolean
 	If tnP = 0 Then MsgBox(ML("Project not selected!")): Return True
 	Dim As TreeNode Ptr tnPr = GetParentNode(tnP)
@@ -2125,6 +2143,13 @@ Function SaveProject(ByRef tnP As TreeNode Ptr, bWithQuestion As Boolean = False
 	'	End If
 	'Next
 	CloseFile_(Fn)
+	'' Both `Open ... Encoding "utf-8"` branches above prepend a UTF-8 BOM the UTF-8/LF policy forbids;
+	'' strip it, reusing the same path the branch just wrote.
+	If Not EndsWith(LCase(*ppe->FileName), ".vfp") Then
+		StripUtf8Bom(*ppe->FileName & "/" & GetFileName(*ppe->FileName) & ".vfp")
+	Else
+		StripUtf8Bom(*ppe->FileName)
+	End If
 	'' B1: only now -- once the project file itself is actually written -- do the files the
 	'' owner deleted this session really disappear from disk and from the tree. Until this
 	'' point, closing the project without saving leaves them untouched.
